@@ -11,17 +11,17 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
 :root {
-  --bg: #f4f6f7; --panel: #ffffff; --ink: #1d2a30; --muted: #6b7a82; --line: #e2e7ea;
+  --bg: #f4f6f7; --panel: #ffffff; --ink: #1d2a30; --muted: #4f5d65; --line: #cfd8dc;
   --brand: #0b3057; --brand-2: #0d818f; --accent: #2fa37f; --navy: #00183f;
   --grad: linear-gradient(90deg, #12406e 0%, #0d818f 55%, #38af88 100%); --ok: #2e7d4f; --warn: #b7791f; --bad: #b83232;
   --radius: 10px; --shadow: 0 1px 3px rgba(0,0,0,.06);
 }
 @media (prefers-color-scheme: dark) {
-  :root { --bg: #11181c; --panel: #1a2328; --ink: #e6ecef; --muted: #93a3ab; --line: #2a363c;
+  :root { --bg: #11181c; --panel: #1a2328; --ink: #e6ecef; --muted: #b3c1c8; --line: #3a4a52;
           --brand: #5b9bd5; --brand-2: #3fb8b0; --accent: #4fc79c; --ok: #5cc28a; --warn: #e0a84a; --bad: #e46a6a; }
 }
 * { box-sizing: border-box; }
-body { margin: 0; font: 14px/1.5 Inter, system-ui, sans-serif; background: var(--bg); color: var(--ink); }
+body { margin: 0; font: 0.875rem/1.5 Inter, system-ui, sans-serif; background: var(--bg); color: var(--ink); }
 .hidden { display: none !important; }
 .l-short { display: none; }
 body.busy { cursor: progress; }
@@ -36,46 +36,46 @@ body.busy main { opacity: .7; pointer-events: none; }
 .sidebar::before { content: ''; display: block; height: 3px; background: var(--grad); margin: -16px -16px 16px; }
 .login-card p { color: var(--muted); margin: 0 0 24px; }
 .login-card #gsi-btn { display: flex; justify-content: center; }
-.login-card small { display: block; margin-top: 24px; color: var(--muted); font-size: 12px; }
-.brand-mark { width: 56px; height: 56px; border-radius: 14px; background: var(--brand); color: #fff; display: inline-grid; place-items: center; font-weight: 700; font-size: 20px; }
-.brand-mark.sm { width: 36px; height: 36px; font-size: 14px; border-radius: 9px; }
+.login-card small { display: block; margin-top: 24px; color: var(--muted); font-size: 0.75rem; }
+.brand-mark { width: 56px; height: 56px; border-radius: 14px; background: var(--brand); color: #fff; display: inline-grid; place-items: center; font-weight: 700; font-size: 1.25rem; }
+.brand-mark.sm { width: 36px; height: 36px; font-size: 0.875rem; border-radius: 9px; }
 .error { color: var(--bad) !important; min-height: 1.5em; margin-top: 12px !important; }
 
 /* Layout */
 .app { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
 .sidebar { background: var(--panel); border-right: 1px solid var(--line); display: flex; flex-direction: column; padding: 16px; position: sticky; top: 0; height: 100vh; }
 .brand { display: flex; gap: 10px; align-items: center; margin-bottom: 24px; }
-.brand small { display: block; color: var(--muted); font-size: 11px; line-height: 1.3; }
+.brand small { display: block; color: var(--muted); font-size: 0.6875rem; line-height: 1.3; }
 nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
 nav button { text-align: left; background: none; border: 0; padding: 9px 12px; border-radius: 8px; font: inherit; color: var(--ink); cursor: pointer; display: flex; justify-content: space-between; }
 nav button:hover { background: var(--bg); }
 nav button.active { background: var(--grad); color: #fff; }
-.badge:not(:empty) { background: var(--bad); color: #fff; border-radius: 10px; padding: 0 7px; font-size: 11px; }
+.badge:not(:empty) { background: var(--bad); color: #fff; border-radius: 10px; padding: 0 7px; font-size: 0.6875rem; }
 .user { border-top: 1px solid var(--line); padding-top: 12px; display: flex; flex-direction: column; }
 .user small { color: var(--muted); text-transform: capitalize; }
 main { padding: 24px 32px; min-width: 0; }
 main header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
-main h2 { margin: 0; font-size: 22px; color: var(--brand); }
-h3 { margin: 0 0 12px; font-size: 15px; }
-.nota { color: var(--muted); font-size: 13px; margin: -8px 0 16px; }
+main h2 { margin: 0; font-size: 1.375rem; color: var(--brand); }
+h3 { margin: 0 0 12px; font-size: 0.9375rem; }
+.nota { color: var(--muted); font-size: 0.8125rem; margin: -8px 0 16px; }
 
 /* Components */
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); overflow-x: auto; margin-bottom: 16px; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
 .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
-.kpi span { color: var(--muted); font-size: 12px; display: block; }
+.kpi span { color: var(--muted); font-size: 0.75rem; display: block; }
 .kpi { border-top: 3px solid var(--brand-2); }
-.kpi strong { font-size: 26px; font-weight: 700; color: var(--brand); }
+.kpi strong { font-size: 1.625rem; font-weight: 700; color: var(--brand); }
 .btn { background: var(--brand); color: #fff; border: 0; border-radius: 8px; padding: 9px 16px; font: inherit; font-weight: 600; cursor: pointer; }
 .btn.ghost { background: transparent; color: var(--brand); border: 1px solid var(--brand); }
 .link { background: none; border: 0; color: var(--brand-2); cursor: pointer; font: inherit; padding: 0; text-align: left; }
 table { width: 100%; border-collapse: collapse; }
-th { text-align: left; font-size: 12px; color: var(--muted); font-weight: 600; padding: 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { text-align: left; font-size: 0.75rem; color: var(--muted); font-weight: 600; padding: 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
 td { padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
 td small { color: var(--muted); }
-tr.group td { background: var(--bg); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; color: var(--brand); }
-.st { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+tr.group td { background: var(--bg); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: .03em; color: var(--brand); }
+.st { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
 .st.ok { background: color-mix(in srgb, var(--ok) 15%, transparent); color: var(--ok); }
 .st.warn { background: color-mix(in srgb, var(--warn) 15%, transparent); color: var(--warn); }
 .st.bad { background: color-mix(in srgb, var(--bad) 15%, transparent); color: var(--bad); }
@@ -92,7 +92,7 @@ tr.group td { background: var(--bg); font-weight: 600; font-size: 12px; text-tra
 .alerts small { color: var(--muted); white-space: nowrap; }
 
 /* Forms */
-.form label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 12px; }
+.form label { display: flex; flex-direction: column; gap: 4px; font-size: 0.75rem; font-weight: 600; color: var(--muted); margin-bottom: 12px; }
 input, select, textarea { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); width: 100%; }
 select#matriz-entidad { width: auto; min-width: 260px; }
 .out { white-space: pre-wrap; font: inherit; margin: 0; min-height: 120px; }
@@ -118,17 +118,17 @@ dialog { max-height: calc(100dvh - 32px); overflow-y: auto; }
   nav button.active { border-color: transparent; }
   nav button:last-child:nth-child(odd) { grid-column: 1 / -1; }
   .l-long { display: none; } .l-short { display: inline; }
-  .user { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 8px 0; font-size: 13px; }
+  .user { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 8px 0; font-size: 0.8125rem; }
   .user small { margin-right: auto; }
   main { padding: 16px 12px; }
   main header { gap: 8px; }
-  main header h2 { font-size: 19px; flex: 1 1 100%; }
+  main header h2 { font-size: 1.1875rem; flex: 1 1 100%; }
   main header .btn, main header select { width: 100%; }
   select#matriz-entidad { min-width: 0; width: 100%; }
   .grid2, .fields { grid-template-columns: 1fr; }
   .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .kpi { padding: 10px 12px; }
-  .kpi strong { font-size: 22px; }
+  .kpi strong { font-size: 1.375rem; }
   .card { padding: 12px; overflow-x: visible; }
   .card:has(> table) { background: none; border: 0; padding: 0; box-shadow: none; }
   .bar-row { grid-template-columns: minmax(0, 1fr) 70px 40px; }
@@ -140,8 +140,8 @@ dialog { max-height: calc(100dvh - 32px); overflow-y: auto; }
   thead { display: none; }
   tr { border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; margin-bottom: 10px; background: var(--panel); }
   td { border: 0; padding: 4px 0; display: flex; gap: 12px; text-align: left; overflow-wrap: anywhere; }
-  td::before { content: attr(data-label); font-size: 12px; font-weight: 600; color: var(--muted); text-align: left; flex: 0 0 35%; padding-top: 2px; }
-  td:first-child { display: block; text-align: left; font-size: 15px; padding-bottom: 6px; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
+  td::before { content: attr(data-label); font-size: 0.75rem; font-weight: 600; color: var(--muted); text-align: left; flex: 0 0 35%; padding-top: 2px; }
+  td:first-child { display: block; text-align: left; font-size: 0.9375rem; padding-bottom: 6px; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
   td:first-child::before, td:not([data-label])::before, td[data-label=""]::before { display: none; }
   td[data-label=""] { justify-content: flex-end; }
   tr.group { border: 0; background: none; padding: 12px 0 4px; margin: 0; }
@@ -155,9 +155,34 @@ dialog { max-height: calc(100dvh - 32px); overflow-y: auto; }
 
 .login-card form { text-align: left; }
 .login-card .btn { width: 100%; margin-top: 4px; }
-.temp { font: 600 20px/1.4 ui-monospace, monospace; background: var(--bg); padding: 10px; border-radius: 8px; text-align: center; letter-spacing: .08em; user-select: all; }
+.temp { font: 600 1.25rem/1.4 ui-monospace, monospace; background: var(--bg); padding: 10px; border-radius: 8px; text-align: center; letter-spacing: .08em; user-select: all; }
 
-  </style>
+  
+/* ---- Accesibilidad ---- */
+html { font-size: calc(var(--fs, 1) * 100%); -webkit-text-size-adjust: 100%; }
+body { line-height: 1.55; }
+:focus-visible { outline: 3px solid var(--brand-2); outline-offset: 2px; border-radius: 6px; }
+input, select, textarea { min-height: 44px; font-size: 1rem; }
+.btn { min-height: 44px; font-size: 1rem; }
+.link { text-decoration: underline; text-underline-offset: 3px; }
+.tamano { display: flex; gap: 6px; align-items: center; margin: 6px 0; }
+.tamano span { font-size: .8rem; color: var(--muted); margin-right: 4px; }
+.tamano button { min-width: 44px; min-height: 40px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 8px; font: inherit; font-weight: 700; cursor: pointer; }
+.tamano button[aria-pressed="true"] { background: var(--brand); color: #fff; border-color: var(--brand); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+@media (max-width: 860px) {
+  html { font-size: calc(var(--fs, 1) * 112.5%); }
+  .form label { font-size: .9rem; }
+  input, select, textarea { min-height: 48px; }
+  .btn { min-height: 50px; }
+  nav button { min-height: 52px; font-size: 1rem; }
+  td .link, .user .link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 8px; text-decoration: none; background: var(--bg); }
+  td[data-label=""] { gap: 8px; flex-wrap: wrap; }
+  .kpi span { font-size: .85rem; }
+  .brand small { font-size: .8rem; }
+  .tamano { width: 100%; }
+}
+</style>
 </head>
 <body>
 
@@ -173,6 +198,7 @@ dialog { max-height: calc(100dvh - 32px); overflow-y: auto; }
         <button class="btn">Entrar</button>
       </form>
       <p id="login-error" class="error"></p>
+      <div class="tamano" role="group" aria-label="Tamaño del texto" style="justify-content:center"><span>Texto</span><button type="button" data-fs="1" aria-label="Texto normal">A</button><button type="button" data-fs="1.15" aria-label="Texto grande">A+</button><button type="button" data-fs="1.3" aria-label="Texto muy grande">A++</button></div>
       <small>Acceso restringido a personal autorizado. Toda actividad queda registrada.</small>
     </div>
   </section>
@@ -191,7 +217,7 @@ dialog { max-height: calc(100dvh - 32px); overflow-y: auto; }
         <button data-view="asistente" data-perm="ia">Asistente IA</button>
         <button data-view="usuarios" data-perm="admin">Usuarios</button>
       </nav>
-      <div class="user"><span id="user-name"></span><small id="user-rol"></small><button id="cambiar-pass" class="link">Cambiar contraseña</button><button id="logout" class="link">Salir</button></div>
+      <div class="user"><div class="tamano" role="group" aria-label="Tamaño del texto"><span>Texto</span><button type="button" data-fs="1" aria-label="Texto normal">A</button><button type="button" data-fs="1.15" aria-label="Texto grande">A+</button><button type="button" data-fs="1.3" aria-label="Texto muy grande">A++</button></div><span id="user-name"></span><small id="user-rol"></small><button id="cambiar-pass" class="link">Cambiar contraseña</button><button id="logout" class="link">Salir</button></div>
     </aside>
 
     <main>
@@ -587,6 +613,15 @@ function mostrarTemporal(usuario, temp) {
   if (!$('#modal').open) $('#modal').showModal();
 }
 
-  </script>
+  
+// ---------- TAMAÑO DE TEXTO ----------
+function aplicarTamano(f) {
+  document.documentElement.style.setProperty('--fs', f);
+  document.querySelectorAll('.tamano button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.fs === String(f))));
+  try { localStorage.setItem('es_fs', f); } catch {}
+}
+document.querySelectorAll('.tamano button').forEach(b => b.onclick = () => aplicarTamano(b.dataset.fs));
+(() => { let f = '1'; try { f = localStorage.getItem('es_fs') || '1'; } catch {} aplicarTamano(f); })();
+</script>
 </body>
 </html>
