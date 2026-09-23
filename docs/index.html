@@ -104,14 +104,51 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
 .toast { position: fixed; bottom: 20px; right: 20px; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 8px; opacity: 0; transition: .3s; pointer-events: none; max-width: 360px; }
 .toast.show { opacity: 1; } .toast.bad { background: var(--bad); color: #fff; }
 
+html, body { max-width: 100%; overflow-x: hidden; }
+dialog { max-height: calc(100dvh - 32px); overflow-y: auto; }
 @media (max-width: 860px) {
-  .app { grid-template-columns: 1fr; }
-  .sidebar { position: static; height: auto; }
-  nav { flex-direction: row; overflow-x: auto; }
-  nav button { white-space: nowrap; }
-  main { padding: 16px; }
+  .app { grid-template-columns: minmax(0, 1fr); align-content: start; }
+  .sidebar { position: static; height: auto; padding: 10px 12px 0; border-right: 0; border-bottom: 1px solid var(--line); }
+  .sidebar::before { margin: -10px -12px 10px; }
+  .brand { margin-bottom: 8px; }
+  .brand .logo.sm { width: 32px; height: 32px; }
+  nav { flex: 0 0 auto; align-items: center; flex-direction: row; overflow-x: auto; gap: 4px; padding-bottom: 8px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  nav::-webkit-scrollbar { display: none; }
+  nav button { white-space: nowrap; flex: 0 0 auto; padding: 8px 12px; background: var(--bg); }
+  .user { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 8px 0; font-size: 13px; }
+  .user small { margin-right: auto; }
+  main { padding: 16px 12px; }
+  main header { gap: 8px; }
+  main header h2 { font-size: 19px; flex: 1 1 100%; }
+  main header .btn, main header select { width: 100%; }
+  select#matriz-entidad { min-width: 0; width: 100%; }
   .grid2, .fields { grid-template-columns: 1fr; }
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .kpi { padding: 10px 12px; }
+  .kpi strong { font-size: 22px; }
+  .card { padding: 12px; overflow-x: visible; }
+  .card:has(> table) { background: none; border: 0; padding: 0; box-shadow: none; }
+  .bar-row { grid-template-columns: minmax(0, 1fr) 70px 40px; }
+  .bar-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .alerts li { flex-wrap: wrap; }
+
+  /* Tablas → fichas apiladas */
+  table, tbody, tr, td { display: block; width: 100%; }
+  thead { display: none; }
+  tr { border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; margin-bottom: 10px; background: var(--panel); }
+  td { border: 0; padding: 4px 0; display: flex; gap: 12px; text-align: left; overflow-wrap: anywhere; }
+  td::before { content: attr(data-label); font-size: 12px; font-weight: 600; color: var(--muted); text-align: left; flex: 0 0 35%; padding-top: 2px; }
+  td:first-child { display: block; text-align: left; font-size: 15px; padding-bottom: 6px; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
+  td:first-child::before, td:not([data-label])::before, td[data-label=""]::before { display: none; }
+  td[data-label=""] { justify-content: flex-end; }
+  tr.group { border: 0; background: none; padding: 12px 0 4px; margin: 0; }
+  tr.group td { display: block; background: none; text-align: left; border: 0; padding: 0; }
+  td.empty { display: block; text-align: center; }
+
+  dialog { padding: 18px 16px; width: calc(100% - 16px); }
+  .toast { left: 12px; right: 12px; bottom: 12px; max-width: none; }
 }
+
 
 .login-card form { text-align: left; }
 .login-card .btn { width: 100%; margin-top: 4px; }
@@ -283,6 +320,13 @@ async function run(fn) {
   try { return await fn(); } catch (e) { toast(e.message, true); throw e; }
   finally { document.body.classList.remove('busy'); }
 }
+function etiquetar(t) {
+  const cab = [...t.querySelectorAll('thead th')].map(th => th.textContent.trim());
+  if (!cab.length) return;
+  t.querySelectorAll('tbody tr:not(.group)').forEach(tr => [...tr.children].forEach((td, i) => { if (!td.hasAttribute('data-label')) td.setAttribute('data-label', cab[i] || ''); }));
+}
+new MutationObserver(ms => ms.forEach(m => { const t = m.target.closest && m.target.closest('table'); if (t) etiquetar(t); }))
+  .observe(document.body, { childList: true, subtree: true });
 const can = p => state.me && state.me.permisos.includes(p);
 
 // ---------- LOGIN ----------
