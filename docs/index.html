@@ -5,121 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>EntornoSeguro · Protección de Menores en el Deporte</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="img/favicon.png">
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
   <meta name="theme-color" content="#0b3057">
-  <link rel="stylesheet" href="css/app.css">
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <script src="js/config.js"></script>
+  <style>html,body{margin:0;height:100%;overflow:hidden;background:#0b3057}iframe{border:0;width:100%;height:100%;display:block}</style>
 </head>
 <body>
-
-  <!-- LOGIN -->
-  <section id="login" class="login">
-    <div class="login-card">
-      <img src="img/logo-512.png" alt="EntornoSeguro" class="logo">
-      <h1>EntornoSeguro</h1>
-      <p>Sistema municipal de protección de menores en el deporte</p>
-      <div id="gsi-btn"></div>
-      <p id="login-error" class="error"></p>
-      <small>Acceso restringido a personal autorizado. Toda actividad queda registrada.</small>
-    </div>
-  </section>
-
-  <!-- APP -->
-  <div id="app" class="app hidden">
-    <aside class="sidebar">
-      <div class="brand"><img src="img/logo-512.png" alt="" class="logo sm"><div><strong>EntornoSeguro</strong><small id="org"></small></div></div>
-      <nav>
-        <button data-view="panel" class="active">Panel</button>
-        <button data-view="entidades">Entidades</button>
-        <button data-view="matriz">Matriz de cumplimiento</button>
-        <button data-view="formacion">Formación</button>
-        <button data-view="alertas">Alertas <span id="badge-alertas" class="badge"></span></button>
-        <button data-view="contenidos" data-perm="ia">Contenidos RRSS</button>
-        <button data-view="asistente" data-perm="ia">Asistente IA</button>
-      </nav>
-      <div class="user"><span id="user-name"></span><small id="user-rol"></small><button id="logout" class="link">Salir</button></div>
-    </aside>
-
-    <main>
-      <!-- PANEL -->
-      <section id="view-panel" class="view">
-        <header><h2>Panel del Delegado de Protección</h2></header>
-        <div id="kpis" class="kpis"></div>
-        <div class="grid2">
-          <div class="card"><h3>Implantación por entidad</h3><div id="panel-entidades"></div></div>
-          <div class="card"><h3>Alertas prioritarias</h3><div id="panel-alertas"></div></div>
-        </div>
-      </section>
-
-      <!-- ENTIDADES -->
-      <section id="view-entidades" class="view hidden">
-        <header><h2>Entidades deportivas</h2><button class="btn" id="nueva-entidad" data-perm="escribir">+ Nueva entidad</button></header>
-        <div class="card"><table id="tabla-entidades"></table></div>
-      </section>
-
-      <!-- MATRIZ -->
-      <section id="view-matriz" class="view hidden">
-        <header><h2>Matriz de cumplimiento · Protocolo Marco</h2>
-          <select id="matriz-entidad"></select></header>
-        <p class="nota">Estado de implantación documental. No constituye valoración de personas ni de entidades.</p>
-        <div class="card"><table id="tabla-matriz"></table></div>
-      </section>
-
-      <!-- FORMACIÓN -->
-      <section id="view-formacion" class="view hidden">
-        <header><h2>Formación de agentes deportivos</h2><button class="btn" id="nueva-formacion" data-perm="escribir">+ Registrar formación</button></header>
-        <div class="card"><table id="tabla-formacion"></table></div>
-      </section>
-
-      <!-- ALERTAS -->
-      <section id="view-alertas" class="view hidden">
-        <header><h2>Alertas preventivas</h2><button class="btn ghost" id="regenerar" data-perm="escribir">Recalcular</button></header>
-        <div class="card"><table id="tabla-alertas"></table></div>
-      </section>
-
-      <!-- CONTENIDOS -->
-      <section id="view-contenidos" class="view hidden">
-        <header><h2>Generador de contenidos</h2></header>
-        <div class="grid2">
-          <form id="form-contenido" class="card form">
-            <label>Tema<input name="tema" required placeholder="Ej.: qué hace el Delegado/a de Protección de tu club"></label>
-            <label>Público<select name="publico">
-              <option>familias</option><option>deportistas de 12 a 17 años</option><option>deportistas de 6 a 11 años</option>
-              <option>entrenadores y monitores</option><option>directivos de clubes</option><option>población general</option>
-            </select></label>
-            <label>Formato<select name="formato">
-              <option value="carrusel">Carrusel Instagram</option><option value="story">Stories</option>
-              <option value="reel">Guion de reel</option><option value="infografia">Infografía</option>
-              <option value="familias">Mensaje a familias</option><option value="entrenadores">Mensaje a entrenadores</option>
-            </select></label>
-            <button class="btn">Generar</button>
-          </form>
-          <div class="card"><div class="out-head"><h3>Resultado</h3><button class="link" id="copiar">Copiar</button></div><pre id="out-contenido" class="out"></pre></div>
-        </div>
-      </section>
-
-      <!-- ASISTENTE -->
-      <section id="view-asistente" class="view hidden">
-        <header><h2>Asistente del Delegado de Protección</h2></header>
-        <p class="nota">No introduzcas nombres, datos ni detalles que permitan identificar a menores o casos. Las respuestas requieren validación profesional.</p>
-        <form id="form-asistente" class="card form">
-          <textarea name="pregunta" rows="4" required placeholder="Ej.: ¿Qué debe contener el análisis de riesgos de un club con pernoctas en torneos?"></textarea>
-          <button class="btn">Consultar</button>
-        </form>
-        <div class="card"><pre id="out-asistente" class="out"></pre></div>
-      </section>
-    </main>
-  </div>
-
-  <!-- MODAL -->
-  <dialog id="modal"><form method="dialog" id="modal-form" class="form"></form></dialog>
-  <div id="toast" class="toast"></div>
-
-  <script src="js/api.js"></script>
-  <script src="js/app.js"></script>
+  <iframe src="https://script.google.com/macros/s/AKfycbyFwgq5G24DhjxMe_mVtxzKntalpZ3ljbdPEnH5iD8a7wibN3YRGKizcCLKoTUOMtJs/exec" title="EntornoSeguro" allow="clipboard-write"></iframe>
 </body>
 </html>
