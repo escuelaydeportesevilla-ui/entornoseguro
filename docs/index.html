@@ -23,6 +23,7 @@
 * { box-sizing: border-box; }
 body { margin: 0; font: 14px/1.5 Inter, system-ui, sans-serif; background: var(--bg); color: var(--ink); }
 .hidden { display: none !important; }
+.l-short { display: none; }
 body.busy { cursor: progress; }
 body.busy main { opacity: .7; pointer-events: none; }
 
@@ -112,9 +113,11 @@ dialog { max-height: calc(100dvh - 32px); overflow-y: auto; }
   .sidebar::before { margin: -10px -12px 10px; }
   .brand { margin-bottom: 8px; }
   .brand .logo.sm { width: 32px; height: 32px; }
-  nav { flex: 0 0 auto; align-items: center; flex-direction: row; overflow-x: auto; gap: 4px; padding-bottom: 8px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
-  nav::-webkit-scrollbar { display: none; }
-  nav button { white-space: nowrap; flex: 0 0 auto; padding: 8px 12px; background: var(--bg); }
+  nav { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; flex: 0 0 auto; padding-bottom: 10px; }
+  nav button { justify-content: center; align-items: center; gap: 6px; min-height: 46px; padding: 8px; background: var(--bg); border: 1px solid var(--line); font-weight: 600; text-align: center; white-space: normal; }
+  nav button.active { border-color: transparent; }
+  nav button:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .l-long { display: none; } .l-short { display: inline; }
   .user { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 8px 0; font-size: 13px; }
   .user small { margin-right: auto; }
   main { padding: 16px 12px; }
@@ -181,10 +184,10 @@ dialog { max-height: calc(100dvh - 32px); overflow-y: auto; }
       <nav>
         <button data-view="panel" class="active">Panel</button>
         <button data-view="entidades">Entidades</button>
-        <button data-view="matriz">Matriz de cumplimiento</button>
+        <button data-view="matriz"><span class="l-long">Matriz de cumplimiento</span><span class="l-short">Matriz</span></button>
         <button data-view="formacion">Formación</button>
         <button data-view="alertas">Alertas <span id="badge-alertas" class="badge"></span></button>
-        <button data-view="contenidos" data-perm="ia">Contenidos RRSS</button>
+        <button data-view="contenidos" data-perm="ia"><span class="l-long">Contenidos RRSS</span><span class="l-short">Redes sociales</span></button>
         <button data-view="asistente" data-perm="ia">Asistente IA</button>
         <button data-view="usuarios" data-perm="admin">Usuarios</button>
       </nav>
