@@ -158,6 +158,10 @@ dialog { max-height: calc(100dvh - 32px); overflow-y: auto; }
 .temp { font: 600 1.25rem/1.4 ui-monospace, monospace; background: var(--bg); padding: 10px; border-radius: 8px; text-align: center; letter-spacing: .08em; user-select: all; }
 
   
+.ia-acciones { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.ia-acciones .btn { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+.out.prompt { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 12px; max-height: 320px; overflow: auto; font-size: .85rem; min-height: 0; }
+@media (max-width: 860px) { .ia-acciones .btn, .form > .btn { flex: 1 1 100%; width: 100%; } }
 /* ---- Accesibilidad ---- */
 html { font-size: calc(var(--fs, 1) * 100%); -webkit-text-size-adjust: 100%; }
 body { line-height: 1.55; }
@@ -272,9 +276,9 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
               <option value="reel">Guion de reel</option><option value="infografia">Infografía</option>
               <option value="familias">Mensaje a familias</option><option value="entrenadores">Mensaje a entrenadores</option>
             </select></label>
-            <button class="btn">Generar</button>
+            <button class="btn">Preparar prompt</button>
           </form>
-          <div class="card"><div class="out-head"><h3>Resultado</h3><button class="link" id="copiar">Copiar</button></div><pre id="out-contenido" class="out"></pre></div>
+          <div class="card"><h3>Prompt preparado</h3><div id="out-contenido"><p class="empty">Rellena el formulario y pulsa "Preparar prompt".</p></div></div>
         </div>
       </section>
 
@@ -284,9 +288,9 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
         <p class="nota">No introduzcas nombres, datos ni detalles que permitan identificar a menores o casos. Las respuestas requieren validación profesional.</p>
         <form id="form-asistente" class="card form">
           <textarea name="pregunta" rows="4" required placeholder="Ej.: ¿Qué debe contener el análisis de riesgos de un club con pernoctas en torneos?"></textarea>
-          <button class="btn">Consultar</button>
+          <button class="btn">Preparar prompt</button>
         </form>
-        <div class="card"><pre id="out-asistente" class="out"></pre></div>
+        <div class="card"><h3>Prompt preparado</h3><div id="out-asistente"><p class="empty">Escribe tu consulta y pulsa "Preparar prompt".</p></div></div>
       </section>
       <!-- USUARIOS -->
       <section id="view-usuarios" class="view hidden">
@@ -379,7 +383,7 @@ async function arrancar() {
   $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
   $('#user-name').textContent = state.me.nombre || state.me.usuario;
   $('#user-rol').textContent = state.me.rol;
-  $('#org').textContent = r.config.organismo || '';
+  $('#org').textContent = r.config.organismo || ''; state.cfg = r.config;
   $$('[data-perm]').forEach(el => { if (!can(el.dataset.perm)) el.remove(); });
   if (state.me.debe_cambiar) formPassword(true); else show('panel');
 }
@@ -536,23 +540,70 @@ async function loadAlertas() {
 }
 $('#regenerar') && ($('#regenerar').onclick = async () => { const r = await run(() => API.call('regenerarAlertas')); toast(r.abiertas + ' alertas abiertas'); loadAlertas(); });
 
-// ---------- IA ----------
-$('#form-contenido').onsubmit = async ev => {
-  ev.preventDefault();
-  $('#out-contenido').textContent = 'Generando…';
-  const r = await run(() => API.call('generarContenido', Object.fromEntries(new FormData(ev.target))));
-  $('#out-contenido').textContent = r.texto;
+// ---------- IA (prompts automáticos → Claude) ----------
+const CONTEXTO_IA = [
+  'Actúa como asistente técnico del Delegado de Protección de Menores en el Deporte de un ayuntamiento andaluz.',
+  'Marco normativo: LO 8/2021 (LOPIVI, Capítulo IX deporte y ocio), Ley 4/2021 de Infancia y Adolescencia de Andalucía, Ley 5/2016 del Deporte de Andalucía, Decreto 41/2022 y Protocolo Marco de protección de menores en el deporte (Orden de 18 de noviembre de 2024).',
+  'Reglas: no emitas conclusiones jurídicas categóricas; no atribuyas responsabilidad ni califiques hechos como violencia; cita la norma o apartado que fundamenta cada afirmación cuando sea posible; indica qué debe validar una persona responsable.',
+  'Estilo: español de España, técnico, conciso.'
+].join('\n');
+const FORMATOS_IA = {
+  carrusel: 'Carrusel de Instagram de 6-8 diapositivas. Para cada una: título (máx. 8 palabras) y texto (máx. 25 palabras). Después, pie de publicación y 8 hashtags.',
+  story: 'Secuencia de 3-4 stories. Texto breve por pantalla y una llamada a la acción.',
+  reel: 'Guion de reel de 30-45 s: gancho (3 s), escenas con texto en pantalla y locución, cierre y pie de publicación.',
+  infografia: 'Contenido para infografía: título, 5-7 bloques con icono sugerido y frase, y fuente normativa.',
+  familias: 'Mensaje para familias (WhatsApp/email), tono cercano, máx. 150 palabras.',
+  entrenadores: 'Mensaje para entrenadores y monitores, operativo, con 3-5 pautas concretas.'
 };
-$('#copiar').onclick = () => {
-  const r = document.createRange(); r.selectNodeContents($('#out-contenido'));
-  const s = getSelection(); s.removeAllRanges(); s.addRange(r);
-  try { document.execCommand('copy'); toast('Copiado'); } catch { toast('Selecciona y copia con Ctrl+C'); }
-};
-$('#form-asistente').onsubmit = async ev => {
+function sanearIA(t) {
+  return String(t || '')
+    .replace(/\b\d{8}[A-Za-z]\b/g, '[DNI]').replace(/\b[XYZxyz]\d{7}[A-Za-z]\b/g, '[NIE]')
+    .replace(/\b[6789]\d{8}\b/g, '[TEL]').replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, '[EMAIL]');
+}
+function mostrarPrompt(caja, prompt) {
+  caja.innerHTML = '';
+  const pre = document.createElement('pre'); pre.className = 'out prompt'; pre.textContent = prompt;
+  const acc = document.createElement('div'); acc.className = 'ia-acciones';
+  const abrir = document.createElement('a'); abrir.className = 'btn'; abrir.target = '_blank'; abrir.rel = 'noopener';
+  abrir.href = 'https://claude.ai/new?q=' + encodeURIComponent(prompt); abrir.textContent = 'Abrir en Claude';
+  const copiar = document.createElement('button'); copiar.type = 'button'; copiar.className = 'btn ghost'; copiar.textContent = 'Copiar prompt';
+  copiar.onclick = () => copiarTexto(prompt);
+  acc.append(abrir, copiar);
+  const nota = document.createElement('p'); nota.className = 'nota';
+  nota.textContent = 'Se abrirá Claude con tu cuenta y el prompt preparado. Si aparece vacío, pulsa "Copiar prompt" y pégalo.';
+  caja.append(acc, nota, pre);
+}
+function copiarTexto(t) {
+  const fin = () => toast('Prompt copiado');
+  if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t).then(fin, () => copiarManual(t));
+  copiarManual(t);
+}
+function copiarManual(t) {
+  const ta = document.createElement('textarea'); ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); toast('Prompt copiado'); } catch { toast('Selecciona el texto y cópialo'); }
+  ta.remove();
+}
+$('#form-contenido').onsubmit = ev => {
   ev.preventDefault();
-  $('#out-asistente').textContent = 'Consultando…';
-  const r = await run(() => API.call('asistente', Object.fromEntries(new FormData(ev.target))));
-  $('#out-asistente').textContent = r.texto;
+  const d = Object.fromEntries(new FormData(ev.target));
+  const org = (state.cfg && state.cfg.organismo) || 'Ayuntamiento';
+  const prompt = [CONTEXTO_IA, '',
+    'TAREA: crea un contenido de sensibilización para redes sociales.',
+    'Organismo: ' + org,
+    'Tema: ' + sanearIA(d.tema),
+    'Público: ' + sanearIA(d.publico),
+    'Tono: positivo y preventivo, sin lenguaje alarmista, lenguaje inclusivo, sin imágenes de menores identificables.',
+    'Formato: ' + (FORMATOS_IA[d.formato] || FORMATOS_IA.carrusel)].join('\n');
+  mostrarPrompt($('#out-contenido'), prompt);
+};
+$('#form-asistente').onsubmit = ev => {
+  ev.preventDefault();
+  const d = Object.fromEntries(new FormData(ev.target));
+  const prompt = [CONTEXTO_IA, '',
+    'IMPORTANTE: la consulta no debe contener datos que identifiquen a menores ni a personas implicadas en casos.', '',
+    'CONSULTA:', sanearIA(d.pregunta)].join('\n');
+  mostrarPrompt($('#out-asistente'), prompt);
 };
 
 // ---------- MODAL GENÉRICO ----------
