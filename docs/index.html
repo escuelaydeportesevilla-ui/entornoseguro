@@ -31,8 +31,8 @@ body.busy main { opacity: .7; pointer-events: none; }
 .login { min-height: 100vh; display: grid; place-items: center; padding: 16px; background: linear-gradient(135deg, #0b3057, #0d818f 60%, #38af88); }
 .login-card { background: var(--panel); padding: 40px 32px; border-radius: 16px; max-width: 380px; width: 100%; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,.2); }
 .login-card h1 { margin: 12px 0 4px; color: var(--brand); letter-spacing: .04em; }
-.logo { width: 120px; height: 120px; border-radius: 26px; }
-.logo.sm { width: 40px; height: 40px; border-radius: 9px; }
+.logo { width: 150px; height: 150px; border-radius: 22%; object-fit: cover; image-rendering: auto; box-shadow: 0 4px 14px rgba(11,48,87,.18); background: #fff; }
+.logo.sm { width: 44px; height: 44px; border-radius: 22%; box-shadow: none; border: 1px solid var(--line); }
 .sidebar::before { content: ''; display: block; height: 3px; background: var(--grad); margin: -16px -16px 16px; }
 .login-card p { color: var(--muted); margin: 0 0 24px; }
 .login-card #gsi-btn { display: flex; justify-content: center; }
@@ -112,7 +112,7 @@ dialog { max-height: calc(100dvh - 32px); overflow-y: auto; }
   .sidebar { position: static; height: auto; padding: 10px 12px 0; border-right: 0; border-bottom: 1px solid var(--line); }
   .sidebar::before { margin: -10px -12px 10px; }
   .brand { margin-bottom: 8px; }
-  .brand .logo.sm { width: 32px; height: 32px; }
+  .brand .logo.sm { width: 40px; height: 40px; }
   nav { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; flex: 0 0 auto; padding-bottom: 10px; }
   nav button { justify-content: center; align-items: center; gap: 6px; min-height: 46px; padding: 8px; background: var(--bg); border: 1px solid var(--line); font-weight: 600; text-align: center; white-space: normal; }
   nav button.active { border-color: transparent; }
@@ -175,6 +175,35 @@ dialog { max-height: calc(100dvh - 32px); overflow-y: auto; }
 .guardar-res { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 12px; }
 mark { background: #fde68a; color: inherit; padding: 0 1px; border-radius: 2px; }
 @media (max-width: 860px) { .buscador { grid-template-columns: 1fr; } .ia-acciones .btn { flex: 1 1 calc(50% - 8px); } .ia-acciones .btn[type=submit] { flex-basis: 100%; } }
+.nivel { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: .8rem; font-weight: 700; }
+.nivel.alto { background: color-mix(in srgb, var(--bad) 15%, transparent); color: var(--bad); }
+.nivel.medio { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn); }
+.nivel.bajo { background: color-mix(in srgb, var(--ok) 15%, transparent); color: var(--ok); }
+.sugerencias { background: var(--bg); border: 1px dashed var(--brand-2); border-radius: 8px; padding: 10px; margin-bottom: 12px; grid-column: 1 / -1; }
+.sugerencias button { display: block; width: 100%; text-align: left; margin: 4px 0; padding: 8px 10px; border: 1px solid var(--line); background: var(--panel); border-radius: 8px; font: inherit; color: var(--ink); cursor: pointer; }
+.sugerencias button:hover { border-color: var(--brand-2); }
+.md { line-height: 1.6; overflow-wrap: anywhere; }
+.md h2, .md h3, .md h4, .md h5 { color: var(--brand); margin: 16px 0 6px; line-height: 1.3; }
+.md h2 { font-size: 1.25rem; } .md h3 { font-size: 1.1rem; } .md h4, .md h5 { font-size: 1rem; color: var(--brand-2); }
+.md p { margin: 0 0 10px; } .md ul, .md ol { margin: 4px 0 12px; padding-left: 22px; } .md li { margin: 3px 0; }
+.md blockquote { border-left: 3px solid var(--brand-2); margin: 8px 0; padding: 2px 12px; color: var(--muted); }
+.md hr { border: 0; border-top: 1px solid var(--line); margin: 16px 0; }
+.md code { background: var(--bg); padding: 1px 5px; border-radius: 4px; font-size: .9em; }
+.md table.md-tabla { display: table; width: 100%; border-collapse: collapse; margin: 10px 0 14px; font-size: .9rem; }
+.md table.md-tabla thead { display: table-header-group; } .md table.md-tabla tbody { display: table-row-group; }
+.md table.md-tabla tr { display: table-row; border: 0; padding: 0; margin: 0; background: none; }
+.md table.md-tabla th, .md table.md-tabla td { display: table-cell; border: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; font-size: inherit; }
+.md table.md-tabla th { background: var(--brand); color: #fff; }
+.md table.md-tabla td::before { display: none; }
+.md table.md-tabla td:first-child { font-size: inherit; border-bottom: 1px solid var(--line); margin: 0; padding: 6px 8px; }
+.md-scroll { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.md table.md-tabla th, .md table.md-tabla td { overflow-wrap: normal; word-break: normal; min-width: 7em; }
+.doc-vista { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; overflow-x: auto; }
+.vista-previa { border: 1px dashed var(--line); border-radius: 8px; padding: 12px; margin: 0 0 12px; overflow-x: auto; }
+.vp-tit { display: block; color: var(--muted); font-size: .85rem; margin-bottom: 6px; }
+.modo { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
+.modo-b { border: 0; background: var(--bg); padding: 8px 18px; font: inherit; font-weight: 600; cursor: pointer; color: var(--ink); min-height: 40px; }
+.modo-b.activo { background: var(--brand); color: #fff; }
 /* ---- Accesibilidad ---- */
 html { font-size: calc(var(--fs, 1) * 100%); -webkit-text-size-adjust: 100%; }
 body { line-height: 1.55; }
@@ -228,6 +257,7 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
         <button data-view="panel" class="active">Panel</button>
         <button data-view="entidades">Entidades</button>
         <button data-view="matriz"><span class="l-long">Matriz de cumplimiento</span><span class="l-short">Matriz</span></button>
+        <button data-view="riesgos">Riesgos</button>
         <button data-view="formacion">Formación</button>
         <button data-view="alertas">Alertas <span id="badge-alertas" class="badge"></span></button>
         <button data-view="contenidos" data-perm="ia"><span class="l-long">Contenidos RRSS</span><span class="l-short">Redes sociales</span></button>
@@ -261,6 +291,19 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
           <select id="matriz-entidad"></select></header>
         <p class="nota">Estado de implantación documental. No constituye valoración de personas ni de entidades.</p>
         <div class="card"><table id="tabla-matriz"></table></div>
+      </section>
+
+      <!-- RIESGOS -->
+      <section id="view-riesgos" class="view hidden">
+        <header><h2>Análisis de riesgos</h2><select id="riesgos-entidad" aria-label="Entidad"></select></header>
+        <p class="nota">Identificación de situaciones de riesgo y medidas preventivas. No constituye valoración de personas ni de entidades.</p>
+        <div id="riesgos-resumen" class="kpis"></div>
+        <div class="ia-acciones">
+          <button class="btn" id="nuevo-riesgo" type="button" data-perm="escribir">+ Nuevo riesgo</button>
+          <button class="btn ghost" id="riesgos-ia" type="button" data-perm="ia">Proponer con IA</button>
+        </div>
+        <div id="riesgos-ia-out"></div>
+        <div class="card"><table id="tabla-riesgos"></table></div>
       </section>
 
       <!-- FORMACIÓN -->
@@ -313,7 +356,7 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
         <header><h2>Documentos</h2></header>
         <div class="card form buscador">
           <label>Buscar<input id="doc-q" type="search" placeholder="Palabras del asunto o del contenido"></label>
-          <label>Tipo<select id="doc-tipo"><option value="">Todos</option><option value="asistente">Asistente IA</option><option value="contenido">Redes sociales</option></select></label>
+          <label>Tipo<select id="doc-tipo"><option value="">Todos</option><option value="asistente">Asistente IA</option><option value="contenido">Redes sociales</option><option value="riesgos">Análisis de riesgos</option></select></label>
         </div>
         <p class="nota" id="doc-count"></p>
         <div id="doc-lista"></div>
@@ -325,7 +368,9 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
         <form id="form-doc" class="card form">
           <label>Asunto<input name="asunto" required maxlength="200"></label>
           <p class="nota" id="doc-meta"></p>
-          <label>Contenido<textarea name="resultado" rows="16" class="doc-texto"></textarea></label>
+          <div class="modo" role="tablist"><button type="button" class="modo-b activo" data-modo="vista" role="tab">Vista</button><button type="button" class="modo-b" data-modo="editar" role="tab">Editar</button></div>
+          <div id="doc-vista" class="md doc-vista"></div>
+          <label id="doc-editar" class="hidden">Contenido (formato: **negrita**, # título, - lista, | tabla |)<textarea name="resultado" rows="16" class="doc-texto"></textarea></label>
           <div class="ia-acciones">
             <button class="btn" type="submit">Guardar</button>
             <button class="btn ghost" type="button" id="doc-copiar">Copiar</button>
@@ -350,7 +395,7 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
   <div id="toast" class="toast"></div>
 
   <script>
-const LOGO = "https://entornoseguro.escuelaydeporte.com/img/logo-512.png";
+const LOGO = "https://entornoseguro.escuelaydeporte.com/img/logo-hd.jpg";
 document.querySelectorAll("[data-logo]").forEach(i => i.src = LOGO);
 
 const API_URL = "https://script.google.com/macros/s/AKfycbx-9rREVClAUwFFehFqGhdlwrDwhjjHpROCf6v94K1G27AX20ZU7PMTB1Yc2H6bq9gM2w/exec";
@@ -463,7 +508,7 @@ $$('nav button').forEach(b => b.onclick = () => show(b.dataset.view));
 function show(v) {
   $$('nav button').forEach(b => b.classList.toggle('active', b.dataset.view === (v === 'doc' ? 'documentos' : v)));
   $$('.view').forEach(s => s.classList.toggle('hidden', s.id !== 'view-' + v));
-  ({ panel: loadPanel, entidades: loadEntidades, matriz: loadMatriz, formacion: loadFormacion, alertas: loadAlertas, usuarios: loadUsuarios, documentos: loadDocumentos }[v] || (() => {}))();
+  ({ panel: loadPanel, entidades: loadEntidades, matriz: loadMatriz, formacion: loadFormacion, alertas: loadAlertas, usuarios: loadUsuarios, documentos: loadDocumentos, riesgos: loadRiesgos }[v] || (() => {}))();
 }
 
 // ---------- PANEL ----------
@@ -474,7 +519,7 @@ async function loadPanel() {
     ['Entidades', k.entidades], ['Con menores', k.con_menores],
     ['Con Delegado/a', `${k.con_delegado}/${k.con_menores}`], ['Aceptan Protocolo', `${k.aceptan_protocolo}/${k.con_menores}`],
     ['Cumplimiento medio', k.cumplimiento_medio + '%'], ['Personas formadas', k.personas_formadas],
-    ['Alertas abiertas', k.alertas_abiertas]
+    ['Alertas abiertas', k.alertas_abiertas], ['Riesgos altos pendientes', k.riesgos_altos || 0]
   ];
   $('#kpis').innerHTML = tiles.map(([l, v]) => `<div class="kpi"><span>${esc(l)}</span><strong>${esc(v)}</strong></div>`).join('');
   $('#badge-alertas').textContent = k.alertas_abiertas || '';
@@ -585,6 +630,120 @@ async function loadAlertas() {
 }
 $('#regenerar') && ($('#regenerar').onclick = async () => { const r = await run(() => API.call('regenerarAlertas')); toast(r.abiertas + ' alertas abiertas'); loadAlertas(); });
 
+
+// ---------- FORMATO (Markdown de Claude → documento limpio) ----------
+function mdInline(s) {
+  return esc(s)
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*\*([^*]+)\*\*\*/g, '<strong><em>$1</em></strong>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/__([^_]+)__/g, '<strong>$1</strong>')
+    .replace(/(^|[\s(])\*([^*\s][^*]*?)\*(?=[\s).,;:!?]|$)/g, '$1<em>$2</em>')
+    .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+}
+function mdToHtml(md) {
+  const L = String(md || '').replace(/\r\n?/g, '\n').split('\n');
+  const out = []; let i = 0;
+  const esFila = l => /^\s*\|.*\|\s*$/.test(l);
+  const esSep = l => /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/.test(l);
+  const celdas = l => l.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
+  const itemRe = /^(\s*)([-*+•]|\d+[.)])\s+(.*)$/;
+  while (i < L.length) {
+    const l = L[i];
+    if (!l.trim()) { i++; continue; }
+    if (esFila(l) && i + 1 < L.length && esSep(L[i + 1])) {
+      const cab = celdas(l); i += 2; const filas = [];
+      while (i < L.length && esFila(L[i])) filas.push(celdas(L[i++]));
+      out.push('<div class="md-scroll"><table class="md-tabla"><thead><tr>' + cab.map(c => '<th>' + mdInline(c) + '</th>').join('') + '</tr></thead><tbody>' +
+        filas.map(f => '<tr>' + f.map(c => '<td>' + mdInline(c) + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>');
+      continue;
+    }
+    let m = l.match(/^\s*(#{1,6})\s+(.*?)\s*#*\s*$/);
+    if (m) { const n = Math.min(m[1].length + 1, 5); out.push(`<h${n}>${mdInline(m[2])}</h${n}>`); i++; continue; }
+    if (/^\s*([-*_])(\s*\1){2,}\s*$/.test(l)) { out.push('<hr>'); i++; continue; }
+    if (/^\s*>/.test(l)) {
+      const q = []; while (i < L.length && /^\s*>/.test(L[i])) q.push(L[i++].replace(/^\s*>\s?/, ''));
+      out.push('<blockquote>' + mdToHtml(q.join('\n')) + '</blockquote>'); continue;
+    }
+    if (itemRe.test(l)) {
+      const pila = []; let html = '';
+      while (i < L.length && (itemRe.test(L[i]) || (L[i].trim() && /^\s{2,}/.test(L[i]) && pila.length))) {
+        const mm = L[i].match(itemRe);
+        if (!mm) { html += ' ' + mdInline(L[i].trim()); i++; continue; }
+        const nivel = Math.floor(mm[1].replace(/\t/g, '  ').length / 2), tipo = /\d/.test(mm[2]) ? 'ol' : 'ul';
+        while (pila.length > nivel + 1 || (pila.length === nivel + 1 && pila[pila.length - 1] !== tipo)) html += '</li></' + pila.pop() + '>';
+        if (pila.length === nivel + 1) html += '</li><li>';
+        else while (pila.length < nivel + 1) { pila.push(tipo); html += '<' + tipo + '><li>'; }
+        html += mdInline(mm[3]); i++;
+      }
+      while (pila.length) html += '</li></' + pila.pop() + '>';
+      out.push(html); continue;
+    }
+    const p = []; while (i < L.length && L[i].trim() && !itemRe.test(L[i]) && !/^\s*#{1,6}\s/.test(L[i]) && !(esFila(L[i]) && esSep(L[i + 1] || ''))) p.push(mdInline(L[i++].trim()));
+    out.push('<p>' + p.join('<br>') + '</p>');
+  }
+  return out.join('\n');
+}
+function mdToText(md) {
+  return String(md || '').replace(/\r\n?/g, '\n').split('\n')
+    .filter(l => !/^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/.test(l) && !/^\s*([-*_])(\s*\1){2,}\s*$/.test(l))
+    .map(l => /^\s*\|.*\|\s*$/.test(l) ? l.trim().replace(/^\||\|$/g, '').split('|').map(c => c.trim()).join(' · ') : l)
+    .join('\n')
+    .replace(/^\s*#{1,6}\s+(.*)$/gm, '\n$1\n').replace(/^(\s*)[-*+]\s+/gm, '$1• ').replace(/^\s*>\s?/gm, '')
+    .replace(/\*\*\*([^*]+)\*\*\*/g, '$1').replace(/\*\*([^*]+)\*\*/g, '$1').replace(/__([^_]+)__/g, '$1')
+    .replace(/(^|[\s(])\*([^*\s][^*]*?)\*(?=[\s).,;:!?]|$)/g, '$1$2').replace(/`([^`]+)`/g, '$1')
+    .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '$1 ($2)').replace(/\n{3,}/g, '\n\n').trim();
+}
+// Si se pega texto con formato (seleccionado en Claude), se convierte a Markdown para conservar la estructura.
+function htmlToMd(html) {
+  const d = new DOMParser().parseFromString(html, 'text/html');
+  const txt = n => [...n.childNodes].map(conv).join('');
+  function conv(n) {
+    if (n.nodeType === 3) return n.textContent.replace(/\s+/g, ' ');
+    if (n.nodeType !== 1) return '';
+    const t = n.tagName.toLowerCase(), c = () => txt(n).trim();
+    if (/^h[1-6]$/.test(t)) return '\n\n' + '#'.repeat(+t[1]) + ' ' + c() + '\n\n';
+    if (t === 'strong' || t === 'b') { const v = c(); return v ? '**' + v + '**' : ''; }
+    if (t === 'em' || t === 'i') { const v = c(); return v ? '*' + v + '*' : ''; }
+    if (t === 'br') return '\n';
+    if (t === 'p' || t === 'div') return '\n\n' + c() + '\n\n';
+    if (t === 'hr') return '\n\n---\n\n';
+    if (t === 'ul' || t === 'ol') {
+      const prof = (() => { let k = 0, p = n.parentElement; while (p) { if (/^(ul|ol)$/i.test(p.tagName)) k++; p = p.parentElement; } return k; })();
+      return '\n' + [...n.children].filter(x => x.tagName === 'LI').map((li, j) => '  '.repeat(prof) + (t === 'ol' ? (j + 1) + '. ' : '- ') + txt(li).trim().replace(/\n{2,}/g, '\n')).join('\n') + '\n\n';
+    }
+    if (t === 'table') {
+      const filas = [...n.querySelectorAll('tr')].map(tr => [...tr.children].map(td => txt(td).trim().replace(/\|/g, '/').replace(/\n+/g, ' ')));
+      if (!filas.length) return '';
+      return '\n\n| ' + filas[0].join(' | ') + ' |\n|' + filas[0].map(() => ' --- ').join('|') + '|\n' + filas.slice(1).map(f => '| ' + f.join(' | ') + ' |').join('\n') + '\n\n';
+    }
+    if (t === 'script' || t === 'style') return '';
+    return txt(n);
+  }
+  return txt(d.body).replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+function pegarConFormato(ta, alCambiar) {
+  ta.addEventListener('paste', e => {
+    const html = e.clipboardData && e.clipboardData.getData('text/html');
+    const plano = e.clipboardData && e.clipboardData.getData('text/plain');
+    if (!html || /^\s*(#|\||- |\* |\d+\.)/m.test(plano || '')) return; // ya viene en Markdown
+    e.preventDefault();
+    const md = htmlToMd(html);
+    const s = ta.selectionStart, f = ta.selectionEnd;
+    ta.value = ta.value.slice(0, s) + md + ta.value.slice(f);
+    ta.selectionStart = ta.selectionEnd = s + md.length;
+    alCambiar && alCambiar();
+  });
+}
+function copiarRico(md) {
+  const html = mdToHtml(md), texto = mdToText(md);
+  if (navigator.clipboard && window.ClipboardItem && window.isSecureContext) {
+    return navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }), 'text/plain': new Blob([texto], { type: 'text/plain' }) })])
+      .then(() => toast('Copiado con formato'), () => copiarTexto(texto));
+  }
+  copiarTexto(texto);
+}
+
 // ---------- IA (prompts automáticos → Claude) ----------
 const CONTEXTO_IA = [
   'Actúa como asistente técnico del Delegado de Protección de Menores en el Deporte de un ayuntamiento andaluz.',
@@ -620,7 +779,10 @@ function mostrarPrompt(caja, prompt, meta) {
   caja.append(acc, nota, pre);
   if (!meta) return;
   const zona = document.createElement('div'); zona.className = 'guardar-res form';
-  zona.innerHTML = '<label>Pega aquí la respuesta de Claude<textarea rows="8" class="doc-texto" placeholder="Copia la respuesta en Claude y pégala aquí"></textarea></label>';
+  zona.innerHTML = '<label>Pega aquí la respuesta de Claude<textarea rows="8" class="doc-texto" placeholder="En Claude, pulsa el botón Copiar de la respuesta y pégala aquí"></textarea></label><div class="vista-previa hidden"><b class="vp-tit">Vista previa</b><div class="md"></div></div>';
+  const taZ = zona.querySelector('textarea'), vp = zona.querySelector('.vista-previa');
+  const refrescar = () => { vp.classList.toggle('hidden', !taZ.value.trim()); vp.querySelector('.md').innerHTML = mdToHtml(taZ.value); };
+  taZ.addEventListener('input', refrescar); pegarConFormato(taZ, refrescar);
   const g = document.createElement('button'); g.type = 'button'; g.className = 'btn'; g.textContent = 'Guardar en Documentos';
   g.onclick = async () => {
     const resultado = zona.querySelector('textarea').value.trim();
@@ -632,14 +794,14 @@ function mostrarPrompt(caja, prompt, meta) {
   zona.append(g); caja.append(zona);
 }
 function copiarTexto(t) {
-  const fin = () => toast('Prompt copiado');
+  const fin = () => toast('Copiado');
   if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t).then(fin, () => copiarManual(t));
   copiarManual(t);
 }
 function copiarManual(t) {
   const ta = document.createElement('textarea'); ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0';
   document.body.appendChild(ta); ta.select();
-  try { document.execCommand('copy'); toast('Prompt copiado'); } catch { toast('Selecciona el texto y cópialo'); }
+  try { document.execCommand('copy'); toast('Copiado'); } catch { toast('Selecciona el texto y cópialo'); }
   ta.remove();
 }
 $('#form-contenido').onsubmit = ev => {
@@ -678,6 +840,7 @@ function modal(titulo, campos, datos, onSave, obligatorio) {
   const dlg = $('#modal');
   dlg.onclose = async () => { if (dlg.returnValue === 'ok') await onSave(Object.fromEntries(new FormData(f))); };
   dlg.oncancel = e => { if (obligatorio) e.preventDefault(); };
+  dlg.returnValue = '';
   dlg.showModal();
 }
 
@@ -733,7 +896,7 @@ document.querySelectorAll('.tamano button').forEach(b => b.onclick = () => aplic
 (() => { let f = '1'; try { f = localStorage.getItem('es_fs') || '1'; } catch {} aplicarTamano(f); })();
 
 // ---------- DOCUMENTOS ----------
-const TIPOS_DOC = { asistente: 'Asistente IA', contenido: 'Redes sociales' };
+const TIPOS_DOC = { asistente: 'Asistente IA', contenido: 'Redes sociales', riesgos: 'Análisis de riesgos' };
 const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 async function loadDocumentos(forzar) {
   if (!state.docs || forzar) state.docs = await run(() => API.call('listarDocumentos'));
@@ -743,7 +906,7 @@ function pintarDocumentos() {
   const q = norm($('#doc-q').value).split(/\s+/).filter(Boolean);
   const tipo = $('#doc-tipo').value;
   const lista = (state.docs || []).filter(d => (!tipo || d.tipo === tipo) &&
-    q.every(w => norm([d.asunto, d.resultado, d.publico, d.formato].join(' ')).includes(w)));
+    q.every(w => norm([d.asunto, mdToText(d.resultado), d.publico, d.formato].join(' ')).includes(w)));
   const n = lista.length, pl = n === 1 ? '' : 's';
   $('#doc-count').textContent = n + ' documento' + pl + (q.length || tipo ? ' encontrado' + pl : '');
   const resaltar = t => { let s = esc(t); q.forEach(w => { if (w.length > 1) s = s.replace(new RegExp('(' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '<mark>$1</mark>'); }); return s; };
@@ -751,7 +914,7 @@ function pintarDocumentos() {
     <div class="doc-item" tabindex="0" role="button" data-doc="${esc(d.id)}">
       <h3>${resaltar(d.asunto)}</h3>
       <div class="meta"><span class="chip">${esc(TIPOS_DOC[d.tipo] || d.tipo)}</span>${esc(d.actualizado || d.creado)} · ${esc(d.autor)}</div>
-      <p>${resaltar(String(d.resultado || '').slice(0, 300))}</p>
+      <p>${resaltar(mdToText(d.resultado).slice(0, 300))}</p>
     </div>`).join('') : '<p class="empty">No hay documentos con esos criterios.</p>';
   $$('[data-doc]').forEach(el => {
     const abrir = () => abrirDoc(el.dataset.doc);
@@ -770,8 +933,18 @@ function abrirDoc(id) {
   $('#doc-meta').innerHTML = `<span class="chip">${esc(TIPOS_DOC[d.tipo] || d.tipo)}</span>Creado ${esc(d.creado)} por ${esc(d.autor)}${d.actualizado ? ' · Modificado ' + esc(d.actualizado) : ''}`;
   $('#doc-prompt').textContent = d.prompt || '';
   show('doc');
-  f.resultado.style.height = 'auto'; f.resultado.style.height = Math.max(320, f.resultado.scrollHeight + 4) + 'px';
+  modoDoc(d.resultado ? 'vista' : 'editar');
 }
+function modoDoc(m) {
+  const f = $('#form-doc');
+  $$('.modo-b').forEach(b => b.classList.toggle('activo', b.dataset.modo === m));
+  $('#doc-vista').innerHTML = mdToHtml(f.resultado.value) || '<p class="empty">Sin contenido.</p>';
+  $('#doc-vista').classList.toggle('hidden', m !== 'vista');
+  $('#doc-editar').classList.toggle('hidden', m !== 'editar');
+  if (m === 'editar') { f.resultado.style.height = 'auto'; f.resultado.style.height = Math.max(320, f.resultado.scrollHeight + 4) + 'px'; }
+}
+$$('.modo-b').forEach(b => b.onclick = () => modoDoc(b.dataset.modo));
+pegarConFormato($('#form-doc').resultado);
 $('#doc-volver').onclick = () => show('documentos');
 $('#form-doc').onsubmit = async ev => {
   ev.preventDefault();
@@ -779,10 +952,10 @@ $('#form-doc').onsubmit = async ev => {
   const r = await run(() => API.call('guardarDocumento', { id: state.doc.id, asunto: f.asunto.value, tipo: state.doc.tipo, formato: state.doc.formato, publico: state.doc.publico, resultado: f.resultado.value }));
   Object.assign(state.doc, { asunto: f.asunto.value, resultado: f.resultado.value });
   $('#doc-titulo').textContent = f.asunto.value;
-  state.docs = null; toast('Documento guardado');
+  state.docs = null; toast('Documento guardado'); modoDoc('vista');
 };
 $('#form-doc').resultado.oninput = e => { e.target.style.height = 'auto'; e.target.style.height = Math.max(320, e.target.scrollHeight + 4) + 'px'; };
-$('#doc-copiar').onclick = () => copiarTexto($('#form-doc').resultado.value);
+$('#doc-copiar').onclick = () => copiarRico($('#form-doc').resultado.value);
 $('#doc-borrar').onclick = async () => {
   if (!confirm('¿Eliminar definitivamente este documento?')) return;
   await run(() => API.call('eliminarDocumento', { id: state.doc.id }));
@@ -798,19 +971,22 @@ function descargar(contenido, tipo, nombre) {
 }
 function htmlDocumento(paraWord) {
   const f = $('#form-doc'); const org = (state.cfg && state.cfg.organismo) || '';
-  const cuerpo = esc(f.resultado.value).split(/\n{2,}/).map(p => '<p>' + p.replace(/\n/g, '<br>') + '</p>').join('');
+  const cuerpo = mdToHtml(f.resultado.value);
   return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${esc(f.asunto.value)}</title>
 <style>body{font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#1d2a30;margin:${paraWord ? '0' : '2cm'};line-height:1.5}
 .cab{display:flex;align-items:center;gap:12px;border-bottom:3px solid #0d818f;padding-bottom:8px;margin-bottom:18px}
 .cab img{width:56px;height:56px}.cab b{color:#0b3057;font-size:14pt;display:block}.cab small{color:#4f5d65}
 h1{color:#0b3057;font-size:16pt;margin:0 0 4px}.fecha{color:#4f5d65;font-size:9pt;margin-bottom:16px}
-.pie{margin-top:28px;border-top:1px solid #cfd8dc;padding-top:6px;color:#4f5d65;font-size:8pt}</style></head><body>
+.pie{margin-top:28px;border-top:1px solid #cfd8dc;padding-top:6px;color:#4f5d65;font-size:8pt}
+h2,h3,h4,h5{color:#0b3057;margin:14px 0 6px}h2{font-size:14pt}h3{font-size:12pt}h4,h5{font-size:11pt;color:#0d818f}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:10pt}th{background:#0b3057;color:#fff;text-align:left}th,td{border:1px solid #9fb3bb;padding:5px 7px;vertical-align:top}tr:nth-child(even) td{background:#f1f6f7}
+ul,ol{margin:6px 0 10px;padding-left:22px}li{margin:2px 0}blockquote{border-left:3px solid #0d818f;margin:8px 0;padding:2px 12px;color:#4f5d65}hr{border:0;border-top:1px solid #cfd8dc;margin:14px 0}p{margin:0 0 8px}</style></head><body>
 <div class="cab"><img src="${LOGO}" alt=""><div><b>EntornoSeguro</b><small>${esc(org)}</small></div></div>
 <h1>${esc(f.asunto.value)}</h1><div class="fecha">${new Date().toLocaleDateString('es-ES')}</div>${cuerpo}
 <div class="pie">EntornoSeguro · ${esc(org)} · Borrador generado con apoyo de IA, sujeto a validación profesional.</div></body></html>`;
 }
 $('#doc-word').onclick = () => descargar('﻿' + htmlDocumento(true), 'application/msword', nombreArchivo('doc'));
-$('#doc-txt').onclick = () => descargar('﻿' + $('#form-doc').asunto.value + '\n\n' + $('#form-doc').resultado.value, 'text/plain;charset=utf-8', nombreArchivo('txt'));
+$('#doc-txt').onclick = () => descargar('﻿' + $('#form-doc').asunto.value + '\n\n' + mdToText($('#form-doc').resultado.value), 'text/plain;charset=utf-8', nombreArchivo('txt'));
 $('#doc-pdf').onclick = () => {
   const w = window.open('', '_blank');
   if (!w) { toast('Permite las ventanas emergentes para imprimir', true); return; }
@@ -819,6 +995,115 @@ $('#doc-pdf').onclick = () => {
   const imprimir = () => { if (hecho) return; hecho = true; try { w.focus(); w.print(); } catch {} };
   w.onload = imprimir; setTimeout(imprimir, 800);
 };
+
+// ---------- ANÁLISIS DE RIESGOS ----------
+const CATALOGO_RIESGOS = {
+  'Vestuarios': [['Presencia de adultos no autorizados en vestuarios', 'Acceso restringido; supervisión por dos adultos del mismo sexo desde la puerta; nunca un adulto a solas con un menor.'],
+                 ['Coincidencia de menores con adultos ajenos a la actividad', 'Franjas horarias separadas o vestuarios diferenciados para menores.']],
+  'Duchas': [['Falta de intimidad en duchas compartidas', 'Duchas individuales o turnos; prohibición de móviles y cámaras en la zona.']],
+  'Entrenamientos': [['Sesiones con un único adulto y un solo menor', 'Regla de dos adultos o espacio abierto y visible; informar a la familia del horario.'],
+                     ['Contacto físico en correcciones técnicas', 'Pauta escrita de contacto físico necesario, explicado y consentido; formación del cuerpo técnico.']],
+  'Competiciones': [['Menores sin supervisión en instalaciones ajenas', 'Responsable identificado por grupo; punto de encuentro y control de asistencia.']],
+  'Desplazamientos': [['Traslado de un menor a solas en vehículo particular', 'Prohibir traslados individuales salvo autorización escrita de la familia; mínimo dos adultos o un tercer menor.'],
+                      ['Falta de autorizaciones familiares', 'Autorización firmada por desplazamiento con datos de contacto de emergencia.']],
+  'Viajes': [['Organización del viaje sin plan de protección', 'Plan escrito: responsables, ratios, teléfonos, normas de convivencia y protocolo ante incidentes.']],
+  'Concentraciones': [['Horarios libres sin supervisión', 'Cuadrante de responsables por franja y normas conocidas por los menores.']],
+  'Actividades fuera de instalaciones': [['Entorno desconocido y control de accesos limitado', 'Reconocimiento previo del lugar, ratios reforzadas y listado actualizado de participantes.']],
+  'Contacto individual entrenador-deportista': [['Reuniones a solas en espacios cerrados', 'Reuniones en espacios visibles o con puerta abierta; informar a otro responsable.']],
+  'Comunicación digital': [['Mensajes privados entre adultos y menores', 'Canales grupales oficiales con presencia de otro adulto o de la familia; prohibido el mensaje privado.']],
+  'Redes sociales': [['Publicación de contenidos con menores identificables', 'Autorización de imagen vigente; evitar nombres, geolocalización y uniformes identificables.']],
+  'Uso de imágenes': [['Grabaciones por terceros en entrenamientos o vestuarios', 'Normas de captación de imágenes visibles; prohibición absoluta en vestuarios y duchas.']],
+  'Entornos digitales': [['Exposición a contactos desconocidos en plataformas del club', 'Configuración privada de grupos y cuentas; administración por dos responsables.']],
+  'Público': [['Acceso libre de público a zonas de menores', 'Delimitar zonas de público y de deportistas; control de accesos.']],
+  'Personal externo': [['Personal sin certificado negativo de delitos sexuales', 'Exigir el certificado del Registro Central antes de iniciar la colaboración (LOPIVI art. 57).']],
+  'Voluntariado': [['Voluntarios sin formación ni certificado', 'Formación básica en protección, certificado negativo y aceptación del código de conducta.']],
+  'Actividades con pernocta': [['Distribución de habitaciones', 'Habitaciones separadas por sexo y edad; ningún adulto duerme en la habitación de menores; rondas por parejas.'],
+                               ['Normas nocturnas poco claras', 'Normas de convivencia escritas, horario de silencio y responsable de guardia identificado.']]
+};
+const NIVELES = { 1: 'Baja', 2: 'Media', 3: 'Alta' };
+const ESTADOS_R = [['pendiente', 'Pendiente'], ['en_curso', 'En curso'], ['implantada', 'Implantada']];
+
+async function loadRiesgos() {
+  const sel = $('#riesgos-entidad');
+  if (!sel.options.length) {
+    if (!state.entidades.length) state.entidades = await run(() => API.call('listarEntidades'));
+    sel.innerHTML = state.entidades.filter(e => e.trabaja_menores === 'SI').map(e => `<option value="${esc(e.id)}">${esc(e.nombre)}</option>`).join('');
+    sel.onchange = loadRiesgos;
+  }
+  if (!sel.value) { $('#tabla-riesgos').innerHTML = '<tr><td class="empty">Registra primero una entidad que trabaje con menores.</td></tr>'; $('#riesgos-resumen').innerHTML = ''; return; }
+  const rows = await run(() => API.call('listarRiesgos', { entidad_id: sel.value }));
+  state.riesgos = rows;
+  const orden = { alto: 0, medio: 1, bajo: 2 };
+  rows.sort((a, b) => orden[a.nivel] - orden[b.nivel]);
+  const cuenta = n => rows.filter(r => r.nivel === n).length;
+  $('#riesgos-resumen').innerHTML = [['Riesgos', rows.length], ['Nivel alto', cuenta('alto')], ['Nivel medio', cuenta('medio')], ['Medidas pendientes', rows.filter(r => r.estado !== 'implantada').length]]
+    .map(([l, v]) => `<div class="kpi"><span>${l}</span><strong>${v}</strong></div>`).join('');
+  const estTxt = v => (ESTADOS_R.find(x => x[0] === v) || ['', 'Pendiente'])[1];
+  $('#tabla-riesgos').innerHTML = `<thead><tr><th>Riesgo</th><th>Nivel</th><th>Medidas preventivas</th><th>Responsable</th><th>Estado</th><th>Revisión</th><th></th></tr></thead><tbody>` +
+    (rows.map(r => `<tr><td><b>${esc(r.ambito)}</b><br>${esc(r.descripcion)}</td>
+      <td><span class="nivel ${esc(r.nivel)}">${esc(r.nivel)}</span><br><small>P ${esc(NIVELES[r.probabilidad])} · I ${esc(NIVELES[r.impacto])}</small></td>
+      <td>${esc(r.medidas) || '—'}</td><td>${esc(r.responsable) || '—'}</td><td>${esc(estTxt(r.estado))}</td>
+      <td class="${r.fecha_revision && new Date(r.fecha_revision) < new Date() ? 'bad-t' : ''}">${esc(r.fecha_revision) || '—'}</td>
+      <td>${can('escribir') ? `<button class="link" data-riesgo="${esc(r.id)}">Editar</button>` : ''}</td></tr>`).join('')
+      || '<tr><td colspan="7" class="empty">Sin riesgos registrados. Pulsa "+ Nuevo riesgo" o "Proponer con IA".</td></tr>') + '</tbody>';
+  $$('[data-riesgo]').forEach(b => b.onclick = () => formRiesgo(rows.find(r => r.id === b.dataset.riesgo)));
+}
+$('#nuevo-riesgo') && ($('#nuevo-riesgo').onclick = () => formRiesgo({ probabilidad: 2, impacto: 2, estado: 'pendiente' }));
+
+function formRiesgo(r) {
+  const entidad_id = $('#riesgos-entidad').value;
+  if (!entidad_id) { toast('Selecciona una entidad', true); return; }
+  const nuevo = !r.id;
+  modal(nuevo ? 'Nuevo riesgo' : 'Editar riesgo', [
+    ['ambito', 'Ámbito', Object.keys(CATALOGO_RIESGOS)],
+    ['descripcion', 'Situación o factor de riesgo', 'textarea', true],
+    ['probabilidad', 'Probabilidad', [[1, 'Baja'], [2, 'Media'], [3, 'Alta']]],
+    ['impacto', 'Impacto', [[1, 'Bajo'], [2, 'Medio'], [3, 'Alto']]],
+    ['medidas', 'Medidas preventivas', 'textarea'],
+    ['responsable', 'Responsable'], ['estado', 'Estado de las medidas', ESTADOS_R],
+    ['fecha_implantacion', 'Fecha de implantación', 'date'], ['fecha_revision', 'Próxima revisión', 'date']
+  ], r, async d => {
+    Object.assign(d, { id: r.id, entidad_id });
+    await run(() => API.call('guardarRiesgo', d)); toast('Riesgo guardado'); loadRiesgos();
+  });
+  const f = $('#modal-form');
+  const caja = document.createElement('div'); caja.className = 'sugerencias';
+  const pintar = () => {
+    const lista = CATALOGO_RIESGOS[f.ambito.value] || [];
+    caja.innerHTML = '<b>Sugerencias para este ámbito</b> <small>(pulsa para rellenar)</small>';
+    lista.forEach(([fac, med]) => {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = fac;
+      b.onclick = () => { f.descripcion.value = fac; if (!f.medidas.value) f.medidas.value = med; };
+      caja.appendChild(b);
+    });
+  };
+  f.ambito.onchange = pintar; pintar();
+  f.querySelector('.fields').insertBefore(caja, f.descripcion.closest('label'));
+  if (!nuevo) {
+    const del = document.createElement('button'); del.type = 'button'; del.className = 'btn ghost peligro'; del.textContent = 'Eliminar';
+    del.onclick = async () => {
+      if (!confirm('¿Eliminar este riesgo?')) return;
+      $('#modal').close('cancel'); await run(() => API.call('eliminarRiesgo', { id: r.id })); toast('Riesgo eliminado'); loadRiesgos();
+    };
+    f.querySelector('.actions').prepend(del);
+  }
+}
+
+$('#riesgos-ia') && ($('#riesgos-ia').onclick = () => {
+  const sel = $('#riesgos-entidad'); if (!sel.value) return;
+  const e = state.entidades.find(x => x.id === sel.value) || {};
+  const ya = (state.riesgos || []).map(r => '- ' + r.ambito + ': ' + r.descripcion).join('\n') || '- Ninguno todavía';
+  const prompt = [CONTEXTO_IA, '',
+    'TAREA: propón un análisis de riesgos de protección de menores para una entidad deportiva, conforme al apartado de análisis de riesgos del Protocolo Marco andaluz.',
+    'Tipo de entidad: ' + (e.tipo || 'club deportivo'),
+    'Modalidad: ' + (e.modalidad || 'no indicada'),
+    'Número aproximado de menores: ' + (e.n_menores || 'no indicado'),
+    'Ámbitos a valorar: ' + Object.keys(CATALOGO_RIESGOS).join(', ') + '.',
+    'Riesgos ya registrados:', ya, '',
+    'Entrega una tabla con columnas: Ámbito | Situación de riesgo | Probabilidad (Baja/Media/Alta) | Impacto (Bajo/Medio/Alto) | Medidas preventivas | Responsable sugerido (por cargo, nunca por nombre) | Periodicidad de revisión.',
+    'Prioriza los riesgos propios de la modalidad. No incluyas datos personales.'].join('\n');
+  mostrarPrompt($('#riesgos-ia-out'), prompt, { asunto: 'Análisis de riesgos · ' + (e.nombre || ''), tipo: 'riesgos' });
+});
 </script>
 </body>
 </html>
