@@ -162,6 +162,19 @@ dialog { max-height: calc(100dvh - 32px); overflow-y: auto; }
 .ia-acciones .btn { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
 .out.prompt { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 12px; max-height: 320px; overflow: auto; font-size: .85rem; min-height: 0; }
 @media (max-width: 860px) { .ia-acciones .btn, .form > .btn { flex: 1 1 100%; width: 100%; } }
+.buscador { display: grid; grid-template-columns: 2fr 1fr; gap: 0 12px; }
+.doc-item { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; cursor: pointer; }
+.doc-item:hover { border-color: var(--brand-2); }
+.doc-item h3 { margin: 0 0 4px; color: var(--brand); }
+.doc-item .meta { font-size: .8rem; color: var(--muted); margin-bottom: 6px; }
+.doc-item p { margin: 0; color: var(--ink); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.chip { display: inline-block; padding: 1px 8px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); font-size: .75rem; font-weight: 600; margin-right: 6px; }
+.doc-texto { min-height: 320px; line-height: 1.6; }
+.btn.peligro { color: var(--bad); border-color: var(--bad); }
+.doc-prompt summary { cursor: pointer; color: var(--muted); font-weight: 600; margin: 8px 0; }
+.guardar-res { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 12px; }
+mark { background: #fde68a; color: inherit; padding: 0 1px; border-radius: 2px; }
+@media (max-width: 860px) { .buscador { grid-template-columns: 1fr; } .ia-acciones .btn { flex: 1 1 calc(50% - 8px); } .ia-acciones .btn[type=submit] { flex-basis: 100%; } }
 /* ---- Accesibilidad ---- */
 html { font-size: calc(var(--fs, 1) * 100%); -webkit-text-size-adjust: 100%; }
 body { line-height: 1.55; }
@@ -219,6 +232,7 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
         <button data-view="alertas">Alertas <span id="badge-alertas" class="badge"></span></button>
         <button data-view="contenidos" data-perm="ia"><span class="l-long">Contenidos RRSS</span><span class="l-short">Redes sociales</span></button>
         <button data-view="asistente" data-perm="ia">Asistente IA</button>
+        <button data-view="documentos" data-perm="leer">Documentos</button>
         <button data-view="usuarios" data-perm="admin">Usuarios</button>
       </nav>
       <div class="user"><div class="tamano" role="group" aria-label="Tamaño del texto"><span>Texto</span><button type="button" data-fs="1" aria-label="Texto normal">A</button><button type="button" data-fs="1.15" aria-label="Texto grande">A+</button><button type="button" data-fs="1.3" aria-label="Texto muy grande">A++</button></div><span id="user-name"></span><small id="user-rol"></small><button id="cambiar-pass" class="link">Cambiar contraseña</button><button id="logout" class="link">Salir</button></div>
@@ -266,6 +280,7 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
         <header><h2>Generador de contenidos</h2></header>
         <div class="grid2">
           <form id="form-contenido" class="card form">
+            <label>Asunto<input name="asunto" required maxlength="200" placeholder="Ej.: Campaña delegado de protección · octubre"></label>
             <label>Tema<input name="tema" required placeholder="Ej.: qué hace el Delegado/a de Protección de tu club"></label>
             <label>Público<select name="publico">
               <option>familias</option><option>deportistas de 12 a 17 años</option><option>deportistas de 6 a 11 años</option>
@@ -287,10 +302,40 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
         <header><h2>Asistente del Delegado de Protección</h2></header>
         <p class="nota">No introduzcas nombres, datos ni detalles que permitan identificar a menores o casos. Las respuestas requieren validación profesional.</p>
         <form id="form-asistente" class="card form">
-          <textarea name="pregunta" rows="4" required placeholder="Ej.: ¿Qué debe contener el análisis de riesgos de un club con pernoctas en torneos?"></textarea>
+          <label>Asunto<input name="asunto" required maxlength="200" placeholder="Ej.: Análisis de riesgos torneo con pernocta"></label>
+          <label>Consulta<textarea name="pregunta" rows="4" required placeholder="Ej.: ¿Qué debe contener el análisis de riesgos de un club con pernoctas en torneos?"></textarea></label>
           <button class="btn">Preparar prompt</button>
         </form>
         <div class="card"><h3>Prompt preparado</h3><div id="out-asistente"><p class="empty">Escribe tu consulta y pulsa "Preparar prompt".</p></div></div>
+      </section>
+      <!-- DOCUMENTOS -->
+      <section id="view-documentos" class="view hidden">
+        <header><h2>Documentos</h2></header>
+        <div class="card form buscador">
+          <label>Buscar<input id="doc-q" type="search" placeholder="Palabras del asunto o del contenido"></label>
+          <label>Tipo<select id="doc-tipo"><option value="">Todos</option><option value="asistente">Asistente IA</option><option value="contenido">Redes sociales</option></select></label>
+        </div>
+        <p class="nota" id="doc-count"></p>
+        <div id="doc-lista"></div>
+      </section>
+
+      <!-- EDITOR DE DOCUMENTO -->
+      <section id="view-doc" class="view hidden">
+        <header><h2 id="doc-titulo">Documento</h2><button class="btn ghost" id="doc-volver" type="button">← Volver a Documentos</button></header>
+        <form id="form-doc" class="card form">
+          <label>Asunto<input name="asunto" required maxlength="200"></label>
+          <p class="nota" id="doc-meta"></p>
+          <label>Contenido<textarea name="resultado" rows="16" class="doc-texto"></textarea></label>
+          <div class="ia-acciones">
+            <button class="btn" type="submit">Guardar</button>
+            <button class="btn ghost" type="button" id="doc-copiar">Copiar</button>
+            <button class="btn ghost" type="button" id="doc-word">Word</button>
+            <button class="btn ghost" type="button" id="doc-pdf">PDF</button>
+            <button class="btn ghost" type="button" id="doc-txt">Texto</button>
+            <button class="btn ghost peligro" type="button" id="doc-borrar">Eliminar</button>
+          </div>
+          <details class="doc-prompt"><summary>Ver prompt original</summary><pre class="out prompt" id="doc-prompt"></pre></details>
+        </form>
       </section>
       <!-- USUARIOS -->
       <section id="view-usuarios" class="view hidden">
@@ -416,9 +461,9 @@ function formPassword(obligatorio) {
 // ---------- NAVEGACIÓN ----------
 $$('nav button').forEach(b => b.onclick = () => show(b.dataset.view));
 function show(v) {
-  $$('nav button').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+  $$('nav button').forEach(b => b.classList.toggle('active', b.dataset.view === (v === 'doc' ? 'documentos' : v)));
   $$('.view').forEach(s => s.classList.toggle('hidden', s.id !== 'view-' + v));
-  ({ panel: loadPanel, entidades: loadEntidades, matriz: loadMatriz, formacion: loadFormacion, alertas: loadAlertas, usuarios: loadUsuarios }[v] || (() => {}))();
+  ({ panel: loadPanel, entidades: loadEntidades, matriz: loadMatriz, formacion: loadFormacion, alertas: loadAlertas, usuarios: loadUsuarios, documentos: loadDocumentos }[v] || (() => {}))();
 }
 
 // ---------- PANEL ----------
@@ -545,7 +590,8 @@ const CONTEXTO_IA = [
   'Actúa como asistente técnico del Delegado de Protección de Menores en el Deporte de un ayuntamiento andaluz.',
   'Marco normativo: LO 8/2021 (LOPIVI, Capítulo IX deporte y ocio), Ley 4/2021 de Infancia y Adolescencia de Andalucía, Ley 5/2016 del Deporte de Andalucía, Decreto 41/2022 y Protocolo Marco de protección de menores en el deporte (Orden de 18 de noviembre de 2024).',
   'Reglas: no emitas conclusiones jurídicas categóricas; no atribuyas responsabilidad ni califiques hechos como violencia; cita la norma o apartado que fundamenta cada afirmación cuando sea posible; indica qué debe validar una persona responsable.',
-  'Estilo: español de España, técnico, conciso.'
+  'Estilo: español de España, técnico, conciso.',
+  'FORMATO DE RESPUESTA: entrega únicamente el resultado final, listo para copiar y pegar, sin introducciones, comentarios ni preguntas al final.'
 ].join('\n');
 const FORMATOS_IA = {
   carrusel: 'Carrusel de Instagram de 6-8 diapositivas. Para cada una: título (máx. 8 palabras) y texto (máx. 25 palabras). Después, pie de publicación y 8 hashtags.',
@@ -560,7 +606,7 @@ function sanearIA(t) {
     .replace(/\b\d{8}[A-Za-z]\b/g, '[DNI]').replace(/\b[XYZxyz]\d{7}[A-Za-z]\b/g, '[NIE]')
     .replace(/\b[6789]\d{8}\b/g, '[TEL]').replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, '[EMAIL]');
 }
-function mostrarPrompt(caja, prompt) {
+function mostrarPrompt(caja, prompt, meta) {
   caja.innerHTML = '';
   const pre = document.createElement('pre'); pre.className = 'out prompt'; pre.textContent = prompt;
   const acc = document.createElement('div'); acc.className = 'ia-acciones';
@@ -572,6 +618,18 @@ function mostrarPrompt(caja, prompt) {
   const nota = document.createElement('p'); nota.className = 'nota';
   nota.textContent = 'Se abrirá Claude con tu cuenta y el prompt preparado. Si aparece vacío, pulsa "Copiar prompt" y pégalo.';
   caja.append(acc, nota, pre);
+  if (!meta) return;
+  const zona = document.createElement('div'); zona.className = 'guardar-res form';
+  zona.innerHTML = '<label>Pega aquí la respuesta de Claude<textarea rows="8" class="doc-texto" placeholder="Copia la respuesta en Claude y pégala aquí"></textarea></label>';
+  const g = document.createElement('button'); g.type = 'button'; g.className = 'btn'; g.textContent = 'Guardar en Documentos';
+  g.onclick = async () => {
+    const resultado = zona.querySelector('textarea').value.trim();
+    if (!resultado) { toast('Pega primero la respuesta de Claude', true); return; }
+    const r = await run(() => API.call('guardarDocumento', Object.assign({}, meta, { prompt, resultado, id: meta.id })));
+    meta.id = r.id; state.docs = null;
+    toast('Guardado en Documentos');
+  };
+  zona.append(g); caja.append(zona);
 }
 function copiarTexto(t) {
   const fin = () => toast('Prompt copiado');
@@ -595,7 +653,7 @@ $('#form-contenido').onsubmit = ev => {
     'Público: ' + sanearIA(d.publico),
     'Tono: positivo y preventivo, sin lenguaje alarmista, lenguaje inclusivo, sin imágenes de menores identificables.',
     'Formato: ' + (FORMATOS_IA[d.formato] || FORMATOS_IA.carrusel)].join('\n');
-  mostrarPrompt($('#out-contenido'), prompt);
+  mostrarPrompt($('#out-contenido'), prompt, { asunto: d.asunto, tipo: 'contenido', formato: d.formato, publico: d.publico });
 };
 $('#form-asistente').onsubmit = ev => {
   ev.preventDefault();
@@ -603,7 +661,7 @@ $('#form-asistente').onsubmit = ev => {
   const prompt = [CONTEXTO_IA, '',
     'IMPORTANTE: la consulta no debe contener datos que identifiquen a menores ni a personas implicadas en casos.', '',
     'CONSULTA:', sanearIA(d.pregunta)].join('\n');
-  mostrarPrompt($('#out-asistente'), prompt);
+  mostrarPrompt($('#out-asistente'), prompt, { asunto: d.asunto, tipo: 'asistente' });
 };
 
 // ---------- MODAL GENÉRICO ----------
@@ -673,6 +731,94 @@ function aplicarTamano(f) {
 }
 document.querySelectorAll('.tamano button').forEach(b => b.onclick = () => aplicarTamano(b.dataset.fs));
 (() => { let f = '1'; try { f = localStorage.getItem('es_fs') || '1'; } catch {} aplicarTamano(f); })();
+
+// ---------- DOCUMENTOS ----------
+const TIPOS_DOC = { asistente: 'Asistente IA', contenido: 'Redes sociales' };
+const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+async function loadDocumentos(forzar) {
+  if (!state.docs || forzar) state.docs = await run(() => API.call('listarDocumentos'));
+  pintarDocumentos();
+}
+function pintarDocumentos() {
+  const q = norm($('#doc-q').value).split(/\s+/).filter(Boolean);
+  const tipo = $('#doc-tipo').value;
+  const lista = (state.docs || []).filter(d => (!tipo || d.tipo === tipo) &&
+    q.every(w => norm([d.asunto, d.resultado, d.publico, d.formato].join(' ')).includes(w)));
+  const n = lista.length, pl = n === 1 ? '' : 's';
+  $('#doc-count').textContent = n + ' documento' + pl + (q.length || tipo ? ' encontrado' + pl : '');
+  const resaltar = t => { let s = esc(t); q.forEach(w => { if (w.length > 1) s = s.replace(new RegExp('(' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '<mark>$1</mark>'); }); return s; };
+  $('#doc-lista').innerHTML = lista.length ? lista.map(d => `
+    <div class="doc-item" tabindex="0" role="button" data-doc="${esc(d.id)}">
+      <h3>${resaltar(d.asunto)}</h3>
+      <div class="meta"><span class="chip">${esc(TIPOS_DOC[d.tipo] || d.tipo)}</span>${esc(d.actualizado || d.creado)} · ${esc(d.autor)}</div>
+      <p>${resaltar(String(d.resultado || '').slice(0, 300))}</p>
+    </div>`).join('') : '<p class="empty">No hay documentos con esos criterios.</p>';
+  $$('[data-doc]').forEach(el => {
+    const abrir = () => abrirDoc(el.dataset.doc);
+    el.onclick = abrir; el.onkeydown = e => { if (e.key === 'Enter') abrir(); };
+  });
+}
+$('#doc-q').oninput = pintarDocumentos;
+$('#doc-tipo').onchange = pintarDocumentos;
+
+function abrirDoc(id) {
+  const d = (state.docs || []).find(x => x.id === id); if (!d) return;
+  state.doc = d;
+  const f = $('#form-doc');
+  f.asunto.value = d.asunto || ''; f.resultado.value = d.resultado || '';
+  $('#doc-titulo').textContent = d.asunto || 'Documento';
+  $('#doc-meta').innerHTML = `<span class="chip">${esc(TIPOS_DOC[d.tipo] || d.tipo)}</span>Creado ${esc(d.creado)} por ${esc(d.autor)}${d.actualizado ? ' · Modificado ' + esc(d.actualizado) : ''}`;
+  $('#doc-prompt').textContent = d.prompt || '';
+  show('doc');
+  f.resultado.style.height = 'auto'; f.resultado.style.height = Math.max(320, f.resultado.scrollHeight + 4) + 'px';
+}
+$('#doc-volver').onclick = () => show('documentos');
+$('#form-doc').onsubmit = async ev => {
+  ev.preventDefault();
+  const f = ev.target;
+  const r = await run(() => API.call('guardarDocumento', { id: state.doc.id, asunto: f.asunto.value, tipo: state.doc.tipo, formato: state.doc.formato, publico: state.doc.publico, resultado: f.resultado.value }));
+  Object.assign(state.doc, { asunto: f.asunto.value, resultado: f.resultado.value });
+  $('#doc-titulo').textContent = f.asunto.value;
+  state.docs = null; toast('Documento guardado');
+};
+$('#form-doc').resultado.oninput = e => { e.target.style.height = 'auto'; e.target.style.height = Math.max(320, e.target.scrollHeight + 4) + 'px'; };
+$('#doc-copiar').onclick = () => copiarTexto($('#form-doc').resultado.value);
+$('#doc-borrar').onclick = async () => {
+  if (!confirm('¿Eliminar definitivamente este documento?')) return;
+  await run(() => API.call('eliminarDocumento', { id: state.doc.id }));
+  state.docs = null; toast('Documento eliminado'); show('documentos');
+};
+function nombreArchivo(ext) {
+  return (norm($('#form-doc').asunto.value).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'documento') + '.' + ext;
+}
+function descargar(contenido, tipo, nombre) {
+  const url = URL.createObjectURL(new Blob([contenido], { type: tipo }));
+  const a = document.createElement('a'); a.href = url; a.download = nombre; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 500);
+}
+function htmlDocumento(paraWord) {
+  const f = $('#form-doc'); const org = (state.cfg && state.cfg.organismo) || '';
+  const cuerpo = esc(f.resultado.value).split(/\n{2,}/).map(p => '<p>' + p.replace(/\n/g, '<br>') + '</p>').join('');
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${esc(f.asunto.value)}</title>
+<style>body{font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#1d2a30;margin:${paraWord ? '0' : '2cm'};line-height:1.5}
+.cab{display:flex;align-items:center;gap:12px;border-bottom:3px solid #0d818f;padding-bottom:8px;margin-bottom:18px}
+.cab img{width:56px;height:56px}.cab b{color:#0b3057;font-size:14pt;display:block}.cab small{color:#4f5d65}
+h1{color:#0b3057;font-size:16pt;margin:0 0 4px}.fecha{color:#4f5d65;font-size:9pt;margin-bottom:16px}
+.pie{margin-top:28px;border-top:1px solid #cfd8dc;padding-top:6px;color:#4f5d65;font-size:8pt}</style></head><body>
+<div class="cab"><img src="${LOGO}" alt=""><div><b>EntornoSeguro</b><small>${esc(org)}</small></div></div>
+<h1>${esc(f.asunto.value)}</h1><div class="fecha">${new Date().toLocaleDateString('es-ES')}</div>${cuerpo}
+<div class="pie">EntornoSeguro · ${esc(org)} · Borrador generado con apoyo de IA, sujeto a validación profesional.</div></body></html>`;
+}
+$('#doc-word').onclick = () => descargar('﻿' + htmlDocumento(true), 'application/msword', nombreArchivo('doc'));
+$('#doc-txt').onclick = () => descargar('﻿' + $('#form-doc').asunto.value + '\n\n' + $('#form-doc').resultado.value, 'text/plain;charset=utf-8', nombreArchivo('txt'));
+$('#doc-pdf').onclick = () => {
+  const w = window.open('', '_blank');
+  if (!w) { toast('Permite las ventanas emergentes para imprimir', true); return; }
+  w.document.write(htmlDocumento(false)); w.document.close();
+  let hecho = false;
+  const imprimir = () => { if (hecho) return; hecho = true; try { w.focus(); w.print(); } catch {} };
+  w.onload = imprimir; setTimeout(imprimir, 800);
+};
 </script>
 </body>
 </html>
