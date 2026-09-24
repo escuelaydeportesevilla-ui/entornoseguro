@@ -5,7 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>EntornoSeguro · Protección de Menores en el Deporte</title>
-  <link rel="icon" type="image/png" href="https://entornoseguro.escuelaydeporte.com/img/favicon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="https://entornoseguro.escuelaydeporte.com/img/icon-192.png">
+  <link rel="apple-touch-icon" href="https://entornoseguro.escuelaydeporte.com/img/icon-192.png">
+  <link rel="manifest" href="https://entornoseguro.escuelaydeporte.com/img/manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="EntornoSeguro">
   <meta name="theme-color" content="#0b3057">
   <meta charset="UTF-8">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -396,7 +400,7 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
 
   <script>
 const LOGO = "https://entornoseguro.escuelaydeporte.com/img/logo-hd.jpg";
-document.querySelectorAll("[data-logo]").forEach(i => i.src = LOGO);
+document.querySelectorAll("[data-logo]").forEach(i => { i.onerror = () => { i.style.visibility = "hidden"; }; i.src = LOGO; });
 
 const API_URL = "https://script.google.com/macros/s/AKfycbx-9rREVClAUwFFehFqGhdlwrDwhjjHpROCf6v94K1G27AX20ZU7PMTB1Yc2H6bq9gM2w/exec";
 const EN_SCRIPT = !!(window.google && google.script && google.script.run);
