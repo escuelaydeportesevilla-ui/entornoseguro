@@ -256,6 +256,45 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
 .tamano span { font-size: .8rem; color: var(--muted); margin-right: 4px; }
 .tamano button { min-width: 44px; min-height: 40px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 8px; font: inherit; font-weight: 700; cursor: pointer; }
 .tamano button[aria-pressed="true"] { background: var(--brand); color: #fff; border-color: var(--brand); }
+@media (min-width: 861px) { .sidebar nav { overflow-y: auto; min-height: 0; } }
+/* ---- v0.9: incidencias, encuestas, biblioteca, certificados ---- */
+.aviso-inc { background: color-mix(in srgb, var(--bad) 8%, var(--panel)); border: 1px solid color-mix(in srgb, var(--bad) 35%, transparent); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 14px; font-size: .9rem; }
+.urgente { background: color-mix(in srgb, var(--bad) 10%, var(--panel)); border: 2px solid var(--bad); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 16px; }
+.urgente h3 { color: var(--bad); margin-bottom: 6px; }
+.urgente ol { margin: 0; padding-left: 22px; } .urgente li { margin: 4px 0; }
+.fases { display: flex; gap: 4px; margin: 0 0 16px; flex-wrap: wrap; }
+.fases span { flex: 1 1 110px; text-align: center; padding: 8px 6px; border-radius: 8px; background: var(--bg); border: 1px solid var(--line); font-size: .8rem; font-weight: 600; color: var(--muted); }
+.fases span.hecha { background: color-mix(in srgb, var(--ok) 12%, var(--panel)); color: var(--ok); border-color: transparent; }
+.fases span.actual { background: var(--brand); color: #fff; border-color: transparent; }
+.guia h3 { color: var(--brand); } .guia ul { margin: 6px 0 10px; padding-left: 20px; } .guia li { margin: 4px 0; }
+.linea { list-style: none; margin: 0; padding: 0; border-left: 3px solid var(--line); }
+.linea li { position: relative; padding: 4px 0 12px 16px; }
+.linea li::before { content: ''; position: absolute; left: -8px; top: 9px; width: 13px; height: 13px; border-radius: 50%; background: var(--brand-2); border: 2px solid var(--panel); }
+.linea b { color: var(--brand); } .linea small { color: var(--muted); display: block; }
+.enc-pub { min-height: 100vh; background: linear-gradient(135deg, #0b3057, #0d818f 60%, #38af88); padding: 16px; }
+.enc-card { background: var(--panel); max-width: 620px; margin: 0 auto; border-radius: 18px; padding: 24px 20px; box-shadow: 0 20px 50px rgba(0,0,0,.2); }
+.enc-card .logo { width: 84px; height: 84px; display: block; margin: 0 auto 8px; }
+.enc-card h1 { text-align: center; color: var(--brand); font-size: 1.4rem; margin: 4px 0; }
+.enc-card .ent { text-align: center; color: var(--muted); margin: 0 0 14px; }
+.enc-intro { background: var(--bg); border-radius: 12px; padding: 12px 14px; font-size: 1rem; margin-bottom: 16px; }
+.preg { border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+.preg p { margin: 0 0 10px; font-size: 1.1rem; font-weight: 600; }
+.resp { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.resp button { border: 2px solid var(--line); background: var(--panel); border-radius: 12px; padding: 10px 4px; font: inherit; font-weight: 600; cursor: pointer; color: var(--ink); min-height: 64px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.resp button span { font-size: 1.7rem; line-height: 1; }
+.resp button[aria-pressed="true"] { border-color: var(--brand-2); background: color-mix(in srgb, var(--brand-2) 14%, var(--panel)); }
+.enc-card .btn { width: 100%; min-height: 56px; font-size: 1.1rem; }
+.ayuda { background: color-mix(in srgb, var(--accent) 12%, var(--panel)); border-radius: 12px; padding: 14px; margin-top: 14px; }
+.ayuda a { color: var(--brand); font-weight: 700; }
+.res-preg { margin-bottom: 12px; } .res-preg p { margin: 0 0 4px; font-weight: 600; }
+.tri { display: flex; height: 22px; border-radius: 6px; overflow: hidden; background: var(--bg); font-size: .75rem; font-weight: 700; color: #fff; }
+.tri i { display: flex; align-items: center; justify-content: center; font-style: normal; min-width: 0; overflow: hidden; }
+.tri .si { background: var(--ok); } .tri .av { background: var(--warn); } .tri .no { background: var(--bad); }
+.leyenda { font-size: .8rem; color: var(--muted); margin-bottom: 10px; }
+.bib-item { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+.bib-item h3 { margin: 0 0 4px; color: var(--brand); } .bib-item p { margin: 4px 0 0; color: var(--muted); font-size: .9rem; }
+.bib-item .ia-acciones { margin: 0; flex: 0 0 auto; }
+@media (max-width: 860px) { .bib-item { flex-direction: column; } .bib-item .ia-acciones { width: 100%; } .resp button { min-height: 72px; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 @media (max-width: 860px) {
   html { font-size: calc(var(--fs, 1) * 112.5%); }
@@ -265,6 +304,9 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
   nav button { min-height: 52px; font-size: 1rem; }
   td .link, .user .link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 8px; text-decoration: none; background: var(--bg); }
   td[data-label=""] { gap: 8px; flex-wrap: wrap; }
+  td .link { white-space: nowrap; }
+  td { flex-wrap: wrap; }
+  td::before { flex-basis: 35%; }
   .kpi span { font-size: .85rem; }
   .brand small { font-size: .8rem; }
   .tamano { width: 100%; }
@@ -272,6 +314,11 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
 </style>
 </head>
 <body>
+
+  <!-- ENCUESTA PÚBLICA (sin acceso) -->
+  <section id="encuesta" class="enc-pub hidden">
+    <div class="enc-card" id="enc-card"><img src="" data-logo alt="EntornoSeguro" class="logo"><p class="ent">Cargando encuesta…</p></div>
+  </section>
 
   <!-- LOGIN -->
   <section id="login" class="login">
@@ -311,11 +358,14 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
         <button data-view="formacion">Formación</button>
         <button data-view="autorizaciones">Autorizaciones</button>
         <button data-view="alertas">Alertas <span id="badge-alertas" class="badge"></span></button>
+        <button data-view="incidencias" data-perm="incidencias">Incidencias</button>
+        <button data-view="encuestas"><span class="l-long">Encuestas a menores</span><span class="l-short">Encuestas</span></button>
         <button data-view="contenidos" data-perm="ia"><span class="l-long">Contenidos RRSS</span><span class="l-short">Redes sociales</span></button>
         <button data-view="asistente" data-perm="ia">Asistente IA</button>
         <button data-view="plantillas" data-perm="ia">Plantillas</button>
         <button data-view="informes" data-perm="informes">Informes</button>
         <button data-view="documentos" data-perm="leer">Documentos</button>
+        <button data-view="biblioteca">Biblioteca</button>
         <button data-view="clubes" data-perm="admin" id="nav-clubes">Mis clubes</button>
         <button data-view="documentacion" data-perm="admin">Documentación</button>
         <button data-view="misdatos" data-perm="club">Mis datos</button>
@@ -391,7 +441,10 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
 
       <!-- FORMACIÓN -->
       <section id="view-formacion" class="view hidden">
-        <header><h2>Formación de agentes deportivos</h2><button class="btn" id="nueva-formacion" data-perm="escribir">+ Registrar formación</button></header>
+        <header><h2>Formación de agentes deportivos</h2></header>
+        <div class="ia-acciones" data-perm="escribir"><button class="btn" id="nueva-formacion" type="button">+ Registrar formación</button><button class="btn ghost" id="formacion-lote" type="button">+ Curso con varios asistentes</button></div>
+        <div class="card form buscador"><label>Buscar<input id="form-q" type="search" placeholder="Persona, curso o colectivo"></label>
+          <label>Mostrar<select id="form-filtro"><option value="">Todas</option><option value="vigente">Vigentes</option><option value="caducada">Caducadas</option></select></label></div>
         <div class="card"><table id="tabla-formacion"></table></div>
       </section>
 
@@ -459,6 +512,24 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
             </div>
             <div id="inf-ia-out"></div>
           </div>
+        </div>
+        <div class="card form">
+          <h3>Memoria anual · Informe por periodo</h3>
+          <p class="nota">Situación de implantación y actividad del periodo: formación, agentes, riesgos, autorizaciones, participación infantil, sensibilización y comunicaciones (solo cifras agregadas).</p>
+          <div class="fields">
+            <label>Año<select id="mem-anio"></select></label>
+            <label>Periodo<select id="mem-periodo"><option value="anual">Año completo</option><option value="1T">1.er trimestre</option><option value="2T">2.º trimestre</option><option value="3T">3.er trimestre</option><option value="4T">4.º trimestre</option><option value="S1">1.er semestre</option><option value="S2">2.º semestre</option><option value="temporada">Temporada (sep.–jun.)</option><option value="libre">Fechas a elegir</option></select></label>
+            <label>Desde<input type="date" id="mem-desde"></label>
+            <label>Hasta<input type="date" id="mem-hasta"></label>
+          </div>
+          <label class="check" id="mem-anon-l"><input type="checkbox" id="mem-anon"> Anonimizar entidades</label>
+          <label>Valoración técnica (opcional)<textarea id="mem-valoracion" rows="5" placeholder="Texto que se incluirá en la memoria. Puedes prepararlo con IA."></textarea></label>
+          <div class="ia-acciones">
+            <button class="btn" type="button" id="mem-pdf">Ver / PDF</button>
+            <button class="btn ghost" type="button" id="mem-word">Word</button>
+            <button class="btn ghost" type="button" id="mem-ia" data-perm="ia">Valoración con IA</button>
+          </div>
+          <div id="mem-ia-out"></div>
         </div>
       </section>
 
@@ -555,6 +626,40 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
         <div class="card"><h3>Registro de accesos del ayuntamiento</h3><table id="tabla-accesos"></table></div>
       </section>
 
+      <!-- INCIDENCIAS -->
+      <section id="view-incidencias" class="view hidden">
+        <header><h2>Registro de incidencias</h2></header>
+        <div class="aviso-inc">🔒 <b>Registro confidencial.</b> Solo el Delegado/a de Protección. <b>No escribas nombres, iniciales ni datos que identifiquen a menores o a personas implicadas.</b> El relato y la documentación van al expediente oficial; aquí solo la trazabilidad del procedimiento. Este módulo no usa IA.</div>
+        <div id="inc-cont"></div>
+      </section>
+
+      <!-- CASO -->
+      <section id="view-caso" class="view hidden">
+        <header><h2 id="caso-titulo">Caso</h2><button class="btn ghost" id="caso-volver" type="button">← Volver al registro</button></header>
+        <div class="aviso-inc">🔒 No escribas nombres ni datos identificativos. Guía orientativa: las decisiones corresponden al profesional responsable.</div>
+        <div id="caso-cont"></div>
+      </section>
+
+      <!-- ENCUESTAS -->
+      <section id="view-encuestas" class="view hidden">
+        <header><h2>Encuestas anónimas a menores</h2><select id="enc-entidad" aria-label="Entidad"></select></header>
+        <p class="nota">Cuestionarios de percepción de seguridad adaptados a la edad. No piden nombre ni datos personales. Los resultados se muestran a partir de 5 respuestas.</p>
+        <div class="ia-acciones" data-perm="escribir"><button class="btn" id="nueva-encuesta" type="button">+ Nueva encuesta</button></div>
+        <div class="card"><table id="tabla-encuestas"></table></div>
+        <div id="enc-resultados"></div>
+      </section>
+
+      <!-- BIBLIOTECA -->
+      <section id="view-biblioteca" class="view hidden">
+        <header><h2>Biblioteca documental</h2></header>
+        <p class="nota">Normativa, Protocolo Marco, guías, modelos y protocolos. Prioriza siempre las fuentes oficiales.</p>
+        <div class="ia-acciones" data-perm="escribir"><button class="btn" id="nuevo-bib" type="button">+ Añadir documento o enlace</button></div>
+        <div class="card form buscador"><label>Buscar<input id="bib-q" type="search" placeholder="Palabras del título o la descripción"></label>
+          <label>Categoría<select id="bib-cat"><option value="">Todas</option></select></label></div>
+        <p class="nota" id="bib-count"></p>
+        <div id="bib-lista"></div>
+      </section>
+
       <!-- USUARIOS -->
       <section id="view-usuarios" class="view hidden">
         <header><h2>Usuarios</h2><button class="btn" id="nuevo-usuario" data-perm="admin">+ Nuevo usuario</button></header>
@@ -573,6 +678,8 @@ document.querySelectorAll("[data-logo]").forEach(i => { i.onerror = () => { i.st
 
 const API_URL = "https://script.google.com/macros/s/AKfycbx-9rREVClAUwFFehFqGhdlwrDwhjjHpROCf6v94K1G27AX20ZU7PMTB1Yc2H6bq9gM2w/exec";
 const EN_SCRIPT = !!(window.google && google.script && google.script.run);
+const WEB_PUBLICA = EN_SCRIPT ? 'https://entornoseguro.escuelaydeporte.com/' : location.origin + location.pathname;
+const COD_ENC = (() => { try { return (new URLSearchParams(location.search).get('e') || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); } catch { return ''; } })();
 const API = {
   token: null,
   async call(accion, datos) {
@@ -664,6 +771,7 @@ async function arrancar() {
     $('#nav-entidades').textContent = state.modo === 'CLUB' ? 'Mi club' : 'Mi entidad';
     $('#panel-titulo').textContent = 'Panel del Delegado/a de Protección' + (state.modo === 'CLUB' ? ' del club' : '');
     const mun = $('#inf-mun-pdf'); if (mun) mun.closest('.card').remove();
+    $('#mem-anon-l').classList.add('hidden');
   }
   if (state.me.debe_cambiar) formPassword(true); else show('panel');
 }
@@ -688,7 +796,7 @@ function formPassword(obligatorio) {
 
 (async () => {
   const t = ssGet('es_token');
-  if (!t) return;
+  if (!t || COD_ENC) return;
   API.token = t;
   try { await arrancar(); } catch { salirLocal(); }
 })();
@@ -699,14 +807,16 @@ $('#menu-toggle').onclick = () => {
   const n = $('#menu-principal'), ab = !n.classList.contains('abierto');
   n.classList.toggle('abierto', ab); $('#menu-toggle').setAttribute('aria-expanded', String(ab));
 };
+const VISTA_MADRE = { doc: 'documentos', caso: 'incidencias' };
 function show(v) {
-  const bAct = $(`nav button[data-view="${v === 'doc' ? 'documentos' : v}"]`);
+  const madre = VISTA_MADRE[v] || v;
+  const bAct = $(`nav button[data-view="${madre}"]`);
   if (bAct) $('#menu-actual').textContent = (bAct.querySelector('.l-short') || bAct).textContent.replace(/\d+$/, '').trim();
   $('#menu-principal').classList.remove('abierto'); $('#menu-toggle').setAttribute('aria-expanded', 'false');
   window.scrollTo(0, 0);
-  $$('nav button').forEach(b => b.classList.toggle('active', b.dataset.view === (v === 'doc' ? 'documentos' : v)));
+  $$('nav button').forEach(b => b.classList.toggle('active', b.dataset.view === madre));
   $$('.view').forEach(s => s.classList.toggle('hidden', s.id !== 'view-' + v));
-  ({ panel: loadPanel, entidades: loadEntidades, matriz: loadMatriz, formacion: loadFormacion, alertas: loadAlertas, usuarios: loadUsuarios, documentos: loadDocumentos, riesgos: loadRiesgos, informes: loadInformes, agentes: loadAgentes, autorizaciones: loadAutorizaciones, plantillas: loadPlantillas, clubes: loadClubes, misdatos: loadMisDatos, documentacion: loadDocumentacion }[v] || (() => {}))();
+  ({ panel: loadPanel, entidades: loadEntidades, matriz: loadMatriz, formacion: loadFormacion, alertas: loadAlertas, usuarios: loadUsuarios, documentos: loadDocumentos, riesgos: loadRiesgos, informes: loadInformes, agentes: loadAgentes, autorizaciones: loadAutorizaciones, plantillas: loadPlantillas, clubes: loadClubes, misdatos: loadMisDatos, documentacion: loadDocumentacion, incidencias: loadIncidencias, encuestas: loadEncuestas, biblioteca: loadBiblioteca }[v] || (() => {}))();
 }
 
 // ---------- PANEL ----------
@@ -719,6 +829,7 @@ async function loadPanel() {
     ['Cumplimiento medio', k.cumplimiento_medio + '%'], ['Personas formadas', k.personas_formadas],
     ['Alertas abiertas', k.alertas_abiertas], ['Riesgos altos pendientes', k.riesgos_altos || 0], ['Agentes deportivos', k.agentes || 0], ['Agentes sin certificado', k.agentes_sin_cert || 0]
   ];
+  if (k.casos_abiertos !== null && k.casos_abiertos !== undefined) tiles.push(['Casos abiertos (incidencias)', k.casos_abiertos]);
   const ocultarClub = ['Entidades', 'Con menores', 'Con Delegado/a', 'Aceptan Protocolo'];
   $('#kpis').innerHTML = tiles.filter(([l]) => !(state.club && ocultarClub.includes(l))).map(([l, v]) => `<div class="kpi"><span>${esc(l)}</span><strong>${esc(v)}</strong></div>`).join('');
   $('#badge-alertas').textContent = k.alertas_abiertas || '';
@@ -800,21 +911,91 @@ function formCumplimiento(entidad_id, r) {
 // ---------- FORMACIÓN ----------
 async function loadFormacion() {
   const [rows, ents] = await run(() => Promise.all([API.call('listarFormacion'), state.entidades.length ? state.entidades : API.call('listarEntidades')]));
-  state.entidades = ents;
-  const nom = id => (ents.find(e => e.id === id) || {}).nombre || id;
-  $('#tabla-formacion').innerHTML = `<thead><tr><th>Persona</th><th>Colectivo</th><th>Entidad</th><th>Curso</th><th>Horas</th><th>Fecha</th><th>Caduca</th></tr></thead><tbody>` +
-    (rows.map(f => `<tr><td>${esc(f.persona_nombre)}</td><td>${esc(f.colectivo)}</td><td>${esc(nom(f.entidad_id))}</td><td>${f.certificado_url ? `<a href="${esc(f.certificado_url)}" target="_blank" rel="noopener">${esc(f.curso)}</a>` : esc(f.curso)}</td>
-      <td>${esc(f.horas)}</td><td>${esc(f.fecha)}</td><td class="${f.fecha_caducidad && new Date(f.fecha_caducidad) < new Date() ? 'bad-t' : ''}">${esc(f.fecha_caducidad) || '—'}</td></tr>`).join('')
-      || '<tr><td colspan="7" class="empty">Sin formación registrada.</td></tr>') + '</tbody>';
+  state.entidades = ents; state.formacion = rows;
+  pintarFormacion();
 }
-$('#nueva-formacion') && ($('#nueva-formacion').onclick = async () => {
+function pintarFormacion() {
+  const ents = state.entidades, hoy = new Date();
+  const nom = id => (ents.find(e => e.id === id) || {}).nombre || id;
+  const q = norm($('#form-q').value), f = $('#form-filtro').value;
+  const cad = x => x.fecha_caducidad && new Date(x.fecha_caducidad) < hoy;
+  const rows = (state.formacion || []).filter(x => (!q || norm([x.persona_nombre, x.curso, x.colectivo].join(' ')).includes(q)) &&
+    (!f || (f === 'caducada' ? cad(x) : !cad(x)))).sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
+  $('#tabla-formacion').innerHTML = `<thead><tr><th>Persona</th><th>Colectivo</th><th>Entidad</th><th>Curso</th><th>Horas</th><th>Fecha</th><th>Caduca</th><th></th></tr></thead><tbody>` +
+    (rows.map(x => `<tr><td>${esc(x.persona_nombre)}</td><td>${esc(x.colectivo)}</td><td>${esc(nom(x.entidad_id))}</td><td>${x.certificado_url ? `<a href="${esc(x.certificado_url)}" target="_blank" rel="noopener">${esc(x.curso)}</a>` : esc(x.curso)}</td>
+      <td>${esc(x.horas)}</td><td>${esc(x.fecha)}</td><td class="${cad(x) ? 'bad-t' : ''}">${esc(x.fecha_caducidad) || '—'}</td>
+      <td><button class="link" data-cert="${esc(x.id)}">Certificado</button>${can('escribir') ? ` <button class="link" data-form="${esc(x.id)}">Editar</button>` : ''}</td></tr>`).join('')
+      || '<tr><td colspan="8" class="empty">Sin formación registrada.</td></tr>') + '</tbody>';
+  $$('[data-cert]').forEach(b => b.onclick = () => abrirInforme(htmlCertificados([state.formacion.find(x => x.id === b.dataset.cert)])));
+  $$('[data-form]').forEach(b => b.onclick = () => formFormacion(state.formacion.find(x => x.id === b.dataset.form)));
+}
+$('#form-q').oninput = pintarFormacion; $('#form-filtro').onchange = pintarFormacion;
+const camposFormacion = () => [['entidad_id', 'Entidad', state.entidades.map(e => [e.id, e.nombre])], ['colectivo', 'Colectivo', COLECTIVOS],
+  ['curso', 'Curso', 'text', true], ['entidad_formadora', 'Entidad formadora'], ['horas', 'Horas', 'number'], ['fecha', 'Fecha', 'date', true],
+  ['fecha_caducidad', 'Caducidad / reciclaje', 'date']];
+async function formFormacion(x) {
   if (!state.entidades.length) state.entidades = await run(() => API.call('listarEntidades'));
-  modal('Registrar formación', [
-    ['entidad_id', 'Entidad', state.entidades.map(e => [e.id, e.nombre])], ['persona_nombre', 'Persona (agente deportivo adulto)', 'text', true],
-    ['colectivo', 'Colectivo', COLECTIVOS], ['curso', 'Curso', 'text', true], ['entidad_formadora', 'Entidad formadora'],
-    ['horas', 'Horas', 'number'], ['fecha', 'Fecha', 'date', true], ['fecha_caducidad', 'Caducidad / reciclaje', 'date'], ['certificado_url', 'Enlace certificado', 'url']
-  ], {}, async d => { await run(() => API.call('guardarFormacion', d)); toast('Formación registrada'); loadFormacion(); });
+  const c = camposFormacion(); c.splice(1, 0, ['persona_nombre', 'Persona (agente deportivo adulto)', 'text', true]);
+  modal(x.id ? 'Editar formación' : 'Registrar formación', c.concat([['certificado_url', 'Enlace a certificado externo', 'url']]), x, async d => {
+    d.id = x.id; await run(() => API.call('guardarFormacion', d)); toast('Formación guardada'); loadFormacion();
+  });
+  if (x.id) {
+    const del = document.createElement('button'); del.type = 'button'; del.className = 'btn ghost peligro'; del.textContent = 'Eliminar';
+    del.onclick = async () => { if (!confirm('¿Eliminar este registro de formación?')) return; $('#modal').close('cancel');
+      await run(() => API.call('eliminarFormacion', { id: x.id })); toast('Registro eliminado'); loadFormacion(); };
+    $('#modal-form .actions').prepend(del);
+  }
+}
+$('#nueva-formacion') && ($('#nueva-formacion').onclick = () => formFormacion({ fecha: new Date().toISOString().slice(0, 10) }));
+$('#formacion-lote') && ($('#formacion-lote').onclick = async () => {
+  if (!state.entidades.length) state.entidades = await run(() => API.call('listarEntidades'));
+  modal('Curso con varios asistentes', camposFormacion().concat([['personas', 'Asistentes (una persona por línea, solo adultos)', 'textarea']]), { fecha: new Date().toISOString().slice(0, 10) }, async d => {
+    const r = await run(() => API.call('guardarFormacionLote', d));
+    toast(r.registradas + ' persona(s) registradas');
+    await loadFormacion();
+    if (confirm('¿Generar ahora los certificados de este curso?')) {
+      const lista = state.formacion.filter(x => x.entidad_id === d.entidad_id && x.curso === d.curso && String(x.fecha).slice(0, 10) === d.fecha);
+      abrirInforme(htmlCertificados(lista));
+    }
+  });
 });
+function htmlCertificados(lista) {
+  const cfg = state.cfg || {}, org = cfg.organismo || '';
+  const fmt = f => f ? new Date(String(f).slice(0, 10) + 'T12:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+  const hoy = fmt(new Date().toISOString().slice(0, 10));
+  const ent = id => state.entidades.find(e => e.id === id) || {};
+  const pags = lista.filter(Boolean).map(x => {
+    const e = ent(x.entidad_id);
+    const firmante = state.club ? (e.delegado_nombre || '') : (cfg.delegado_municipal || '');
+    return `<div class="cert"><div class="marco">
+      <div class="cab"><img src="${LOGO}" alt=""><div><b>${esc(org || 'EntornoSeguro')}</b><small>Sistema de protección de menores en el deporte</small></div></div>
+      <h1>CERTIFICADO DE FORMACIÓN</h1>
+      <p class="c">Se certifica que</p>
+      <p class="nombre">${esc(x.persona_nombre)}</p>
+      <p class="c">${x.colectivo ? esc(x.colectivo) + ' · ' : ''}${esc(e.nombre || '')}</p>
+      <p class="c">ha completado la acción formativa</p>
+      <p class="curso">«${esc(x.curso)}»</p>
+      <p class="c">${x.horas ? 'con una duración de <b>' + esc(x.horas) + ' horas</b>, ' : ''}realizada el ${esc(fmt(x.fecha))}${x.entidad_formadora ? ' e impartida por ' + esc(x.entidad_formadora) : ''},<br>
+      en materia de protección de las personas menores frente a la violencia en el deporte<br>(LO 8/2021, art. 5, y Protocolo Marco de Andalucía, Orden de 18 de noviembre de 2024).</p>
+      ${x.fecha_caducidad ? `<p class="c peq">Se recomienda su actualización antes del ${esc(fmt(x.fecha_caducidad))}.</p>` : ''}
+      <div class="pie-cert"><div>${esc(cfg.municipio || '')}${cfg.municipio ? ', a ' : ''}${esc(hoy)}</div>
+        <div class="firma-c">Delegado/a de Protección<br>${esc(firmante)}</div></div>
+      <div class="cod">Código de verificación: ${esc(x.id)}</div></div></div>`;
+  }).join('');
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Certificados de formación</title><style>
+@page { size: A4 landscape; margin: 1cm; }
+body{font-family:Calibri,Arial,sans-serif;color:#1d2a30;margin:0}
+.cert{page-break-after:always;height:18.5cm;box-sizing:border-box;padding:.2cm}.cert:last-child{page-break-after:auto}
+.marco{border:3px solid #0b3057;outline:1px solid #0d818f;outline-offset:-9px;height:100%;box-sizing:border-box;padding:1cm 1.6cm;position:relative}
+.cab{display:flex;align-items:center;gap:12px;border-bottom:3px solid #0d818f;padding-bottom:8px}.cab img{width:60px;height:60px;border-radius:12px}.cab b{color:#0b3057;font-size:14pt;display:block}.cab small{color:#4f5d65}
+h1{text-align:center;color:#0b3057;letter-spacing:.12em;font-size:24pt;margin:18px 0 10px}
+.c{text-align:center;font-size:12pt;margin:4px 0;line-height:1.5}.peq{font-size:10pt;color:#4f5d65}
+.nombre{text-align:center;font-size:22pt;font-weight:700;color:#0d818f;margin:6px 0}.curso{text-align:center;font-size:15pt;font-weight:700;color:#0b3057;margin:6px 0}
+.pie-cert{position:absolute;left:1.6cm;right:1.6cm;bottom:1.3cm;display:flex;justify-content:space-between;align-items:flex-end;font-size:11pt}
+.firma-c{border-top:1px solid #1d2a30;padding-top:4px;min-width:7cm;text-align:center}
+.cod{position:absolute;left:1.6cm;bottom:.5cm;font-size:8pt;color:#6b7a82}
+</style></head><body>${pags || '<p>No hay registros.</p>'}</body></html>`;
+}
 
 // ---------- ALERTAS ----------
 async function loadAlertas() {
@@ -1857,6 +2038,451 @@ $('#form-prestador') && ($('#form-prestador').onsubmit = async ev => {
   ev.preventDefault();
   await run(() => API.call('guardarPrestador', Object.fromEntries(new FormData(ev.target)))); toast('Datos del prestador guardados');
 });
+
+// ---------- REGISTRO DE INCIDENCIAS ----------
+const txtFase = f => ((state.inc && state.inc.listas && state.inc.listas.fases.find(x => x[0] === f)) || ['', f])[1];
+const hoyISO = () => new Date().toISOString().slice(0, 10);
+async function incCall(accion, datos) {
+  document.body.classList.add('busy');
+  try { return await API.call(accion, datos); }
+  catch (e) {
+    if (e.message === 'INC_BLOQUEO') { toast('La sesión del registro ha caducado. Confirma tu contraseña.', true); show('incidencias'); }
+    else toast(e.message, true);
+    throw e;
+  } finally { document.body.classList.remove('busy'); }
+}
+async function loadIncidencias() {
+  const st = state.inc = await run(() => API.call('estadoIncidencias'));
+  if (!st.activo) return pintarIncInactivo(st);
+  if (!st.abierto) return pintarIncBloqueo();
+  if (!state.club && !state.entidades.length) state.entidades = await run(() => API.call('listarEntidades'));
+  state.casos = await incCall('listarCasos');
+  pintarCasos();
+}
+function pintarIncInactivo(st) {
+  $('#inc-cont').innerHTML = `<div class="grid2"><div class="card"><h3>Módulo desactivado</h3>
+    <p>El registro de incidencias permanece <b>desactivado</b> hasta que el Delegado/a de Protección de Datos (DPD) valide su diseño.</p>
+    <p class="nota">Descarga la ficha técnica, entrégala al DPD y, con su informe favorable, activa el módulo.</p>
+    <div class="ia-acciones"><button class="btn" type="button" data-doclegal="ficha" data-fmt="pdf">Ficha para el DPD (PDF)</button><button class="btn ghost" type="button" data-doclegal="ficha" data-fmt="word">Word</button></div></div>
+    <div class="card">${st.puede_activar ? `<form id="form-activar" class="form"><h3>Activar el registro</h3>
+      <label class="check"><input type="checkbox" name="confirmo" value="SI" required> El DPD ha emitido informe favorable sobre el diseño del módulo</label>
+      <label>Fecha del informe del DPD<input type="date" name="fecha_dpd" required></label>
+      <label>Plazo de conservación de casos cerrados (meses, fijado por el DPD)<input type="number" name="conservacion_meses" min="1" max="600" required></label>
+      <label>Confirma tu contraseña<input type="password" name="password" autocomplete="current-password" required></label>
+      <button class="btn">Activar registro de incidencias</button>
+      <p class="nota">Se creará una hoja de datos separada, solo accesible desde la aplicación.</p></form>`
+      : '<h3>Activación</h3><p>Solicita la activación al administrador del sistema cuando el DPD haya validado el diseño.</p>'}</div></div>`;
+  const f = $('#form-activar');
+  if (f) f.onsubmit = async ev => {
+    ev.preventDefault();
+    const d = Object.fromEntries(new FormData(f)); d.confirmo = f.confirmo.checked ? 'SI' : '';
+    await run(() => API.call('activarIncidencias', d)); state.cfg.incidencias = true;
+    toast('Registro de incidencias activado'); loadIncidencias();
+  };
+}
+function pintarIncBloqueo() {
+  $('#inc-cont').innerHTML = `<form id="form-abrir-inc" class="card form" style="max-width:460px"><h3>Abrir el registro</h3>
+    <p class="nota">Por seguridad, confirma tu contraseña. La sesión del registro dura 30 minutos sin actividad.</p>
+    <label>Contraseña<input type="password" name="password" autocomplete="current-password" required></label>
+    <button class="btn">Abrir registro</button></form>`;
+  $('#form-abrir-inc').onsubmit = async ev => {
+    ev.preventDefault();
+    await run(() => API.call('abrirIncidencias', { password: ev.target.password.value }));
+    loadIncidencias();
+  };
+  setTimeout(() => { const p = $('#form-abrir-inc [name=password]'); if (p) p.focus(); }, 50);
+}
+function pintarCasos() {
+  const cs = state.casos || [], hoy = hoyISO();
+  const abiertos = cs.filter(c => c.fase !== 'cerrada');
+  const vencida = abiertos.filter(c => c.proxima_revision && String(c.proxima_revision).slice(0, 10) < hoy).length;
+  const nomE = id => (state.entidades.find(e => e.id === id) || {}).nombre || '—';
+  $('#inc-cont').innerHTML = `<div class="kpis">${[['Casos abiertos', abiertos.length], ['Pendientes de valoración', abiertos.filter(c => c.fase === 'comunicada').length],
+      ['Con riesgo inmediato', abiertos.filter(c => c.riesgo_inmediato === 'SI').length], ['Revisión vencida', vencida], ['Cerrados', cs.length - abiertos.length]]
+      .map(([l, v]) => `<div class="kpi"><span>${l}</span><strong>${v}</strong></div>`).join('')}</div>
+    <div class="ia-acciones"><button class="btn" id="nuevo-caso" type="button">+ Registrar comunicación</button><button class="btn ghost" id="bloquear-inc" type="button">🔒 Cerrar registro</button></div>
+    <div class="card form buscador"><label>Mostrar<select id="inc-filtro"><option value="abiertos">Casos abiertos</option><option value="">Todos</option>${state.inc.listas.fases.map(([k, t]) => `<option value="${k}">${esc(t)}</option>`).join('')}</select></label>
+      <label>Buscar código<input id="inc-q" type="search" placeholder="INC-…"></label></div>
+    <div class="card"><table id="tabla-casos"></table></div>`;
+  const pintar = () => {
+    const f = $('#inc-filtro').value, q = $('#inc-q').value.trim().toUpperCase();
+    const l = cs.filter(c => (f === 'abiertos' ? c.fase !== 'cerrada' : !f || c.fase === f) && (!q || String(c.codigo).includes(q)));
+    $('#tabla-casos').innerHTML = `<thead><tr><th>Código</th><th>Comunicación</th>${state.club ? '' : '<th>Entidad</th>'}<th>Situación</th><th>Fase</th><th>Próxima revisión</th><th></th></tr></thead><tbody>` +
+      (l.map(c => `<tr><td><b>${esc(c.codigo)}</b>${c.riesgo_inmediato === 'SI' && c.fase !== 'cerrada' ? '<br><span class="st bad">Riesgo inmediato</span>' : ''}</td>
+        <td>${esc(String(c.fecha_comunicacion).slice(0, 10))}</td>${state.club ? '' : `<td>${esc(nomE(c.entidad_id))}</td>`}
+        <td>${esc(c.tipo)}<br><small>${esc(c.ambito)}</small></td><td><span class="st ${c.fase === 'cerrada' ? 'muted' : c.fase === 'comunicada' ? 'bad' : 'warn'}">${esc(txtFase(c.fase))}</span></td>
+        <td class="${c.fase !== 'cerrada' && c.proxima_revision && String(c.proxima_revision).slice(0, 10) < hoy ? 'bad-t' : ''}">${esc(c.proxima_revision) || '—'}</td>
+        <td><button class="link" data-caso="${esc(c.id)}">Abrir</button></td></tr>`).join('')
+        || `<tr><td colspan="${state.club ? 6 : 7}" class="empty">No hay casos con esos criterios.</td></tr>`) + '</tbody>';
+    $$('[data-caso]').forEach(b => b.onclick = () => abrirCaso(b.dataset.caso));
+  };
+  $('#inc-filtro').onchange = pintar; $('#inc-q').oninput = pintar; pintar();
+  $('#nuevo-caso').onclick = () => formCaso({ fecha_comunicacion: hoyISO(), fase: 'comunicada', riesgo_inmediato: 'NO' });
+  $('#bloquear-inc').onclick = async () => { await run(() => API.call('cerrarIncidencias')); toast('Registro cerrado'); loadIncidencias(); };
+}
+function formCaso(c, faseNueva) {
+  const L = state.inc.listas, nuevo = !c.id;
+  const campos = [];
+  if (!state.club) campos.push(['entidad_id', 'Entidad', state.entidades.filter(e => e.trabaja_menores === 'SI').map(e => [e.id, e.nombre])]);
+  campos.push(['fecha_comunicacion', 'Fecha de la comunicación', 'date', true], ['fecha_hechos', 'Fecha de los hechos (si se conoce)', 'date'],
+    ['ambito', 'Ámbito', L.ambitos], ['tipo', 'Tipo de situación', L.tipos], ['riesgo_inmediato', '¿Existe riesgo inmediato?', [['NO', 'No'], ['SI', 'Sí']]],
+    ['fase', 'Fase', L.fases], ['responsable', 'Responsable del caso (cargo, no nombre)'], ['ref_expediente', 'Referencia del expediente oficial'],
+    ['proxima_revision', 'Próxima revisión', 'date'], ['resultado', 'Resultado administrativo (para cerrar)', L.resultados.map(r => [r, r || '—'])],
+    ['fecha_cierre', 'Fecha de cierre', 'date']);
+  const datos = Object.assign({}, c, faseNueva ? { fase: faseNueva } : {});
+  modal(nuevo ? 'Registrar comunicación' : 'Caso ' + c.codigo, campos, datos, async d => {
+    d.id = c.id;
+    const r = await incCall('guardarCaso', d);
+    toast(nuevo ? 'Comunicación registrada: ' + r.codigo : 'Caso actualizado');
+    abrirCaso(r.id);
+  });
+  $('#modal-form h3').insertAdjacentHTML('afterend', '<p class="aviso-inc">No escribas nombres, iniciales ni datos que identifiquen a menores o a personas implicadas.</p>');
+}
+const GUIA_FASES = {
+  comunicada: ['¿Qué ha ocurrido? ¿Existe riesgo inmediato?', [
+    'Escucha con calma y sin interrogar; no pidas detalles ni hagas repetir el relato.',
+    'No confrontes a las personas implicadas ni investigues por tu cuenta.',
+    'Registra aquí solo fecha, ámbito y tipo de situación. El relato y los datos personales van al expediente oficial.',
+    'Valora si hay riesgo inmediato para el menor. Si lo hay, marca «Riesgo inmediato: Sí» y sigue los pasos urgentes.']],
+  valorada: ['¿Qué actuación corresponde? ¿A quién debe comunicarse?', [
+    'Ante indicios de violencia existe deber de comunicación a los servicios sociales y, en su caso, a las Fuerzas y Cuerpos de Seguridad, la Fiscalía o la autoridad judicial (LOPIVI, arts. 15 y 16).',
+    'Informa al Delegado/a de Protección municipal cuando proceda según el Protocolo Marco.',
+    'Informa a la familia, salvo que pueda perjudicar al menor.',
+    'Valora medidas de protección provisionales en la entidad (supervisión, reorganización de grupos…), sin prejuzgar responsabilidades.']],
+  en_actuacion: ['¿Qué documentación debe generarse? ¿Qué actuaciones deben realizarse?', [
+    'Registra cada comunicación con fecha, destinatario y número de registro o referencia.',
+    'Guarda escritos y justificantes en el expediente oficial, fuera de esta aplicación.',
+    'Anota las medidas organizativas adoptadas.',
+    'Fija la fecha de la próxima revisión: la aplicación te avisará.']],
+  en_seguimiento: ['¿Qué seguimiento debe establecerse? ¿Cuándo debe revisarse?', [
+    'Revisa la evolución en las fechas fijadas.',
+    'Coordínate con los servicios a los que se derivó el caso.',
+    'Comprueba que las medidas de protección siguen siendo adecuadas.',
+    'Cuando exista resultado administrativo, cierra el caso.']],
+  cerrada: ['Cierre y mejora continua', [
+    'Revisa si conviene actualizar el análisis de riesgos, el código de conducta o la formación.',
+    'Los datos se anonimizarán automáticamente al vencer el plazo de conservación fijado por el DPD.']]
+};
+const PASOS_URGENTES = ['Garantiza la seguridad del menor: sepáralo de la situación de riesgo y no lo dejes solo.',
+  'Si hay peligro para su vida o integridad, o un posible delito en curso, llama al 112.',
+  'Si necesita atención sanitaria, avisa a emergencias o acompáñalo al centro sanitario.',
+  'Comunica los hechos a Policía Nacional (091) o Guardia Civil (062) cuando proceda.',
+  'Informa a la familia, salvo que pueda perjudicar al menor.',
+  'Avisa al Delegado/a de Protección municipal.',
+  'Registra aquí cada actuación con fecha y hora.'];
+async function abrirCaso(id) {
+  const d = state.caso = await incCall('verCaso', { id });
+  const c = d.caso, L = state.inc.listas, i = L.fases.findIndex(x => x[0] === c.fase);
+  show('caso');
+  $('#caso-titulo').textContent = 'Caso ' + c.codigo;
+  const g = GUIA_FASES[c.fase] || GUIA_FASES.comunicada, sig = L.fases[i + 1];
+  const nomE = (state.entidades.find(e => e.id === c.entidad_id) || {}).nombre || '';
+  $('#caso-cont').innerHTML = `<div class="fases">${L.fases.map(([k, t], j) => `<span class="${j < i ? 'hecha' : j === i ? 'actual' : ''}">${j < i ? '✓ ' : ''}${esc(t)}</span>`).join('')}</div>
+    ${c.riesgo_inmediato === 'SI' && c.fase !== 'cerrada' ? `<div class="urgente"><h3>⚠ Riesgo inmediato · pasos urgentes</h3><ol>${PASOS_URGENTES.map(p => `<li>${esc(p)}</li>`).join('')}</ol></div>` : ''}
+    ${c.anonimizado === 'SI' ? '<p class="aviso-inc">Caso anonimizado por vencimiento del plazo de conservación. Solo se conservan datos estadísticos.</p>' : ''}
+    <div class="grid2">
+      <div class="card guia"><h3>Asistente de procedimiento</h3><p><b>${esc(g[0])}</b></p><ul>${g[1].map(t => `<li>${esc(t)}</li>`).join('')}</ul>
+        ${c.anonimizado !== 'SI' ? `<div class="ia-acciones">${sig ? `<button class="btn" type="button" id="caso-avanzar">Pasar a: ${esc(sig[1])}</button>` : ''}<button class="btn ghost" type="button" id="caso-actuacion">+ Añadir actuación</button></div>` : ''}</div>
+      <div class="card"><h3>Datos del caso</h3><table class="claves">
+        ${!state.club ? `<tr><td>Entidad</td><td>${esc(nomE)}</td></tr>` : ''}
+        <tr><td>Comunicación</td><td>${esc(String(c.fecha_comunicacion).slice(0, 10))}</td></tr><tr><td>Hechos</td><td>${esc(c.fecha_hechos) || '—'}</td></tr>
+        <tr><td>Ámbito</td><td>${esc(c.ambito)}</td></tr><tr><td>Situación</td><td>${esc(c.tipo)}</td></tr>
+        <tr><td>Riesgo inmediato</td><td>${c.riesgo_inmediato === 'SI' ? '<span class="st bad">Sí</span>' : 'No'}</td></tr>
+        <tr><td>Responsable</td><td>${esc(c.responsable) || '—'}</td></tr><tr><td>Expediente oficial</td><td>${esc(c.ref_expediente) || '—'}</td></tr>
+        <tr><td>Próxima revisión</td><td>${esc(c.proxima_revision) || '—'}</td></tr>
+        ${c.fase === 'cerrada' ? `<tr><td>Resultado</td><td>${esc(c.resultado)}</td></tr><tr><td>Cierre</td><td>${esc(c.fecha_cierre)}</td></tr>` : ''}</table>
+        <div class="ia-acciones">${c.anonimizado !== 'SI' ? '<button class="btn ghost" type="button" id="caso-editar">Editar datos</button>' : ''}<button class="btn ghost" type="button" id="caso-pdf">Informe PDF</button><button class="btn ghost" type="button" id="caso-word">Word</button></div></div>
+    </div>
+    <div class="card"><h3>Cronología de actuaciones</h3>${d.actuaciones.length ? `<ul class="linea">${d.actuaciones.map(a => `<li><b>${esc(a.tipo)}</b>${a.destinatario ? ' · ' + esc(a.destinatario) : ''}
+      <small>${esc(a.fecha)}${a.referencia ? ' · Ref.: ' + esc(a.referencia) : ''}${a.usuario ? ' · ' + esc(a.usuario) : ''}</small>${a.observaciones ? `<div>${esc(a.observaciones)}</div>` : ''}</li>`).join('')}</ul>` : '<p class="empty">Sin actuaciones.</p>'}</div>
+    <details class="card"><summary><b>Registro de accesos a este caso</b></summary><table><thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th></tr></thead><tbody>
+      ${d.accesos.map(l => `<tr><td>${esc(l.timestamp)}</td><td>${esc(l.usuario)}</td><td>${esc(l.accion)}</td></tr>`).join('')}</tbody></table></details>`;
+  const b = id => $('#' + id);
+  b('caso-avanzar') && (b('caso-avanzar').onclick = () => formCaso(c, sig[0]));
+  b('caso-editar') && (b('caso-editar').onclick = () => formCaso(c));
+  b('caso-actuacion') && (b('caso-actuacion').onclick = () => formActuacion(c));
+  b('caso-pdf').onclick = async () => abrirInforme(await htmlInformeCaso(c.id));
+  b('caso-word').onclick = async () => descargar('﻿' + await htmlInformeCaso(c.id), 'application/msword', nombreInf('informe-' + c.codigo));
+}
+$('#caso-volver').onclick = () => show('incidencias');
+function formActuacion(c) {
+  const L = state.inc.listas;
+  modal('Nueva actuación · ' + c.codigo, [['fecha', 'Fecha', 'date', true], ['hora', 'Hora', 'time'], ['tipo', 'Tipo de actuación', L.actuaciones],
+    ['destinatario', 'Destinatario institucional', L.destinatarios.map(x => [x, x || '—'])], ['referencia', 'Nº de registro o referencia'],
+    ['observaciones', 'Observaciones (sin nombres ni datos personales)', 'textarea']], { fecha: hoyISO(), hora: new Date().toTimeString().slice(0, 5) }, async d => {
+    d.caso_id = c.id; await incCall('guardarActuacion', d); toast('Actuación registrada'); abrirCaso(c.id);
+  });
+  $('#modal-form h3').insertAdjacentHTML('afterend', '<p class="aviso-inc">Registra solo hechos de procedimiento: qué se hizo, cuándo y ante quién.</p>');
+}
+async function htmlInformeCaso(id) {
+  const d = await incCall('verCaso', { id, informe: true }), c = d.caso;
+  const nomE = (state.entidades.find(e => e.id === c.entidad_id) || {}).nombre || ((state.cfg || {}).organismo || '');
+  let b = '<div class="nota">DOCUMENTO CONFIDENCIAL. Contiene únicamente datos mínimos de trazabilidad del procedimiento. Los datos identificativos y el relato constan en el expediente oficial.</div>';
+  b += '<h2>1. Datos del caso</h2><table>' + fila('Código', esc(c.codigo)) + fila('Entidad', esc(nomE)) + fila('Fecha de comunicación', esc(String(c.fecha_comunicacion).slice(0, 10))) +
+    fila('Fecha de los hechos', esc(c.fecha_hechos) || '—') + fila('Ámbito', esc(c.ambito)) + fila('Tipo de situación comunicada', esc(c.tipo)) +
+    fila('Riesgo inmediato', c.riesgo_inmediato === 'SI' ? 'Sí' : 'No') + fila('Fase actual', esc(txtFase(c.fase))) + fila('Responsable', esc(c.responsable) || '—') +
+    fila('Referencia del expediente oficial', esc(c.ref_expediente) || '—') + fila('Próxima revisión', esc(c.proxima_revision) || '—') +
+    (c.fase === 'cerrada' ? fila('Resultado administrativo', esc(c.resultado)) + fila('Fecha de cierre', esc(c.fecha_cierre)) : '') + '</table>';
+  b += '<h2>2. Cronología de actuaciones</h2>' + (d.actuaciones.length ? '<table><thead><tr><th>Fecha</th><th>Actuación</th><th>Destinatario</th><th>Referencia</th><th>Observaciones</th></tr></thead><tbody>' +
+    d.actuaciones.map(a => `<tr><td>${esc(a.fecha)}</td><td>${esc(a.tipo)}</td><td>${esc(a.destinatario) || '—'}</td><td>${esc(a.referencia) || '—'}</td><td>${esc(a.observaciones) || '—'}</td></tr>`).join('') + '</tbody></table>' : '<p>Sin actuaciones registradas.</p>');
+  b += '<div class="nota">Este documento no califica los hechos ni atribuye responsabilidades. Referencias: LO 8/2021 (LOPIVI), arts. 15 y 16; Protocolo Marco de Andalucía (Orden de 18 de noviembre de 2024).</div>';
+  b += '<div class="firma"><div>Delegado/a de Protección</div><div>Fecha</div></div>';
+  return plantillaInforme('Informe de seguimiento de caso', c.codigo, b, false, 'EntornoSeguro · Registro de incidencias · Documento confidencial · ' + esc(c.codigo));
+}
+
+// ---------- ENCUESTAS ANÓNIMAS ----------
+const PREGUNTAS_ENC = {
+  '6-11': ['Me lo paso bien en los entrenamientos.', 'Me siento seguro/a en el club.', 'Mis entrenadores me tratan bien.',
+    'Mis compañeros y compañeras me tratan bien.', 'Me siento cómodo/a en el vestuario.', 'Cuando hablo, las personas mayores del club me escuchan.',
+    'Nadie me hace sentir mal por cómo soy.', 'Si algo me preocupa, sé a quién contárselo.'],
+  '12-17': ['Me siento seguro/a en las actividades del club.', 'El trato de entrenadores y monitores es respetuoso.',
+    'El trato entre compañeros y compañeras es respetuoso.', 'Me siento cómodo/a en vestuarios y duchas.', 'En viajes y competiciones me siento seguro/a.',
+    'Me siento cómodo/a con los mensajes y grupos del club (WhatsApp, redes…).', 'Sé quién es el Delegado/a de Protección del club.',
+    'Si viera o viviera algo que no está bien, sabría cómo contarlo.']
+};
+const FRANJAS = [['6-11', 'De 6 a 11 años'], ['12-17', 'De 12 a 17 años']];
+const enlaceEnc = c => WEB_PUBLICA + '?e=' + encodeURIComponent(c);
+async function loadEncuestas() {
+  const ent = await selEntidad($('#enc-entidad'), loadEncuestas);
+  if (!ent) { $('#tabla-encuestas').innerHTML = '<tr><td class="empty">Registra primero una entidad que trabaje con menores.</td></tr>'; return; }
+  const rows = state.encuestas = await run(() => API.call('listarEncuestas', { entidad_id: ent }));
+  $('#tabla-encuestas').innerHTML = `<thead><tr><th>Encuesta</th><th>Edades</th><th>Estado</th><th>Respuestas</th><th>Enlace</th><th></th></tr></thead><tbody>` +
+    (rows.map(e => `<tr><td><b>${esc(e.titulo)}</b><br><small>${[esc(e.grupo), e.fecha_inicio || e.fecha_fin ? esc(e.fecha_inicio || '…') + ' a ' + esc(e.fecha_fin || '…') : ''].filter(Boolean).join(' · ')}</small></td>
+      <td>${esc((FRANJAS.find(f => f[0] === e.franja) || ['', e.franja])[1])}</td>
+      <td><span class="st ${e.estado === 'abierta' ? 'ok' : 'muted'}">${e.estado === 'abierta' ? 'Abierta' : 'Cerrada'}</span></td><td>${e.respuestas}</td>
+      <td><button class="link" data-enl="${esc(e.id)}">Copiar enlace</button> <button class="link" data-cartel="${esc(e.id)}">Cartel</button></td>
+      <td><button class="link" data-res="${esc(e.id)}">Resultados</button>${can('escribir') ? ` <button class="link" data-enc="${esc(e.id)}">Editar</button>` : ''}</td></tr>`).join('')
+      || '<tr><td colspan="6" class="empty">Aún no hay encuestas. Pulsa "+ Nueva encuesta".</td></tr>') + '</tbody>';
+  const porId = id => rows.find(e => e.id === id);
+  $$('[data-enl]').forEach(b => b.onclick = () => copiarTexto(enlaceEnc(porId(b.dataset.enl).codigo)));
+  $$('[data-cartel]').forEach(b => b.onclick = () => abrirInforme(htmlCartelEncuesta(porId(b.dataset.cartel))));
+  $$('[data-res]').forEach(b => b.onclick = () => verResultados(b.dataset.res));
+  $$('[data-enc]').forEach(b => b.onclick = () => formEncuesta(porId(b.dataset.enc)));
+}
+$('#nueva-encuesta') && ($('#nueva-encuesta').onclick = () => formEncuesta({ franja: '12-17', estado: 'abierta', fecha_inicio: hoyISO() }));
+function formEncuesta(e) {
+  const entidad_id = $('#enc-entidad').value; if (!entidad_id) return;
+  modal(e.id ? 'Editar encuesta' : 'Nueva encuesta anónima', [['titulo', 'Título', 'text', true], ['grupo', 'Grupo o categoría (opcional)'],
+    ['franja', 'Edades', FRANJAS], ['estado', 'Estado', [['abierta', 'Abierta'], ['cerrada', 'Cerrada']]],
+    ['fecha_inicio', 'Desde', 'date'], ['fecha_fin', 'Hasta', 'date']], e, async d => {
+    Object.assign(d, { id: e.id, entidad_id });
+    const r = await run(() => API.call('guardarEncuesta', d));
+    toast('Encuesta guardada'); await loadEncuestas();
+    if (!e.id) copiarTexto(enlaceEnc(r.codigo));
+  });
+  const f = $('#modal-form');
+  f.querySelector('h3').insertAdjacentHTML('afterend', '<p class="nota">Preguntas fijas adaptadas a la edad (Sí / A veces / No). Evita grupos muy pequeños: con pocas personas las respuestas podrían identificarse.</p>');
+  if (e.id) {
+    const del = document.createElement('button'); del.type = 'button'; del.className = 'btn ghost peligro'; del.textContent = 'Eliminar';
+    del.onclick = async () => { if (!confirm('¿Eliminar la encuesta y todas sus respuestas?')) return; $('#modal').close('cancel');
+      await run(() => API.call('eliminarEncuesta', { id: e.id })); $('#enc-resultados').innerHTML = ''; toast('Encuesta eliminada'); loadEncuestas(); };
+    f.querySelector('.actions').prepend(del);
+  }
+}
+const pctTri = o => { const t = o.si + o.aveces + o.no; return t ? [o.si, o.aveces, o.no].map(v => Math.round(v * 100 / t)) : [0, 0, 0]; };
+const barraTri = o => { const [a, b, c] = pctTri(o); return `<div class="tri"><i class="si" style="width:${a}%">${a >= 10 ? a + '%' : ''}</i><i class="av" style="width:${b}%">${b >= 10 ? b + '%' : ''}</i><i class="no" style="width:${c}%">${c >= 10 ? c + '%' : ''}</i></div>`; };
+async function verResultados(id) {
+  const r = state.resEnc = await run(() => API.call('resultadosEncuesta', { id })), e = r.encuesta;
+  const cont = $('#enc-resultados');
+  if (r.oculto) { cont.innerHTML = `<div class="card"><h3>${esc(e.titulo)}</h3><p>Hay <b>${r.n}</b> respuesta(s). Los resultados se muestran a partir de ${r.minimo} para proteger el anonimato.</p></div>`; cont.scrollIntoView({ behavior: 'smooth' }); return; }
+  const P = PREGUNTAS_ENC[e.franja] || [];
+  cont.innerHTML = `<div class="card"><h3>Resultados · ${esc(e.titulo)} (${r.n} respuestas)</h3>
+    <p class="leyenda">🟩 Sí · 🟨 A veces · 🟥 No</p>
+    ${r.preguntas.map((o, i) => `<div class="res-preg"><p>${i + 1}. ${esc(P[i])}</p>${barraTri(o)}</div>`).join('')}
+    ${r.comentarios.length ? `<h3>Comentarios (${r.comentarios.length})</h3><ul>${r.comentarios.map(c => `<li>${esc(c)}</li>`).join('')}</ul>` : ''}
+    <div class="ia-acciones"><button class="btn" type="button" id="res-pdf">Informe PDF</button><button class="btn ghost" type="button" id="res-word">Word</button>${can('ia') ? '<button class="btn ghost" type="button" id="res-ia">Propuestas de mejora con IA</button>' : ''}</div>
+    <div id="res-ia-out"></div></div>`;
+  $('#res-pdf').onclick = () => abrirInforme(htmlResultadosEnc(r));
+  $('#res-word').onclick = () => descargar('﻿' + htmlResultadosEnc(r), 'application/msword', nombreInf('encuesta-' + e.titulo));
+  $('#res-ia') && ($('#res-ia').onclick = () => {
+    const prompt = [CONTEXTO_IA, '',
+      'TAREA: a partir de los resultados agregados de una encuesta anónima de percepción de seguridad a deportistas menores de ' + e.franja + ' años, propón una valoración breve (máx. 200 palabras) y 5 medidas de mejora concretas para la entidad deportiva, en el marco del Protocolo Marco andaluz. No interpretes los datos como prueba de violencia.',
+      'Respuestas: ' + r.n, 'Resultados (% Sí / A veces / No):',
+      r.preguntas.map((o, i) => { const [a, b, c] = pctTri(o); return `- ${P[i]}: ${a}% / ${b}% / ${c}%`; }).join('\n')].join('\n');
+    mostrarPrompt($('#res-ia-out'), prompt, { asunto: 'Mejoras tras encuesta · ' + e.titulo, tipo: 'asistente' });
+  });
+  cont.scrollIntoView({ behavior: 'smooth' });
+}
+function htmlResultadosEnc(r) {
+  const e = r.encuesta, P = PREGUNTAS_ENC[e.franja] || [];
+  let b = '<table>' + fila('Encuesta', esc(e.titulo)) + fila('Grupo', esc(e.grupo) || '—') + fila('Edades', esc((FRANJAS.find(f => f[0] === e.franja) || ['', e.franja])[1])) +
+    fila('Periodo', esc((e.fecha_inicio || '…') + ' a ' + (e.fecha_fin || '…'))) + fila('Respuestas', r.n) + '</table>';
+  b += '<h2>Resultados</h2><table><thead><tr><th>Pregunta</th><th>Sí</th><th>A veces</th><th>No</th></tr></thead><tbody>' +
+    r.preguntas.map((o, i) => { const [a, bb, c] = pctTri(o); return `<tr><td>${i + 1}. ${esc(P[i])}</td><td class="ok st">${a}%</td><td class="warn st">${bb}%</td><td class="bad st">${c}%</td></tr>`; }).join('') + '</tbody></table>';
+  if (r.comentarios.length) b += '<h2>Comentarios</h2><ul>' + r.comentarios.map(c => `<li>${esc(c)}</li>`).join('') + '</ul>';
+  b += '<div class="nota">Encuesta anónima: no se recogen nombres ni datos identificativos. Los resultados reflejan percepciones y orientan la mejora preventiva; no constituyen valoración de personas.</div>';
+  return plantillaInforme('Resultados de encuesta de percepción de seguridad', e.titulo, b);
+}
+function htmlCartelEncuesta(e) {
+  const url = enlaceEnc(e.codigo), peq = e.franja === '6-11';
+  const qr = 'https://api.qrserver.com/v1/create-qr-code/?size=360x360&margin=8&data=' + encodeURIComponent(url);
+  const b = `<div style="text-align:center">
+    <p style="font-size:26pt;font-weight:700;color:#0b3057;margin:18px 0 6px">${peq ? '¿Cómo te sientes en tu equipo?' : '¿Te sientes seguro/a en el club?'}</p>
+    <p style="font-size:15pt;margin:0 0 18px">${peq ? 'Cuéntanoslo. Son solo 8 preguntas y no tienes que poner tu nombre.' : 'Tu opinión nos ayuda a mejorar. Es anónima: no pedimos tu nombre.'}</p>
+    <img src="${qr}" alt="Código QR" style="width:9cm;height:9cm;border:1px solid #cfd8dc;border-radius:12px">
+    <p style="font-size:12pt;margin:14px 0 4px">Escanea el código con el móvil o entra en:</p>
+    <p style="font-size:13pt;font-weight:700;color:#0d818f;word-break:break-all">${esc(url)}</p>
+    <p style="font-size:11pt;color:#4f5d65;margin-top:22px">Si algo te preocupa, habla con tu familia, con un adulto de confianza o con el Delegado/a de Protección del club.<br>
+    Teléfono ANAR de ayuda a niños, niñas y adolescentes: <b>900 20 20 10</b> · Emergencias: <b>112</b></p></div>`;
+  return plantillaInforme(e.titulo, e.grupo || 'Encuesta anónima', b, false, 'EntornoSeguro · Encuesta anónima de percepción de seguridad');
+}
+
+// Página pública de la encuesta (sin acceso)
+async function iniciarEncuesta(codigo) {
+  $('#login').classList.add('hidden'); $('#encuesta').classList.remove('hidden');
+  document.title = 'Encuesta · EntornoSeguro';
+  const card = $('#enc-card');
+  let d;
+  try { d = await API.call('encuestaPublica', { codigo }); }
+  catch (e) { card.innerHTML = `<img src="${LOGO}" alt="" class="logo"><h1>Encuesta</h1><p class="ent">${esc(e.message)}</p>`; return; }
+  const cab = `<img src="${LOGO}" alt="" class="logo" onerror="this.style.visibility='hidden'"><h1>${esc(d.titulo)}</h1><p class="ent">${esc(d.entidad)}</p>`;
+  if (!d.abierta) { card.innerHTML = cab + '<div class="enc-intro">Esta encuesta no está abierta en este momento. ¡Gracias por tu interés!</div>'; return; }
+  let hecho = false; try { hecho = localStorage.getItem('es_enc_' + codigo) === '1'; } catch {}
+  if (hecho) {
+    card.innerHTML = cab + '<div class="enc-intro">Ya se ha respondido esta encuesta desde este dispositivo. ¡Gracias!</div><button class="btn ghost" type="button" id="enc-otra">Responder otra persona en este dispositivo</button>' + AYUDA_ENC;
+    $('#enc-otra').onclick = () => { try { localStorage.removeItem('es_enc_' + codigo); } catch {} iniciarEncuesta(codigo); };
+    return;
+  }
+  const P = PREGUNTAS_ENC[d.franja] || PREGUNTAS_ENC['12-17'], peq = d.franja === '6-11';
+  const OPC = [['si', '😊', 'Sí'], ['aveces', '😐', 'A veces'], ['no', '🙁', 'No']];
+  card.innerHTML = cab + `<div class="enc-intro">${peq ? 'Hola 👋 Queremos saber cómo te sientes en el club. <b>No pongas tu nombre.</b> No hay respuestas buenas ni malas.' : 'Queremos saber cómo te sientes en el club. <b>Es anónima:</b> no pedimos tu nombre ni ningún dato personal. Responde con sinceridad.'}</div>
+    <form id="form-enc">${P.map((t, i) => `<div class="preg" role="group" aria-label="${esc(t)}"><p>${i + 1}. ${esc(t)}</p><div class="resp">${OPC.map(([v, ico, tx]) => `<button type="button" data-p="p${i + 1}" data-v="${v}" aria-pressed="false"><span aria-hidden="true">${ico}</span>${tx}</button>`).join('')}</div></div>`).join('')}
+    <div class="preg form"><label style="font-size:1rem;color:var(--ink)">${peq ? '¿Quieres contarnos algo más? (opcional)' : '¿Algo que quieras añadir o proponer? (opcional)'}<textarea name="comentario" rows="3" maxlength="300" placeholder="No escribas nombres de nadie"></textarea></label></div>
+    <button class="btn">Enviar</button><p class="error" id="enc-error"></p></form>`;
+  const resp = {};
+  card.querySelectorAll('.resp button').forEach(b => b.onclick = () => {
+    resp[b.dataset.p] = b.dataset.v;
+    b.parentElement.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  });
+  $('#form-enc').onsubmit = async ev => {
+    ev.preventDefault();
+    if (!Object.keys(resp).length) { $('#enc-error').textContent = 'Responde al menos una pregunta.'; return; }
+    try { await run(() => API.call('responderEncuesta', { codigo, respuestas: resp, comentario: ev.target.comentario.value })); }
+    catch (e) { $('#enc-error').textContent = e.message; return; }
+    try { localStorage.setItem('es_enc_' + codigo, '1'); } catch {}
+    card.innerHTML = cab + `<div class="enc-intro" style="text-align:center;font-size:1.15rem">✅ <b>¡Gracias!</b> Tus respuestas se han enviado.</div>` + AYUDA_ENC;
+    window.scrollTo(0, 0);
+  };
+}
+const AYUDA_ENC = `<div class="ayuda"><b>Si algo te preocupa o te hace sentir mal:</b><ul>
+  <li>Habla con tu familia, con un adulto de confianza o con el Delegado/a de Protección del club.</li>
+  <li>Llama gratis a la Fundación ANAR: <a href="tel:900202010">900 20 20 10</a> o al <a href="tel:116111">116 111</a> (niños, niñas y adolescentes, 24 h).</li>
+  <li>En una emergencia: <a href="tel:112">112</a>.</li></ul></div>`;
+
+// ---------- BIBLIOTECA ----------
+const CATEGORIAS_BIB = ['Normativa estatal', 'Normativa andaluza', 'Protocolo Marco', 'Protección de datos', 'Guías y manuales', 'Modelos y plantillas', 'Formación', 'Protocolos de la entidad', 'Otros'];
+$('#bib-cat').innerHTML = '<option value="">Todas</option>' + CATEGORIAS_BIB.map(c => `<option>${esc(c)}</option>`).join('');
+async function loadBiblioteca(forzar) {
+  if (!state.bib || forzar) state.bib = await run(() => API.call('listarBiblioteca'));
+  pintarBiblioteca();
+}
+function pintarBiblioteca() {
+  const q = norm($('#bib-q').value).split(/\s+/).filter(Boolean), cat = $('#bib-cat').value;
+  const l = (state.bib || []).filter(x => (!cat || x.categoria === cat) && q.every(w => norm([x.titulo, x.descripcion, x.categoria].join(' ')).includes(w)));
+  $('#bib-count').textContent = l.length + ' documento' + (l.length === 1 ? '' : 's');
+  $('#bib-lista').innerHTML = l.map(x => `<div class="bib-item"><div><h3>${esc(x.titulo)}</h3><span class="chip">${esc(x.categoria)}</span>${x.fecha ? `<small>${esc(x.fecha)}</small>` : ''}${x.descripcion ? `<p>${esc(x.descripcion)}</p>` : ''}</div>
+    <div class="ia-acciones">${x.url ? `<a class="btn" href="${esc(x.url)}" target="_blank" rel="noopener">Abrir</a>` : ''}${can('escribir') ? `<button class="btn ghost" type="button" data-bib="${esc(x.id)}">Editar</button>` : ''}</div></div>`).join('')
+    || '<p class="empty">No hay documentos con esos criterios.</p>';
+  $$('[data-bib]').forEach(b => b.onclick = () => formBib(state.bib.find(x => x.id === b.dataset.bib)));
+}
+$('#bib-q').oninput = pintarBiblioteca; $('#bib-cat').onchange = pintarBiblioteca;
+$('#nuevo-bib') && ($('#nuevo-bib').onclick = () => formBib({ categoria: 'Protocolos de la entidad' }));
+function formBib(x) {
+  modal(x.id ? 'Editar documento' : 'Añadir a la biblioteca', [['titulo', 'Título', 'text', true], ['categoria', 'Categoría', CATEGORIAS_BIB],
+    ['url', 'Enlace (web oficial o Google Drive)', 'url'], ['fecha', 'Fecha del documento', 'date'], ['descripcion', 'Descripción', 'textarea']], x, async d => {
+    d.id = x.id; await run(() => API.call('guardarBiblioteca', d)); toast('Guardado en la biblioteca'); loadBiblioteca(true);
+  });
+  const f = $('#modal-form');
+  f.querySelector('h3').insertAdjacentHTML('afterend', '<p class="nota">En Drive, comparte el archivo solo con quien deba verlo. No subas documentos con datos de menores.</p>');
+  if (x.id) {
+    const del = document.createElement('button'); del.type = 'button'; del.className = 'btn ghost peligro'; del.textContent = 'Eliminar';
+    del.onclick = async () => { if (!confirm('¿Quitar este documento de la biblioteca?')) return; $('#modal').close('cancel');
+      await run(() => API.call('eliminarBiblioteca', { id: x.id })); toast('Eliminado'); loadBiblioteca(true); };
+    f.querySelector('.actions').prepend(del);
+  }
+}
+
+// ---------- MEMORIA ANUAL / INFORME POR PERIODO ----------
+(() => {
+  const y = new Date().getFullYear();
+  $('#mem-anio').innerHTML = [y, y - 1, y - 2].map(a => `<option>${a}</option>`).join('');
+  const fijar = () => {
+    const a = +$('#mem-anio').value, p = $('#mem-periodo').value;
+    const R = { anual: ['01-01', '12-31'], '1T': ['01-01', '03-31'], '2T': ['04-01', '06-30'], '3T': ['07-01', '09-30'], '4T': ['10-01', '12-31'], S1: ['01-01', '06-30'], S2: ['07-01', '12-31'] };
+    if (p === 'temporada') { $('#mem-desde').value = a + '-09-01'; $('#mem-hasta').value = (a + 1) + '-06-30'; }
+    else if (R[p]) { $('#mem-desde').value = a + '-' + R[p][0]; $('#mem-hasta').value = a + '-' + R[p][1]; }
+  };
+  $('#mem-anio').onchange = fijar; $('#mem-periodo').onchange = fijar;
+  $('#mem-desde').oninput = $('#mem-hasta').oninput = () => { $('#mem-periodo').value = 'libre'; };
+  fijar();
+})();
+const fmtFecha = f => new Date(f + 'T12:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+async function datosMemoria() { return run(() => API.call('memoria', { desde: $('#mem-desde').value, hasta: $('#mem-hasta').value })); }
+async function htmlMemoria() {
+  const d = await datosMemoria(), t = d.totales, a = d.actividad, anon = !d.club && $('#mem-anon').checked;
+  const org = d.config.organismo || '', periodo = fmtFecha(d.desde) + ' – ' + fmtFecha(d.hasta);
+  const kp = arr => '<div class="kpis">' + arr.map(([k, v]) => `<div class="kpi"><span>${k}</span><b>${v}</b></div>`).join('') + '</div>';
+  const pc = (n, tot) => tot ? Math.round(n * 100 / tot) + '%' : '—';
+  const tabObj = (o, c1) => { const ks = Object.keys(o || {}); return ks.length ? `<table><thead><tr><th>${c1}</th><th>Nº</th></tr></thead><tbody>` + ks.sort((x, y) => o[y] - o[x]).map(k => `<tr><td>${esc(k)}</td><td>${o[k]}</td></tr>`).join('') + '</tbody></table>' : ''; };
+  let b = `<h2>1. Presentación</h2><p>Memoria de actividad del sistema de protección de las personas menores frente a la violencia en el deporte de <b>${esc(org)}</b>, correspondiente al periodo <b>${esc(periodo)}</b>, conforme a la LO 8/2021 (LOPIVI) y al Protocolo Marco de Andalucía (Orden de 18 de noviembre de 2024).</p>`;
+  b += '<h2>2. Situación de implantación a la fecha</h2>' + kp((d.club ? [] : [['Entidades con menores', t.entidades], ['Con Delegado/a', t.con_delegado + '/' + t.entidades], ['Aceptan Protocolo Marco', t.con_protocolo + '/' + t.entidades]])
+    .concat([['Cumplimiento medio', t.cumplimiento_medio + '%'], ['Menores (aprox.)', t.menores], ['Riesgos altos pendientes', t.riesgos_altos], ['Alertas prioritarias', t.alertas_altas]]));
+  if (!d.club && d.filas.length) {
+    b += '<table><thead><tr><th>Entidad</th><th>Delegado/a</th><th>Protocolo Marco</th><th colspan="2">Cumplimiento</th></tr></thead><tbody>' +
+      d.filas.slice().sort((x, y) => y.pct - x.pct).map((f, i) => `<tr><td>${anon ? 'Entidad ' + (i + 1) : esc(f.nombre)}</td><td>${siNo(f.delegado)}</td><td>${siNo(f.protocolo)}</td><td style="width:70px">${barra(f.pct)}</td><td><b>${f.pct}%</b></td></tr>`).join('') + '</tbody></table>';
+  }
+  b += '<h3>Implantación por bloque del Protocolo Marco</h3><table><thead><tr><th>Bloque</th><th colspan="2">' + (d.club ? 'Completo' : '% de entidades con el bloque completo') + '</th></tr></thead><tbody>' +
+    d.bloques.map(x => `<tr><td>${esc(x.bloque)}</td><td style="width:90px">${barra(x.pct)}</td><td><b>${d.club ? (x.pct === 100 ? 'Sí' : 'No') : x.pct + '%'}</b></td></tr>`).join('') + '</tbody></table>';
+  b += '<h2>3. Actividad del periodo</h2>';
+  b += '<h3>3.1 Formación</h3>' + kp([['Personas formadas', a.formacion.personas], ['Acciones formativas', a.formacion.acciones], ['Horas de formación', a.formacion.horas]]) + tabObj(a.formacion.por_colectivo, 'Colectivo');
+  const g = a.agentes;
+  b += '<h3>3.2 Agentes deportivos</h3>' + kp([['Agentes activos', g.activos], ['Altas en el periodo', g.altas], ['Con certificado negativo', pc(g.con_cert, g.activos)], ['Código de conducta aceptado', pc(g.con_codigo, g.activos)], ['Con formación en protección', pc(g.con_formacion, g.activos)]]);
+  b += '<h3>3.3 Análisis de riesgos</h3>' + kp([['Riesgos identificados en el periodo', a.riesgos.identificados], ['Medidas implantadas en el periodo', a.riesgos.implantados], ['Riesgos altos pendientes', a.riesgos.altos_pendientes]]);
+  b += '<h3>3.4 Autorizaciones familiares</h3>' + kp([['Registros por grupo', a.autorizaciones.registros], ['Autorizaciones recibidas', a.autorizaciones.recibidas + ' de ' + a.autorizaciones.total], ['% recibidas', pc(a.autorizaciones.recibidas, a.autorizaciones.total)]]);
+  const en = a.encuestas;
+  b += '<h3>3.5 Participación infantil y adolescente</h3>' + kp([['Encuestas', en.encuestas], ['Respuestas', en.respuestas], ['Respuestas «Sí» (percepción positiva)', en.pct_si === null ? '—' : en.pct_si + '%']]);
+  FRANJAS.forEach(([k, txt]) => {
+    const fr = en.por_franja[k]; if (!fr || fr.n < 5) return;
+    b += `<p><b>${txt}</b> (${fr.n} respuestas)</p><table><thead><tr><th>Pregunta</th><th>Sí</th><th>A veces</th><th>No</th></tr></thead><tbody>` +
+      fr.preguntas.map((o, i) => { const [x, y, z] = pctTri(o); return `<tr><td>${i + 1}. ${esc(PREGUNTAS_ENC[k][i])}</td><td>${x}%</td><td>${y}%</td><td>${z}%</td></tr>`; }).join('') + '</tbody></table>';
+  });
+  b += '<h3>3.6 Sensibilización y documentación</h3>' + kp([['Documentos y contenidos elaborados', a.documentos.total]]) + tabObj(Object.fromEntries(Object.entries(a.documentos.por_tipo || {}).map(([k, v]) => [TIPOS_DOC[k] || k, v])), 'Tipo');
+  if (a.incidencias) b += '<h3>3.7 Comunicaciones e incidencias (datos agregados)</h3>' + kp([['Comunicaciones registradas', a.incidencias.comunicados], ['Casos cerrados', a.incidencias.cerrados], ['Casos abiertos a la fecha', a.incidencias.abiertos]]) +
+    '<p class="muted">Solo se ofrecen cifras agregadas, sin tipología ni datos que permitan identificar casos.</p>';
+  const mej = d.bloques.slice().sort((x, y) => x.pct - y.pct).filter(x => x.pct < 100).slice(0, 3);
+  b += '<h2>4. Áreas prioritarias de mejora</h2><ul>' + (mej.map(x => `<li><b>${esc(x.bloque)}</b>${d.club ? ': pendiente de completar.' : ': ' + x.pct + '% de entidades con el bloque completo.'}</li>`).join('') +
+    (g.activos && g.con_cert < g.activos ? `<li><b>${g.activos - g.con_cert}</b> agente(s) sin certificado negativo registrado.</li>` : '') +
+    (a.riesgos.altos_pendientes ? `<li><b>${a.riesgos.altos_pendientes}</b> riesgo(s) alto(s) sin medidas implantadas.</li>` : '') +
+    (!en.respuestas ? '<li>Impulsar la participación de los menores mediante encuestas anónimas.</li>' : '')) + '</ul>';
+  const val = $('#mem-valoracion').value.trim();
+  if (val) b += '<h2>5. Valoración técnica</h2>' + mdToHtml(val);
+  b += '<div style="page-break-inside:avoid"><div class="nota">Datos extraídos de EntornoSeguro a fecha del informe. Estado de implantación documental; no constituye valoración de personas ni de entidades.</div>';
+  b += `<div class="firma"><div>Delegado/a de Protección<br>${esc(d.club ? ((state.entidades[0] || {}).delegado_nombre || '') : (d.config.delegado_municipal || ''))}</div><div>Visto bueno</div></div></div>`;
+  return plantillaInforme(periodoEsAnual() ? 'Memoria anual ' + $('#mem-anio').value : 'Informe de actividad', 'Protección de menores en el deporte · ' + periodo, b);
+}
+const periodoEsAnual = () => $('#mem-periodo').value === 'anual';
+$('#mem-pdf').onclick = async () => abrirInforme(await htmlMemoria());
+$('#mem-word').onclick = async () => descargar('﻿' + await htmlMemoria(), 'application/msword', nombreInf(periodoEsAnual() ? 'memoria-anual-' + $('#mem-anio').value : 'informe-actividad'));
+$('#mem-ia') && ($('#mem-ia').onclick = async () => {
+  const d = await datosMemoria(), t = d.totales, a = d.actividad;
+  const prompt = [CONTEXTO_IA, '',
+    'TAREA: redacta la valoración técnica de la memoria de actividad del sistema de protección de menores en el deporte' + (d.club ? ' de un club deportivo' : ' de un ayuntamiento') + ', periodo ' + d.desde + ' a ' + d.hasta + '. Máximo 400 palabras, en párrafos, tono técnico.',
+    'Datos agregados (sin identificar entidades ni personas):',
+    `- Cumplimiento medio del Protocolo Marco: ${t.cumplimiento_medio}%` + (d.club ? '' : `; entidades con menores: ${t.entidades}; con Delegado/a: ${t.con_delegado}; aceptan el Protocolo: ${t.con_protocolo}`),
+    `- Formación: ${a.formacion.personas} personas, ${a.formacion.acciones} acciones, ${a.formacion.horas} horas`,
+    `- Agentes deportivos activos: ${a.agentes.activos}; con certificado negativo: ${a.agentes.con_cert}; con código aceptado: ${a.agentes.con_codigo}; con formación: ${a.agentes.con_formacion}`,
+    `- Riesgos identificados en el periodo: ${a.riesgos.identificados}; medidas implantadas: ${a.riesgos.implantados}; riesgos altos pendientes: ${a.riesgos.altos_pendientes}`,
+    `- Encuestas a menores: ${a.encuestas.encuestas}; respuestas: ${a.encuestas.respuestas}; respuestas positivas: ${a.encuestas.pct_si === null ? 'sin datos' : a.encuestas.pct_si + '%'}`,
+    `- Documentos y contenidos de sensibilización: ${a.documentos.total}`,
+    'Implantación por bloque (%):', d.bloques.map(x => `- ${x.bloque}: ${x.pct}%`).join('\n'), '',
+    'Incluye: balance del periodo, fortalezas, áreas de mejora y 4-6 objetivos para el próximo periodo. No valores a personas ni entidades concretas. No incluyas datos de incidencias.'].join('\n');
+  mostrarPrompt($('#mem-ia-out'), prompt, null);
+  const nota = document.createElement('p'); nota.className = 'nota'; nota.textContent = 'Pega la respuesta de Claude en "Valoración técnica" y genera la memoria.';
+  $('#mem-ia-out').appendChild(nota);
+});
+
+// ---------- ARRANQUE DE LA ENCUESTA PÚBLICA ----------
+if (COD_ENC) iniciarEncuesta(COD_ENC);
 </script>
 </body>
 </html>
