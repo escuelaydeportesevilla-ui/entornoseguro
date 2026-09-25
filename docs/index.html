@@ -208,6 +208,8 @@ mark { background: #fde68a; color: inherit; padding: 0 1px; border-radius: 2px; 
 .modo { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
 .modo-b { border: 0; background: var(--bg); padding: 8px 18px; font: inherit; font-weight: 600; cursor: pointer; color: var(--ink); min-height: 40px; }
 .modo-b.activo { background: var(--brand); color: #fff; }
+.form label.check { flex-direction: row; align-items: center; gap: 10px; font-size: .95rem; color: var(--ink); }
+.form label.check input { width: 22px; height: 22px; min-height: 0; }
 /* ---- Accesibilidad ---- */
 html { font-size: calc(var(--fs, 1) * 100%); -webkit-text-size-adjust: 100%; }
 body { line-height: 1.55; }
@@ -266,6 +268,7 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
         <button data-view="alertas">Alertas <span id="badge-alertas" class="badge"></span></button>
         <button data-view="contenidos" data-perm="ia"><span class="l-long">Contenidos RRSS</span><span class="l-short">Redes sociales</span></button>
         <button data-view="asistente" data-perm="ia">Asistente IA</button>
+        <button data-view="informes" data-perm="informes">Informes</button>
         <button data-view="documentos" data-perm="leer">Documentos</button>
         <button data-view="usuarios" data-perm="admin">Usuarios</button>
       </nav>
@@ -355,6 +358,34 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
         </form>
         <div class="card"><h3>Prompt preparado</h3><div id="out-asistente"><p class="empty">Escribe tu consulta y pulsa "Preparar prompt".</p></div></div>
       </section>
+      <!-- INFORMES -->
+      <section id="view-informes" class="view hidden">
+        <header><h2>Informes</h2></header>
+        <div class="grid2">
+          <div class="card form">
+            <h3>Informe de entidad</h3>
+            <p class="nota">Estado de implantación del sistema de protección: datos, matriz de cumplimiento, riesgos, formación y pendientes.</p>
+            <label>Entidad<select id="inf-entidad"></select></label>
+            <div class="ia-acciones">
+              <button class="btn" type="button" id="inf-ent-pdf">Ver / PDF</button>
+              <button class="btn ghost" type="button" id="inf-ent-word">Word</button>
+            </div>
+          </div>
+          <div class="card form" data-perm="leer">
+            <h3>Informe municipal de cumplimiento</h3>
+            <p class="nota">Situación de implantación del Protocolo Marco en todas las entidades con menores.</p>
+            <label class="check"><input type="checkbox" id="inf-anon"> Anonimizar entidades (Entidad 1, 2, 3…)</label>
+            <label>Valoración técnica (opcional)<textarea id="inf-valoracion" rows="5" placeholder="Texto que se incluirá en el informe. Puedes prepararlo con IA."></textarea></label>
+            <div class="ia-acciones">
+              <button class="btn" type="button" id="inf-mun-pdf">Ver / PDF</button>
+              <button class="btn ghost" type="button" id="inf-mun-word">Word</button>
+              <button class="btn ghost" type="button" id="inf-mun-ia" data-perm="ia">Valoración con IA</button>
+            </div>
+            <div id="inf-ia-out"></div>
+          </div>
+        </div>
+      </section>
+
       <!-- DOCUMENTOS -->
       <section id="view-documentos" class="view hidden">
         <header><h2>Documentos</h2></header>
@@ -512,7 +543,7 @@ $$('nav button').forEach(b => b.onclick = () => show(b.dataset.view));
 function show(v) {
   $$('nav button').forEach(b => b.classList.toggle('active', b.dataset.view === (v === 'doc' ? 'documentos' : v)));
   $$('.view').forEach(s => s.classList.toggle('hidden', s.id !== 'view-' + v));
-  ({ panel: loadPanel, entidades: loadEntidades, matriz: loadMatriz, formacion: loadFormacion, alertas: loadAlertas, usuarios: loadUsuarios, documentos: loadDocumentos, riesgos: loadRiesgos }[v] || (() => {}))();
+  ({ panel: loadPanel, entidades: loadEntidades, matriz: loadMatriz, formacion: loadFormacion, alertas: loadAlertas, usuarios: loadUsuarios, documentos: loadDocumentos, riesgos: loadRiesgos, informes: loadInformes }[v] || (() => {}))();
 }
 
 // ---------- PANEL ----------
@@ -1107,6 +1138,156 @@ $('#riesgos-ia') && ($('#riesgos-ia').onclick = () => {
     'Entrega una tabla con columnas: Ámbito | Situación de riesgo | Probabilidad (Baja/Media/Alta) | Impacto (Bajo/Medio/Alto) | Medidas preventivas | Responsable sugerido (por cargo, nunca por nombre) | Periodicidad de revisión.',
     'Prioriza los riesgos propios de la modalidad. No incluyas datos personales.'].join('\n');
   mostrarPrompt($('#riesgos-ia-out'), prompt, { asunto: 'Análisis de riesgos · ' + (e.nombre || ''), tipo: 'riesgos' });
+});
+
+// ---------- INFORMES ----------
+function plantillaInforme(titulo, subtitulo, cuerpo, paraWord) {
+  const org = (state.cfg && state.cfg.organismo) || '';
+  const hoy = new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${esc(titulo)}</title>
+<style>
+@page { size: A4; margin: 1.7cm 1.6cm 1.8cm; }
+body{font-family:Calibri,Arial,sans-serif;font-size:10.5pt;color:#1d2a30;margin:${paraWord ? '0' : '0'};line-height:1.45}
+.cab{display:flex;align-items:center;gap:12px;border-bottom:3px solid #0d818f;padding-bottom:8px;margin-bottom:16px}
+.cab img{width:58px;height:58px;border-radius:12px}.cab b{color:#0b3057;font-size:14pt;display:block}.cab small{color:#4f5d65}
+h1{color:#0b3057;font-size:17pt;margin:0 0 2px}.sub{color:#0d818f;font-size:11pt;margin:0 0 4px;font-weight:600}.fecha{color:#4f5d65;font-size:9pt;margin-bottom:14px}
+h2{color:#0b3057;font-size:12.5pt;margin:18px 0 6px;padding-bottom:3px;border-bottom:1px solid #cfd8dc;page-break-after:avoid}
+h3{color:#0d818f;font-size:11pt;margin:12px 0 4px;page-break-after:avoid}
+table{border-collapse:collapse;width:100%;margin:6px 0 10px;font-size:9.5pt}thead{display:table-header-group}
+th{background:#0b3057;color:#fff;text-align:left;font-weight:600}th,td{border:1px solid #b7c6cc;padding:4px 6px;vertical-align:top}
+tr{page-break-inside:avoid}tr:nth-child(even) td{background:#f3f7f8}
+td.k{width:34%;background:#eef4f6 !important;font-weight:600;color:#0b3057}
+.kpis{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 10px}.kpi{border:1px solid #cfd8dc;border-top:3px solid #0d818f;border-radius:6px;padding:6px 10px;min-width:110px}
+.kpi span{display:block;font-size:8.5pt;color:#4f5d65}.kpi b{font-size:15pt;color:#0b3057}
+.st{font-weight:700}.ok{color:#2e7d4f}.warn{color:#b7791f}.bad{color:#b83232}.muted{color:#6b7a82}
+.barra{height:8px;background:#e3eaed;border-radius:4px;overflow:hidden;min-width:60px}.barra i{display:block;height:100%}
+.nota{font-size:8.5pt;color:#4f5d65;border-left:3px solid #0d818f;padding:4px 10px;margin:14px 0;background:#f3f7f8}
+.firma{margin-top:36px;display:flex;justify-content:space-between;gap:30px;page-break-inside:avoid}.firma div{flex:1;border-top:1px solid #1d2a30;padding-top:4px;font-size:9pt;text-align:center}
+.pie{margin-top:24px;border-top:1px solid #cfd8dc;padding-top:6px;color:#4f5d65;font-size:8pt}
+ul,ol{margin:4px 0 8px;padding-left:20px}p{margin:0 0 6px}
+</style></head><body>
+<div class="cab"><img src="${LOGO}" alt=""><div><b>EntornoSeguro</b><small>${esc(org)}</small></div></div>
+<h1>${esc(titulo)}</h1>${subtitulo ? `<div class="sub">${esc(subtitulo)}</div>` : ''}<div class="fecha">${esc(hoy)}</div>
+${cuerpo}
+<div class="pie">EntornoSeguro · ${esc(org)} · Documento generado el ${esc(hoy)}. Estado de implantación documental; no constituye valoración de personas ni de entidades.</div>
+</body></html>`;
+}
+function abrirInforme(html) {
+  const w = window.open('', '_blank');
+  if (!w) { toast('Permite las ventanas emergentes para ver el informe', true); return; }
+  w.document.write(html.replace('</body>', '<div style="position:fixed;top:10px;right:10px" class="noprint"><button onclick="window.print()" style="font:600 14px Arial;padding:10px 16px;background:#0b3057;color:#fff;border:0;border-radius:8px;cursor:pointer">Imprimir / Guardar PDF</button></div><style>@media print{.noprint{display:none}}</style></body>'));
+  w.document.close();
+}
+const fila = (k, v) => `<tr><td class="k">${esc(k)}</td><td>${v}</td></tr>`;
+const siNo = v => v ? '<span class="st ok">Sí</span>' : '<span class="st bad">No</span>';
+const barra = p => `<div class="barra"><i style="width:${p}%;background:${p < 40 ? '#b83232' : p < 80 ? '#b7791f' : '#2e7d4f'}"></i></div>`;
+
+async function loadInformes() {
+  if (!state.entidades.length) state.entidades = await run(() => API.call('listarEntidades'));
+  $('#inf-entidad').innerHTML = state.entidades.filter(e => e.trabaja_menores === 'SI').map(e => `<option value="${esc(e.id)}">${esc(e.nombre)}</option>`).join('')
+    || '<option value="">Sin entidades con menores</option>';
+}
+
+async function htmlInformeEntidad() {
+  const id = $('#inf-entidad').value; if (!id) { toast('Selecciona una entidad', true); return null; }
+  const d = await run(() => API.call('informeEntidad', { entidad_id: id }));
+  const e = d.entidad, m = d.matriz;
+  const cuenta = s => m.filter(r => r.estado === s).length;
+  const okN = m.filter(r => r.estado === 'cumple' || r.estado === 'no_aplica').length;
+  const pct = m.length ? Math.round(okN * 100 / m.length) : 0;
+  const altos = d.riesgos.filter(r => r.nivel === 'alto' && r.estado !== 'implantada').length;
+  let b = '';
+  b += '<h2>1. Datos de la entidad</h2><table>' +
+    fila('Entidad', esc(e.nombre)) + fila('CIF', esc(e.cif) || '—') + fila('Tipo / modalidad', esc([e.tipo, e.modalidad].filter(Boolean).join(' · ')) || '—') +
+    fila('Nº aproximado de menores', esc(e.n_menores) || '—') + fila('Delegado/a de Protección', esc(e.delegado_nombre) || '<span class="st bad">Sin designar</span>') +
+    fila('Fecha de designación', esc(e.fecha_designacion) || '—') +
+    fila('Aceptación del Protocolo Marco', e.acepta_protocolo_marco === 'SI' ? '<span class="st ok">Sí</span>' + (e.fecha_aceptacion ? ' · ' + esc(e.fecha_aceptacion) : '') : '<span class="st bad">Pendiente</span>') + '</table>';
+  b += '<h2>2. Resumen de implantación</h2><div class="kpis">' +
+    [['Cumplimiento', pct + '%'], ['Cumple', cuenta('cumple')], ['Parcial', cuenta('parcial')], ['No cumple', cuenta('no_cumple')], ['Pendiente', cuenta('pendiente')],
+     ['Riesgos identificados', d.riesgos.length], ['Riesgos altos pendientes', altos], ['Personas formadas', d.formacion.length]]
+      .map(([k, v]) => `<div class="kpi"><span>${k}</span><b>${v}</b></div>`).join('') + '</div>' + barra(pct);
+  b += '<h2>3. Matriz de cumplimiento · Protocolo Marco</h2>';
+  let bloque = '';
+  m.forEach(r => {
+    if (r.bloque !== bloque) {
+      if (bloque) b += '</tbody></table>';
+      bloque = r.bloque;
+      b += `<h3>${esc(bloque)}</h3><table><thead><tr><th style="width:38%">Requisito</th><th>Estado</th><th>Revisión</th><th>Próxima</th><th>Acción pendiente</th></tr></thead><tbody>`;
+    }
+    const [ico, cls, txt] = ESTADOS[r.estado] || ESTADOS.pendiente;
+    b += `<tr><td><b>${esc(r.codigo)}</b> ${esc(r.requisito)}${r.evidencias.length ? '<br><small>Evidencias: ' + r.evidencias.map(v => esc(v.titulo)).join(', ') + '</small>' : ''}</td>
+      <td class="st ${cls}">${ico} ${txt}</td><td>${esc(r.fecha_revision) || '—'}</td><td>${esc(r.proxima_revision) || '—'}</td><td>${esc(r.accion_pendiente) || '—'}</td></tr>`;
+  });
+  if (bloque) b += '</tbody></table>';
+  b += '<h2>4. Análisis de riesgos</h2>' + (d.riesgos.length ?
+    '<table><thead><tr><th>Ámbito</th><th>Situación de riesgo</th><th>Nivel</th><th>Medidas preventivas</th><th>Estado</th><th>Revisión</th></tr></thead><tbody>' +
+    d.riesgos.sort((a, c) => ({ alto: 0, medio: 1, bajo: 2 })[a.nivel] - ({ alto: 0, medio: 1, bajo: 2 })[c.nivel]).map(r => `<tr><td>${esc(r.ambito)}</td><td>${esc(r.descripcion)}</td>
+      <td class="st ${r.nivel === 'alto' ? 'bad' : r.nivel === 'medio' ? 'warn' : 'ok'}">${esc(r.nivel)}</td><td>${esc(r.medidas) || '—'}</td>
+      <td>${esc((ESTADOS_R.find(x => x[0] === r.estado) || ['', 'Pendiente'])[1])}</td><td>${esc(r.fecha_revision) || '—'}</td></tr>`).join('') + '</tbody></table>'
+    : '<p class="muted">No hay riesgos registrados.</p>');
+  b += '<h2>5. Formación de agentes deportivos</h2>' + (d.formacion.length ?
+    '<table><thead><tr><th>Persona</th><th>Colectivo</th><th>Curso</th><th>Horas</th><th>Fecha</th><th>Caducidad</th></tr></thead><tbody>' +
+    d.formacion.map(f => `<tr><td>${esc(f.persona_nombre)}</td><td>${esc(f.colectivo)}</td><td>${esc(f.curso)}</td><td>${esc(f.horas)}</td><td>${esc(f.fecha)}</td><td>${esc(f.fecha_caducidad) || '—'}</td></tr>`).join('') + '</tbody></table>'
+    : '<p class="muted">No hay formación registrada.</p>');
+  const orden = { alta: 0, media: 1, baja: 2 };
+  b += '<h2>6. Actuaciones pendientes</h2>' + (d.alertas.length ?
+    '<table><thead><tr><th>Prioridad</th><th>Actuación</th><th>Fecha límite</th></tr></thead><tbody>' +
+    d.alertas.sort((a, c) => orden[a.prioridad] - orden[c.prioridad]).map(a => `<tr><td class="st ${a.prioridad === 'alta' ? 'bad' : a.prioridad === 'media' ? 'warn' : 'muted'}">${esc(a.prioridad)}</td><td>${esc(String(a.mensaje).replace(e.nombre + ': ', ''))}</td><td>${esc(a.fecha_limite) || '—'}</td></tr>`).join('') + '</tbody></table>'
+    : '<p class="ok st">Sin actuaciones pendientes.</p>');
+  b += `<div style="page-break-inside:avoid"><div class="nota">Referencias: LO 8/2021 (LOPIVI), Ley 4/2021 de Infancia y Adolescencia de Andalucía y Protocolo Marco aprobado por Orden de 18 de noviembre de 2024. Periodicidades de revisión orientativas.</div>`;
+  b += `<div class="firma"><div>Delegado/a de Protección de la entidad<br>${esc(e.delegado_nombre || '')}</div><div>Delegado/a de Protección municipal<br>${esc(d.config.delegado_municipal || '')}</div></div></div>`;
+  return plantillaInforme('Informe de implantación del sistema de protección', e.nombre, b);
+}
+
+async function htmlInformeMunicipal() {
+  const d = await run(() => API.call('informeMunicipal'));
+  const anon = $('#inf-anon').checked, t = d.totales;
+  const nombre = (f, i) => anon ? 'Entidad ' + (i + 1) : esc(f.nombre);
+  let b = '<h2>1. Indicadores generales</h2><div class="kpis">' +
+    [['Entidades con menores', t.entidades], ['Menores (aprox.)', t.menores], ['Con Delegado/a', t.con_delegado + '/' + t.entidades], ['Aceptan Protocolo Marco', t.con_protocolo + '/' + t.entidades],
+     ['Cumplimiento medio', t.cumplimiento_medio + '%'], ['Personas formadas', t.formados], ['Riesgos identificados', t.riesgos], ['Riesgos altos pendientes', t.riesgos_altos], ['Alertas prioritarias', t.alertas_altas]]
+      .map(([k, v]) => `<div class="kpi"><span>${k}</span><b>${v}</b></div>`).join('') + '</div>';
+  const filas = d.filas.slice().sort((a, c) => c.pct - a.pct);
+  b += '<h2>2. Situación por entidad</h2>' + (filas.length ?
+    '<table><thead><tr><th>Entidad</th><th>Delegado/a</th><th>Protocolo Marco</th><th colspan="2">Cumplimiento</th><th>Riesgos (altos)</th><th>Formados</th><th>Alertas altas</th></tr></thead><tbody>' +
+    filas.map((f, i) => `<tr><td>${nombre(f, i)}${!anon && f.modalidad ? '<br><small>' + esc(f.modalidad) + '</small>' : ''}</td><td>${siNo(f.delegado)}</td><td>${siNo(f.protocolo)}</td>
+      <td style="width:70px">${barra(f.pct)}</td><td><b>${f.pct}%</b></td><td>${f.riesgos} (${f.riesgos_altos})</td><td>${f.formados}</td><td>${f.alertas_altas}</td></tr>`).join('') + '</tbody></table>'
+    : '<p class="muted">No hay entidades con menores registradas.</p>');
+  b += '<h2>3. Implantación por bloque del Protocolo Marco</h2><p>Porcentaje de entidades que tienen completo cada bloque.</p><table><thead><tr><th>Bloque</th><th>Entidades con el bloque completo</th><th colspan="2">%</th></tr></thead><tbody>' +
+    d.bloques.map(x => `<tr><td>${esc(x.bloque)}</td><td>${x.entidades_completas} de ${t.entidades}</td><td style="width:90px">${barra(x.pct)}</td><td><b>${x.pct}%</b></td></tr>`).join('') + '</tbody></table>';
+  const menos = d.bloques.slice().sort((a, c) => a.pct - c.pct).slice(0, 3);
+  b += '<h2>4. Áreas prioritarias de mejora</h2><ul>' + menos.map(x => `<li><b>${esc(x.bloque)}</b>: ${x.pct}% de entidades con el bloque completo.</li>`).join('') +
+    (t.entidades - t.con_delegado > 0 ? `<li><b>${t.entidades - t.con_delegado}</b> entidad(es) sin Delegado/a de Protección designado.</li>` : '') +
+    (t.riesgos_altos ? `<li><b>${t.riesgos_altos}</b> riesgo(s) alto(s) sin medidas implantadas.</li>` : '') + '</ul>';
+  const val = $('#inf-valoracion').value.trim();
+  if (val) b += '<h2>5. Valoración técnica</h2>' + mdToHtml(val);
+  b += `<div class="nota">Datos agregados a fecha del informe. Referencias: LO 8/2021 (LOPIVI), Ley 4/2021 de Infancia y Adolescencia de Andalucía y Protocolo Marco (Orden de 18 de noviembre de 2024).</div>`;
+  b += `<div class="firma"><div>Delegado/a de Protección municipal<br>${esc(d.config.delegado_municipal || '')}</div><div>Visto bueno</div></div>`;
+  state.ultimoMunicipal = d;
+  return plantillaInforme('Informe municipal de cumplimiento', 'Protección de menores en el deporte · ' + (d.config.municipio || ''), b);
+}
+
+const nombreInf = base => base.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-') + '-' + new Date().toISOString().slice(0, 10) + '.doc';
+$('#inf-ent-pdf').onclick = async () => { const h = await htmlInformeEntidad(); if (h) abrirInforme(h); };
+$('#inf-ent-word').onclick = async () => { const h = await htmlInformeEntidad(); if (h) descargar('﻿' + h, 'application/msword', nombreInf('informe-' + ($('#inf-entidad').selectedOptions[0] || {}).text)); };
+$('#inf-mun-pdf') && ($('#inf-mun-pdf').onclick = async () => abrirInforme(await htmlInformeMunicipal()));
+$('#inf-mun-word') && ($('#inf-mun-word').onclick = async () => descargar('﻿' + await htmlInformeMunicipal(), 'application/msword', nombreInf('informe-municipal')));
+$('#inf-mun-ia') && ($('#inf-mun-ia').onclick = async () => {
+  const d = await run(() => API.call('informeMunicipal')); const t = d.totales;
+  const prompt = [CONTEXTO_IA, '',
+    'TAREA: redacta la valoración técnica de un informe municipal de cumplimiento del Protocolo Marco de protección de menores en el deporte. Máximo 350 palabras, en párrafos, tono técnico de administración local.',
+    'Datos agregados (sin identificar entidades):',
+    `- Entidades con menores: ${t.entidades}; menores aproximados: ${t.menores}`,
+    `- Con Delegado/a de Protección: ${t.con_delegado}; aceptan el Protocolo Marco: ${t.con_protocolo}`,
+    `- Cumplimiento medio: ${t.cumplimiento_medio}%; personas formadas: ${t.formados}`,
+    `- Riesgos identificados: ${t.riesgos}; riesgos altos sin medidas: ${t.riesgos_altos}; alertas prioritarias: ${t.alertas_altas}`,
+    'Implantación por bloque (% de entidades con el bloque completo):',
+    d.bloques.map(x => `- ${x.bloque}: ${x.pct}%`).join('\n'), '',
+    'Incluye: situación general, fortalezas, áreas de mejora prioritarias y 3-5 propuestas de actuación municipal. No valores a personas ni entidades concretas.'].join('\n');
+  mostrarPrompt($('#inf-ia-out'), prompt, null);
+  const nota = document.createElement('p'); nota.className = 'nota';
+  nota.textContent = 'Pega la respuesta de Claude en "Valoración técnica" y genera el informe.';
+  $('#inf-ia-out').appendChild(nota);
 });
 </script>
 </body>
