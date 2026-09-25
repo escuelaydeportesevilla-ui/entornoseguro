@@ -210,6 +210,24 @@ mark { background: #fde68a; color: inherit; padding: 0 1px; border-radius: 2px; 
 .modo-b.activo { background: var(--brand); color: #fff; }
 .form label.check { flex-direction: row; align-items: center; gap: 10px; font-size: .95rem; color: var(--ink); }
 .form label.check input { width: 22px; height: 22px; min-height: 0; }
+.menu-toggle { display: none; }
+.plantillas { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.plantilla { text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; cursor: pointer; font: inherit; color: var(--ink); }
+.plantilla:hover, .plantilla.activa { border-color: var(--brand-2); box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-2) 25%, transparent); }
+.plantilla b { display: block; color: var(--brand); margin-bottom: 4px; }
+.plantilla small { color: var(--muted); }
+.progreso { height: 10px; background: var(--bg); border-radius: 5px; overflow: hidden; min-width: 80px; }
+.progreso i { display: block; height: 100%; }
+@media (max-width: 860px) {
+  .menu-toggle { display: flex; justify-content: space-between; align-items: center; width: 100%; min-height: 52px; padding: 10px 14px; margin-bottom: 8px;
+    background: var(--brand); color: #fff; border: 0; border-radius: 10px; font: inherit; font-weight: 700; cursor: pointer; }
+  .menu-toggle b { font-weight: 600; opacity: .9; }
+  nav#menu-principal { display: none; }
+  nav#menu-principal.abierto { display: grid; }
+  .sidebar .user { display: none; }
+  nav#menu-principal.abierto + .user { display: flex; }
+  .plantillas { grid-template-columns: 1fr; }
+}
 /* ---- Accesibilidad ---- */
 html { font-size: calc(var(--fs, 1) * 100%); -webkit-text-size-adjust: 100%; }
 body { line-height: 1.55; }
@@ -259,15 +277,19 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
   <div id="app" class="app hidden">
     <aside class="sidebar">
       <div class="brand"><img src="" data-logo alt="" class="logo sm"><div><strong>EntornoSeguro</strong><small id="org"></small></div></div>
-      <nav>
+      <button type="button" id="menu-toggle" class="menu-toggle" aria-expanded="false" aria-controls="menu-principal"><span>☰ Menú</span><b id="menu-actual">Panel</b></button>
+      <nav id="menu-principal">
         <button data-view="panel" class="active">Panel</button>
-        <button data-view="entidades">Entidades</button>
+        <button data-view="entidades" id="nav-entidades">Entidades</button>
         <button data-view="matriz"><span class="l-long">Matriz de cumplimiento</span><span class="l-short">Matriz</span></button>
         <button data-view="riesgos">Riesgos</button>
+        <button data-view="agentes"><span class="l-long">Agentes deportivos</span><span class="l-short">Agentes</span></button>
         <button data-view="formacion">Formación</button>
+        <button data-view="autorizaciones">Autorizaciones</button>
         <button data-view="alertas">Alertas <span id="badge-alertas" class="badge"></span></button>
         <button data-view="contenidos" data-perm="ia"><span class="l-long">Contenidos RRSS</span><span class="l-short">Redes sociales</span></button>
         <button data-view="asistente" data-perm="ia">Asistente IA</button>
+        <button data-view="plantillas" data-perm="ia">Plantillas</button>
         <button data-view="informes" data-perm="informes">Informes</button>
         <button data-view="documentos" data-perm="leer">Documentos</button>
         <button data-view="usuarios" data-perm="admin">Usuarios</button>
@@ -278,7 +300,7 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
     <main>
       <!-- PANEL -->
       <section id="view-panel" class="view">
-        <header><h2>Panel del Delegado de Protección</h2></header>
+        <header><h2 id="panel-titulo">Panel del Delegado de Protección</h2></header>
         <div id="kpis" class="kpis"></div>
         <div class="grid2">
           <div class="card"><h3>Implantación por entidad</h3><div id="panel-entidades"></div></div>
@@ -311,6 +333,33 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
         </div>
         <div id="riesgos-ia-out"></div>
         <div class="card"><table id="tabla-riesgos"></table></div>
+      </section>
+
+      <!-- AGENTES -->
+      <section id="view-agentes" class="view hidden">
+        <header><h2>Agentes deportivos</h2><select id="agentes-entidad" aria-label="Entidad"></select></header>
+        <p class="nota">Personas adultas que intervienen con menores: entrenadores, monitores, voluntarios, directivos… (LOPIVI art. 57 y Protocolo Marco, bloque K).</p>
+        <div id="agentes-resumen" class="kpis"></div>
+        <div class="ia-acciones"><button class="btn" id="nuevo-agente" type="button">+ Nuevo agente</button></div>
+        <div class="card form buscador"><label>Buscar<input id="agentes-q" type="search" placeholder="Nombre, rol o grupo"></label>
+          <label>Mostrar<select id="agentes-filtro"><option value="">Todos</option><option value="sincert">Sin certificado</option><option value="renovar">Certificado a renovar</option><option value="sincodigo">Sin código aceptado</option><option value="sinform">Sin formación</option></select></label></div>
+        <div class="card"><table id="tabla-agentes"></table></div>
+      </section>
+
+      <!-- AUTORIZACIONES -->
+      <section id="view-autorizaciones" class="view hidden">
+        <header><h2>Autorizaciones por grupo</h2><select id="aut-entidad" aria-label="Entidad"></select></header>
+        <p class="nota">Control numérico por grupo o equipo. No se registran nombres ni datos de menores: los originales firmados los custodia la entidad.</p>
+        <div class="ia-acciones"><button class="btn" id="nueva-aut" type="button">+ Nuevo registro</button></div>
+        <div class="card"><table id="tabla-aut"></table></div>
+      </section>
+
+      <!-- PLANTILLAS -->
+      <section id="view-plantillas" class="view hidden">
+        <header><h2>Plantillas de documentos</h2><select id="plant-entidad" aria-label="Entidad"></select></header>
+        <p class="nota">Genera con IA los documentos del sistema de protección con los datos de la entidad. Revisa y adapta siempre el resultado antes de aprobarlo.</p>
+        <div id="plant-lista" class="plantillas"></div>
+        <div id="plant-out"></div>
       </section>
 
       <!-- FORMACIÓN -->
@@ -391,7 +440,7 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
         <header><h2>Documentos</h2></header>
         <div class="card form buscador">
           <label>Buscar<input id="doc-q" type="search" placeholder="Palabras del asunto o del contenido"></label>
-          <label>Tipo<select id="doc-tipo"><option value="">Todos</option><option value="asistente">Asistente IA</option><option value="contenido">Redes sociales</option><option value="riesgos">Análisis de riesgos</option></select></label>
+          <label>Tipo<select id="doc-tipo"><option value="">Todos</option><option value="asistente">Asistente IA</option><option value="contenido">Redes sociales</option><option value="riesgos">Análisis de riesgos</option><option value="plantilla">Plantillas</option></select></label>
         </div>
         <p class="nota" id="doc-count"></p>
         <div id="doc-lista"></div>
@@ -510,6 +559,13 @@ async function arrancar() {
   $('#user-rol').textContent = state.me.rol;
   $('#org').textContent = r.config.organismo || ''; state.cfg = r.config;
   $$('[data-perm]').forEach(el => { if (!can(el.dataset.perm)) el.remove(); });
+  state.modo = r.config.modo || 'MUNICIPAL';
+  state.club = state.modo === 'CLUB' || state.me.rol === 'entidad';
+  if (state.club) {
+    $('#nav-entidades').textContent = state.modo === 'CLUB' ? 'Mi club' : 'Mi entidad';
+    $('#panel-titulo').textContent = 'Panel del Delegado/a de Protección' + (state.modo === 'CLUB' ? ' del club' : '');
+    const mun = $('#inf-mun-pdf'); if (mun) mun.closest('.card').remove();
+  }
   if (state.me.debe_cambiar) formPassword(true); else show('panel');
 }
 
@@ -540,10 +596,18 @@ function formPassword(obligatorio) {
 
 // ---------- NAVEGACIÓN ----------
 $$('nav button').forEach(b => b.onclick = () => show(b.dataset.view));
+$('#menu-toggle').onclick = () => {
+  const n = $('#menu-principal'), ab = !n.classList.contains('abierto');
+  n.classList.toggle('abierto', ab); $('#menu-toggle').setAttribute('aria-expanded', String(ab));
+};
 function show(v) {
+  const bAct = $(`nav button[data-view="${v === 'doc' ? 'documentos' : v}"]`);
+  if (bAct) $('#menu-actual').textContent = (bAct.querySelector('.l-short') || bAct).textContent.replace(/\d+$/, '').trim();
+  $('#menu-principal').classList.remove('abierto'); $('#menu-toggle').setAttribute('aria-expanded', 'false');
+  window.scrollTo(0, 0);
   $$('nav button').forEach(b => b.classList.toggle('active', b.dataset.view === (v === 'doc' ? 'documentos' : v)));
   $$('.view').forEach(s => s.classList.toggle('hidden', s.id !== 'view-' + v));
-  ({ panel: loadPanel, entidades: loadEntidades, matriz: loadMatriz, formacion: loadFormacion, alertas: loadAlertas, usuarios: loadUsuarios, documentos: loadDocumentos, riesgos: loadRiesgos, informes: loadInformes }[v] || (() => {}))();
+  ({ panel: loadPanel, entidades: loadEntidades, matriz: loadMatriz, formacion: loadFormacion, alertas: loadAlertas, usuarios: loadUsuarios, documentos: loadDocumentos, riesgos: loadRiesgos, informes: loadInformes, agentes: loadAgentes, autorizaciones: loadAutorizaciones, plantillas: loadPlantillas }[v] || (() => {}))();
 }
 
 // ---------- PANEL ----------
@@ -554,9 +618,10 @@ async function loadPanel() {
     ['Entidades', k.entidades], ['Con menores', k.con_menores],
     ['Con Delegado/a', `${k.con_delegado}/${k.con_menores}`], ['Aceptan Protocolo', `${k.aceptan_protocolo}/${k.con_menores}`],
     ['Cumplimiento medio', k.cumplimiento_medio + '%'], ['Personas formadas', k.personas_formadas],
-    ['Alertas abiertas', k.alertas_abiertas], ['Riesgos altos pendientes', k.riesgos_altos || 0]
+    ['Alertas abiertas', k.alertas_abiertas], ['Riesgos altos pendientes', k.riesgos_altos || 0], ['Agentes deportivos', k.agentes || 0], ['Agentes sin certificado', k.agentes_sin_cert || 0]
   ];
-  $('#kpis').innerHTML = tiles.map(([l, v]) => `<div class="kpi"><span>${esc(l)}</span><strong>${esc(v)}</strong></div>`).join('');
+  const ocultarClub = ['Entidades', 'Con menores', 'Con Delegado/a', 'Aceptan Protocolo'];
+  $('#kpis').innerHTML = tiles.filter(([l]) => !(state.club && ocultarClub.includes(l))).map(([l, v]) => `<div class="kpi"><span>${esc(l)}</span><strong>${esc(v)}</strong></div>`).join('');
   $('#badge-alertas').textContent = k.alertas_abiertas || '';
   $('#panel-entidades').innerHTML = d.entidades.length ? d.entidades.map(e => `
     <div class="bar-row" data-id="${esc(e.id)}"><span>${esc(e.nombre)}</span>
@@ -579,6 +644,7 @@ async function loadEntidades() {
       <td>${e.acepta_protocolo_marco === 'SI' ? '✓ ' + esc(e.fecha_aceptacion) : '<span class="bad-t">Pendiente</span>'}</td>
       <td>${can('escribir') ? `<button class="link" data-edit="${esc(e.id)}">Editar</button>` : ''}</td></tr>`).join('') + '</tbody>';
   $$('[data-edit]').forEach(b => b.onclick = () => formEntidad(state.entidades.find(e => e.id === b.dataset.edit)));
+  const nb = $('#nueva-entidad'); if (nb) nb.classList.toggle('hidden', !!state.club && state.entidades.length > 0);
 }
 $('#nueva-entidad') && ($('#nueva-entidad').onclick = () => formEntidad({}));
 
@@ -600,6 +666,7 @@ async function loadMatriz() {
     sel.innerHTML = state.entidades.filter(e => e.trabaja_menores === 'SI').map(e => `<option value="${esc(e.id)}">${esc(e.nombre)}</option>`).join('');
     sel.onchange = loadMatriz;
   }
+  sel.classList.toggle('hidden', !!state.club);
   if (!sel.value) { $('#tabla-matriz').innerHTML = '<tr><td class="empty">Registra primero una entidad que trabaje con menores.</td></tr>'; return; }
   const rows = await run(() => API.call('matriz', { entidad_id: sel.value }));
   let bloque = '';
@@ -931,7 +998,7 @@ document.querySelectorAll('.tamano button').forEach(b => b.onclick = () => aplic
 (() => { let f = '1'; try { f = localStorage.getItem('es_fs') || '1'; } catch {} aplicarTamano(f); })();
 
 // ---------- DOCUMENTOS ----------
-const TIPOS_DOC = { asistente: 'Asistente IA', contenido: 'Redes sociales', riesgos: 'Análisis de riesgos' };
+const TIPOS_DOC = { asistente: 'Asistente IA', contenido: 'Redes sociales', riesgos: 'Análisis de riesgos', plantilla: 'Plantillas' };
 const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 async function loadDocumentos(forzar) {
   if (!state.docs || forzar) state.docs = await run(() => API.call('listarDocumentos'));
@@ -1065,6 +1132,7 @@ async function loadRiesgos() {
     sel.innerHTML = state.entidades.filter(e => e.trabaja_menores === 'SI').map(e => `<option value="${esc(e.id)}">${esc(e.nombre)}</option>`).join('');
     sel.onchange = loadRiesgos;
   }
+  sel.classList.toggle('hidden', !!state.club);
   if (!sel.value) { $('#tabla-riesgos').innerHTML = '<tr><td class="empty">Registra primero una entidad que trabaje con menores.</td></tr>'; $('#riesgos-resumen').innerHTML = ''; return; }
   const rows = await run(() => API.call('listarRiesgos', { entidad_id: sel.value }));
   state.riesgos = rows;
@@ -1229,8 +1297,24 @@ async function htmlInformeEntidad() {
     '<table><thead><tr><th>Persona</th><th>Colectivo</th><th>Curso</th><th>Horas</th><th>Fecha</th><th>Caducidad</th></tr></thead><tbody>' +
     d.formacion.map(f => `<tr><td>${esc(f.persona_nombre)}</td><td>${esc(f.colectivo)}</td><td>${esc(f.curso)}</td><td>${esc(f.horas)}</td><td>${esc(f.fecha)}</td><td>${esc(f.fecha_caducidad) || '—'}</td></tr>`).join('') + '</tbody></table>'
     : '<p class="muted">No hay formación registrada.</p>');
+  const meses = (state.cfg && state.cfg.meses_certificado) || 12;
+  const ag = d.agentes || [];
+  const sinC = ag.filter(a => !a.cert_fecha).length, ren = ag.filter(a => a.cert_fecha && new Date(a.cert_fecha) < fechaMenos(meses)).length;
+  b += '<h2>6. Agentes deportivos</h2>' + (ag.length ?
+    `<div class="kpis"><div class="kpi"><span>Agentes activos</span><b>${ag.length}</b></div><div class="kpi"><span>Sin certificado negativo</span><b>${sinC}</b></div><div class="kpi"><span>Certificado a renovar</span><b>${ren}</b></div><div class="kpi"><span>Código aceptado</span><b>${ag.filter(a => a.codigo_aceptado === 'SI').length}</b></div></div>` +
+    '<table><thead><tr><th>Agente</th><th>Rol</th><th>Grupo</th><th>Certificado negativo</th><th>Código</th><th>Formación</th></tr></thead><tbody>' +
+    ag.sort((a, c) => String(a.nombre).localeCompare(String(c.nombre))).map(a => `<tr><td>${esc(a.nombre)}</td><td>${esc(a.rol)}</td><td>${esc(a.grupo) || '—'}</td>
+      <td class="st ${!a.cert_fecha ? 'bad' : new Date(a.cert_fecha) < fechaMenos(meses) ? 'warn' : 'ok'}">${esc(a.cert_fecha) || 'Sin registrar'}</td>
+      <td class="st ${a.codigo_aceptado === 'SI' ? 'ok' : 'bad'}">${a.codigo_aceptado === 'SI' ? 'Sí' : 'No'}</td><td>${esc(a.formacion_fecha) || '—'}</td></tr>`).join('') + '</tbody></table>'
+    : '<p class="muted">No hay agentes deportivos registrados.</p>');
+  const au = d.autorizaciones || [];
+  b += '<h2>7. Autorizaciones familiares por grupo</h2>' + (au.length ?
+    '<table><thead><tr><th>Grupo</th><th>Tipo</th><th>Temporada</th><th>Recibidas</th><th>Denegadas</th><th>Actualizado</th></tr></thead><tbody>' +
+    au.map(a => { const t = +a.total || 0, r = +a.recibidas || 0; return `<tr><td>${esc(a.grupo)}</td><td>${esc(a.tipo)}</td><td>${esc(a.temporada) || '—'}</td>
+      <td class="st ${r >= t ? 'ok' : 'warn'}">${r} de ${t}</td><td>${esc(a.denegadas || 0)}</td><td>${esc(a.fecha) || '—'}</td></tr>`; }).join('') + '</tbody></table>'
+    : '<p class="muted">No hay registros de autorizaciones.</p>');
   const orden = { alta: 0, media: 1, baja: 2 };
-  b += '<h2>6. Actuaciones pendientes</h2>' + (d.alertas.length ?
+  b += '<h2>8. Actuaciones pendientes</h2>' + (d.alertas.length ?
     '<table><thead><tr><th>Prioridad</th><th>Actuación</th><th>Fecha límite</th></tr></thead><tbody>' +
     d.alertas.sort((a, c) => orden[a.prioridad] - orden[c.prioridad]).map(a => `<tr><td class="st ${a.prioridad === 'alta' ? 'bad' : a.prioridad === 'media' ? 'warn' : 'muted'}">${esc(a.prioridad)}</td><td>${esc(String(a.mensaje).replace(e.nombre + ': ', ''))}</td><td>${esc(a.fecha_limite) || '—'}</td></tr>`).join('') + '</tbody></table>'
     : '<p class="ok st">Sin actuaciones pendientes.</p>');
@@ -1289,6 +1373,145 @@ $('#inf-mun-ia') && ($('#inf-mun-ia').onclick = async () => {
   nota.textContent = 'Pega la respuesta de Claude en "Valoración técnica" y genera el informe.';
   $('#inf-ia-out').appendChild(nota);
 });
+
+// ---------- SELECTOR DE ENTIDAD COMÚN ----------
+async function selEntidad(sel, recargar) {
+  if (!sel.options.length) {
+    if (!state.entidades.length) state.entidades = await run(() => API.call('listarEntidades'));
+    sel.innerHTML = state.entidades.filter(e => e.trabaja_menores === 'SI').map(e => `<option value="${esc(e.id)}">${esc(e.nombre)}</option>`).join('');
+    sel.onchange = recargar;
+  }
+  sel.classList.toggle('hidden', !!state.club);
+  return sel.value;
+}
+const fechaMenos = meses => { const d = new Date(); d.setMonth(d.getMonth() - meses); return d; };
+
+// ---------- AGENTES DEPORTIVOS ----------
+const ROLES_AGENTE = ['entrenador', 'monitor', 'delegado de protección', 'directivo', 'voluntario', 'árbitro/juez', 'personal externo', 'otro'];
+async function loadAgentes() {
+  const ent = await selEntidad($('#agentes-entidad'), loadAgentes);
+  if (!ent) { $('#tabla-agentes').innerHTML = '<tr><td class="empty">Registra primero una entidad que trabaje con menores.</td></tr>'; return; }
+  state.agentes = await run(() => API.call('listarAgentes', { entidad_id: ent }));
+  pintarAgentes();
+}
+function estadoAgente(a) {
+  const meses = (state.cfg && state.cfg.meses_certificado) || 12;
+  return { sincert: !a.cert_fecha, renovar: a.cert_fecha && new Date(a.cert_fecha) < fechaMenos(meses),
+           sincodigo: a.codigo_aceptado !== 'SI', sinform: !a.formacion_fecha };
+}
+function pintarAgentes() {
+  const todos = (state.agentes || []).filter(a => a.activo !== 'NO');
+  const est = todos.map(estadoAgente);
+  const pc = n => todos.length ? Math.round(n * 100 / todos.length) + '%' : '—';
+  $('#agentes-resumen').innerHTML = [['Agentes activos', todos.length], ['Sin certificado', est.filter(e => e.sincert).length],
+    ['Certificado a renovar', est.filter(e => e.renovar).length], ['Código aceptado', pc(est.filter(e => !e.sincodigo).length)], ['Con formación', pc(est.filter(e => !e.sinform).length)]]
+    .map(([l, v]) => `<div class="kpi"><span>${l}</span><strong>${v}</strong></div>`).join('');
+  const q = norm($('#agentes-q').value), f = $('#agentes-filtro').value;
+  const lista = (state.agentes || []).filter(a => (!q || norm([a.nombre, a.rol, a.grupo].join(' ')).includes(q)) && (!f || estadoAgente(a)[f]))
+    .sort((a, b) => String(a.nombre).localeCompare(String(b.nombre)));
+  const marca = (ok, txt) => ok ? `<span class="st ok">✓ ${esc(txt)}</span>` : `<span class="st bad">✗ Pendiente</span>`;
+  $('#tabla-agentes').innerHTML = `<thead><tr><th>Agente</th><th>Grupo</th><th>Certificado negativo</th><th>Código de conducta</th><th>Formación</th><th></th></tr></thead><tbody>` +
+    (lista.map(a => { const e = estadoAgente(a); return `<tr class="${a.activo === 'NO' ? 'inactivo' : ''}"><td><b>${esc(a.nombre)}</b><br><small>${esc(a.rol)}${a.activo === 'NO' ? ' · baja' : ''}</small></td>
+      <td>${esc(a.grupo) || '—'}</td>
+      <td>${e.sincert ? '<span class="st bad">✗ Sin registrar</span>' : e.renovar ? `<span class="st warn">⚠ ${esc(a.cert_fecha)} · renovar</span>` : `<span class="st ok">✓ ${esc(a.cert_fecha)}</span>`}</td>
+      <td>${marca(!e.sincodigo, a.codigo_fecha || 'Aceptado')}</td><td>${marca(!e.sinform, a.formacion_fecha || 'Sí')}</td>
+      <td><button class="link" data-agente="${esc(a.id)}">Editar</button></td></tr>`; }).join('')
+      || '<tr><td colspan="6" class="empty">Sin agentes con esos criterios.</td></tr>') + '</tbody>';
+  $$('[data-agente]').forEach(b => b.onclick = () => formAgente(state.agentes.find(a => a.id === b.dataset.agente)));
+}
+$('#agentes-q').oninput = pintarAgentes; $('#agentes-filtro').onchange = pintarAgentes;
+$('#nuevo-agente').onclick = () => formAgente({ activo: 'SI', codigo_aceptado: 'NO', fecha_alta: new Date().toISOString().slice(0, 10) });
+function formAgente(a) {
+  const entidad_id = $('#agentes-entidad').value; if (!entidad_id) return;
+  modal(a.id ? 'Editar agente' : 'Nuevo agente deportivo', [
+    ['nombre', 'Nombre y apellidos', 'text', true], ['rol', 'Rol', ROLES_AGENTE], ['grupo', 'Grupo / equipo'],
+    ['email', 'Email', 'email'], ['telefono', 'Teléfono'], ['fecha_alta', 'Fecha de alta', 'date'],
+    ['cert_fecha', 'Fecha del certificado negativo', 'date'], ['codigo_aceptado', 'Código de conducta aceptado', ['NO', 'SI']],
+    ['codigo_fecha', 'Fecha de aceptación', 'date'], ['formacion_fecha', 'Fecha de formación en protección', 'date'],
+    ['activo', 'Activo', ['SI', 'NO']], ['observaciones', 'Observaciones', 'textarea']
+  ], a, async d => { Object.assign(d, { id: a.id, entidad_id }); await run(() => API.call('guardarAgente', d)); toast('Agente guardado'); loadAgentes(); });
+  const f = $('#modal-form');
+  f.insertAdjacentHTML('afterbegin', '');
+  f.querySelector('h3').insertAdjacentHTML('afterend', '<p class="nota">Registra solo la fecha del certificado; el documento original lo custodia la entidad.</p>');
+  if (a.id) {
+    const del = document.createElement('button'); del.type = 'button'; del.className = 'btn ghost peligro'; del.textContent = 'Eliminar';
+    del.onclick = async () => { if (!confirm('¿Eliminar este agente? Si solo ha dejado la entidad, mejor márcalo como no activo.')) return;
+      $('#modal').close('cancel'); await run(() => API.call('eliminarAgente', { id: a.id })); toast('Agente eliminado'); loadAgentes(); };
+    f.querySelector('.actions').prepend(del);
+  }
+}
+
+// ---------- AUTORIZACIONES POR GRUPO ----------
+const TIPOS_AUT = ['imagen', 'desplazamiento', 'actividad con pernocta', 'actividad fuera de instalaciones', 'otra'];
+async function loadAutorizaciones() {
+  const ent = await selEntidad($('#aut-entidad'), loadAutorizaciones);
+  if (!ent) { $('#tabla-aut').innerHTML = '<tr><td class="empty">Registra primero una entidad que trabaje con menores.</td></tr>'; return; }
+  const rows = state.autorizaciones = await run(() => API.call('listarAutorizaciones', { entidad_id: ent }));
+  rows.sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
+  $('#tabla-aut').innerHTML = `<thead><tr><th>Grupo</th><th>Tipo</th><th>Temporada</th><th>Recibidas</th><th>Denegadas</th><th>Fecha</th><th></th></tr></thead><tbody>` +
+    (rows.map(a => { const t = +a.total || 0, r = +a.recibidas || 0, p = t ? Math.round(r * 100 / t) : 0;
+      return `<tr><td><b>${esc(a.grupo)}</b></td><td>${esc(a.tipo)}</td><td>${esc(a.temporada) || '—'}</td>
+      <td><div class="progreso"><i style="width:${p}%;background:${p < 100 ? 'var(--warn)' : 'var(--ok)'}"></i></div><small>${r} de ${t} (${p}%)</small></td>
+      <td>${esc(a.denegadas || 0)}</td><td>${esc(a.fecha) || '—'}</td><td><button class="link" data-aut="${esc(a.id)}">Editar</button></td></tr>`; }).join('')
+      || '<tr><td colspan="7" class="empty">Sin registros. Añade uno por grupo y tipo de autorización.</td></tr>') + '</tbody>';
+  $$('[data-aut]').forEach(b => b.onclick = () => formAut(rows.find(a => a.id === b.dataset.aut)));
+}
+$('#nueva-aut').onclick = () => formAut({ tipo: 'imagen', fecha: new Date().toISOString().slice(0, 10) });
+function formAut(a) {
+  const entidad_id = $('#aut-entidad').value; if (!entidad_id) return;
+  modal(a.id ? 'Editar autorizaciones' : 'Nuevo registro de autorizaciones', [
+    ['grupo', 'Grupo / equipo', 'text', true], ['tipo', 'Tipo de autorización', TIPOS_AUT], ['temporada', 'Temporada (ej. 2026-27)'],
+    ['total', 'Nº de menores del grupo', 'number', true], ['recibidas', 'Autorizaciones recibidas', 'number', true],
+    ['denegadas', 'De ellas, denegadas (no autorizan)', 'number'], ['fecha', 'Fecha de actualización', 'date'], ['observaciones', 'Observaciones', 'textarea']
+  ], a, async d => { Object.assign(d, { id: a.id, entidad_id }); await run(() => API.call('guardarAutorizacion', d)); toast('Registro guardado'); loadAutorizaciones(); });
+  if (a.id) {
+    const f = $('#modal-form'), del = document.createElement('button'); del.type = 'button'; del.className = 'btn ghost peligro'; del.textContent = 'Eliminar';
+    del.onclick = async () => { if (!confirm('¿Eliminar este registro?')) return; $('#modal').close('cancel');
+      await run(() => API.call('eliminarAutorizacion', { id: a.id })); toast('Registro eliminado'); loadAutorizaciones(); };
+    f.querySelector('.actions').prepend(del);
+  }
+}
+
+// ---------- PLANTILLAS DE DOCUMENTOS ----------
+const PLANTILLAS = [
+  ['protocolo', 'Protocolo de protección de la entidad', 'Documento completo adaptado al Protocolo Marco andaluz (bloque G).',
+   'Redacta el PROTOCOLO DE PROTECCIÓN frente a la violencia de la entidad, con índice y apartados: objeto y ámbito, principios, Delegado/a de Protección y funciones, análisis de riesgos y medidas, código de conducta (resumen), protección de datos e imágenes, desplazamientos y pernoctas, procedimiento de comunicación y actuación ante incidentes (con flujograma en texto), canal de comunicación, formación, difusión y revisión.'],
+  ['codigo', 'Código de conducta', 'Normas para agentes deportivos, con hoja de aceptación.',
+   'Redacta el CÓDIGO DE CONDUCTA de la entidad para agentes deportivos (entrenadores, monitores, directivos, voluntarios): conductas esperadas y prohibidas en trato, contacto físico, comunicación digital, vestuarios, desplazamientos e imágenes. Incluye al final una hoja de aceptación con campos para nombre, rol, fecha y firma.'],
+  ['designacion', 'Designación del Delegado/a de Protección', 'Acuerdo de designación y funciones.',
+   'Redacta el documento de DESIGNACIÓN DEL DELEGADO/A DE PROTECCIÓN de la entidad por su órgano de gobierno: antecedentes normativos (LOPIVI y Protocolo Marco), acuerdo, funciones, datos de contacto para comunicaciones, vigencia y firmas. Deja los datos personales como [CAMPO].'],
+  ['canal', 'Cartel del canal de comunicación', 'Texto claro para menores y familias.',
+   'Redacta el texto de un CARTEL informativo sobre el canal de comunicación de la entidad para menores y familias: a quién acudir, cómo contactar de forma confidencial, qué se puede comunicar y teléfonos de ayuda generales (ANAR 900 20 20 10, Emergencias 112). Lenguaje sencillo y adaptado a la edad; incluye una versión corta para menores de 6 a 11 años.'],
+  ['aut_imagen', 'Modelo de autorización de imagen', 'Autorización familiar conforme a RGPD.',
+   'Redacta un MODELO DE AUTORIZACIÓN FAMILIAR para la captación y uso de imágenes de menores en la entidad, conforme al RGPD y la LO 1/1982: finalidades separadas y marcables (web, redes sociales, prensa, uso interno), conservación, derechos y revocación. Deja los datos como [CAMPO].'],
+  ['aut_desplaz', 'Modelo de autorización de desplazamiento', 'Para viajes, torneos y pernoctas.',
+   'Redacta un MODELO DE AUTORIZACIÓN FAMILIAR para desplazamientos y actividades con pernocta: datos de la actividad, responsables, medio de transporte, alojamiento, normas de convivencia, contacto de emergencia e información médica relevante a comunicar por la familia. Deja los datos como [CAMPO].'],
+  ['actuacion', 'Guía rápida de actuación ante incidentes', 'Pasos para agentes deportivos.',
+   'Redacta una GUÍA RÁPIDA (1 página) para agentes deportivos sobre qué hacer ante una sospecha o comunicación de violencia: escuchar sin interrogar, no confrontar, proteger al menor, comunicar al Delegado/a de Protección, registrar hechos objetivos, cuándo avisar a emergencias o servicios sociales y deber de comunicación de la LOPIVI.'],
+  ['familias', 'Carta informativa a familias', 'Presentación del sistema de protección.',
+   'Redacta una CARTA a las familias presentando el sistema de protección de la entidad: compromiso, Delegado/a de Protección y cómo contactar, medidas principales, uso de imágenes y canal de comunicación. Tono cercano, máximo una página.']
+];
+async function loadPlantillas() {
+  await selEntidad($('#plant-entidad'), () => {});
+  $('#plant-lista').innerHTML = PLANTILLAS.map(([id, t, s]) => `<button type="button" class="plantilla" data-plant="${id}"><b>${esc(t)}</b><small>${esc(s)}</small></button>`).join('');
+  $$('[data-plant]').forEach(b => b.onclick = () => prepararPlantilla(b.dataset.plant, b));
+}
+function prepararPlantilla(id, boton) {
+  $$('.plantilla').forEach(x => x.classList.toggle('activa', x === boton));
+  const p = PLANTILLAS.find(x => x[0] === id);
+  const e = state.entidades.find(x => x.id === $('#plant-entidad').value) || {};
+  const prompt = [CONTEXTO_IA, '',
+    'TAREA: ' + p[3],
+    '', 'Datos de la entidad (usa [CAMPO] para lo que falte):',
+    '- Nombre: ' + (e.nombre || '[NOMBRE DE LA ENTIDAD]'),
+    '- Tipo y modalidad: ' + ([e.tipo, e.modalidad].filter(Boolean).join(', ') || '[TIPO Y MODALIDAD]'),
+    '- Nº aproximado de menores: ' + (e.n_menores || '[Nº]'),
+    '- Delegado/a de Protección: ' + (e.delegado_nombre ? '[NOMBRE DEL DELEGADO/A]' : '[PENDIENTE DE DESIGNAR]') + ' (no incluyas datos personales reales)',
+    '- Municipio: ' + ((state.cfg && state.cfg.municipio) || '[MUNICIPIO]'),
+    '', 'Formato: documento listo para aprobar, con títulos, apartados numerados y listas. Referencia la norma que fundamenta cada apartado cuando proceda.'].join('\n');
+  mostrarPrompt($('#plant-out'), prompt, { asunto: p[1] + ' · ' + (e.nombre || ''), tipo: 'plantilla' });
+  $('#plant-out').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 </script>
 </body>
 </html>
