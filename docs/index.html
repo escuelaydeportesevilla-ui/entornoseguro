@@ -243,6 +243,8 @@ tr.inactivo td { opacity: .6; }
 .claves { width: 100%; margin: 10px 0; } .claves td { padding: 6px 4px; border: 0; } .claves td:first-child { color: var(--muted); width: 38%; }
 .acciones-club { display: grid; gap: 8px; margin: 10px 0; }
 @media (max-width: 860px) { table.claves tr { border: 0; padding: 0; margin: 0; background: none; } table.claves td, table.claves td:first-child { display: block; border: 0; padding: 2px 0; margin: 0; font-size: inherit; } table.claves td::before { display: none; } }
+.doc-legal { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.doc-legal .ia-acciones { margin: 0; }
 /* ---- Accesibilidad ---- */
 html { font-size: calc(var(--fs, 1) * 100%); -webkit-text-size-adjust: 100%; }
 body { line-height: 1.55; }
@@ -315,6 +317,7 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
         <button data-view="informes" data-perm="informes">Informes</button>
         <button data-view="documentos" data-perm="leer">Documentos</button>
         <button data-view="clubes" data-perm="admin" id="nav-clubes">Mis clubes</button>
+        <button data-view="documentacion" data-perm="admin">Documentación</button>
         <button data-view="misdatos" data-perm="club">Mis datos</button>
         <button data-view="usuarios" data-perm="admin">Usuarios</button>
       </nav>
@@ -498,6 +501,36 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
         <div class="card"><table id="tabla-clubes"></table></div>
       </section>
 
+      <!-- DOCUMENTACIÓN (administrador) -->
+      <section id="view-documentacion" class="view hidden">
+        <header><h2>Documentación del servicio</h2></header>
+        <div class="grid2">
+          <form id="form-prestador" class="card form">
+            <h3>Datos del prestador del servicio</h3>
+            <p class="nota">Se usan para rellenar los contratos y la ficha del DPD. Se guardan una sola vez.</p>
+            <label>Razón social<input name="nombre" placeholder="Escuela y Deporte …"></label>
+            <label>CIF / NIF<input name="cif"></label>
+            <label>Domicilio<input name="domicilio"></label>
+            <label>Representante<input name="representante"></label>
+            <label>Cargo<input name="cargo" placeholder="Administrador/a"></label>
+            <label>Localidad (firma y jurisdicción)<input name="localidad" placeholder="Sevilla"></label>
+            <button class="btn">Guardar datos</button>
+          </form>
+          <div>
+            <div class="card">
+              <h3>Contrato de encargo del tratamiento</h3>
+              <p class="nota">Modelo en blanco. El contrato de cada club, ya relleno, está en Mis clubes → Gestionar.</p>
+              <div class="ia-acciones"><button class="btn" type="button" data-doclegal="contrato" data-fmt="pdf">Ver / PDF</button><button class="btn ghost" type="button" data-doclegal="contrato" data-fmt="word">Word</button></div>
+            </div>
+            <div class="card">
+              <h3>Ficha técnica para el DPD · Módulo de incidencias</h3>
+              <p class="nota">Propuesta de diseño para su validación antes de activar el registro de incidencias.</p>
+              <div class="ia-acciones"><button class="btn" type="button" data-doclegal="ficha" data-fmt="pdf">Ver / PDF</button><button class="btn ghost" type="button" data-doclegal="ficha" data-fmt="word">Word</button></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- MIS DATOS (club) -->
       <section id="view-misdatos" class="view hidden">
         <header><h2>Mis datos</h2></header>
@@ -513,6 +546,11 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
             <p>El ayuntamiento, como gestor del servicio, solo ve indicadores. Cualquier consulta de detalle o copia de tus datos aparece en el registro de abajo.</p>
             <p class="nota">Si prefieres una instalación totalmente independiente, en tu propia cuenta de Google, solicítala al administrador.</p>
           </div>
+        </div>
+        <div class="card">
+          <h3>Documentación del servicio</h3>
+          <div class="doc-legal"><span>Contrato de encargo del tratamiento</span><div class="ia-acciones"><button class="btn" type="button" data-doclegal="contrato" data-fmt="pdf">Ver / PDF</button><button class="btn ghost" type="button" data-doclegal="contrato" data-fmt="word">Word</button></div></div>
+          <div class="doc-legal"><span>Ficha técnica para el DPD · Incidencias</span><div class="ia-acciones"><button class="btn" type="button" data-doclegal="ficha" data-fmt="pdf">Ver / PDF</button><button class="btn ghost" type="button" data-doclegal="ficha" data-fmt="word">Word</button></div></div>
         </div>
         <div class="card"><h3>Registro de accesos del ayuntamiento</h3><table id="tabla-accesos"></table></div>
       </section>
@@ -668,7 +706,7 @@ function show(v) {
   window.scrollTo(0, 0);
   $$('nav button').forEach(b => b.classList.toggle('active', b.dataset.view === (v === 'doc' ? 'documentos' : v)));
   $$('.view').forEach(s => s.classList.toggle('hidden', s.id !== 'view-' + v));
-  ({ panel: loadPanel, entidades: loadEntidades, matriz: loadMatriz, formacion: loadFormacion, alertas: loadAlertas, usuarios: loadUsuarios, documentos: loadDocumentos, riesgos: loadRiesgos, informes: loadInformes, agentes: loadAgentes, autorizaciones: loadAutorizaciones, plantillas: loadPlantillas, clubes: loadClubes, misdatos: loadMisDatos }[v] || (() => {}))();
+  ({ panel: loadPanel, entidades: loadEntidades, matriz: loadMatriz, formacion: loadFormacion, alertas: loadAlertas, usuarios: loadUsuarios, documentos: loadDocumentos, riesgos: loadRiesgos, informes: loadInformes, agentes: loadAgentes, autorizaciones: loadAutorizaciones, plantillas: loadPlantillas, clubes: loadClubes, misdatos: loadMisDatos, documentacion: loadDocumentacion }[v] || (() => {}))();
 }
 
 // ---------- PANEL ----------
@@ -1270,7 +1308,7 @@ $('#riesgos-ia') && ($('#riesgos-ia').onclick = () => {
 });
 
 // ---------- INFORMES ----------
-function plantillaInforme(titulo, subtitulo, cuerpo, paraWord) {
+function plantillaInforme(titulo, subtitulo, cuerpo, paraWord, pie) {
   const org = (state.cfg && state.cfg.organismo) || '';
   const hoy = new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
   return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${esc(titulo)}</title>
@@ -1291,6 +1329,7 @@ td.k{width:34%;background:#eef4f6 !important;font-weight:600;color:#0b3057}
 .st{font-weight:700}.ok{color:#2e7d4f}.warn{color:#b7791f}.bad{color:#b83232}.muted{color:#6b7a82}
 .barra{height:8px;background:#e3eaed;border-radius:4px;overflow:hidden;min-width:60px}.barra i{display:block;height:100%}
 .nota{font-size:8.5pt;color:#4f5d65;border-left:3px solid #0d818f;padding:4px 10px;margin:14px 0;background:#f3f7f8}
+.campo{background:#fff176;font-weight:700}.just p,.just li{text-align:justify}.centro{text-align:center}
 .firma{margin-top:36px;display:flex;justify-content:space-between;gap:30px;page-break-inside:avoid}.firma div{flex:1;border-top:1px solid #1d2a30;padding-top:4px;font-size:9pt;text-align:center}
 .pie{margin-top:24px;border-top:1px solid #cfd8dc;padding-top:6px;color:#4f5d65;font-size:8pt}
 ul,ol{margin:4px 0 8px;padding-left:20px}p{margin:0 0 6px}
@@ -1298,7 +1337,7 @@ ul,ol{margin:4px 0 8px;padding-left:20px}p{margin:0 0 6px}
 <div class="cab"><img src="${LOGO}" alt=""><div><b>EntornoSeguro</b><small>${esc(org)}</small></div></div>
 <h1>${esc(titulo)}</h1>${subtitulo ? `<div class="sub">${esc(subtitulo)}</div>` : ''}<div class="fecha">${esc(hoy)}</div>
 ${cuerpo}
-<div class="pie">EntornoSeguro · ${esc(org)} · Documento generado el ${esc(hoy)}. Estado de implantación documental; no constituye valoración de personas ni de entidades.</div>
+<div class="pie">${pie || `EntornoSeguro · ${esc(org)} · Documento generado el ${esc(hoy)}. Estado de implantación documental; no constituye valoración de personas ni de entidades.`}</div>
 </body></html>`;
 }
 function abrirInforme(html) {
@@ -1627,6 +1666,8 @@ function gestionarClub(c) {
       <button type="button" class="btn" data-acc="informe">Ver informe del club</button>
       <button type="button" class="btn ghost" data-acc="clave">Generar nueva contraseña</button>
       <button type="button" class="btn ghost" data-acc="estado">${c.estado === 'activo' ? 'Desactivar acceso' : 'Reactivar acceso'}</button>
+      <button type="button" class="btn ghost" data-acc="contrato">Contrato de encargo (PDF)</button>
+      <button type="button" class="btn ghost" data-acc="contrato-word">Contrato de encargo (Word)</button>
       <button type="button" class="btn ghost" data-acc="exportar">Copia de datos (Excel)</button>
       <button type="button" class="btn ghost peligro" data-acc="baja">Dar de baja y borrar</button>
     </div>
@@ -1639,6 +1680,7 @@ function gestionarClub(c) {
     if (acc === 'informe') { $('#modal').close('cancel'); const d = await run(() => API.call('informeClub', { id: c.id })); abrirInforme(construirInformeEntidad(d)); }
     if (acc === 'clave') { if (!confirm('¿Generar una contraseña nueva? La actual dejará de funcionar.')) return; const r = await run(() => API.call('claveClub', { id: c.id })); mostrarClaves(c.nombre, r.usuario, r.temporal); }
     if (acc === 'estado') { await run(() => API.call('estadoClub', { id: c.id, estado: c.estado === 'activo' ? 'inactivo' : 'activo' })); $('#modal').close('cancel'); toast('Estado actualizado'); loadClubes(); }
+    if (acc === 'contrato' || acc === 'contrato-word') { $('#modal').close('cancel'); await docLegal('contrato', acc === 'contrato' ? 'pdf' : 'word', c.id); }
     if (acc === 'exportar') { const r = await run(() => API.call('exportarClub', { id: c.id })); descargarBase64(r.base64, r.nombre); toast('Copia descargada'); }
     if (acc === 'baja') {
       const conf = prompt(`Se borrará la hoja del club "${c.nombre}" (queda 30 días en la papelera de Drive).\nEscribe el usuario del club para confirmar: ${c.usuario}`);
@@ -1658,6 +1700,162 @@ async function loadMisDatos() {
 }
 $('#exportar-datos') && ($('#exportar-datos').onclick = async () => {
   const r = await run(() => API.call('exportarMisDatos')); descargarBase64(r.base64, r.nombre); toast('Copia descargada');
+});
+
+// ---------- DOCUMENTACIÓN LEGAL ----------
+const campo = (v, etiqueta) => v ? esc(v) : `<span class="campo">[${esc(etiqueta)}]</span>`;
+function textoCampos(t) { return esc(t).replace(/\[([^\]]+)\]/g, '<span class="campo">[$1]</span>'); }
+const pj = t => `<p>${textoCampos(t)}</p>`;
+const lista = arr => '<ul>' + arr.map(t => `<li>${textoCampos(t)}</li>`).join('') + '</ul>';
+const tablaKV = filas => '<table>' + filas.map(([k, v]) => `<tr><td class="k">${esc(k)}</td><td>${v}</td></tr>`).join('') + '</table>';
+
+function htmlContrato(p, e) {
+  const ENT = campo(e.nombre, 'DENOMINACIÓN DE LA ENTIDAD'), PRE = campo(p.nombre, 'RAZÓN SOCIAL DEL PRESTADOR');
+  const hoy = new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+  let b = `<p>En ${campo(p.localidad, 'LOCALIDAD')}, a ${esc(hoy)}.</p>
+  <h3 class="centro">REUNIDOS</h3>
+  <p>De una parte, <span class="campo">[NOMBRE Y APELLIDOS DEL REPRESENTANTE]</span>, con DNI <span class="campo">[DNI]</span>, en nombre y representación de ${ENT}, con CIF ${campo(e.cif, 'CIF')} y domicilio en <span class="campo">[DOMICILIO]</span>, en su condición de <span class="campo">[CARGO]</span>, en adelante el RESPONSABLE DEL TRATAMIENTO o la ENTIDAD.</p>
+  <p>De otra parte, ${campo(p.representante, 'NOMBRE Y APELLIDOS')}, con DNI <span class="campo">[DNI]</span>, en nombre y representación de ${PRE}, con CIF/NIF ${campo(p.cif, 'CIF')} y domicilio en ${campo(p.domicilio, 'DOMICILIO')}, en su condición de ${campo(p.cargo, 'CARGO')}, en adelante el ENCARGADO DEL TRATAMIENTO.</p>
+  <p>Ambas partes se reconocen capacidad suficiente para suscribir el presente contrato y</p>
+  <h3 class="centro">EXPONEN</h3><ol type="I">
+  <li>Que la ENTIDAD desarrolla actividades deportivas con personas menores de edad y está sujeta a las obligaciones de la Ley Orgánica 8/2021, de 4 de junio, de protección integral a la infancia y la adolescencia frente a la violencia (LOPIVI), y del Protocolo Marco de Actuación para la Protección de las Personas Menores frente a la Violencia en el Deporte, aprobado por Orden de 18 de noviembre de 2024 de la Junta de Andalucía.</li>
+  <li>Que el ENCARGADO presta el servicio EntornoSeguro, aplicación web para la gestión documental del sistema de protección de la ENTIDAD, que conlleva el tratamiento de datos personales por cuenta de esta.</li>
+  <li>Que, conforme al artículo 28 del Reglamento (UE) 2016/679 (RGPD) y al artículo 33 de la Ley Orgánica 3/2018 (LOPDGDD), las partes formalizan el encargo con arreglo a las siguientes</li></ol>
+  <h3 class="centro">CLÁUSULAS</h3>
+  <h2>PRIMERA. Objeto del encargo</h2>` +
+  pj('El ENCARGADO tratará por cuenta de la ENTIDAD los datos personales necesarios para prestar el servicio EntornoSeguro: alojamiento y gestión de la información del sistema de protección de la ENTIDAD (cumplimiento del Protocolo Marco, análisis de riesgos, agentes deportivos, formación, autorizaciones agregadas, alertas, documentos e informes). El detalle del tratamiento figura en el Anexo I.') +
+  '<h2>SEGUNDA. Información tratada y exclusiones</h2>' +
+  pj('Se tratarán exclusivamente datos identificativos y de contacto de personas adultas vinculadas a la ENTIDAD (Delegado/a de Protección, directivos, entrenadores, monitores, voluntarios y otros agentes deportivos), así como la información documental del sistema de protección.') +
+  pj('Queda expresamente excluido el registro en el servicio de datos personales de personas menores de edad. Las autorizaciones familiares se controlan únicamente mediante cifras agregadas por grupo. La ENTIDAD se compromete a no introducir datos que permitan identificar a menores.') +
+  pj('Respecto al certificado negativo del Registro Central de Delincuentes Sexuales, el servicio registra únicamente la fecha de presentación. El documento original lo custodia la ENTIDAD y no se incorpora al servicio.') +
+  '<h2>TERCERA. Duración</h2>' + pj('El presente contrato tendrá la misma duración que la prestación del servicio, desde la fecha de firma hasta la baja de la ENTIDAD en el servicio.') +
+  '<h2>CUARTA. Obligaciones del encargado</h2>' + pj('El ENCARGADO se obliga a:') + lista([
+    'Tratar los datos solo para la finalidad del encargo y siguiendo las instrucciones documentadas de la ENTIDAD. Si considera que una instrucción infringe la normativa, lo comunicará de inmediato.',
+    'No acceder al detalle de la información de la ENTIDAD salvo cuando sea necesario para prestar soporte técnico, a petición de la ENTIDAD o por obligación legal. La aplicación muestra al ENCARGADO únicamente indicadores de cumplimiento; toda consulta de detalle o copia de datos realizada desde la aplicación queda registrada y es visible para la ENTIDAD en el apartado "Mis datos".',
+    'Garantizar que las personas autorizadas para tratar los datos se comprometen a respetar la confidencialidad.',
+    'Aplicar las medidas técnicas y organizativas descritas en el Anexo II.',
+    'No recurrir a otro encargado sin autorización previa de la ENTIDAD. Se autorizan los subencargados del Anexo III. Cualquier cambio se comunicará con al menos quince días de antelación, y la ENTIDAD podrá oponerse.',
+    'Asistir a la ENTIDAD en la atención de los derechos de las personas interesadas (acceso, rectificación, supresión, oposición, limitación y portabilidad). Si recibe directamente una solicitud, la trasladará a la ENTIDAD en un plazo máximo de cinco días hábiles.',
+    'Notificar a la ENTIDAD, sin dilación indebida y en todo caso en un plazo máximo de 48 horas, cualquier violación de la seguridad de los datos de la que tenga conocimiento, con la información necesaria para su documentación y, en su caso, comunicación a la autoridad de control.',
+    'Poner a disposición de la ENTIDAD la información necesaria para demostrar el cumplimiento de este contrato y permitir auditorías o inspecciones razonables.',
+    'Llevar, cuando proceda, el registro de actividades de tratamiento efectuadas por cuenta de la ENTIDAD.']) +
+  '<h2>QUINTA. Obligaciones de la entidad</h2>' + lista([
+    'Garantizar la licitud del tratamiento de los datos que incorpore al servicio e informar a las personas interesadas.',
+    'No introducir datos de menores ni datos de categorías especiales o relativos a infracciones penales, salvo la fecha de presentación del certificado indicada en la cláusula segunda.',
+    'Custodiar las credenciales de acceso de su perfil MI CLUB y comunicar al ENCARGADO cualquier uso indebido.',
+    'Supervisar el tratamiento, incluidas las auditorías que estime oportunas.',
+    'Si utiliza herramientas externas de inteligencia artificial a partir de los textos que prepara el servicio, hacerlo sin incluir datos personales. El servicio no envía datos de forma automática a proveedores de inteligencia artificial.']) +
+  '<h2>SEXTA. Portabilidad y destino de los datos</h2>' +
+  pj('La ENTIDAD puede descargar en cualquier momento una copia completa de sus datos en formato Excel desde el apartado "Mis datos".') +
+  pj('A la finalización del servicio, el ENCARGADO entregará a la ENTIDAD, si lo solicita, una copia completa de sus datos y, a continuación, suprimirá la hoja de datos de la ENTIDAD. Tras la supresión, el archivo permanece un máximo de 30 días en la papelera de Google Drive antes de su borrado definitivo. El ENCARGADO podrá conservar los datos bloqueados solo mientras puedan derivarse responsabilidades de la ejecución del servicio.') +
+  pj('La ENTIDAD podrá solicitar en cualquier momento el traslado de sus datos a una instalación independiente del servicio en su propia cuenta de Google.') +
+  '<h2>SÉPTIMA. Transferencias internacionales</h2>' +
+  pj('El alojamiento se presta sobre la infraestructura de Google. Google puede tratar datos fuera del Espacio Económico Europeo con las garantías del artículo 46 del RGPD (cláusulas contractuales tipo) o al amparo del Marco de Privacidad de Datos UE-EE. UU. No se realizarán otras transferencias internacionales sin autorización de la ENTIDAD.') +
+  '<h2>OCTAVA. Responsabilidad</h2>' +
+  pj('Si el ENCARGADO destina los datos a otra finalidad, los comunica o los utiliza incumpliendo este contrato, será considerado responsable del tratamiento a todos los efectos y responderá de las infracciones en que hubiera incurrido personalmente.') +
+  '<h2>NOVENA. Legislación y jurisdicción</h2>' +
+  `<p>Este contrato se rige por la legislación española. Para cualquier controversia, las partes se someten a los juzgados y tribunales de ${campo(p.localidad, 'LOCALIDAD')}.</p>` +
+  pj('Y en prueba de conformidad, firman el presente documento por duplicado en el lugar y fecha indicados.') +
+  `<div class="firma"><div>Por la ENTIDAD (Responsable)<br>${ENT}</div><div>Por el ENCARGADO<br>${PRE}</div></div>` +
+  '<h2 style="page-break-before:always">ANEXO I. Descripción del tratamiento</h2>' + tablaKV([
+    ['Responsable', `${ENT} · CIF ${campo(e.cif, 'CIF')}`], ['Encargado', `${PRE} · CIF/NIF ${campo(p.cif, 'CIF')}`],
+    ['Finalidad', 'Gestión documental del sistema de protección de menores de la entidad conforme a la LOPIVI y al Protocolo Marco andaluz: cumplimiento, riesgos, agentes deportivos, formación, alertas, documentos e informes.'],
+    ['Base jurídica', 'Cumplimiento de obligación legal (art. 6.1.c RGPD) en relación con la LOPIVI (arts. 47, 48 y 57) y el Protocolo Marco; interés legítimo de la entidad en la organización de su sistema de protección (art. 6.1.f RGPD).'],
+    ['Interesados', 'Personas adultas vinculadas a la entidad: Delegado/a de Protección, directivos, entrenadores, monitores, voluntarios, árbitros y otros agentes deportivos.'],
+    ['Categorías de datos', 'Nombre y apellidos, rol, grupo o equipo, correo electrónico, teléfono, fechas de alta, de formación, de aceptación del código de conducta y de presentación del certificado negativo. Datos de la entidad: denominación, CIF, modalidad y número aproximado de menores (cifra agregada).'],
+    ['Datos excluidos', 'Datos identificativos de menores, datos de salud, categorías especiales y contenido de certificados o antecedentes.'],
+    ['Operaciones', 'Registro, conservación, consulta, modificación, extracción, exportación, supresión y cálculo de indicadores y alertas.'],
+    ['Conservación', 'Mientras dure el servicio y, a su término, según la cláusula sexta.']]) +
+  '<h2>ANEXO II. Medidas técnicas y organizativas</h2>' + tablaKV([
+    ['Separación de datos', 'Cada entidad dispone de una hoja de datos propia, independiente de la del prestador y de las demás entidades.'],
+    ['Control de acceso', 'Acceso con usuario y contraseña personal. Contraseñas almacenadas mediante función resumen con sal, nunca en claro. Cambio obligatorio de la contraseña temporal en el primer acceso.'],
+    ['Protección frente a accesos indebidos', 'Bloqueo temporal tras cinco intentos fallidos. Sesiones con caducidad automática. Desactivación inmediata del acceso.'],
+    ['Trazabilidad', 'Registro de auditoría de las operaciones. Registro visible para la entidad de toda consulta de detalle o exportación realizada por el prestador desde la aplicación.'],
+    ['Minimización', 'Exclusión de datos de menores; autorizaciones familiares solo en cifras agregadas; certificado negativo registrado solo por fecha.'],
+    ['Cifrado', 'Comunicaciones cifradas mediante HTTPS. Cifrado en reposo proporcionado por la infraestructura de Google.'],
+    ['Disponibilidad y portabilidad', 'Descarga por la entidad de una copia completa en Excel en cualquier momento.'],
+    ['Inteligencia artificial', 'El servicio no transmite datos a proveedores de IA. Los textos para asistentes externos se preparan sin datos personales y con enmascaramiento de DNI, teléfonos y correos.'],
+    ['Organizativas', 'Acceso del prestador limitado a soporte, instrucción de la entidad u obligación legal. Deber de confidencialidad del personal. Notificación de brechas en 48 horas.']]) +
+  '<h2>ANEXO III. Subencargados autorizados</h2><table><thead><tr><th>Subencargado</th><th>Servicio</th><th>Ubicación y garantías</th></tr></thead><tbody>' +
+  '<tr><td>Google Ireland Ltd. / Google LLC</td><td>Alojamiento de las hojas de datos y ejecución de la aplicación (Google Workspace, Sheets, Apps Script)</td><td>UE y otros países con cláusulas contractuales tipo y Marco de Privacidad de Datos UE-EE. UU.</td></tr>' +
+  '<tr><td>GitHub, Inc.</td><td>Alojamiento de la página web de acceso (interfaz, sin datos personales)</td><td>EE. UU. · No trata datos personales de la entidad</td></tr></tbody></table>';
+  return plantillaInforme('Contrato de encargo del tratamiento', 'Servicio EntornoSeguro · ' + (e.nombre || 'Modelo'), '<div class="just">' + b + '</div>', false,
+    `EntornoSeguro · Contrato de encargo del tratamiento entre ${e.nombre ? esc(e.nombre) : 'la entidad'} y ${p.nombre ? esc(p.nombre) : 'el prestador'}.`);
+}
+
+function htmlFichaDPD(p, e) {
+  const PRE = campo(p.nombre, 'RAZÓN SOCIAL DEL PRESTADOR');
+  const b = tablaKV([
+      ['Documento', 'Propuesta de diseño para validación previa a su desarrollo'],
+      ['Responsable del tratamiento', campo(e.nombre, 'ENTIDAD CLIENTE: AYUNTAMIENTO O CLUB')],
+      ['Prestador del servicio (encargado)', `${PRE} · CIF ${campo(p.cif, 'CIF')}`],
+      ['Estado', 'Pendiente de informe del DPD. El módulo no se activará hasta su validación.']]) +
+    '<h2>1. Objeto</h2>' +
+    pj('El Protocolo Marco andaluz (Orden de 18 de noviembre de 2024) exige que las entidades deportivas dispongan de un procedimiento de comunicación y actuación ante incidentes y de su registro. Este documento describe cómo se propone incorporar ese registro a EntornoSeguro y qué garantías tendrá, para que el DPD valide el diseño antes de su desarrollo.') +
+    pj('El módulo se plantea como asistente de procedimiento y registro de actuaciones. No sustituye la decisión profesional, no califica hechos ni atribuye responsabilidades, y no reemplaza el expediente administrativo o judicial que corresponda.') +
+    '<h2>2. Marco normativo</h2>' + lista([
+      'LO 8/2021 (LOPIVI): deber de comunicación de situaciones de violencia (arts. 15 y 16) y obligaciones en el ámbito deportivo (arts. 47 y 48).',
+      'Ley 4/2021, de Infancia y Adolescencia de Andalucía, y Protocolo Marco de protección de menores en el deporte (Orden de 18 de noviembre de 2024).',
+      'RGPD, en particular arts. 5 (minimización), 6, 9, 10, 25 (protección desde el diseño), 32 (seguridad) y 35 (EIPD). LOPDGDD.']) +
+    '<h2>3. Principio rector: expediente mínimo</h2>' +
+    pj('El módulo registra la trazabilidad del procedimiento, no el contenido del caso. La información identificativa y el relato detallado permanecen en el expediente oficial (servicios sociales, sede electrónica, Fiscalía o Fuerzas y Cuerpos de Seguridad), al que la aplicación solo hace referencia.') +
+    '<table><thead><tr><th>Se registra</th><th>No se registra</th></tr></thead><tbody>' + [
+      ['Código de caso generado automáticamente (sin nombres)', 'Nombre, iniciales, fecha de nacimiento o cualquier dato que identifique al menor'],
+      ['Fecha de comunicación y de los hechos', 'Identidad de la persona a la que se atribuyen los hechos'],
+      ['Entidad y ámbito (entrenamiento, viaje, vestuario, digital…)', 'Relato detallado de los hechos'],
+      ['Tipo de situación según categorías cerradas', 'Datos de salud, informes médicos o psicológicos'],
+      ['Valoración inicial del riesgo (inmediato / no inmediato)', 'Documentos del caso (solo número o referencia del expediente oficial)'],
+      ['Actuaciones: fecha, tipo y destinatario institucional', 'Datos de testigos o de familias'],
+      ['Seguimiento: fechas previstas y realizadas', 'Calificación jurídica de los hechos'],
+      ['Resultado administrativo, fecha de cierre y responsable del caso', '']].map(([a, c]) => `<tr><td>${esc(a)}</td><td>${esc(c)}</td></tr>`).join('') + '</tbody></table>' +
+    pj('Los campos de texto libre aplicarán enmascaramiento automático de DNI, teléfonos y correos y mostrarán un aviso permanente de no introducir datos identificativos.') +
+    '<h2>4. Flujo de actuación</h2><ol>' + ['Hechos comunicados: registro mínimo de la comunicación recibida.',
+      'Valoración inicial: ¿existe riesgo inmediato? Si es así, la aplicación muestra los pasos urgentes (112, protección del menor, comunicación a la familia salvo contraindicación, Fuerzas y Cuerpos de Seguridad).',
+      'Actuaciones: comunicaciones a servicios sociales, Fiscalía, Fuerzas y Cuerpos de Seguridad, federación o Delegado/a municipal, con fecha y referencia.',
+      'Seguimiento: fechas de revisión con alertas que solo muestran el código de caso.', 'Resultado administrativo y cierre.'].map(t => `<li>${esc(t)}</li>`).join('') + '</ol>' +
+    '<h2>5. Control de acceso</h2><table><thead><tr><th>Perfil</th><th>Acceso al módulo</th></tr></thead><tbody>' + [
+      ['Delegado/a de Protección de la entidad', 'Completo sobre los casos de su entidad.'],
+      ['Otros usuarios de la entidad', 'Sin acceso. Solo ven el número de casos abiertos.'],
+      ['Administrador del servicio (encargado)', 'Sin acceso al módulo ni a sus indicadores de detalle. Solo soporte técnico a petición expresa y con registro visible para la entidad.'],
+      ['Delegado/a municipal (versión ayuntamiento)', 'Casos de su ámbito municipal. Las entidades no ven casos de otras.']].map(([a, c]) => `<tr><td>${esc(a)}</td><td>${esc(c)}</td></tr>`).join('') + '</tbody></table>' +
+    pj('Medidas adicionales: confirmación de la contraseña para abrir el módulo, sesión reducida a 30 minutos, registro de auditoría de cada consulta y modificación y exportación limitada al Delegado/a.') +
+    '<h2>6. Inteligencia artificial</h2>' + pj('El módulo de incidencias no se conectará a herramientas de IA ni generará prompts con datos de casos.') +
+    '<h2>7. Seguridad y almacenamiento</h2>' + lista(['Hoja de datos separada para incidencias, con acceso solo desde la aplicación.',
+      'Cifrado en tránsito (HTTPS) y en reposo (infraestructura de Google).', 'Contraseñas con función resumen y sal; bloqueo tras intentos fallidos.',
+      'Registro de auditoría.', 'Estadísticas solo con datos agregados y anonimizados.']) +
+    '<h2>8. Conservación</h2>' + pj('Propuesta: los casos cerrados se conservan [PLAZO A DETERMINAR POR EL DPD] desde el cierre y después se anonimizan, manteniendo solo datos estadísticos.') +
+    '<h2>9. Riesgos identificados y medidas</h2><table><thead><tr><th>Riesgo</th><th>Medida</th></tr></thead><tbody>' + [
+      ['Identificación indirecta del menor por combinación de datos', 'Categorías cerradas, sin fechas de nacimiento ni equipos concretos; código de caso aleatorio.'],
+      ['Acceso de personas no autorizadas', 'Acceso restringido al Delegado/a, confirmación de contraseña, sesión corta y auditoría.'],
+      ['Introducción de datos identificativos en texto libre', 'Aviso permanente, enmascaramiento automático y revisión periódica.'],
+      ['Acceso del prestador del servicio', 'Sin acceso funcional; registro visible de cualquier intervención técnica; contrato de encargo.'],
+      ['Uso de IA con datos de casos', 'Módulo excluido de cualquier funcionalidad de IA.'],
+      ['Conservación excesiva', 'Anonimización automática al vencer el plazo fijado.']].map(([a, c]) => `<tr><td>${esc(a)}</td><td>${esc(c)}</td></tr>`).join('') + '</tbody></table>' +
+    '<h2>10. Cuestiones que se someten al DPD</h2><ol>' + ['¿Es suficiente el modelo de expediente mínimo, o debe limitarse aún más?',
+      '¿Procede realizar una Evaluación de Impacto (EIPD)? Recomendación del prestador: sí.', 'Base jurídica aplicable y plazo de conservación.',
+      '¿Debe residir la hoja de incidencias en la cuenta de Google de la propia entidad?', 'Información a las personas interesadas y cláusulas que deben mostrarse en la aplicación.'].map(t => `<li>${esc(t)}</li>`).join('') + '</ol>' +
+    '<h3>Informe del DPD</h3>' + tablaKV([['Valoración', '☐ Favorable &nbsp; ☐ Favorable con condiciones &nbsp; ☐ Desfavorable'], ['Condiciones u observaciones', '<br><br><br><br>'], ['Fecha y firma', '<br><br><br>']]);
+  return plantillaInforme('Ficha técnica para el Delegado de Protección de Datos', 'Módulo de registro y seguimiento de incidencias', '<div class="just">' + b + '</div>', false,
+    'EntornoSeguro · Ficha técnica para el DPD · Propuesta de diseño sujeta a validación.');
+}
+
+async function docLegal(tipo, fmt, clubId) {
+  const d = await run(() => API.call('datosContrato', clubId ? { club_id: clubId } : {}));
+  const html = tipo === 'contrato' ? htmlContrato(d.prestador, d.entidad) : htmlFichaDPD(d.prestador, d.entidad);
+  const base = (tipo === 'contrato' ? 'contrato-encargo-' : 'ficha-dpd-incidencias-') + (d.entidad.nombre || 'modelo');
+  if (fmt === 'word') descargar('﻿' + html, 'application/msword', nombreInf(base)); else abrirInforme(html);
+}
+document.addEventListener('click', ev => {
+  const b = ev.target.closest('[data-doclegal]'); if (!b) return;
+  docLegal(b.dataset.doclegal, b.dataset.fmt);
+});
+async function loadDocumentacion() {
+  const p = await run(() => API.call('datosPrestador'));
+  const f = $('#form-prestador'); Object.keys(p).forEach(k => { if (f[k]) f[k].value = p[k]; });
+}
+$('#form-prestador') && ($('#form-prestador').onsubmit = async ev => {
+  ev.preventDefault();
+  await run(() => API.call('guardarPrestador', Object.fromEntries(new FormData(ev.target)))); toast('Datos del prestador guardados');
 });
 </script>
 </body>
