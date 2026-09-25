@@ -228,6 +228,21 @@ mark { background: #fde68a; color: inherit; padding: 0 1px; border-radius: 2px; 
   nav#menu-principal.abierto + .user { display: flex; }
   .plantillas { grid-template-columns: 1fr; }
 }
+.perfiles { display: grid; gap: 12px; margin: 8px 0 4px; }
+.perfil { display: grid; grid-template-columns: 52px 1fr; grid-template-rows: auto auto; align-items: center; text-align: left; gap: 0 12px;
+  padding: 16px; border: 2px solid var(--line); border-radius: 14px; background: var(--panel); cursor: pointer; font: inherit; color: var(--ink); min-height: 76px; }
+.perfil:hover, .perfil:focus-visible { border-color: var(--brand-2); background: color-mix(in srgb, var(--brand-2) 6%, var(--panel)); }
+.perfil-ico { grid-row: 1 / 3; font-size: 1.9rem; width: 52px; height: 52px; display: grid; place-items: center; border-radius: 12px; background: var(--bg); }
+.perfil b { color: var(--brand); font-size: 1.1rem; letter-spacing: .04em; }
+.perfil small { color: var(--muted); }
+.perfil[data-perfil="club"] .perfil-ico { background: color-mix(in srgb, var(--accent) 15%, transparent); }
+.perfil[data-perfil="admin"] .perfil-ico { background: color-mix(in srgb, var(--brand) 12%, transparent); }
+.login-titulo { margin: 0 0 12px; font-size: 1.15rem; color: var(--brand); text-align: center; }
+.volver { display: block; margin: 12px auto 0; }
+tr.inactivo td { opacity: .6; }
+.claves { width: 100%; margin: 10px 0; } .claves td { padding: 6px 4px; border: 0; } .claves td:first-child { color: var(--muted); width: 38%; }
+.acciones-club { display: grid; gap: 8px; margin: 10px 0; }
+@media (max-width: 860px) { table.claves tr { border: 0; padding: 0; margin: 0; background: none; } table.claves td, table.claves td:first-child { display: block; border: 0; padding: 2px 0; margin: 0; font-size: inherit; } table.claves td::before { display: none; } }
 /* ---- Accesibilidad ---- */
 html { font-size: calc(var(--fs, 1) * 100%); -webkit-text-size-adjust: 100%; }
 body { line-height: 1.55; }
@@ -262,10 +277,17 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
       <img src="" data-logo alt="EntornoSeguro" class="logo">
       <h1>EntornoSeguro</h1>
       <p>Sistema municipal de protección de menores en el deporte</p>
-      <form id="form-login" class="form">
-        <label>Usuario<input name="usuario" autocomplete="username" required autofocus></label>
+      <div id="perfiles" class="perfiles">
+        <button type="button" class="perfil" data-perfil="admin"><span class="perfil-ico" aria-hidden="true">🏛️</span><b>ADMINISTRADOR</b><small>Ayuntamiento · Delegado/a municipal</small></button>
+        <button type="button" class="perfil" data-perfil="club"><span class="perfil-ico" aria-hidden="true">⚽</span><b>MI CLUB</b><small>Acceso con las claves de tu club</small></button>
+      </div>
+      <form id="form-login" class="form hidden">
+        <h2 id="login-titulo" class="login-titulo">Acceso</h2>
+        <input type="hidden" name="perfil" value="admin">
+        <label>Usuario<input name="usuario" autocomplete="username" required></label>
         <label>Contraseña<input name="password" type="password" autocomplete="current-password" required></label>
         <button class="btn">Entrar</button>
+        <button type="button" class="link volver" id="login-volver">← Volver</button>
       </form>
       <p id="login-error" class="error"></p>
       <div class="tamano" role="group" aria-label="Tamaño del texto" style="justify-content:center"><span>Texto</span><button type="button" data-fs="1" aria-label="Texto normal">A</button><button type="button" data-fs="1.15" aria-label="Texto grande">A+</button><button type="button" data-fs="1.3" aria-label="Texto muy grande">A++</button></div>
@@ -292,6 +314,8 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
         <button data-view="plantillas" data-perm="ia">Plantillas</button>
         <button data-view="informes" data-perm="informes">Informes</button>
         <button data-view="documentos" data-perm="leer">Documentos</button>
+        <button data-view="clubes" data-perm="admin" id="nav-clubes">Mis clubes</button>
+        <button data-view="misdatos" data-perm="club">Mis datos</button>
         <button data-view="usuarios" data-perm="admin">Usuarios</button>
       </nav>
       <div class="user"><div class="tamano" role="group" aria-label="Tamaño del texto"><span>Texto</span><button type="button" data-fs="1" aria-label="Texto normal">A</button><button type="button" data-fs="1.15" aria-label="Texto grande">A+</button><button type="button" data-fs="1.3" aria-label="Texto muy grande">A++</button></div><span id="user-name"></span><small id="user-rol"></small><button id="cambiar-pass" class="link">Cambiar contraseña</button><button id="logout" class="link">Salir</button></div>
@@ -466,6 +490,33 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
           <details class="doc-prompt"><summary>Ver prompt original</summary><pre class="out prompt" id="doc-prompt"></pre></details>
         </form>
       </section>
+      <!-- MIS CLUBES (administrador) -->
+      <section id="view-clubes" class="view hidden">
+        <header><h2>Mis clubes</h2><button class="btn" id="nuevo-club" type="button">+ Nuevo club</button></header>
+        <p class="nota">Cada club tiene su propia hoja de datos y accede con el perfil MI CLUB. Aquí solo se muestran indicadores; las consultas de detalle quedan registradas y el club las ve.</p>
+        <div id="clubes-resumen" class="kpis"></div>
+        <div class="card"><table id="tabla-clubes"></table></div>
+      </section>
+
+      <!-- MIS DATOS (club) -->
+      <section id="view-misdatos" class="view hidden">
+        <header><h2>Mis datos</h2></header>
+        <div class="grid2">
+          <div class="card">
+            <h3>Copia completa de mis datos</h3>
+            <p class="nota">Descarga todos los datos del club en un archivo Excel. Puedes hacerlo cuando quieras (derecho de portabilidad).</p>
+            <button class="btn" id="exportar-datos" type="button">Descargar Excel</button>
+          </div>
+          <div class="card">
+            <h3>Privacidad</h3>
+            <p>Los datos del club se guardan en una hoja propia, separada de la del ayuntamiento y de otros clubes.</p>
+            <p>El ayuntamiento, como gestor del servicio, solo ve indicadores. Cualquier consulta de detalle o copia de tus datos aparece en el registro de abajo.</p>
+            <p class="nota">Si prefieres una instalación totalmente independiente, en tu propia cuenta de Google, solicítala al administrador.</p>
+          </div>
+        </div>
+        <div class="card"><h3>Registro de accesos del ayuntamiento</h3><table id="tabla-accesos"></table></div>
+      </section>
+
       <!-- USUARIOS -->
       <section id="view-usuarios" class="view hidden">
         <header><h2>Usuarios</h2><button class="btn" id="nuevo-usuario" data-perm="admin">+ Nuevo usuario</button></header>
@@ -540,6 +591,16 @@ const can = p => state.me && state.me.permisos.includes(p);
 function ssGet(k) { try { return sessionStorage.getItem(k); } catch { return null; } }
 function ssSet(k, v) { try { v ? sessionStorage.setItem(k, v) : sessionStorage.removeItem(k); } catch {} }
 
+function elegirPerfil(p) {
+  const f = $('#form-login');
+  f.perfil.value = p;
+  $('#login-titulo').textContent = p === 'club' ? 'Acceso MI CLUB' : 'Acceso ADMINISTRADOR';
+  $('#perfiles').classList.add('hidden'); f.classList.remove('hidden'); $('#login-error').textContent = '';
+  try { localStorage.setItem('es_perfil', p); } catch {}
+  f.usuario.focus();
+}
+$$('.perfil').forEach(b => b.onclick = () => elegirPerfil(b.dataset.perfil));
+$('#login-volver').onclick = () => { $('#form-login').classList.add('hidden'); $('#perfiles').classList.remove('hidden'); $('#login-error').textContent = ''; };
 $('#form-login').onsubmit = async ev => {
   ev.preventDefault();
   $('#login-error').textContent = '';
@@ -560,7 +621,7 @@ async function arrancar() {
   $('#org').textContent = r.config.organismo || ''; state.cfg = r.config;
   $$('[data-perm]').forEach(el => { if (!can(el.dataset.perm)) el.remove(); });
   state.modo = r.config.modo || 'MUNICIPAL';
-  state.club = state.modo === 'CLUB' || state.me.rol === 'entidad';
+  state.club = state.modo === 'CLUB' || state.me.rol === 'entidad' || state.me.rol === 'club';
   if (state.club) {
     $('#nav-entidades').textContent = state.modo === 'CLUB' ? 'Mi club' : 'Mi entidad';
     $('#panel-titulo').textContent = 'Panel del Delegado/a de Protección' + (state.modo === 'CLUB' ? ' del club' : '');
@@ -607,7 +668,7 @@ function show(v) {
   window.scrollTo(0, 0);
   $$('nav button').forEach(b => b.classList.toggle('active', b.dataset.view === (v === 'doc' ? 'documentos' : v)));
   $$('.view').forEach(s => s.classList.toggle('hidden', s.id !== 'view-' + v));
-  ({ panel: loadPanel, entidades: loadEntidades, matriz: loadMatriz, formacion: loadFormacion, alertas: loadAlertas, usuarios: loadUsuarios, documentos: loadDocumentos, riesgos: loadRiesgos, informes: loadInformes, agentes: loadAgentes, autorizaciones: loadAutorizaciones, plantillas: loadPlantillas }[v] || (() => {}))();
+  ({ panel: loadPanel, entidades: loadEntidades, matriz: loadMatriz, formacion: loadFormacion, alertas: loadAlertas, usuarios: loadUsuarios, documentos: loadDocumentos, riesgos: loadRiesgos, informes: loadInformes, agentes: loadAgentes, autorizaciones: loadAutorizaciones, plantillas: loadPlantillas, clubes: loadClubes, misdatos: loadMisDatos }[v] || (() => {}))();
 }
 
 // ---------- PANEL ----------
@@ -1259,6 +1320,9 @@ async function loadInformes() {
 async function htmlInformeEntidad() {
   const id = $('#inf-entidad').value; if (!id) { toast('Selecciona una entidad', true); return null; }
   const d = await run(() => API.call('informeEntidad', { entidad_id: id }));
+  return construirInformeEntidad(d);
+}
+function construirInformeEntidad(d) {
   const e = d.entidad, m = d.matriz;
   const cuenta = s => m.filter(r => r.estado === s).length;
   const okN = m.filter(r => r.estado === 'cumple' || r.estado === 'no_aplica').length;
@@ -1512,6 +1576,89 @@ function prepararPlantilla(id, boton) {
   mostrarPrompt($('#plant-out'), prompt, { asunto: p[1] + ' · ' + (e.nombre || ''), tipo: 'plantilla' });
   $('#plant-out').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+
+// ---------- DESCARGA DE EXCEL ----------
+function descargarBase64(b64, nombre, tipo) {
+  const bin = atob(b64), bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  descargar(bytes, tipo || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', nombre);
+}
+
+// ---------- MIS CLUBES (administrador) ----------
+async function loadClubes() {
+  const rows = state.clubes = await run(() => API.call('listarClubes'));
+  const act = rows.filter(c => c.estado === 'activo');
+  const media = act.length ? Math.round(act.reduce((s, c) => s + (c.pct || 0), 0) / act.length) : 0;
+  $('#clubes-resumen').innerHTML = [['Clubes activos', act.length], ['Cumplimiento medio', media + '%'],
+    ['Agentes sin certificado', act.reduce((s, c) => s + (c.agentes_sin_cert || 0), 0)], ['Riesgos altos pendientes', act.reduce((s, c) => s + (c.riesgos_altos || 0), 0)]]
+    .map(([l, v]) => `<div class="kpi"><span>${l}</span><strong>${v}</strong></div>`).join('');
+  $('#tabla-clubes').innerHTML = `<thead><tr><th>Club</th><th>Cumplimiento</th><th>Delegado/a</th><th>Agentes (sin cert.)</th><th>Alertas altas</th><th>Último acceso</th><th></th></tr></thead><tbody>` +
+    (rows.map(c => `<tr class="${c.estado !== 'activo' ? 'inactivo' : ''}"><td><b>${esc(c.nombre)}</b><br><small>Usuario: ${esc(c.usuario)}${c.estado !== 'activo' ? ' · DESACTIVADO' : ''}</small></td>
+      <td>${c.error ? `<span class="bad-t">${esc(c.error)}</span>` : `<div class="progreso"><i style="width:${c.pct}%;background:${c.pct < 40 ? 'var(--bad)' : c.pct < 80 ? 'var(--warn)' : 'var(--ok)'}"></i></div><small>${c.pct}%</small>`}</td>
+      <td>${c.delegado ? '<span class="st ok">Sí</span>' : '<span class="st bad">No</span>'}</td>
+      <td>${c.agentes ?? 0} (${c.agentes_sin_cert ?? 0})</td><td>${c.alertas_altas ?? 0}</td><td>${esc(c.ultimo_acceso) || 'Nunca'}</td>
+      <td><button class="link" data-club="${esc(c.id)}">Gestionar</button></td></tr>`).join('')
+      || '<tr><td colspan="7" class="empty">Aún no hay clubes. Pulsa "+ Nuevo club".</td></tr>') + '</tbody>';
+  $$('[data-club]').forEach(b => b.onclick = () => gestionarClub(rows.find(c => c.id === b.dataset.club)));
+}
+$('#nuevo-club') && ($('#nuevo-club').onclick = () => {
+  modal('Nuevo club', [['nombre', 'Nombre del club', 'text', true], ['modalidad', 'Modalidad deportiva'], ['cif', 'CIF'], ['email', 'Email de contacto (recibirá las alertas)', 'email']], {}, async d => {
+    toast('Creando la hoja del club…');
+    const r = await run(() => API.call('crearClub', d));
+    mostrarClaves(d.nombre, r.usuario, r.temporal); loadClubes();
+  });
+});
+function mostrarClaves(nombre, usuario, clave) {
+  const url = location.origin + location.pathname;
+  const f = $('#modal-form');
+  f.innerHTML = `<h3>Claves de acceso · ${esc(nombre)}</h3>
+    <p>Entrega estos datos al Delegado/a de Protección del club. Deberá entrar con el perfil <b>MI CLUB</b>.</p>
+    <table class="claves"><tr><td>Web</td><td><b>${esc(url)}</b></td></tr><tr><td>Usuario</td><td class="temp">${esc(usuario)}</td></tr><tr><td>Contraseña temporal</td><td class="temp">${esc(clave)}</td></tr></table>
+    <p class="nota">La contraseña no se volverá a mostrar. Al primer acceso el club la cambiará por una propia.</p>
+    <div class="actions"><button type="button" class="btn ghost" id="copiar-claves">Copiar</button><button value="cancel" class="btn">Entendido</button></div>`;
+  $('#copiar-claves').onclick = () => copiarTexto(`EntornoSeguro · Acceso MI CLUB\nWeb: ${url}\nUsuario: ${usuario}\nContraseña temporal: ${clave}\n(Se pedirá cambiarla en el primer acceso)`);
+  $('#modal').onclose = null; $('#modal').oncancel = null;
+  if (!$('#modal').open) $('#modal').showModal();
+}
+function gestionarClub(c) {
+  const f = $('#modal-form');
+  f.innerHTML = `<h3>${esc(c.nombre)}</h3><p class="nota">Usuario: ${esc(c.usuario)} · Estado: ${esc(c.estado)} · Alta: ${esc(c.creado)}</p>
+    <div class="acciones-club">
+      <button type="button" class="btn" data-acc="informe">Ver informe del club</button>
+      <button type="button" class="btn ghost" data-acc="clave">Generar nueva contraseña</button>
+      <button type="button" class="btn ghost" data-acc="estado">${c.estado === 'activo' ? 'Desactivar acceso' : 'Reactivar acceso'}</button>
+      <button type="button" class="btn ghost" data-acc="exportar">Copia de datos (Excel)</button>
+      <button type="button" class="btn ghost peligro" data-acc="baja">Dar de baja y borrar</button>
+    </div>
+    <p class="nota">Ver el informe y descargar la copia quedan registrados en el apartado "Mis datos" del club.</p>
+    <div class="actions"><button value="cancel" class="btn ghost">Cerrar</button></div>`;
+  $('#modal').onclose = null; $('#modal').oncancel = null;
+  if (!$('#modal').open) $('#modal').showModal();
+  f.querySelectorAll('[data-acc]').forEach(b => b.onclick = async () => {
+    const acc = b.dataset.acc;
+    if (acc === 'informe') { $('#modal').close('cancel'); const d = await run(() => API.call('informeClub', { id: c.id })); abrirInforme(construirInformeEntidad(d)); }
+    if (acc === 'clave') { if (!confirm('¿Generar una contraseña nueva? La actual dejará de funcionar.')) return; const r = await run(() => API.call('claveClub', { id: c.id })); mostrarClaves(c.nombre, r.usuario, r.temporal); }
+    if (acc === 'estado') { await run(() => API.call('estadoClub', { id: c.id, estado: c.estado === 'activo' ? 'inactivo' : 'activo' })); $('#modal').close('cancel'); toast('Estado actualizado'); loadClubes(); }
+    if (acc === 'exportar') { const r = await run(() => API.call('exportarClub', { id: c.id })); descargarBase64(r.base64, r.nombre); toast('Copia descargada'); }
+    if (acc === 'baja') {
+      const conf = prompt(`Se borrará la hoja del club "${c.nombre}" (queda 30 días en la papelera de Drive).\nEscribe el usuario del club para confirmar: ${c.usuario}`);
+      if (conf === null) return;
+      await run(() => API.call('bajaClub', { id: c.id, confirmar: conf })); $('#modal').close('cancel'); toast('Club dado de baja'); loadClubes();
+    }
+  });
+}
+
+// ---------- MIS DATOS (club) ----------
+async function loadMisDatos() {
+  const rows = await run(() => API.call('misAccesos'));
+  const txt = { CONSULTA_AYUNTAMIENTO: 'Consulta de informe', EXPORTACION_AYUNTAMIENTO: 'Copia completa de datos', ALTA_CLUB: 'Alta del club' };
+  $('#tabla-accesos').innerHTML = `<thead><tr><th>Fecha</th><th>Quién</th><th>Acción</th></tr></thead><tbody>` +
+    (rows.map(l => `<tr><td>${esc(l.timestamp)}</td><td>${esc(l.usuario)}</td><td>${esc(txt[l.accion] || l.accion)}</td></tr>`).join('')
+      || '<tr><td colspan="3" class="empty">El ayuntamiento no ha consultado datos de detalle del club.</td></tr>') + '</tbody>';
+}
+$('#exportar-datos') && ($('#exportar-datos').onclick = async () => {
+  const r = await run(() => API.call('exportarMisDatos')); descargarBase64(r.base64, r.nombre); toast('Copia descargada');
+});
 </script>
 </body>
 </html>
