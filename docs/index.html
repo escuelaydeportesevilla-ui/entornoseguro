@@ -1288,7 +1288,7 @@ $('#nuevo-usuario') && ($('#nuevo-usuario').onclick = () => formUsuario({}));
 function formUsuario(u) {
   const nuevo = !u.usuario;
   modal(nuevo ? 'Nuevo usuario' : 'Editar usuario', [
-    ['usuario', 'Usuario (sin espacios)', 'text', true], ['nombre', 'Nombre y apellidos', 'text', true], ['email', 'Email', 'email'],
+    ['usuario', 'Usuario (sin espacios ni @)', 'text', true], ['nombre', 'Nombre y apellidos', 'text', true], ['email', 'Email', 'email'],
     ['rol', 'Rol', ROLES_TXT], ['entidad_id', 'Entidad (solo rol Entidad)', [['', '—']].concat(state.entidades.map(e => [e.id, e.nombre]))],
     ['activo', 'Activo', ['SI', 'NO']]
   ], u, async d => {
