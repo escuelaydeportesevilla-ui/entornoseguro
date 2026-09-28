@@ -30,6 +30,11 @@ body { margin: 0; font: 0.875rem/1.5 Inter, system-ui, sans-serif; background: v
 .l-short { display: none; }
 body.busy { cursor: progress; }
 body.busy main { opacity: .7; pointer-events: none; }
+body.busy::after { content: 'Cargando…'; position: fixed; left: 50%; top: 45%; transform: translate(-50%, -50%); z-index: 50;
+  background: var(--brand); color: #fff; padding: 12px 22px; border-radius: 24px; font-weight: 700; box-shadow: 0 6px 20px rgba(0,0,0,.2); }
+body.busy::before { content: ''; position: fixed; top: 0; left: 0; height: 4px; width: 40%; z-index: 51; background: var(--grad); animation: cargando 1.1s ease-in-out infinite; }
+@keyframes cargando { 0% { left: -40%; } 100% { left: 100%; } }
+@media (prefers-reduced-motion: reduce) { body.busy::before { animation: none; width: 100%; } }
 
 /* Login */
 .login { min-height: 100vh; display: grid; place-items: center; padding: 16px; background: linear-gradient(135deg, #0b3057, #0d818f 60%, #38af88); }
@@ -257,6 +262,9 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
 .tamano button { min-width: 44px; min-height: 40px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 8px; font: inherit; font-weight: 700; cursor: pointer; }
 .tamano button[aria-pressed="true"] { background: var(--brand); color: #fff; border-color: var(--brand); }
 @media (min-width: 861px) { .sidebar nav { overflow-y: auto; min-height: 0; } }
+.rev-reqs { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 4px 12px; margin: 6px 0 12px; }
+.rev-reqs label.check { font-size: .9rem; margin: 0; }
+.propuesta td select { min-width: 130px; }
 /* ---- v0.9: incidencias, encuestas, biblioteca, certificados ---- */
 .aviso-inc { background: color-mix(in srgb, var(--bad) 8%, var(--panel)); border: 1px solid color-mix(in srgb, var(--bad) 35%, transparent); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 14px; font-size: .9rem; }
 .urgente { background: color-mix(in srgb, var(--bad) 10%, var(--panel)); border: 2px solid var(--bad); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 16px; }
@@ -396,6 +404,8 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
         <header><h2>Matriz de cumplimiento · Protocolo Marco</h2>
           <select id="matriz-entidad"></select></header>
         <p class="nota">Estado de implantación documental. No constituye valoración de personas ni de entidades.</p>
+        <div class="ia-acciones" data-perm="ia"><button class="btn ghost" id="matriz-ia" type="button">🔎 Revisar documento con IA</button></div>
+        <div id="revision-ia"></div>
         <div class="card"><table id="tabla-matriz"></table></div>
       </section>
 
@@ -538,7 +548,7 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
         <header><h2>Documentos</h2></header>
         <div class="card form buscador">
           <label>Buscar<input id="doc-q" type="search" placeholder="Palabras del asunto o del contenido"></label>
-          <label>Tipo<select id="doc-tipo"><option value="">Todos</option><option value="asistente">Asistente IA</option><option value="contenido">Redes sociales</option><option value="riesgos">Análisis de riesgos</option><option value="plantilla">Plantillas</option></select></label>
+          <label>Tipo<select id="doc-tipo"><option value="">Todos</option><option value="asistente">Asistente IA</option><option value="contenido">Redes sociales</option><option value="riesgos">Análisis de riesgos</option><option value="plantilla">Plantillas</option><option value="revision">Revisión documental</option></select></label>
         </div>
         <p class="nota" id="doc-count"></p>
         <div id="doc-lista"></div>
@@ -758,7 +768,8 @@ $('#form-login').onsubmit = async ev => {
 };
 
 async function arrancar() {
-  const r = await API.call('me');
+  document.body.classList.add('busy');
+  let r; try { r = await API.call('me'); } finally { document.body.classList.remove('busy'); }
   state.me = r.me;
   $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
   $('#user-name').textContent = state.me.nombre || state.me.usuario;
@@ -821,6 +832,7 @@ function show(v) {
 
 // ---------- PANEL ----------
 async function loadPanel() {
+  if (!$('#kpis').innerHTML) $('#panel-entidades').innerHTML = $('#panel-alertas').innerHTML = '<p class="empty">Cargando datos…</p>';
   const d = await run(() => API.call('dashboard'));
   const k = d.kpi;
   const tiles = [
@@ -878,7 +890,7 @@ async function loadMatriz() {
   }
   sel.classList.toggle('hidden', !!state.club);
   if (!sel.value) { $('#tabla-matriz').innerHTML = '<tr><td class="empty">Registra primero una entidad que trabaje con menores.</td></tr>'; return; }
-  const rows = await run(() => API.call('matriz', { entidad_id: sel.value }));
+  const rows = state.matriz = await run(() => API.call('matriz', { entidad_id: sel.value }));
   let bloque = '';
   $('#tabla-matriz').innerHTML = `<thead><tr><th>Requisito</th><th>Estado</th><th>Evidencia</th><th>Revisión</th><th>Próxima</th><th>Acción pendiente</th><th></th></tr></thead><tbody>` +
     rows.map(r => {
@@ -890,9 +902,10 @@ async function loadMatriz() {
         <td>${r.evidencias.map(v => v.url_drive ? `<a href="${esc(v.url_drive)}" target="_blank" rel="noopener">${esc(v.titulo)}</a>` : esc(v.titulo)).join('<br>') || '—'}</td>
         <td>${esc(r.fecha_revision) || '—'}</td><td class="${venc ? 'bad-t' : ''}">${esc(r.proxima_revision) || '—'}</td>
         <td>${esc(r.accion_pendiente) || '—'}</td>
-        <td>${can('escribir') ? `<button class="link" data-req="${esc(r.codigo)}">Actualizar</button>` : ''}</td></tr>`;
+        <td>${can('escribir') ? `<button class="link" data-req="${esc(r.codigo)}">Actualizar</button>` : ''}${can('ia') ? ` <button class="link" data-revia="${esc(r.codigo)}">Revisar con IA</button>` : ''}</td></tr>`;
     }).join('') + '</tbody>';
   $$('[data-req]').forEach(b => b.onclick = () => formCumplimiento(sel.value, rows.find(r => r.codigo === b.dataset.req)));
+  $$('[data-revia]').forEach(b => b.onclick = () => abrirRevision([b.dataset.revia]));
 }
 function formCumplimiento(entidad_id, r) {
   modal(`${r.codigo} · ${r.requisito}`, [
@@ -1278,7 +1291,7 @@ document.querySelectorAll('.tamano button').forEach(b => b.onclick = () => aplic
 (() => { let f = '1'; try { f = localStorage.getItem('es_fs') || '1'; } catch {} aplicarTamano(f); })();
 
 // ---------- DOCUMENTOS ----------
-const TIPOS_DOC = { asistente: 'Asistente IA', contenido: 'Redes sociales', riesgos: 'Análisis de riesgos', plantilla: 'Plantillas' };
+const TIPOS_DOC = { asistente: 'Asistente IA', contenido: 'Redes sociales', riesgos: 'Análisis de riesgos', plantilla: 'Plantillas', revision: 'Revisión documental' };
 const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 async function loadDocumentos(forzar) {
   if (!state.docs || forzar) state.docs = await run(() => API.call('listarDocumentos'));
@@ -2480,6 +2493,151 @@ $('#mem-ia') && ($('#mem-ia').onclick = async () => {
   const nota = document.createElement('p'); nota.className = 'nota'; nota.textContent = 'Pega la respuesta de Claude en "Valoración técnica" y genera la memoria.';
   $('#mem-ia-out').appendChild(nota);
 });
+
+// ---------- REVISIÓN DOCUMENTAL CON IA (matriz) ----------
+const CRITERIOS = {
+  A1: ['Aprobación por el órgano de gobierno (fecha o acta)', 'Compromiso expreso con la protección de menores y rechazo de toda forma de violencia', 'Firma del representante de la entidad', 'Previsión de difusión'],
+  A2: ['Referencia expresa al Protocolo Marco (Orden de 18 de noviembre de 2024)', 'Acuerdo de adhesión o aceptación', 'Fecha y firma'],
+  B1: ['Identificación del Delegado/a por cargo y datos de contacto', 'Órgano que designa y fecha', 'Funciones asignadas', 'Vigencia de la designación', 'Comunicación a agentes deportivos y familias'],
+  B2: ['Formación específica en protección de menores', 'Horas y fecha', 'Entidad formadora', 'Documento acreditativo'],
+  C1: ['Actividades y espacios analizados (entrenamientos, competiciones, vestuarios, viajes, entorno digital…)', 'Valoración del nivel de riesgo', 'Fecha de elaboración'],
+  C2: ['Medidas preventivas por cada riesgo', 'Responsable de cada medida', 'Fecha de implantación', 'Fecha o periodicidad de revisión'],
+  D1: ['Conductas esperadas y conductas no permitidas', 'Contacto físico', 'Comunicación digital y redes sociales', 'Vestuarios, desplazamientos y pernoctas', 'Consecuencias del incumplimiento', 'Aprobación por la entidad'],
+  D2: ['Documento o sistema de aceptación firmada por los agentes', 'Registro de aceptaciones', 'Difusión del código'],
+  E1: ['Modelo de autorización familiar de imagen', 'Finalidades separadas (web, redes, prensa, uso interno)', 'Derecho de revocación', 'Plazo de conservación'],
+  E2: ['Criterios de publicación de imágenes', 'Prohibición de captar imágenes en vestuarios y duchas', 'Evitar nombres y datos que identifiquen a menores', 'Responsable de las redes de la entidad'],
+  F1: ['Modelo de autorización familiar por desplazamiento', 'Datos de la actividad, fechas y transporte', 'Contacto de emergencia'],
+  F2: ['Responsables y ratio de adultos', 'Alojamiento y distribución de habitaciones', 'Normas de convivencia', 'Actuación ante incidentes durante el viaje'],
+  G1: ['Aprobación por la entidad y fecha', 'Objeto, ámbito y principios', 'Referencias a la LOPIVI y al Protocolo Marco', 'Previsión de revisión'],
+  G2: ['Medios de difusión del protocolo', 'Acceso para agentes, familias y menores', 'Versión adaptada a menores'],
+  H1: ['Pasos a seguir ante una sospecha o comunicación', 'Personas responsables', 'Comunicación a servicios sociales, Fuerzas y Cuerpos de Seguridad o Fiscalía (deber de comunicación, LOPIVI arts. 15 y 16)', 'Registro de actuaciones', 'Confidencialidad'],
+  H2: ['Flujograma o esquema secuencial de actuación', 'Difusión del flujograma'],
+  I1: ['Canal definido (persona, correo, buzón…)', 'Garantías de confidencialidad', 'Respuesta y seguimiento de las comunicaciones'],
+  I2: ['Información adaptada a la edad de los menores', 'Teléfonos de ayuda (ANAR 900 20 20 10, 112)', 'Información a las familias'],
+  J1: ['Formación prevista por colectivo', 'Periodicidad o reciclaje', 'Registro de asistentes'],
+  K1: ['Listado de agentes deportivos por rol o función', 'Previsión de actualización'],
+  K2: ['Exigencia del certificado negativo del Registro Central de Delincuentes Sexuales a todo el personal en contacto habitual con menores', 'Control de renovación']
+};
+const TIPOS_REV = [
+  ['protocolo', 'Protocolo de protección de la entidad', ['G1', 'G2', 'H1', 'H2', 'I1', 'I2', 'B1', 'C1', 'C2', 'D1', 'E2', 'F2']],
+  ['codigo', 'Código de conducta', ['D1', 'D2']],
+  ['designacion', 'Designación del Delegado/a', ['B1']],
+  ['formacion_del', 'Certificado de formación del Delegado/a', ['B2']],
+  ['riesgos', 'Análisis de riesgos', ['C1', 'C2']],
+  ['declaracion', 'Declaración institucional o adhesión', ['A1', 'A2']],
+  ['imagenes', 'Procedimiento de imágenes y redes sociales', ['E1', 'E2']],
+  ['viajes', 'Plan de desplazamientos o viajes', ['F1', 'F2']],
+  ['canal', 'Canal de comunicación / cartel informativo', ['I1', 'I2']],
+  ['plan_form', 'Plan de formación', ['J1']],
+  ['agentes', 'Registro de agentes deportivos', ['K1', 'K2']],
+  ['otro', 'Otro documento (elige los requisitos)', []]];
+const EST_REV = [['cumple', 'Cumple'], ['parcial', 'Parcial'], ['no_cumple', 'No cumple']];
+
+function abrirRevision(codigos) {
+  const rows = state.matriz || [];
+  const ent = state.entidades.find(e => e.id === $('#matriz-entidad').value) || {};
+  if (!rows.length) { toast('Selecciona una entidad', true); return; }
+  const caja = $('#revision-ia');
+  const preset = codigos ? 'otro' : 'protocolo';
+  caja.innerHTML = `<div class="card form"><h3>🔎 Revisar documento con IA · ${esc(ent.nombre || '')}</h3>
+    <p class="nota">Claude compara el documento del club con los criterios del Protocolo Marco y te propone el estado de cada requisito. Tú decides qué aplicar.</p>
+    <div class="fields"><label>Tipo de documento<select id="rev-tipo">${TIPOS_REV.map(([k, t]) => `<option value="${k}" ${k === preset ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></label>
+      <label>Nombre del documento<input id="rev-nombre" placeholder="Ej.: Protocolo de protección 2026"></label></div>
+    <b>Requisitos que debe cubrir</b><div class="rev-reqs">${rows.map(r => `<label class="check"><input type="checkbox" value="${esc(r.codigo)}"> <span><b>${esc(r.codigo)}</b> ${esc(r.requisito)}</span></label>`).join('')}</div>
+    <div class="ia-acciones"><button class="btn" type="button" id="rev-preparar">Preparar prompt</button><button class="btn ghost" type="button" id="rev-cerrar">Cerrar</button></div>
+    <div id="rev-prompt"></div><div id="rev-respuesta"></div><div id="rev-propuesta"></div></div>`;
+  const marcar = lista => caja.querySelectorAll('.rev-reqs input').forEach(i => { i.checked = lista.includes(i.value); });
+  const tipo = $('#rev-tipo');
+  tipo.onchange = () => { const t = TIPOS_REV.find(x => x[0] === tipo.value); if (t[2].length) marcar(t[2]); if (!$('#rev-nombre').value || $('#rev-nombre').dataset.auto) { $('#rev-nombre').value = t[0] === 'otro' ? '' : t[1]; $('#rev-nombre').dataset.auto = '1'; } };
+  $('#rev-nombre').oninput = e => delete e.target.dataset.auto;
+  if (codigos) marcar(codigos); else tipo.onchange();
+  $('#rev-cerrar').onclick = () => { caja.innerHTML = ''; };
+  $('#rev-preparar').onclick = () => prepararRevision(ent);
+  caja.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function prepararRevision(ent) {
+  const cods = [...$$('#revision-ia .rev-reqs input:checked')].map(i => i.value);
+  if (!cods.length) { toast('Marca al menos un requisito', true); return; }
+  const nombre = $('#rev-nombre').value.trim() || 'Documento de la entidad';
+  const req = cods.map(c => state.matriz.find(r => r.codigo === c));
+  const prompt = [CONTEXTO_IA, '',
+    'TAREA: revisa el documento ADJUNTO de una entidad deportiva y comprueba si cubre los requisitos del Protocolo Marco de Andalucía indicados abajo.',
+    'Documento: ' + nombre + (ent.nombre ? ' · Entidad: ' + ent.nombre : ''), '',
+    'IMPORTANTE: si el documento contiene datos personales (nombres, DNI, teléfonos, datos de menores), no los reproduzcas en la respuesta.', '',
+    'REQUISITOS Y ELEMENTOS A COMPROBAR (orientativos):',
+    req.map(r => `${r.codigo} · ${r.requisito}\n` + (CRITERIOS[r.codigo] || []).map(c => '  - ' + c).join('\n')).join('\n'), '',
+    'FORMATO DE RESPUESTA:',
+    '1. Para cada requisito, una tabla: Elemento | ¿Consta? (Sí / Parcial / No) | Dónde (página o apartado) | Observación.',
+    '2. Al final, EXACTAMENTE este bloque, una línea por requisito, sin negritas:',
+    'RESULTADO',
+    ...req.map(r => `${r.codigo} | cumple o parcial o no_cumple | qué falta o mejorar (máx. 15 palabras)`),
+    'FIN',
+    'Criterio: cumple = constan todos los elementos esenciales; parcial = constan algunos; no_cumple = no se aborda. Es una revisión documental orientativa, no una valoración de la entidad.'].join('\n');
+  mostrarPrompt($('#rev-prompt'), prompt, null);
+  $('#rev-prompt .nota').textContent = 'Al abrirse Claude, ADJUNTA el documento del club (PDF o Word) antes de enviar. Si el prompt no aparece, pulsa "Copiar prompt" y pégalo. No subas documentos con datos de menores.';
+  const z = $('#rev-respuesta');
+  z.innerHTML = `<div class="guardar-res"><label>Pega aquí la respuesta de Claude<textarea rows="8" class="doc-texto" id="rev-texto" placeholder="En Claude, pulsa Copiar en la respuesta y pégala aquí"></textarea></label>
+    <div class="ia-acciones"><button class="btn" type="button" id="rev-analizar">Ver propuesta</button></div></div>`;
+  pegarConFormato($('#rev-texto'));
+  $('#rev-analizar').onclick = () => proponerRevision(ent, nombre, prompt, cods);
+}
+
+function leerResultado(txt) {
+  const limpio = String(txt).replace(/\*\*/g, '').replace(/`/g, '');
+  const i = limpio.search(/RESULTADO/i);
+  const zona = i >= 0 ? limpio.slice(i) : limpio;
+  const out = {};
+  zona.split('\n').forEach(l => {
+    const m = l.replace(/^[\s|>*-]+/, '').match(/^([A-K]\d)\s*[|:·-]\s*(cumple|parcial|no[ _]?cumple|no consta)\s*(?:[|:·-]\s*(.*?))?\s*\|?\s*$/i);
+    if (!m) return;
+    const e = m[2].toLowerCase().replace(/\s/g, '_');
+    out[m[1].toUpperCase()] = { estado: e.startsWith('no') ? 'no_cumple' : e, obs: (m[3] || '').trim() };
+  });
+  return out;
+}
+
+function proponerRevision(ent, nombre, prompt, cods) {
+  const txt = $('#rev-texto').value.trim();
+  if (!txt) { toast('Pega primero la respuesta de Claude', true); return; }
+  const res = leerResultado(txt);
+  const lista = cods.filter(c => res[c]);
+  const cont = $('#rev-propuesta');
+  if (!lista.length) { cont.innerHTML = '<p class="aviso-inc">No encuentro el bloque RESULTADO en la respuesta. Pide a Claude: «Añade al final el bloque RESULTADO … FIN en el formato indicado».</p>'; return; }
+  const faltan = cods.filter(c => !res[c]);
+  const hoy = hoyISO();
+  cont.innerHTML = `<h3>Propuesta de actualización</h3>
+    <p class="nota">Revisa cada fila. Solo se aplican las marcadas. El estado actual queda sustituido.</p>
+    <table class="propuesta"><thead><tr><th></th><th>Requisito</th><th>Actual</th><th>Propuesto</th><th>Acción pendiente</th></tr></thead><tbody>
+    ${lista.map(c => { const r = state.matriz.find(x => x.codigo === c), p = res[c];
+      return `<tr><td><input type="checkbox" data-ap="${c}" checked style="width:22px;height:22px;min-height:0"></td><td><b>${c}</b> ${esc(r.requisito)}</td>
+        <td>${esc((ESTADOS[r.estado] || ESTADOS.pendiente)[2])}</td>
+        <td><select data-est="${c}">${EST_REV.map(([k, t]) => `<option value="${k}" ${k === p.estado ? 'selected' : ''}>${t}</option>`).join('')}</select></td>
+        <td><input data-acc="${c}" value="${esc(p.estado === 'cumple' ? '' : p.obs)}"></td></tr>`; }).join('')}</tbody></table>
+    ${faltan.length ? `<p class="nota">Sin resultado en la respuesta: ${faltan.join(', ')}.</p>` : ''}
+    <div class="fields"><label>Evidencia · título<input id="rev-ev-t" value="${esc(nombre)}"></label><label>Evidencia · enlace Drive (opcional)<input id="rev-ev-u" type="url" placeholder="https://drive.google.com/…"></label></div>
+    <label class="check"><input type="checkbox" id="rev-guardar" checked> Guardar el informe de Claude en Documentos</label>
+    <div class="ia-acciones"><button class="btn" type="button" id="rev-aplicar">Aplicar a la matriz</button></div>`;
+  $('#rev-aplicar').onclick = async () => {
+    const sel = lista.filter(c => $(`[data-ap="${c}"]`).checked);
+    if (!sel.length) { toast('No hay filas marcadas', true); return; }
+    const entidad_id = $('#matriz-entidad').value, evT = $('#rev-ev-t').value.trim(), evU = $('#rev-ev-u').value.trim();
+    await run(async () => {
+      for (const c of sel) {
+        const r = state.matriz.find(x => x.codigo === c);
+        await API.call('guardarCumplimiento', { id: r.cumplimiento_id, entidad_id, requisito_codigo: c, estado: $(`[data-est="${c}"]`).value,
+          fecha_revision: hoy, proxima_revision: '', responsable: r.responsable, accion_pendiente: $(`[data-acc="${c}"]`).value });
+        if (evT) await API.call('guardarEvidencia', { entidad_id, requisito_codigo: c, titulo: evT, url_drive: evU, fecha_documento: hoy });
+      }
+      if ($('#rev-guardar').checked) await API.call('guardarDocumento', { asunto: 'Revisión · ' + nombre + (ent.nombre ? ' · ' + ent.nombre : ''), tipo: 'revision', prompt, resultado: $('#rev-texto').value });
+    });
+    state.docs = null;
+    toast(sel.length + ' requisito(s) actualizados');
+    $('#revision-ia').innerHTML = ''; loadMatriz();
+  };
+  cont.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+$('#matriz-ia') && ($('#matriz-ia').onclick = () => abrirRevision(null));
 
 // ---------- ARRANQUE DE LA ENCUESTA PÚBLICA ----------
 if (COD_ENC) iniciarEncuesta(COD_ENC);
