@@ -4,6 +4,9 @@
   <base target="_top">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
+  <meta name="author" content="Escuela&amp;Deporte (by M.A. Ballesteros)">
+  <meta name="copyright" content="© 2026 Escuela&amp;Deporte (by M.A. Ballesteros). Todos los derechos reservados.">
+  <!-- EntornoSeguro · © 2026 Escuela&Deporte (by M.A. Ballesteros). Todos los derechos reservados. -->
   <title>EntornoSeguro · Protección de Menores en el Deporte</title>
   <link rel="icon" type="image/png" sizes="192x192" href="https://entornoseguro.escuelaydeporte.com/img/icon-192.png">
   <link rel="apple-touch-icon" href="https://entornoseguro.escuelaydeporte.com/img/icon-192.png">
@@ -46,6 +49,9 @@ body.busy::before { content: ''; position: fixed; top: 0; left: 0; height: 4px; 
 .login-card p { color: var(--muted); margin: 0 0 24px; }
 .login-card #gsi-btn { display: flex; justify-content: center; }
 .login-card small { display: block; margin-top: 24px; color: var(--muted); font-size: 0.75rem; }
+.copy { display: block; color: var(--muted); font-size: .72rem; margin-top: 8px; letter-spacing: .01em; }
+.login-card .copy { margin-top: 10px; }
+.enc-card .copy { text-align: center; margin-top: 14px; }
 .brand-mark { width: 56px; height: 56px; border-radius: 14px; background: var(--brand); color: #fff; display: inline-grid; place-items: center; font-weight: 700; font-size: 1.25rem; }
 .brand-mark.sm { width: 36px; height: 36px; font-size: 0.875rem; border-radius: 9px; }
 .error { color: var(--bad) !important; min-height: 1.5em; margin-top: 12px !important; }
@@ -349,6 +355,7 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
       <p id="login-error" class="error"></p>
       <div class="tamano" role="group" aria-label="Tamaño del texto" style="justify-content:center"><span>Texto</span><button type="button" data-fs="1" aria-label="Texto normal">A</button><button type="button" data-fs="1.15" aria-label="Texto grande">A+</button><button type="button" data-fs="1.3" aria-label="Texto muy grande">A++</button></div>
       <small>Acceso restringido a personal autorizado. Toda actividad queda registrada.</small>
+      <span class="copy">© 2026 Escuela&amp;Deporte<br>(by M.A. Ballesteros)</span>
     </div>
   </section>
 
@@ -379,7 +386,7 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
         <button data-view="misdatos" data-perm="club">Mis datos</button>
         <button data-view="usuarios" data-perm="admin">Usuarios</button>
       </nav>
-      <div class="user"><div class="tamano" role="group" aria-label="Tamaño del texto"><span>Texto</span><button type="button" data-fs="1" aria-label="Texto normal">A</button><button type="button" data-fs="1.15" aria-label="Texto grande">A+</button><button type="button" data-fs="1.3" aria-label="Texto muy grande">A++</button></div><span id="user-name"></span><small id="user-rol"></small><button id="cambiar-pass" class="link">Cambiar contraseña</button><button id="logout" class="link">Salir</button></div>
+      <div class="user"><div class="tamano" role="group" aria-label="Tamaño del texto"><span>Texto</span><button type="button" data-fs="1" aria-label="Texto normal">A</button><button type="button" data-fs="1.15" aria-label="Texto grande">A+</button><button type="button" data-fs="1.3" aria-label="Texto muy grande">A++</button></div><span id="user-name"></span><small id="user-rol"></small><button id="cambiar-pass" class="link">Cambiar contraseña</button><button id="logout" class="link">Salir</button><span class="copy">© 2026 Escuela&amp;Deporte<br>(by M.A. Ballesteros)</span></div>
     </aside>
 
     <main>
@@ -1378,7 +1385,7 @@ table{border-collapse:collapse;width:100%;margin:10px 0;font-size:10pt}th{backgr
 ul,ol{margin:6px 0 10px;padding-left:22px}li{margin:2px 0}blockquote{border-left:3px solid #0d818f;margin:8px 0;padding:2px 12px;color:#4f5d65}hr{border:0;border-top:1px solid #cfd8dc;margin:14px 0}p{margin:0 0 8px}</style></head><body>
 <div class="cab"><img src="${LOGO}" alt=""><div><b>EntornoSeguro</b><small>${esc(org)}</small></div></div>
 <h1>${esc(f.asunto.value)}</h1><div class="fecha">${new Date().toLocaleDateString('es-ES')}</div>${cuerpo}
-<div class="pie">EntornoSeguro · ${esc(org)} · Borrador generado con apoyo de IA, sujeto a validación profesional.</div></body></html>`;
+<div class="pie">EntornoSeguro · ${esc(org)} · Borrador generado con apoyo de IA, sujeto a validación profesional.<br>EntornoSeguro © 2026 Escuela&amp;Deporte (by M.A. Ballesteros)</div></body></html>`;
 }
 $('#doc-word').onclick = () => descargar('﻿' + htmlDocumento(true), 'application/msword', nombreArchivo('doc'));
 $('#doc-txt').onclick = () => descargar('﻿' + $('#form-doc').asunto.value + '\n\n' + mdToText($('#form-doc').resultado.value), 'text/plain;charset=utf-8', nombreArchivo('txt'));
@@ -1531,7 +1538,7 @@ ul,ol{margin:4px 0 8px;padding-left:20px}p{margin:0 0 6px}
 <div class="cab"><img src="${LOGO}" alt=""><div><b>EntornoSeguro</b><small>${esc(org)}</small></div></div>
 <h1>${esc(titulo)}</h1>${subtitulo ? `<div class="sub">${esc(subtitulo)}</div>` : ''}<div class="fecha">${esc(hoy)}</div>
 ${cuerpo}
-<div class="pie">${pie || `EntornoSeguro · ${esc(org)} · Documento generado el ${esc(hoy)}. Estado de implantación documental; no constituye valoración de personas ni de entidades.`}</div>
+<div class="pie">${pie || `EntornoSeguro · ${esc(org)} · Documento generado el ${esc(hoy)}. Estado de implantación documental; no constituye valoración de personas ni de entidades.`}<br>EntornoSeguro © 2026 Escuela&amp;Deporte (by M.A. Ballesteros)</div>
 </body></html>`;
 }
 function abrirInforme(html) {
@@ -2380,7 +2387,7 @@ async function iniciarEncuesta(codigo) {
 const AYUDA_ENC = `<div class="ayuda"><b>Si algo te preocupa o te hace sentir mal:</b><ul>
   <li>Habla con tu familia, con un adulto de confianza o con el Delegado/a de Protección del club.</li>
   <li>Llama gratis a la Fundación ANAR: <a href="tel:900202010">900 20 20 10</a> o al <a href="tel:116111">116 111</a> (niños, niñas y adolescentes, 24 h).</li>
-  <li>En una emergencia: <a href="tel:112">112</a>.</li></ul></div>`;
+  <li>En una emergencia: <a href="tel:112">112</a>.</li></ul></div><span class="copy">EntornoSeguro © 2026 Escuela&amp;Deporte (by M.A. Ballesteros)</span>`;
 
 // ---------- BIBLIOTECA ----------
 const CATEGORIAS_BIB = ['Normativa estatal', 'Normativa andaluza', 'Protocolo Marco', 'Protección de datos', 'Guías y manuales', 'Modelos y plantillas', 'Formación', 'Protocolos de la entidad', 'Otros'];
