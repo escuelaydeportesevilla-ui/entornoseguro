@@ -383,6 +383,7 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
         <button data-view="biblioteca">Biblioteca</button>
         <button data-view="clubes" data-perm="admin" id="nav-clubes">Mis clubes</button>
         <button data-view="documentacion" data-perm="admin">Documentación</button>
+        <button data-view="instancias" data-perm="admin" id="nav-instancias">Ayuntamientos</button>
         <button data-view="misdatos" data-perm="club">Mis datos</button>
         <button data-view="usuarios" data-perm="admin">Usuarios</button>
       </nav>
@@ -677,6 +678,13 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
         <div id="bib-lista"></div>
       </section>
 
+      <!-- AYUNTAMIENTOS (instancias clonadas, solo versión principal) -->
+      <section id="view-instancias" class="view hidden">
+        <header><h2>Ayuntamientos clientes</h2><button class="btn" id="nueva-instancia" type="button">+ Nuevo ayuntamiento</button></header>
+        <p class="nota">Cada ayuntamiento tiene su propia hoja y su propio servidor, pero entra por esta misma web escribiendo el usuario con su código: <b>admin@codigo</b>. Sus clubes entran igual: <b>usuario@codigo</b>.</p>
+        <div class="card"><table id="tabla-instancias"></table></div>
+      </section>
+
       <!-- USUARIOS -->
       <section id="view-usuarios" class="view hidden">
         <header><h2>Usuarios</h2><button class="btn" id="nuevo-usuario" data-perm="admin">+ Nuevo usuario</button></header>
@@ -699,6 +707,7 @@ const WEB_PUBLICA = EN_SCRIPT ? 'https://entornoseguro.escuelaydeporte.com/' : l
 const COD_ENC = (() => { try { return (new URLSearchParams(location.search).get('e') || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); } catch { return ''; } })();
 const API = {
   token: null,
+  base: (() => { try { return sessionStorage.getItem('es_api') || API_URL; } catch { return API_URL; } })(),
   async call(accion, datos) {
     let r;
     if (EN_SCRIPT) {
@@ -707,7 +716,7 @@ const API = {
     } else {
       let res;
       try {
-        res = await fetch(API_URL, { method: 'POST', credentials: 'omit', redirect: 'follow',
+        res = await fetch(this.base, { method: 'POST', credentials: 'omit', redirect: 'follow',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({ token: this.token, accion, datos: datos || {} }) });
         r = await res.json();
@@ -723,7 +732,7 @@ const API = {
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const state = { me: null, entidades: [] };
+const state = { me: null, entidades: [], inst: (() => { try { return sessionStorage.getItem('es_inst') || ''; } catch { return ''; } })() };
 
 const ESTADOS = {
   cumple: ['✓', 'ok', 'Cumple'], parcial: ['⚠', 'warn', 'Parcial'], no_cumple: ['✗', 'bad', 'No cumple'],
@@ -768,6 +777,7 @@ $('#form-login').onsubmit = async ev => {
   $('#login-error').textContent = '';
   const d = Object.fromEntries(new FormData(ev.target));
   try {
+    await elegirInstancia(d);
     const r = await run(() => API.call('login', d));
     API.token = r.token; ssSet('es_token', r.token);
     await arrancar();
@@ -784,6 +794,7 @@ async function arrancar() {
   $('#org').textContent = r.config.organismo || ''; state.cfg = r.config;
   $$('[data-perm]').forEach(el => { if (!can(el.dataset.perm)) el.remove(); });
   state.modo = r.config.modo || 'MUNICIPAL';
+  if (state.inst || String(r.config.tipo || '').toUpperCase() !== 'MAESTRO') { const ni = $('#nav-instancias'); if (ni) ni.remove(); }
   state.club = state.modo === 'CLUB' || state.me.rol === 'entidad' || state.me.rol === 'club';
   if (state.club) {
     $('#nav-entidades').textContent = state.modo === 'CLUB' ? 'Mi club' : 'Mi entidad';
@@ -794,11 +805,21 @@ async function arrancar() {
   if (state.me.debe_cambiar) formPassword(true); else show('panel');
 }
 
+/** 'usuario@codigo' → conecta con el servidor de ese ayuntamiento. Sin @ → versión principal. */
+async function elegirInstancia(d) {
+  const m = String(d.usuario || '').trim().match(/^([^@\s]+)@([a-z0-9-]+)$/i);
+  API.base = API_URL; ssSet('es_api', null); ssSet('es_inst', null); state.inst = '';
+  if (!m || EN_SCRIPT) return;
+  const r = await run(() => API.call('resolverInstancia', { codigo: m[2].toLowerCase() }));
+  API.base = r.api_url; ssSet('es_api', r.api_url); ssSet('es_inst', m[2].toLowerCase()); state.inst = m[2].toLowerCase();
+  d.usuario = m[1];
+}
+
 function salirLocal() {
   API.token = null; ssSet('es_token', null);
   $('#app').classList.add('hidden'); $('#login').classList.remove('hidden');
 }
-$('#logout').onclick = async () => { try { await API.call('logout'); } catch {} location.reload(); };
+$('#logout').onclick = async () => { try { await API.call('logout'); } catch {} ssSet('es_api', null); ssSet('es_inst', null); location.reload(); };
 $('#cambiar-pass').onclick = () => formPassword(false);
 
 function formPassword(obligatorio) {
@@ -834,7 +855,7 @@ function show(v) {
   window.scrollTo(0, 0);
   $$('nav button').forEach(b => b.classList.toggle('active', b.dataset.view === madre));
   $$('.view').forEach(s => s.classList.toggle('hidden', s.id !== 'view-' + v));
-  ({ panel: loadPanel, entidades: loadEntidades, matriz: loadMatriz, formacion: loadFormacion, alertas: loadAlertas, usuarios: loadUsuarios, documentos: loadDocumentos, riesgos: loadRiesgos, informes: loadInformes, agentes: loadAgentes, autorizaciones: loadAutorizaciones, plantillas: loadPlantillas, clubes: loadClubes, misdatos: loadMisDatos, documentacion: loadDocumentacion, incidencias: loadIncidencias, encuestas: loadEncuestas, biblioteca: loadBiblioteca }[v] || (() => {}))();
+  ({ panel: loadPanel, entidades: loadEntidades, matriz: loadMatriz, formacion: loadFormacion, alertas: loadAlertas, usuarios: loadUsuarios, documentos: loadDocumentos, riesgos: loadRiesgos, informes: loadInformes, agentes: loadAgentes, autorizaciones: loadAutorizaciones, plantillas: loadPlantillas, clubes: loadClubes, instancias: loadInstancias, misdatos: loadMisDatos, documentacion: loadDocumentacion, incidencias: loadIncidencias, encuestas: loadEncuestas, biblioteca: loadBiblioteca }[v] || (() => {}))();
 }
 
 // ---------- PANEL ----------
@@ -1849,6 +1870,7 @@ $('#nuevo-club') && ($('#nuevo-club').onclick = () => {
   });
 });
 function mostrarClaves(nombre, usuario, clave) {
+  if (state.inst) usuario = usuario + '@' + state.inst;
   const url = location.origin + location.pathname;
   const f = $('#modal-form');
   f.innerHTML = `<h3>Claves de acceso · ${esc(nombre)}</h3>
@@ -2261,7 +2283,7 @@ const PREGUNTAS_ENC = {
     'Si viera o viviera algo que no está bien, sabría cómo contarlo.']
 };
 const FRANJAS = [['6-11', 'De 6 a 11 años'], ['12-17', 'De 12 a 17 años']];
-const enlaceEnc = c => WEB_PUBLICA + '?e=' + encodeURIComponent(c);
+const enlaceEnc = c => WEB_PUBLICA + '?e=' + encodeURIComponent(c) + (state.inst ? '&a=' + encodeURIComponent(state.inst) : '');
 async function loadEncuestas() {
   const ent = await selEntidad($('#enc-entidad'), loadEncuestas);
   if (!ent) { $('#tabla-encuestas').innerHTML = '<tr><td class="empty">Registra primero una entidad que trabaje con menores.</td></tr>'; return; }
@@ -2646,8 +2668,38 @@ function proponerRevision(ent, nombre, prompt, cods) {
 }
 $('#matriz-ia') && ($('#matriz-ia').onclick = () => abrirRevision(null));
 
+// ---------- AYUNTAMIENTOS (instancias) ----------
+async function loadInstancias() {
+  const rows = state.instancias = await run(() => API.call('listarInstancias'));
+  $('#tabla-instancias').innerHTML = `<thead><tr><th>Ayuntamiento</th><th>Acceso</th><th>Estado</th><th></th></tr></thead><tbody>` +
+    (rows.map(x => `<tr class="${x.estado === 'inactivo' ? 'inactivo' : ''}"><td><b>${esc(x.nombre)}</b><br><small>${esc(x.api_url)}</small></td>
+      <td><b>admin@${esc(x.codigo)}</b></td><td>${x.estado === 'inactivo' ? '<span class="st muted">Inactivo</span>' : '<span class="st ok">Activo</span>'}</td>
+      <td><button class="link" data-inst="${esc(x.codigo)}">Editar</button></td></tr>`).join('')
+      || '<tr><td colspan="4" class="empty">Aún no hay ayuntamientos clientes.</td></tr>') + '</tbody>';
+  $$('[data-inst]').forEach(b => b.onclick = () => formInstancia(rows.find(x => x.codigo === b.dataset.inst)));
+}
+$('#nueva-instancia') && ($('#nueva-instancia').onclick = () => formInstancia({ estado: 'activo' }));
+function formInstancia(x) {
+  modal(x.codigo ? 'Editar ayuntamiento' : 'Nuevo ayuntamiento cliente', [['codigo', 'Código (minúsculas, sin espacios: sanlucar)', 'text', true],
+    ['nombre', 'Nombre', 'text', true], ['api_url', 'URL de su aplicación web (/exec)', 'url', true], ['estado', 'Estado', [['activo', 'Activo'], ['inactivo', 'Inactivo']]]], x, async d => {
+    await run(() => API.call('guardarInstancia', d)); toast('Ayuntamiento guardado'); loadInstancias();
+  });
+  const f = $('#modal-form');
+  if (x.codigo) {
+    f.codigo.readOnly = true;
+    const del = document.createElement('button'); del.type = 'button'; del.className = 'btn ghost peligro'; del.textContent = 'Quitar';
+    del.onclick = async () => { if (!confirm('¿Quitar este ayuntamiento del acceso único? Su hoja y sus datos no se borran.')) return; $('#modal').close('cancel');
+      await run(() => API.call('eliminarInstancia', { codigo: x.codigo })); toast('Quitado'); loadInstancias(); };
+    f.querySelector('.actions').prepend(del);
+  }
+}
+
 // ---------- ARRANQUE DE LA ENCUESTA PÚBLICA ----------
-if (COD_ENC) iniciarEncuesta(COD_ENC);
+if (COD_ENC) (async () => {
+  const a = (() => { try { return (new URLSearchParams(location.search).get('a') || '').toLowerCase().replace(/[^a-z0-9-]/g, ''); } catch { return ''; } })();
+  if (a && !EN_SCRIPT) { try { const r = await API.call('resolverInstancia', { codigo: a }); API.base = r.api_url; } catch (e) { $('#login').classList.add('hidden'); $('#encuesta').classList.remove('hidden'); $('#enc-card').innerHTML = `<p class="ent">${esc(e.message)}</p>`; return; } }
+  iniciarEncuesta(COD_ENC);
+})();
 </script>
 </body>
 </html>
