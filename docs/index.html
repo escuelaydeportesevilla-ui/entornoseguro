@@ -647,7 +647,7 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
       <!-- INCIDENCIAS -->
       <section id="view-incidencias" class="view hidden">
         <header><h2>Registro de incidencias</h2></header>
-        <div class="aviso-inc">🔒 <b>Registro confidencial.</b> Solo el Delegado/a de Protección. <b>No escribas nombres, iniciales ni datos que identifiquen a menores o a personas implicadas.</b> El relato y la documentación van al expediente oficial; aquí solo la trazabilidad del procedimiento. Este módulo no usa IA.</div>
+        <div class="aviso-inc">🔒 <b>Registro confidencial.</b> Solo el Delegado/a de Protección. <b>No escribas nombres, iniciales ni datos que identifiquen a menores o a personas implicadas.</b> El relato y la documentación van al expediente oficial; aquí solo la trazabilidad del procedimiento. Si el asistente IA está activado, solo recibe categorías, nunca datos.</div>
         <div id="inc-cont"></div>
       </section>
 
@@ -2014,7 +2014,7 @@ function htmlFichaDPD(p, e) {
       ['Documento', 'Propuesta de diseño para validación previa a su desarrollo'],
       ['Responsable del tratamiento', campo(e.nombre, 'ENTIDAD CLIENTE: AYUNTAMIENTO O CLUB')],
       ['Prestador del servicio (encargado)', `${PRE} · CIF ${campo(p.cif, 'CIF')}`],
-      ['Estado', 'Pendiente de informe del DPD. El módulo no se activará hasta su validación.']]) +
+      ['Estado', 'Pendiente de informe del DPD (o aprobación del órgano de gobierno en entidades sin DPD). El módulo no se activará hasta su validación.']]) +
     '<h2>1. Objeto</h2>' +
     pj('El Protocolo Marco andaluz (Orden de 18 de noviembre de 2024) exige que las entidades deportivas dispongan de un procedimiento de comunicación y actuación ante incidentes y de su registro. Este documento describe cómo se propone incorporar ese registro a EntornoSeguro y qué garantías tendrá, para que el DPD valide el diseño antes de su desarrollo.') +
     pj('El módulo se plantea como asistente de procedimiento y registro de actuaciones. No sustituye la decisión profesional, no califica hechos ni atribuye responsabilidades, y no reemplaza el expediente administrativo o judicial que corresponda.') +
@@ -2044,7 +2044,13 @@ function htmlFichaDPD(p, e) {
       ['Administrador del servicio (encargado)', 'Sin acceso al módulo ni a sus indicadores de detalle. Solo soporte técnico a petición expresa y con registro visible para la entidad.'],
       ['Delegado/a municipal (versión ayuntamiento)', 'Casos de su ámbito municipal. Las entidades no ven casos de otras.']].map(([a, c]) => `<tr><td>${esc(a)}</td><td>${esc(c)}</td></tr>`).join('') + '</tbody></table>' +
     pj('Medidas adicionales: confirmación de la contraseña para abrir el módulo, sesión reducida a 30 minutos, registro de auditoría de cada consulta y modificación y exportación limitada al Delegado/a.') +
-    '<h2>6. Inteligencia artificial</h2>' + pj('El módulo de incidencias no se conectará a herramientas de IA ni generará prompts con datos de casos.') +
+    '<h2>6. Inteligencia artificial</h2>' +
+    pj('El registro de incidencias no envía datos de casos a ninguna herramienta de IA. De forma opcional, y solo si se valida expresamente con una segunda activación independiente, puede usarse un asistente de IA sin datos con estas condiciones:') +
+    lista(['La IA recibe exclusivamente categorías cerradas: tipo de situación, ámbito, fase del procedimiento, existencia de riesgo inmediato y tipo de organización. Nunca nombres, iniciales, fechas, lugares, relato, código de caso ni referencias de expedientes.',
+      'La IA devuelve orientación de procedimiento y borradores con marcadores ([FECHA], [DESTINATARIO]…). La aplicación completa los marcadores en local con los datos del registro, sin enviarlos a la IA.',
+      'No existe conexión automática: el prompt se muestra íntegro antes de abrir la herramienta externa con la cuenta del usuario.',
+      'Los borradores se guardan solo en la hoja de incidencias, asociados al caso, y se eliminan al anonimizarse el caso.',
+      'Cada uso del asistente queda en el registro de accesos del caso.']) +
     '<h2>7. Seguridad y almacenamiento</h2>' + lista(['Hoja de datos separada para incidencias, con acceso solo desde la aplicación.',
       'Cifrado en tránsito (HTTPS) y en reposo (infraestructura de Google).', 'Contraseñas con función resumen y sal; bloqueo tras intentos fallidos.',
       'Registro de auditoría.', 'Estadísticas solo con datos agregados y anonimizados.']) +
@@ -2054,11 +2060,11 @@ function htmlFichaDPD(p, e) {
       ['Acceso de personas no autorizadas', 'Acceso restringido al Delegado/a, confirmación de contraseña, sesión corta y auditoría.'],
       ['Introducción de datos identificativos en texto libre', 'Aviso permanente, enmascaramiento automático y revisión periódica.'],
       ['Acceso del prestador del servicio', 'Sin acceso funcional; registro visible de cualquier intervención técnica; contrato de encargo.'],
-      ['Uso de IA con datos de casos', 'Módulo excluido de cualquier funcionalidad de IA.'],
+      ['Uso de IA con datos de casos', 'Sin envío de datos: el asistente opcional solo recibe categorías cerradas; los datos se completan en local. Activación independiente y validada.'],
       ['Conservación excesiva', 'Anonimización automática al vencer el plazo fijado.']].map(([a, c]) => `<tr><td>${esc(a)}</td><td>${esc(c)}</td></tr>`).join('') + '</tbody></table>' +
     '<h2>10. Cuestiones que se someten al DPD</h2><ol>' + ['¿Es suficiente el modelo de expediente mínimo, o debe limitarse aún más?',
       '¿Procede realizar una Evaluación de Impacto (EIPD)? Recomendación del prestador: sí.', 'Base jurídica aplicable y plazo de conservación.',
-      '¿Debe residir la hoja de incidencias en la cuenta de Google de la propia entidad?', 'Información a las personas interesadas y cláusulas que deben mostrarse en la aplicación.'].map(t => `<li>${esc(t)}</li>`).join('') + '</ol>' +
+      '¿Debe residir la hoja de incidencias en la cuenta de Google de la propia entidad?', 'Información a las personas interesadas y cláusulas que deben mostrarse en la aplicación.', '¿Se autoriza el asistente de IA sin datos descrito en el apartado 6?'].map(t => `<li>${esc(t)}</li>`).join('') + '</ol>' +
     '<h3>Informe del DPD</h3>' + tablaKV([['Valoración', '☐ Favorable &nbsp; ☐ Favorable con condiciones &nbsp; ☐ Desfavorable'], ['Condiciones u observaciones', '<br><br><br><br>'], ['Fecha y firma', '<br><br><br>']]);
   return plantillaInforme('Ficha técnica para el Delegado de Protección de Datos', 'Módulo de registro y seguimiento de incidencias', '<div class="just">' + b + '</div>', false,
     'EntornoSeguro · Ficha técnica para el DPD · Propuesta de diseño sujeta a validación.');
@@ -2105,17 +2111,17 @@ async function loadIncidencias() {
 }
 function pintarIncInactivo(st) {
   $('#inc-cont').innerHTML = `<div class="grid2"><div class="card"><h3>Módulo desactivado</h3>
-    <p>El registro de incidencias permanece <b>desactivado</b> hasta que el Delegado/a de Protección de Datos (DPD) valide su diseño.</p>
-    <p class="nota">Descarga la ficha técnica, entrégala al DPD y, con su informe favorable, activa el módulo.</p>
+    <p>El registro de incidencias permanece <b>desactivado</b> hasta que el Delegado/a de Protección de Datos (DPD) valide su diseño o, en entidades sin DPD, lo apruebe su órgano de gobierno.</p>
+    <p class="nota">Descarga la ficha técnica, entrégala al DPD (o a la junta directiva) y, con su visto bueno, activa el módulo.</p>
     <div class="ia-acciones"><button class="btn" type="button" data-doclegal="ficha" data-fmt="pdf">Ficha para el DPD (PDF)</button><button class="btn ghost" type="button" data-doclegal="ficha" data-fmt="word">Word</button></div></div>
     <div class="card">${st.puede_activar ? `<form id="form-activar" class="form"><h3>Activar el registro</h3>
-      <label class="check"><input type="checkbox" name="confirmo" value="SI" required> El DPD ha emitido informe favorable sobre el diseño del módulo</label>
-      <label>Fecha del informe del DPD<input type="date" name="fecha_dpd" required></label>
+      <label class="check"><input type="checkbox" name="confirmo" value="SI" required> El DPD (o el órgano de gobierno, si la entidad no tiene DPD) ha validado el diseño del módulo</label>
+      <label>Fecha del informe o de la aprobación<input type="date" name="fecha_dpd" required></label>
       <label>Plazo de conservación de casos cerrados (meses, fijado por el DPD)<input type="number" name="conservacion_meses" min="1" max="600" required></label>
       <label>Confirma tu contraseña<input type="password" name="password" autocomplete="current-password" required></label>
       <button class="btn">Activar registro de incidencias</button>
       <p class="nota">Se creará una hoja de datos separada, solo accesible desde la aplicación.</p></form>`
-      : '<h3>Activación</h3><p>Solicita la activación al administrador del sistema cuando el DPD haya validado el diseño.</p>'}</div></div>`;
+      : '<h3>Activación</h3><p>Solicita la activación al administrador del sistema cuando el diseño esté validado.</p>'}</div></div>`;
   const f = $('#form-activar');
   if (f) f.onsubmit = async ev => {
     ev.preventDefault();
@@ -2145,6 +2151,9 @@ function pintarCasos() {
       ['Con riesgo inmediato', abiertos.filter(c => c.riesgo_inmediato === 'SI').length], ['Revisión vencida', vencida], ['Cerrados', cs.length - abiertos.length]]
       .map(([l, v]) => `<div class="kpi"><span>${l}</span><strong>${v}</strong></div>`).join('')}</div>
     <div class="ia-acciones"><button class="btn" id="nuevo-caso" type="button">+ Registrar comunicación</button><button class="btn ghost" id="bloquear-inc" type="button">🔒 Cerrar registro</button></div>
+    ${state.inc.puede_activar ? `<div class="card"><b>Asistente IA en incidencias:</b> ${state.inc.ia ? `<span class="st ok">Activado</span> <small>desde ${esc(state.inc.ia_fecha)}</small>` : '<span class="st muted">Desactivado</span>'}
+      <button class="link" type="button" id="inc-ia-switch">${state.inc.ia ? 'Desactivar' : 'Activar'}</button>
+      <p class="nota" style="margin:6px 0 0">Solo recibe categorías (tipo, ámbito, fase, riesgo). Devuelve orientación y borradores que la app completa con los datos del caso sin enviarlos. Requiere validación (apartado 6 de la ficha técnica).</p></div>` : ''}
     <div class="card form buscador"><label>Mostrar<select id="inc-filtro"><option value="abiertos">Casos abiertos</option><option value="">Todos</option>${state.inc.listas.fases.map(([k, t]) => `<option value="${k}">${esc(t)}</option>`).join('')}</select></label>
       <label>Buscar código<input id="inc-q" type="search" placeholder="INC-…"></label></div>
     <div class="card"><table id="tabla-casos"></table></div>`;
@@ -2162,6 +2171,13 @@ function pintarCasos() {
   };
   $('#inc-filtro').onchange = pintar; $('#inc-q').oninput = pintar; pintar();
   $('#nuevo-caso').onclick = () => formCaso({ fecha_comunicacion: hoyISO(), fase: 'comunicada', riesgo_inmediato: 'NO' });
+  $('#inc-ia-switch') && ($('#inc-ia-switch').onclick = () => {
+    const activar = !state.inc.ia;
+    modal(activar ? 'Activar asistente IA en incidencias' : 'Desactivar asistente IA', (activar ? [['confirmo', 'Validación', [['', '— elige —'], ['SI', 'El DPD o el órgano de gobierno ha validado el uso del asistente (apartado 6 de la ficha)']]], ['fecha', 'Fecha de la validación', 'date', true]] : []).concat([['password', 'Confirma tu contraseña', 'password', true]]), {}, async d => {
+      d.activar = activar ? 'SI' : 'NO';
+      await incCall('asistenteIAIncidencias', d); toast(activar ? 'Asistente IA activado' : 'Asistente IA desactivado'); loadIncidencias();
+    });
+  });
   $('#bloquear-inc').onclick = async () => { await run(() => API.call('cerrarIncidencias')); toast('Registro cerrado'); loadIncidencias(); };
 }
 function formCaso(c, faseNueva) {
@@ -2237,6 +2253,12 @@ async function abrirCaso(id) {
         ${c.fase === 'cerrada' ? `<tr><td>Resultado</td><td>${esc(c.resultado)}</td></tr><tr><td>Cierre</td><td>${esc(c.fecha_cierre)}</td></tr>` : ''}</table>
         <div class="ia-acciones">${c.anonimizado !== 'SI' ? '<button class="btn ghost" type="button" id="caso-editar">Editar datos</button>' : ''}<button class="btn ghost" type="button" id="caso-pdf">Informe PDF</button><button class="btn ghost" type="button" id="caso-word">Word</button></div></div>
     </div>
+    ${state.inc.ia && c.anonimizado !== 'SI' ? `<div class="card form"><h3>🤖 Asistente IA sin datos</h3>
+      <p class="nota">Claude solo recibe: tipo de situación, ámbito, fase y riesgo inmediato. Nada que identifique el caso. Revisa el prompt antes de abrirlo.</p>
+      <div class="fields"><label>¿Qué necesitas?<select id="ia-tarea">${TAREAS_IA.map(([k, t]) => `<option value="${k}">${esc(k === 'com_municipal' && !state.club ? 'Borrador: comunicación a la entidad deportiva' : t)}</option>`).join('')}</select></label></div>
+      <div class="ia-acciones"><button class="btn" type="button" id="ia-preparar">Preparar prompt</button></div>
+      <div id="ia-caso-out"></div></div>` : ''}
+    ${d.borradores && d.borradores.length ? `<div class="card"><h3>Borradores del caso</h3>${d.borradores.map(x => `<div class="doc-legal"><span><b>${esc(x.titulo)}</b><br><small>${esc(x.creado)} · ${esc(x.usuario)}</small></span><div class="ia-acciones"><button class="btn ghost" type="button" data-bor-pdf="${esc(x.id)}">Ver / PDF</button><button class="btn ghost" type="button" data-bor-word="${esc(x.id)}">Word</button><button class="btn ghost peligro" type="button" data-bor-del="${esc(x.id)}">Eliminar</button></div></div>`).join('')}</div>` : ''}
     <div class="card"><h3>Cronología de actuaciones</h3>${d.actuaciones.length ? `<ul class="linea">${d.actuaciones.map(a => `<li><b>${esc(a.tipo)}</b>${a.destinatario ? ' · ' + esc(a.destinatario) : ''}
       <small>${esc(a.fecha)}${a.referencia ? ' · Ref.: ' + esc(a.referencia) : ''}${a.usuario ? ' · ' + esc(a.usuario) : ''}</small>${a.observaciones ? `<div>${esc(a.observaciones)}</div>` : ''}</li>`).join('')}</ul>` : '<p class="empty">Sin actuaciones.</p>'}</div>
     <details class="card"><summary><b>Registro de accesos a este caso</b></summary><table><thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th></tr></thead><tbody>
@@ -2247,6 +2269,11 @@ async function abrirCaso(id) {
   b('caso-actuacion') && (b('caso-actuacion').onclick = () => formActuacion(c));
   b('caso-pdf').onclick = async () => abrirInforme(await htmlInformeCaso(c.id));
   b('caso-word').onclick = async () => descargar('﻿' + await htmlInformeCaso(c.id), 'application/msword', nombreInf('informe-' + c.codigo));
+  b('ia-preparar') && (b('ia-preparar').onclick = () => prepararIACaso(c));
+  const bor = id => d.borradores.find(x => x.id === id);
+  $$('[data-bor-pdf]').forEach(x => x.onclick = () => abrirInforme(htmlBorrador(bor(x.dataset.borPdf), c)));
+  $$('[data-bor-word]').forEach(x => x.onclick = () => descargar('﻿' + htmlBorrador(bor(x.dataset.borWord), c), 'application/msword', nombreInf('borrador-' + c.codigo)));
+  $$('[data-bor-del]').forEach(x => x.onclick = async () => { if (!confirm('¿Eliminar este borrador?')) return; await incCall('eliminarBorrador', { id: x.dataset.borDel }); toast('Borrador eliminado'); abrirCaso(c.id); });
 }
 $('#caso-volver').onclick = () => show('incidencias');
 function formActuacion(c) {
@@ -2272,6 +2299,75 @@ async function htmlInformeCaso(id) {
   b += '<div class="nota">Este documento no califica los hechos ni atribuye responsabilidades. Referencias: LO 8/2021 (LOPIVI), arts. 15 y 16; Protocolo Marco de Andalucía (Orden de 18 de noviembre de 2024).</div>';
   b += '<div class="firma"><div>Delegado/a de Protección</div><div>Fecha</div></div>';
   return plantillaInforme('Informe de seguimiento de caso', c.codigo, b, false, 'EntornoSeguro · Registro de incidencias · Documento confidencial · ' + esc(c.codigo));
+}
+
+// ---------- ASISTENTE IA SIN DATOS (incidencias) ----------
+const TAREAS_IA = [
+  ['orientacion', 'Orientación para la fase actual'],
+  ['com_ss', 'Borrador: comunicación a Servicios Sociales'],
+  ['com_familia', 'Borrador: comunicación a la familia'],
+  ['com_municipal', 'Borrador: comunicación al Delegado/a municipal'],
+  ['acta', 'Borrador: acta de reunión de valoración'],
+  ['checklist', 'Checklist de documentación y actuaciones'],
+  ['seguimiento', 'Plan de seguimiento'],
+  ['medidas', 'Medidas preventivas de mejora (tras el cierre)']];
+const INSTR_IA = {
+  orientacion: 'Da una orientación práctica para la fase indicada: preguntas que debe hacerse el responsable, actuaciones que suelen corresponder, a quién comunicar y plazos orientativos. Máximo 350 palabras, en viñetas.',
+  com_ss: 'Redacta un escrito formal de comunicación a los Servicios Sociales Comunitarios en cumplimiento del deber de comunicación (LOPIVI, arts. 15 y 16). Incluye asunto, cuerpo, solicitud de coordinación y firma. Tono técnico y neutro, sin calificar los hechos.',
+  com_familia: 'Redacta una comunicación a la familia o tutores, cercana y prudente: informa de que se ha recibido una comunicación, de las medidas de protección y de la persona de contacto. Sin detalles de los hechos ni de otras personas.',
+  com_municipal: 'Redacta una comunicación formal entre el Delegado/a de Protección de la entidad y el Delegado/a de Protección municipal (o viceversa) informando del caso por su código, la fase y las actuaciones realizadas, y proponiendo coordinación.',
+  acta: 'Redacta un modelo de acta de reunión de valoración inicial: asistentes (por cargo), orden del día, valoración del riesgo, decisiones, comunicaciones acordadas, responsables y próxima revisión.',
+  checklist: 'Elabora una checklist de documentación y actuaciones para la fase indicada, con casillas ☐ y la referencia normativa cuando proceda.',
+  seguimiento: 'Propón un plan de seguimiento: qué revisar, con qué periodicidad, indicadores de evolución, coordinación con servicios y criterio para el cierre.',
+  medidas: 'Propón 5-8 medidas preventivas para reducir la probabilidad de situaciones similares en el ámbito indicado, formuladas para el análisis de riesgos del Protocolo Marco.'
+};
+const MARCADORES_IA = ['CODIGO_CASO', 'FECHA_HOY', 'FECHA_COMUNICACION', 'ORGANISMO', 'ENTIDAD', 'REF_EXPEDIENTE', 'RESPONSABLE', 'DELEGADO'];
+function prepararIACaso(c) {
+  const tarea = $('#ia-tarea').value;
+  const t = (TAREAS_IA.find(x => x[0] === tarea) || TAREAS_IA[0])[1];
+  const prompt = [CONTEXTO_IA, '',
+    'TAREA: ' + t + '. ' + INSTR_IA[tarea],
+    '', 'SITUACIÓN (solo categorías; no se facilitan datos personales ni del caso):',
+    '- Tipo de organización: ' + (state.club ? 'club o entidad deportiva' : 'ayuntamiento (Delegado/a de Protección municipal)'),
+    '- Tipo de situación comunicada: ' + c.tipo,
+    '- Ámbito: ' + c.ambito,
+    '- Fase del procedimiento: ' + txtFase(c.fase),
+    '- Riesgo inmediato: ' + (c.riesgo_inmediato === 'SI' ? 'sí' : 'no'),
+    '', 'REGLAS:',
+    '- No inventes hechos ni datos. No califiques los hechos ni atribuyas responsabilidades.',
+    '- Donde falten datos usa EXACTAMENTE estos marcadores: ' + MARCADORES_IA.map(m => '[' + m + ']').join(' ') + '.',
+    '- Para cualquier otro dato usa [COMPLETAR: descripción]. Nunca escribas nombres de personas.',
+    '- Referencia la norma (LOPIVI, Protocolo Marco de Andalucía) cuando proceda.'].join('\n');
+  const caja = $('#ia-caso-out');
+  mostrarPrompt(caja, prompt, null);
+  $('#ia-caso-out .nota').textContent = 'Revisa el prompt: solo contiene categorías. Se abrirá Claude con tu cuenta. Si aparece vacío, pulsa "Copiar prompt" y pégalo.';
+  incCall('usoIACaso', { caso_id: c.id, tarea }).catch(() => {});
+  const z = document.createElement('div'); z.className = 'guardar-res form';
+  z.innerHTML = `<label>Pega aquí la respuesta de Claude<textarea rows="8" class="doc-texto" id="ia-resp"></textarea></label>
+    <div class="ia-acciones"><button class="btn" type="button" id="ia-completar">Completar con los datos del caso</button></div><div id="ia-final"></div>`;
+  caja.appendChild(z); pegarConFormato($('#ia-resp'));
+  $('#ia-completar').onclick = () => {
+    const txt = $('#ia-resp').value.trim(); if (!txt) { toast('Pega primero la respuesta de Claude', true); return; }
+    const final = completarMarcadores(txt, c);
+    const quedan = (final.match(/\[[^\]]+\]/g) || []).length;
+    $('#ia-final').innerHTML = `<p class="nota">${quedan ? quedan + ' dato(s) por completar, marcados en amarillo. Complétalos en el documento final, fuera de la app si son datos personales.' : 'Todos los marcadores completados.'}</p>
+      <div class="md vista-previa">${mdToHtml(final).replace(/\[([^\]]+)\]/g, '<mark>[$1]</mark>')}</div>
+      <label>Título<input id="ia-titulo" value="${esc((x => x.charAt(0).toUpperCase() + x.slice(1))(t.replace(/^Borrador: /, '')) + ' · ' + c.codigo)}"></label>
+      <div class="ia-acciones"><button class="btn" type="button" id="ia-guardar">Guardar en el caso</button><button class="btn ghost" type="button" id="ia-copiar">Copiar</button></div>`;
+    $('#ia-copiar').onclick = () => copiarRico(final);
+    $('#ia-guardar').onclick = async () => { await incCall('guardarBorrador', { caso_id: c.id, tarea, titulo: $('#ia-titulo').value, texto: final }); toast('Borrador guardado en el caso'); abrirCaso(c.id); };
+  };
+}
+function completarMarcadores(txt, c) {
+  const cfg = state.cfg || {}, e = state.entidades.find(x => x.id === c.entidad_id) || {};
+  const f = v => v ? new Date(String(v).slice(0, 10) + 'T12:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+  const val = { CODIGO_CASO: c.codigo, FECHA_HOY: f(hoyISO()), FECHA_COMUNICACION: f(c.fecha_comunicacion), ORGANISMO: cfg.organismo || '',
+    ENTIDAD: e.nombre || cfg.organismo || '', REF_EXPEDIENTE: c.ref_expediente || '', RESPONSABLE: c.responsable || '',
+    DELEGADO: state.club ? (e.delegado_nombre || '') : (cfg.delegado_municipal || '') };
+  return String(txt).replace(/\[([A-Z_]+)\]/g, (m, k) => val[k] ? val[k] : m);
+}
+function htmlBorrador(x, c) {
+  return plantillaInforme(x.titulo, 'Borrador · ' + c.codigo, '<div class="nota">DOCUMENTO CONFIDENCIAL · Borrador elaborado con asistente de IA sin datos personales y completado en la aplicación. Revísalo antes de su uso.</div>' + mdToHtml(x.texto).replace(/\[([^\]]+)\]/g, '<span class="campo">[$1]</span>'), false, 'EntornoSeguro · Registro de incidencias · Documento confidencial · ' + esc(c.codigo));
 }
 
 // ---------- ENCUESTAS ANÓNIMAS ----------
