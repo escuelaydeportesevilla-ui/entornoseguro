@@ -870,11 +870,12 @@ async function loadPanel() {
     ['Alertas abiertas', k.alertas_abiertas], ['Riesgos altos pendientes', k.riesgos_altos || 0], ['Agentes deportivos', k.agentes || 0], ['Agentes sin certificado', k.agentes_sin_cert || 0]
   ];
   if (k.casos_abiertos !== null && k.casos_abiertos !== undefined) tiles.push(['Casos abiertos (incidencias)', k.casos_abiertos]);
+  if (k.propia && !state.club) tiles.splice(4, 0, ['Actividades municipales', k.propia.pct + '%']);
   const ocultarClub = ['Entidades', 'Con menores', 'Con Delegado/a', 'Aceptan Protocolo'];
   $('#kpis').innerHTML = tiles.filter(([l]) => !(state.club && ocultarClub.includes(l))).map(([l, v]) => `<div class="kpi"><span>${esc(l)}</span><strong>${esc(v)}</strong></div>`).join('');
   $('#badge-alertas').textContent = k.alertas_abiertas || '';
   $('#panel-entidades').innerHTML = d.entidades.length ? d.entidades.map(e => `
-    <div class="bar-row" data-id="${esc(e.id)}"><span>${esc(e.nombre)}</span>
+    <div class="bar-row" data-id="${esc(e.id)}"><span>${e.propia ? '🏛️ ' : ''}${esc(e.nombre)}</span>
       <div class="bar"><i style="width:${e.pct}%" class="${e.pct < 40 ? 'bad' : e.pct < 80 ? 'warn' : 'ok'}"></i></div><b>${e.pct}%</b></div>`).join('')
     : '<p class="empty">Sin entidades con menores registradas.</p>';
   $$('#panel-entidades .bar-row').forEach(r => r.onclick = () => { show('matriz'); setTimeout(() => { $('#matriz-entidad').value = r.dataset.id; loadMatriz(); }, 50); });
@@ -889,7 +890,7 @@ function alertList(a) {
 async function loadEntidades() {
   state.entidades = await run(() => API.call('listarEntidades'));
   $('#tabla-entidades').innerHTML = `<thead><tr><th>Entidad</th><th>Modalidad</th><th>Menores</th><th>Delegado/a</th><th>Protocolo Marco</th><th></th></tr></thead><tbody>` +
-    state.entidades.map(e => `<tr><td><b>${esc(e.nombre)}</b><br><small>${esc(e.cif)}</small></td><td>${esc(e.modalidad)}</td>
+    state.entidades.map(e => `<tr><td><b>${esc(e.nombre)}</b>${e.propia === 'SI' ? ' <span class="chip">Propia</span>' : ''}<br><small>${esc(e.cif)}</small></td><td>${esc(e.modalidad)}</td>
       <td>${e.trabaja_menores === 'SI' ? esc(e.n_menores || 'Sí') : 'No'}</td><td>${esc(e.delegado_nombre) || '<span class="bad-t">Sin designar</span>'}</td>
       <td>${e.acepta_protocolo_marco === 'SI' ? '✓ ' + esc(e.fecha_aceptacion) : '<span class="bad-t">Pendiente</span>'}</td>
       <td>${can('escribir') ? `<button class="link" data-edit="${esc(e.id)}">Editar</button>` : ''}</td></tr>`).join('') + '</tbody>';
@@ -900,7 +901,7 @@ $('#nueva-entidad') && ($('#nueva-entidad').onclick = () => formEntidad({}));
 
 function formEntidad(e) {
   modal('Entidad deportiva', [
-    ['nombre', 'Nombre', 'text', true], ['cif', 'CIF'], ['tipo', 'Tipo', ['Club', 'Asociación', 'Escuela deportiva', 'Empresa de servicios', 'Otro']],
+    ['nombre', 'Nombre', 'text', true], ['cif', 'CIF'], ['tipo', 'Tipo', ['Club', 'Asociación', 'Escuela deportiva', 'Empresa de servicios', 'Ayuntamiento', 'Otro']],
     ['modalidad', 'Modalidad deportiva'], ['trabaja_menores', '¿Trabaja con menores?', ['SI', 'NO']], ['n_menores', 'Nº aprox. de menores', 'number'],
     ['delegado_nombre', 'Delegado/a de Protección'], ['delegado_email', 'Email delegado/a', 'email'], ['delegado_telefono', 'Teléfono delegado/a'],
     ['fecha_designacion', 'Fecha designación', 'date'], ['acepta_protocolo_marco', 'Acepta Protocolo Marco', ['NO', 'SI']],
@@ -1656,6 +1657,7 @@ async function htmlInformeMunicipal() {
     [['Entidades con menores', t.entidades], ['Menores (aprox.)', t.menores], ['Con Delegado/a', t.con_delegado + '/' + t.entidades], ['Aceptan Protocolo Marco', t.con_protocolo + '/' + t.entidades],
      ['Cumplimiento medio', t.cumplimiento_medio + '%'], ['Personas formadas', t.formados], ['Riesgos identificados', t.riesgos], ['Riesgos altos pendientes', t.riesgos_altos], ['Alertas prioritarias', t.alertas_altas]]
       .map(([k, v]) => `<div class="kpi"><span>${k}</span><b>${v}</b></div>`).join('') + '</div>';
+  if (d.propia) { const p = d.propia; b += `<h3>Actividades municipales propias</h3><table><thead><tr><th>Entidad</th><th>Delegado/a</th><th>Protocolo Marco</th><th colspan="2">Cumplimiento</th><th>Riesgos (altos)</th><th>Formados</th></tr></thead><tbody><tr><td>${esc(p.nombre)}</td><td>${siNo(p.delegado)}</td><td>${siNo(p.protocolo)}</td><td style="width:70px">${barra(p.pct)}</td><td><b>${p.pct}%</b></td><td>${p.riesgos} (${p.riesgos_altos})</td><td>${p.formados}</td></tr></tbody></table><p class="muted">El ayuntamiento no se incluye en los indicadores de entidades.</p>`; }
   const filas = d.filas.slice().sort((a, c) => c.pct - a.pct);
   b += '<h2>2. Situación por entidad</h2>' + (filas.length ?
     '<table><thead><tr><th>Entidad</th><th>Delegado/a</th><th>Protocolo Marco</th><th colspan="2">Cumplimiento</th><th>Riesgos (altos)</th><th>Formados</th><th>Alertas altas</th></tr></thead><tbody>' +
@@ -2469,6 +2471,7 @@ async function htmlMemoria() {
   let b = `<h2>1. Presentación</h2><p>Memoria de actividad del sistema de protección de las personas menores frente a la violencia en el deporte de <b>${esc(org)}</b>, correspondiente al periodo <b>${esc(periodo)}</b>, conforme a la LO 8/2021 (LOPIVI) y al Protocolo Marco de Andalucía (Orden de 18 de noviembre de 2024).</p>`;
   b += '<h2>2. Situación de implantación a la fecha</h2>' + kp((d.club ? [] : [['Entidades con menores', t.entidades], ['Con Delegado/a', t.con_delegado + '/' + t.entidades], ['Aceptan Protocolo Marco', t.con_protocolo + '/' + t.entidades]])
     .concat([['Cumplimiento medio', t.cumplimiento_medio + '%'], ['Menores (aprox.)', t.menores], ['Riesgos altos pendientes', t.riesgos_altos], ['Alertas prioritarias', t.alertas_altas]]));
+  if (d.propia) { const p = d.propia; b += `<h3>Actividades municipales propias</h3><table><thead><tr><th>Entidad</th><th>Delegado/a</th><th>Protocolo Marco</th><th colspan="2">Cumplimiento</th></tr></thead><tbody><tr><td>${esc(p.nombre)}</td><td>${siNo(p.delegado)}</td><td>${siNo(p.protocolo)}</td><td style="width:70px">${barra(p.pct)}</td><td><b>${p.pct}%</b></td></tr></tbody></table><h3>Entidades deportivas</h3>`; }
   if (!d.club && d.filas.length) {
     b += '<table><thead><tr><th>Entidad</th><th>Delegado/a</th><th>Protocolo Marco</th><th colspan="2">Cumplimiento</th></tr></thead><tbody>' +
       d.filas.slice().sort((x, y) => y.pct - x.pct).map((f, i) => `<tr><td>${anon ? 'Entidad ' + (i + 1) : esc(f.nombre)}</td><td>${siNo(f.delegado)}</td><td>${siNo(f.protocolo)}</td><td style="width:70px">${barra(f.pct)}</td><td><b>${f.pct}%</b></td></tr>`).join('') + '</tbody></table>';
