@@ -131,7 +131,7 @@ dialog { max-height: calc(100dvh - 32px); overflow-y: auto; }
   nav { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; flex: 0 0 auto; padding-bottom: 10px; }
   nav button { justify-content: center; align-items: center; gap: 6px; min-height: 46px; padding: 8px; background: var(--bg); border: 1px solid var(--line); font-weight: 600; text-align: center; white-space: normal; }
   nav button.active { border-color: transparent; }
-  .nav-grupo { grid-column: 1 / -1; margin: 8px 2px 0; }
+  .nav-grupo { grid-column: 1 / -1; margin: 10px 0 0; font-size: .8rem; }
   .nav-grupo:first-child { margin-top: 0; }
   .l-long { display: none; } .l-short { display: inline; }
   .user { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 8px 0; font-size: 0.8125rem; }
@@ -269,7 +269,7 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
 .tamano button { min-width: 44px; min-height: 40px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 8px; font: inherit; font-weight: 700; cursor: pointer; }
 .tamano button[aria-pressed="true"] { background: var(--brand); color: #fff; border-color: var(--brand); }
 @media (min-width: 861px) { .sidebar nav { overflow-y: auto; min-height: 0; } }
-.nav-grupo { font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 12px 12px 2px; }
+.nav-grupo { display: flex; align-items: center; gap: 6px; font-size: .74rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--brand); background: color-mix(in srgb, var(--brand-2) 12%, transparent); border-left: 4px solid var(--brand-2); border-radius: 0 8px 8px 0; padding: 6px 10px; margin: 14px 0 4px; }
 .nav-grupo:first-child { margin-top: 0; }
 .rec-item { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
 .rec-item:hover b { color: var(--brand-2); } .rec-item small { color: var(--muted); white-space: nowrap; }
@@ -370,28 +370,28 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
       <div class="brand"><img src="" data-logo alt="" class="logo sm"><div><strong>EntornoSeguro</strong><small id="org"></small></div></div>
       <button type="button" id="menu-toggle" class="menu-toggle" aria-expanded="false" aria-controls="menu-principal"><span>☰ Menú</span><b id="menu-actual">Panel</b></button>
       <nav id="menu-principal">
-        <div class="nav-grupo" aria-hidden="true">Seguimiento</div>
+        <div class="nav-grupo" aria-hidden="true">📊 Seguimiento</div>
         <button data-view="panel" class="active">Panel</button>
         <button data-view="alertas">Alertas <span id="badge-alertas" class="badge"></span></button>
-        <div class="nav-grupo" aria-hidden="true">Cumplimiento</div>
+        <div class="nav-grupo" aria-hidden="true">✅ Cumplimiento</div>
         <button data-view="entidades" id="nav-entidades">Entidades</button>
         <button data-view="matriz"><span class="l-long">Matriz de cumplimiento</span><span class="l-short">Matriz</span></button>
         <button data-view="riesgos">Riesgos</button>
         <button data-view="agentes"><span class="l-long">Agentes deportivos</span><span class="l-short">Agentes</span></button>
         <button data-view="formacion">Formación</button>
         <button data-view="autorizaciones">Autorizaciones</button>
-        <div class="nav-grupo" aria-hidden="true">Protección</div>
+        <div class="nav-grupo" aria-hidden="true">🛡️ Protección</div>
         <button data-view="incidencias" data-perm="incidencias">Incidencias</button>
         <button data-view="encuestas"><span class="l-long">Encuestas a menores</span><span class="l-short">Encuestas</span></button>
-        <div class="nav-grupo" aria-hidden="true">IA y documentos</div>
+        <div class="nav-grupo" aria-hidden="true">🤖 IA y documentos</div>
         <button data-view="asistente" data-perm="ia">Asistente IA</button>
         <button data-view="plantillas" data-perm="ia">Plantillas</button>
         <button data-view="contenidos" data-perm="ia"><span class="l-long">Contenidos RRSS</span><span class="l-short">Redes sociales</span></button>
         <button data-view="documentos" data-perm="leer">Documentos</button>
         <button data-view="biblioteca">Biblioteca</button>
-        <div class="nav-grupo" aria-hidden="true">Informes</div>
+        <div class="nav-grupo" aria-hidden="true">📄 Informes</div>
         <button data-view="informes" data-perm="informes">Informes</button>
-        <div class="nav-grupo" aria-hidden="true">Administración</div>
+        <div class="nav-grupo" aria-hidden="true">⚙️ Administración</div>
         <button data-view="clubes" data-perm="admin" id="nav-clubes">Mis clubes</button>
         <button data-view="instancias" data-perm="admin" id="nav-instancias">Ayuntamientos</button>
         <button data-view="usuarios" data-perm="admin">Usuarios</button>
