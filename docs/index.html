@@ -497,10 +497,18 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
               <option>entrenadores y monitores</option><option>directivos de clubes</option><option>población general</option>
             </select></label>
             <label>Formato<select name="formato">
+              <option value="publicacion">Publicación Instagram (pie de foto)</option>
               <option value="carrusel">Carrusel Instagram</option><option value="story">Stories</option>
               <option value="reel">Guion de reel</option><option value="infografia">Infografía</option>
               <option value="familias">Mensaje a familias</option><option value="entrenadores">Mensaje a entrenadores</option>
             </select></label>
+            <div id="pub-extra">
+              <label>Soporte<select name="soporte"><option>Foto</option><option>Carrusel</option><option>Reel</option></select></label>
+              <label>Objetivo<select name="objetivo">
+                <option>Informar</option><option>Que guarden la publicación</option><option>Generar comentarios</option><option>Que la compartan</option>
+                <option>Que participen (encuesta, formación o actividad)</option><option>Que contacten con el Delegado/a de Protección</option>
+              </select></label>
+            </div>
             <div class="ia-acciones"><button class="btn">Preparar prompt</button><button class="btn ghost" type="button" data-nuevo="contenido">+ Nuevo</button></div>
           </form>
           <div class="card"><h3>Prompt preparado</h3><div id="out-contenido"><p class="empty">Rellena el formulario y pulsa "Preparar prompt".</p></div></div>
@@ -1244,10 +1252,40 @@ function copiarManual(t) {
   try { document.execCommand('copy'); toast('Copiado'); } catch { toast('Selecciona el texto y cópialo'); }
   ta.remove();
 }
+const pubExtra = () => { const f = $('#form-contenido'); $('#pub-extra').classList.toggle('hidden', f.formato.value !== 'publicacion'); };
+$('#form-contenido').formato.addEventListener('change', pubExtra);
+$('#form-contenido').addEventListener('reset', () => setTimeout(pubExtra, 0));
+pubExtra();
+function promptPublicacion(d, org) {
+  const mun = (state.cfg && state.cfg.municipio) || '';
+  return ['Actúa como copywriter experto en Instagram y especialista en SEO para redes sociales, especializado en comunicación institucional sobre protección de la infancia en el deporte.',
+    'Contexto: ' + org + (mun ? ' (' + mun + ')' : '') + '. Sistema de protección de menores en el deporte conforme a la LO 8/2021 (LOPIVI) y al Protocolo Marco de Andalucía.', '',
+    'Redacta los textos (pies de foto) para mi próxima publicación con esta información:',
+    '- Soporte: ' + d.soporte,
+    '- Tema del post: ' + sanearIA(d.tema),
+    '- Objetivo principal: ' + d.objetivo,
+    '- Público objetivo: ' + sanearIA(d.publico), '',
+    'Dame 3 opciones independientes con enfoques diferentes (Corta, Mediana y Larga/Storytelling). Cada opción debe cumplir estrictamente:',
+    '1. El Gancho: primera línea impactante de menos de 125 caracteres, antes del botón «ver más».',
+    '2. El Cuerpo: información organizada con saltos de línea frecuentes y viñetas para que sea muy fácil de leer.',
+    '3. Llamada a la acción (CTA): una orden clara y directa al final, alineada con el objetivo.',
+    '4. Naturalidad SEO: integra palabras clave relevantes de forma natural (por ejemplo: deporte base' + (mun ? ' ' + mun : '') + ', delegado de protección, entorno seguro, protección de menores).', '',
+    'Reglas obligatorias:',
+    '- Tono cercano e institucional, positivo y preventivo; nunca alarmista. Lenguaje inclusivo.',
+    '- Nunca nombres ni datos de menores ni referencias a casos reales. No vendas ni hagas ofertas.',
+    '- Emojis con moderación. Cada pie completo por debajo de 2.200 caracteres.',
+    '- Para cada opción, propón la imagen o el vídeo SIN menores identificables (manos, siluetas, material deportivo, adultos formadores) y un texto alternativo (alt text) de 1-2 frases para accesibilidad.', '',
+    'Al final de las 3 opciones, incluye una lista única de 3 a 5 hashtags altamente específicos y relevantes para esta temática.', '',
+    'FORMATO DE RESPUESTA: entrega únicamente el resultado final, listo para copiar y pegar, sin introducciones ni preguntas al final.'].join('\n');
+}
 $('#form-contenido').onsubmit = ev => {
   ev.preventDefault();
   const d = Object.fromEntries(new FormData(ev.target));
   const org = (state.cfg && state.cfg.organismo) || 'Ayuntamiento';
+  if (d.formato === 'publicacion') {
+    mostrarPrompt($('#out-contenido'), promptPublicacion(d, org), { asunto: d.asunto, tipo: 'contenido', formato: 'publicacion', publico: d.publico });
+    return;
+  }
   const prompt = [CONTEXTO_IA, '',
     'TAREA: crea un contenido de sensibilización para redes sociales.',
     'Organismo: ' + org,
