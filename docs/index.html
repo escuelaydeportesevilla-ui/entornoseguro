@@ -491,6 +491,7 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
         <div class="grid2">
           <form id="form-contenido" class="card form">
             <label>Asunto<input name="asunto" required maxlength="200" placeholder="Ej.: Campaña delegado de protección · octubre"></label>
+            <label>Enfoque<select name="enfoque"><option value="proteccion">Protección de menores</option><option value="educacion">Educación en valores</option><option value="mixto">Mixto: valores + entorno seguro</option></select></label>
             <label>Tema<input name="tema" required placeholder="Ej.: qué hace el Delegado/a de Protección de tu club"></label>
             <label>Público<select name="publico">
               <option>familias</option><option>deportistas de 12 a 17 años</option><option>deportistas de 6 a 11 años</option>
@@ -1256,10 +1257,28 @@ const pubExtra = () => { const f = $('#form-contenido'); $('#pub-extra').classLi
 $('#form-contenido').formato.addEventListener('change', pubExtra);
 $('#form-contenido').addEventListener('reset', () => setTimeout(pubExtra, 0));
 pubExtra();
+const ENFOQUES = {
+  proteccion: { nombre: 'Protección de menores',
+    rol: 'especializado en comunicación institucional sobre protección de la infancia en el deporte',
+    contexto: 'Sistema de protección de menores en el deporte conforme a la LO 8/2021 (LOPIVI) y al Protocolo Marco de Andalucía.',
+    tono: 'Tono cercano e institucional, positivo y preventivo; nunca alarmista.',
+    claves: 'deporte base, delegado de protección, entorno seguro, protección de menores' },
+  educacion: { nombre: 'Educación en valores',
+    rol: 'especializado en educación en valores a través del deporte base',
+    contexto: 'El deporte como herramienta educativa: respeto, compañerismo, esfuerzo, juego limpio, gestión de la frustración, autoestima, igualdad e inclusión. Entrenadores y familias como educadores.',
+    tono: 'Tono cálido, inspirador y cercano, que emocione y motive; celebra el proceso y el esfuerzo por encima del resultado. No menciones riesgos, violencia ni protocolos.',
+    claves: 'deporte base, educación en valores, juego limpio, deporte en familia, valores del deporte' },
+  mixto: { nombre: 'Mixto: valores + entorno seguro',
+    rol: 'especializado en educación en valores a través del deporte y en entornos deportivos seguros',
+    contexto: 'El deporte educa en valores y lo hace en un entorno seguro y cuidado para niños, niñas y adolescentes (LOPIVI y Protocolo Marco de Andalucía como respaldo, sin protagonismo).',
+    tono: 'Tono cálido e inspirador; los valores son el protagonista y el entorno seguro aparece como garantía, en una frase, sin alarmismo.',
+    claves: 'deporte base, valores del deporte, entorno seguro, deporte en familia' }
+};
 function promptPublicacion(d, org) {
   const mun = (state.cfg && state.cfg.municipio) || '';
-  return ['Actúa como copywriter experto en Instagram y especialista en SEO para redes sociales, especializado en comunicación institucional sobre protección de la infancia en el deporte.',
-    'Contexto: ' + org + (mun ? ' (' + mun + ')' : '') + '. Sistema de protección de menores en el deporte conforme a la LO 8/2021 (LOPIVI) y al Protocolo Marco de Andalucía.', '',
+  const E = ENFOQUES[d.enfoque] || ENFOQUES.proteccion;
+  return ['Actúa como copywriter experto en Instagram y especialista en SEO para redes sociales, ' + E.rol + '.',
+    'Contexto: ' + org + (mun ? ' (' + mun + ')' : '') + '. ' + E.contexto, '',
     'Redacta los textos (pies de foto) para mi próxima publicación con esta información:',
     '- Soporte: ' + d.soporte,
     '- Tema del post: ' + sanearIA(d.tema),
@@ -1269,9 +1288,9 @@ function promptPublicacion(d, org) {
     '1. El Gancho: primera línea impactante de menos de 125 caracteres, antes del botón «ver más».',
     '2. El Cuerpo: información organizada con saltos de línea frecuentes y viñetas para que sea muy fácil de leer.',
     '3. Llamada a la acción (CTA): una orden clara y directa al final, alineada con el objetivo.',
-    '4. Naturalidad SEO: integra palabras clave relevantes de forma natural (por ejemplo: deporte base' + (mun ? ' ' + mun : '') + ', delegado de protección, entorno seguro, protección de menores).', '',
+    '4. Naturalidad SEO: integra palabras clave relevantes de forma natural (por ejemplo: ' + E.claves + (mun ? ', ' + mun : '') + ').', '',
     'Reglas obligatorias:',
-    '- Tono cercano e institucional, positivo y preventivo; nunca alarmista. Lenguaje inclusivo.',
+    '- ' + E.tono + ' Lenguaje inclusivo.',
     '- Nunca nombres ni datos de menores ni referencias a casos reales. No vendas ni hagas ofertas.',
     '- Emojis con moderación. Cada pie completo por debajo de 2.200 caracteres.',
     '- Para cada opción, propón la imagen o el vídeo SIN menores identificables (manos, siluetas, material deportivo, adultos formadores) y un texto alternativo (alt text) de 1-2 frases para accesibilidad.', '',
@@ -1283,7 +1302,19 @@ $('#form-contenido').onsubmit = ev => {
   const d = Object.fromEntries(new FormData(ev.target));
   const org = (state.cfg && state.cfg.organismo) || 'Ayuntamiento';
   if (d.formato === 'publicacion') {
-    mostrarPrompt($('#out-contenido'), promptPublicacion(d, org), { asunto: d.asunto, tipo: 'contenido', formato: 'publicacion', publico: d.publico });
+    mostrarPrompt($('#out-contenido'), promptPublicacion(d, org), { asunto: d.asunto, tipo: 'contenido', formato: 'publicacion', publico: d.publico + ' · ' + (ENFOQUES[d.enfoque] || ENFOQUES.proteccion).nombre });
+    return;
+  }
+  const E = ENFOQUES[d.enfoque] || ENFOQUES.proteccion;
+  if (d.enfoque === 'educacion' || d.enfoque === 'mixto') {
+    const p2 = ['Actúa como comunicador experto en redes sociales, ' + E.rol + '.',
+      'Contexto: ' + org + '. ' + E.contexto, '',
+      'TAREA: crea un contenido para redes sociales.',
+      'Tema: ' + sanearIA(d.tema), 'Público: ' + sanearIA(d.publico),
+      'Tono: ' + E.tono + ' Lenguaje inclusivo. Nunca nombres ni datos de menores; propón imágenes sin menores identificables.',
+      'Formato: ' + (FORMATOS_IA[d.formato] || FORMATOS_IA.carrusel), '',
+      'FORMATO DE RESPUESTA: entrega únicamente el resultado final, listo para copiar y pegar, sin introducciones ni preguntas al final.'].join('\n');
+    mostrarPrompt($('#out-contenido'), p2, { asunto: d.asunto, tipo: 'contenido', formato: d.formato, publico: d.publico + ' · ' + E.nombre });
     return;
   }
   const prompt = [CONTEXTO_IA, '',
