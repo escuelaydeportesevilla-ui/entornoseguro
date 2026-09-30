@@ -268,6 +268,8 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
 .tamano button { min-width: 44px; min-height: 40px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 8px; font: inherit; font-weight: 700; cursor: pointer; }
 .tamano button[aria-pressed="true"] { background: var(--brand); color: #fff; border-color: var(--brand); }
 @media (min-width: 861px) { .sidebar nav { overflow-y: auto; min-height: 0; } }
+.rec-item { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+.rec-item:hover b { color: var(--brand-2); } .rec-item small { color: var(--muted); white-space: nowrap; }
 .rev-reqs { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 4px 12px; margin: 6px 0 12px; }
 .rev-reqs label.check { font-size: .9rem; margin: 0; }
 .propuesta td select { min-width: 130px; }
@@ -454,7 +456,9 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
         <header><h2>Plantillas de documentos</h2><select id="plant-entidad" aria-label="Entidad"></select></header>
         <p class="nota">Genera con IA los documentos del sistema de protección con los datos de la entidad. Revisa y adapta siempre el resultado antes de aprobarlo.</p>
         <div id="plant-lista" class="plantillas"></div>
+        <div class="ia-acciones"><button class="btn ghost" type="button" data-nuevo="plantilla">+ Nuevo</button></div>
         <div id="plant-out"></div>
+        <div class="card"><div class="out-head"><h3>Últimas plantillas generadas</h3><button class="link" type="button" data-vertodos="plantilla">Ver todas</button></div><div id="rec-plantilla"></div></div>
       </section>
 
       <!-- FORMACIÓN -->
@@ -488,10 +492,11 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
               <option value="reel">Guion de reel</option><option value="infografia">Infografía</option>
               <option value="familias">Mensaje a familias</option><option value="entrenadores">Mensaje a entrenadores</option>
             </select></label>
-            <button class="btn">Preparar prompt</button>
+            <div class="ia-acciones"><button class="btn">Preparar prompt</button><button class="btn ghost" type="button" data-nuevo="contenido">+ Nuevo</button></div>
           </form>
           <div class="card"><h3>Prompt preparado</h3><div id="out-contenido"><p class="empty">Rellena el formulario y pulsa "Preparar prompt".</p></div></div>
         </div>
+        <div class="card"><div class="out-head"><h3>Últimos contenidos</h3><button class="link" type="button" data-vertodos="contenido">Ver todos</button></div><div id="rec-contenido"></div></div>
       </section>
 
       <!-- ASISTENTE -->
@@ -501,9 +506,10 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
         <form id="form-asistente" class="card form">
           <label>Asunto<input name="asunto" required maxlength="200" placeholder="Ej.: Análisis de riesgos torneo con pernocta"></label>
           <label>Consulta<textarea name="pregunta" rows="4" required placeholder="Ej.: ¿Qué debe contener el análisis de riesgos de un club con pernoctas en torneos?"></textarea></label>
-          <button class="btn">Preparar prompt</button>
+          <div class="ia-acciones"><button class="btn">Preparar prompt</button><button class="btn ghost" type="button" data-nuevo="asistente">+ Nuevo</button></div>
         </form>
         <div class="card"><h3>Prompt preparado</h3><div id="out-asistente"><p class="empty">Escribe tu consulta y pulsa "Preparar prompt".</p></div></div>
+        <div class="card"><div class="out-head"><h3>Últimas consultas</h3><button class="link" type="button" data-vertodos="asistente">Ver todas</button></div><div id="rec-asistente"></div></div>
       </section>
       <!-- INFORMES -->
       <section id="view-informes" class="view hidden">
@@ -855,7 +861,7 @@ function show(v) {
   window.scrollTo(0, 0);
   $$('nav button').forEach(b => b.classList.toggle('active', b.dataset.view === madre));
   $$('.view').forEach(s => s.classList.toggle('hidden', s.id !== 'view-' + v));
-  ({ panel: loadPanel, entidades: loadEntidades, matriz: loadMatriz, formacion: loadFormacion, alertas: loadAlertas, usuarios: loadUsuarios, documentos: loadDocumentos, riesgos: loadRiesgos, informes: loadInformes, agentes: loadAgentes, autorizaciones: loadAutorizaciones, plantillas: loadPlantillas, clubes: loadClubes, instancias: loadInstancias, misdatos: loadMisDatos, documentacion: loadDocumentacion, incidencias: loadIncidencias, encuestas: loadEncuestas, biblioteca: loadBiblioteca }[v] || (() => {}))();
+  ({ panel: loadPanel, entidades: loadEntidades, matriz: loadMatriz, formacion: loadFormacion, alertas: loadAlertas, usuarios: loadUsuarios, documentos: loadDocumentos, riesgos: loadRiesgos, informes: loadInformes, agentes: loadAgentes, autorizaciones: loadAutorizaciones, plantillas: loadPlantillas, clubes: loadClubes, instancias: loadInstancias, misdatos: loadMisDatos, documentacion: loadDocumentacion, contenidos: () => loadRecientes('contenido'), asistente: () => loadRecientes('asistente'), incidencias: loadIncidencias, encuestas: loadEncuestas, biblioteca: loadBiblioteca }[v] || (() => {}))();
 }
 
 // ---------- PANEL ----------
@@ -1213,7 +1219,7 @@ function mostrarPrompt(caja, prompt, meta) {
     if (!resultado) { toast('Pega primero la respuesta de Claude', true); return; }
     const r = await run(() => API.call('guardarDocumento', Object.assign({}, meta, { prompt, resultado, id: meta.id })));
     meta.id = r.id; state.docs = null;
-    toast('Guardado en Documentos');
+    toast('Guardado en Documentos'); loadRecientes(meta.tipo);
   };
   zona.append(g); caja.append(zona);
 }
@@ -1819,6 +1825,7 @@ const PLANTILLAS = [
    'Redacta una CARTA a las familias presentando el sistema de protección de la entidad: compromiso, Delegado/a de Protección y cómo contactar, medidas principales, uso de imágenes y canal de comunicación. Tono cercano, máximo una página.']
 ];
 async function loadPlantillas() {
+  loadRecientes('plantilla');
   await selEntidad($('#plant-entidad'), () => {});
   $('#plant-lista').innerHTML = PLANTILLAS.map(([id, t, s]) => `<button type="button" class="plantilla" data-plant="${id}"><b>${esc(t)}</b><small>${esc(s)}</small></button>`).join('');
   $$('[data-plant]').forEach(b => b.onclick = () => prepararPlantilla(b.dataset.plant, b));
@@ -2792,6 +2799,29 @@ function formInstancia(x) {
     f.querySelector('.actions').prepend(del);
   }
 }
+
+// ---------- NUEVO · ÚLTIMOS · VER TODOS (contenidos, asistente, plantillas) ----------
+const VACIO = { contenido: 'Rellena el formulario y pulsa "Preparar prompt".', asistente: 'Escribe tu consulta y pulsa "Preparar prompt".' };
+async function loadRecientes(tipo) {
+  const caja = $('#rec-' + tipo); if (!caja) return;
+  try { if (!state.docs) state.docs = await API.call('listarDocumentos'); } catch { return; }
+  const l = (state.docs || []).filter(d => d.tipo === tipo).slice(0, 5);
+  caja.innerHTML = l.length ? l.map(d => `<div class="rec-item" role="button" tabindex="0" data-rec="${esc(d.id)}"><b>${esc(d.asunto)}</b><small>${esc(String(d.actualizado || d.creado).slice(0, 10))}</small></div>`).join('')
+    : '<p class="empty">Aún no hay nada guardado. Tras preparar el prompt, pega la respuesta de Claude y pulsa "Guardar en Documentos".</p>';
+  caja.querySelectorAll('[data-rec]').forEach(el => { el.onclick = () => abrirDoc(el.dataset.rec); el.onkeydown = e => { if (e.key === 'Enter') abrirDoc(el.dataset.rec); }; });
+}
+document.addEventListener('click', ev => {
+  const n = ev.target.closest('[data-nuevo]');
+  if (n) {
+    const t = n.dataset.nuevo;
+    if (t === 'plantilla') { $('#plant-out').innerHTML = ''; $$('.plantilla').forEach(x => x.classList.remove('activa')); }
+    else { const f = $('#form-' + t); if (f) f.reset(); $('#out-' + t).innerHTML = `<p class="empty">${VACIO[t]}</p>`; }
+    window.scrollTo(0, 0); toast('Listo para uno nuevo');
+    return;
+  }
+  const v = ev.target.closest('[data-vertodos]');
+  if (v) { $('#doc-tipo').value = v.dataset.vertodos; $('#doc-q').value = ''; show('documentos'); }
+});
 
 // ---------- ARRANQUE DE LA ENCUESTA PÚBLICA ----------
 if (COD_ENC) (async () => {
