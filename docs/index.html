@@ -2909,7 +2909,7 @@ if (COD_ENC) (async () => {
   iniciarEncuesta(COD_ENC);
 })();
 
-// ---------- COORDINACIÓN Y VERIFICACIÓN CON ENTIDADES (v1.1) ----------
+// ---------- COORDINACIÓN Y VERIFICACIÓN CON ENTIDADES (v1.2) ----------
 // Pegar justo ENCIMA de la etiqueta de cierre del script, al final del archivo Index.
 // Añade en la ventana "Entidades" la tarjeta del procedimiento y genera sus documentos (PDF / Word).
 const COORD_DOCS = [
@@ -3174,6 +3174,139 @@ descargar = function (contenido, tipo, nombre) {
 
 const coordLoadEntOriginal = loadEntidades;
 loadEntidades = async function () { await coordLoadEntOriginal(); pintarCoord(); };
+
+// ---------- GUÍA DE USO · PREGUNTAS FRECUENTES (v1.2) ----------
+// Nueva ventana "Guía de uso" en el menú: preguntas por temas, buscador, enlace a cada ventana
+// y solo lo que corresponde al perfil (municipal, club o administrador).
+// Ámbito de cada pregunta: '' = todos · 'mun' = perfil municipal · 'club' = perfil club · 'admin' = administrador.
+const GUIA = [
+  ['🚀', 'Primeros pasos', [
+    ['¿Qué es EntornoSeguro y qué no es?', '<p>Es la herramienta del Delegado/a de Protección para organizar, documentar y hacer seguimiento del sistema de protección de menores en el deporte: entidades, requisitos del Protocolo Marco, riesgos, agentes, formación, alertas, informes e incidencias.</p><p><b>No valora a personas ni entidades</b> y no sustituye la decisión profesional. Los estados reflejan la implantación documental.</p>', ''],
+    ['¿Por dónde empiezo?', '<ol><li><b>Entidades</b>: da de alta las entidades y marca si trabajan con menores.</li><li><b>Matriz</b>: revisa los requisitos A–K de cada una.</li><li><b>Agentes</b> y <b>Formación</b>: registra al personal y su formación.</li><li><b>Riesgos</b>: elabora el análisis de riesgos.</li><li><b>Alertas</b>: atiende lo que el sistema te avise cada día.</li></ol>', 'mun', 'entidades'],
+    ['¿Por dónde empiezo con mi club?', '<ol><li><b>Mi club</b>: completa la ficha, el Delegado/a y la aceptación del Protocolo Marco.</li><li><b>Plantillas</b>: genera protocolo, código de conducta y designación.</li><li><b>Agentes</b>: registra a entrenadores, monitores y voluntarios.</li><li><b>Matriz</b>: marca lo que ya tienes y sube las evidencias.</li><li><b>Encuestas</b>: lanza la primera encuesta anónima.</li></ol>', 'club', 'entidades'],
+    ['¿Cómo entro y cómo cambio mi contraseña?', '<p>Elige el perfil (<b>ADMINISTRADOR</b> o <b>MI CLUB</b>) y escribe usuario y contraseña. Si tu ayuntamiento tiene código, entra como <b>usuario@código</b>.</p><p>La primera vez se pide cambiar la contraseña temporal. Después, en <b>Cambiar contraseña</b>, abajo del menú. Tras 5 intentos fallidos el acceso se bloquea 15 minutos.</p>', ''],
+    ['¿Puedo agrandar el texto?', '<p>Sí. Usa los botones <b>A · A+ · A++</b> abajo del menú (o en la pantalla de acceso). La app recuerda tu elección.</p>', '']
+  ]],
+  ['🤝', 'Entidades y coordinación con clubes', [
+    ['¿Cómo doy de alta una entidad?', '<p><b>Entidades → + Nueva entidad</b>. Lo imprescindible: nombre, si <b>trabaja con menores</b>, su Delegado/a de Protección y si <b>acepta el Protocolo Marco</b>. Solo las entidades con menores entran en la matriz, los informes y las alertas.</p>', 'mun', 'entidades'],
+    ['¿Qué es la entidad «Actividades municipales»?', '<p>Representa las escuelas y actividades deportivas que organiza directamente el ayuntamiento. Tiene su propia matriz y aparece aparte en los informes, sin contar en las medias de las entidades.</p>', 'mun', 'entidades'],
+    ['¿Qué hace el Delegado municipal respecto a los clubes?', '<p>Solo <b>coordinar y verificar</b>: recibe la declaración responsable, comprueba que la documentación está completa, requiere lo que falte y traslada las comunicaciones a quien corresponda.</p><p><b>No</b> investiga ni valora hechos, ni asume las obligaciones del club, que tiene su propio Delegado/a de Protección.</p>', 'mun'],
+    ['¿Cómo envío la declaración responsable a los clubes?', '<p><b>Entidades → tarjeta «Coordinación y verificación»</b>. Entidad: <i>Modelo en blanco</i> (o un club concreto, sale con sus datos). Documento: <i>I · Declaración responsable</i>. Pulsa <b>Word</b> y envíala con el plazo.</p>', 'mun', 'entidades'],
+    ['Me ha llegado una declaración firmada: ¿cómo la paso a la matriz?', '<ol><li>Guarda el PDF en Drive y copia el enlace.</li><li><b>Matriz</b> → elige el club → <b>📥 Registrar declaración responsable</b>.</li><li>Pon la fecha, pega el enlace y <b>desmarca lo que el club no haya marcado</b>.</li><li><b>Aplicar a la matriz</b>: se actualizan de una vez hasta 18 requisitos, con su evidencia.</li></ol><p>A1, H1 y H2 no los cubre la declaración: actualízalos aparte.</p>', 'mun', 'matriz'],
+    ['Falta documentación de un club: ¿qué hago?', '<p>En la tarjeta de coordinación elige el club y el documento <b>III · Requerimiento</b>. El club tiene <b>10 días hábiles</b>. Archiva la comprobación con la <b>II · Ficha de verificación</b>.</p>', 'mun', 'entidades'],
+    ['¿Qué cláusula pongo en autorizaciones de uso y subvenciones?', '<p>Documento <b>V · Cláusula tipo</b> de la tarjeta de coordinación. Hace obligatoria la declaración responsable para usar instalaciones con menores o ser beneficiaria de subvenciones.</p>', 'mun', 'entidades'],
+    ['¿Cómo creo un club alojado y le doy acceso?', '<p><b>Mis clubes → + Nuevo club</b>. Se crea su hoja propia y sus claves (se muestran una sola vez). En <b>Gestionar</b> puedes ver su informe, generar otra contraseña, desactivarlo o descargar el contrato de encargo. Ver su informe o copiar sus datos <b>queda registrado</b> y el club lo ve.</p>', 'admin', 'clubes']
+  ]],
+  ['✅', 'Matriz de cumplimiento', [
+    ['¿Qué significa cada estado?', '<ul><li><b>✓ Cumple</b>: el requisito está implantado.</li><li><b>⚠ Parcial</b>: implantado en parte.</li><li><b>✗ No cumple</b>: no está.</li><li><b>· Pendiente</b>: sin revisar.</li><li><b>— No aplica</b>: no procede en esta entidad.</li></ul><p>Es estado documental, no una valoración de la entidad.</p>', '', 'matriz'],
+    ['¿Cómo actualizo un requisito y adjunto la evidencia?', '<p>En su fila, <b>Actualizar</b>: estado, fecha de revisión, responsable y acción pendiente. Añade la evidencia con un título y el <b>enlace de Drive</b>. Si dejas vacía la próxima revisión, se calcula sola según la periodicidad del requisito.</p>', '', 'matriz'],
+    ['¿Cómo reviso un documento del club con IA?', '<ol><li><b>Matriz → 🔎 Revisar documento con IA</b>; elige el tipo de documento.</li><li><b>Preparar prompt → Abrir en Claude</b> y <b>adjunta el documento</b> antes de enviar.</li><li>Copia la respuesta, pégala y pulsa <b>Ver propuesta</b>.</li><li>Revisa fila a fila y <b>Aplicar a la matriz</b>.</li></ol><p>No adjuntes documentos con datos de menores.</p>', 'ia', 'matriz']
+  ]],
+  ['👥', 'Agentes, formación y autorizaciones', [
+    ['¿A quién registro como agente deportivo?', '<p>A todas las personas adultas que intervienen con menores: entrenadores, monitores, directivos, voluntarios, árbitros y personal externo.</p>', '', 'agentes'],
+    ['¿Qué registro del certificado negativo de delitos sexuales?', '<p><b>Solo la fecha.</b> El documento lo custodia la entidad. La app avisa de quien no lo tiene y de los certificados con más antigüedad de la configurada para renovar.</p>', '', 'agentes'],
+    ['¿Cómo registro un curso con varias personas y saco los certificados?', '<p><b>Formación → + Curso con varios asistentes</b>: una persona por línea. Al guardar, la app ofrece generar los certificados en PDF. Si el nombre coincide con un agente, se actualiza su fecha de formación.</p>', 'escribir', 'formacion'],
+    ['¿Cómo controlo las autorizaciones familiares?', '<p><b>Autorizaciones</b>: un registro por grupo y tipo (imagen, desplazamiento, pernocta…) con el total de menores y las recibidas. <b>Nunca se anotan nombres de menores</b>; los originales los guarda la entidad.</p>', '', 'autorizaciones']
+  ]],
+  ['⚠️', 'Análisis de riesgos', [
+    ['¿Cómo hago el análisis de riesgos?', '<p><b>Riesgos → + Nuevo riesgo</b>. Elige el ámbito (vestuarios, viajes, comunicación digital…) y pulsa una <b>sugerencia</b> para rellenar situación y medidas. El nivel se calcula con probabilidad × impacto.</p><p>Con <b>Proponer con IA</b> obtienes una propuesta completa según la modalidad.</p>', '', 'riesgos'],
+    ['¿Qué pasa con un riesgo alto?', '<p>Genera una alerta prioritaria mientras sus medidas no estén <b>implantadas</b>. Pon fecha de revisión para que te avise a tiempo.</p>', '', 'riesgos']
+  ]],
+  ['🛡️', 'Incidencias y comunicaciones', [
+    ['Hay un menor en peligro ahora mismo: ¿qué hago?', '<p><b>Primero, llama al 112</b> y protege al menor. Después, registra. La app muestra los pasos urgentes cuando marcas «Riesgo inmediato: Sí».</p>', ''],
+    ['¿Cómo se activa el registro de incidencias?', '<p>Está desactivado hasta que el DPD (o la junta directiva en entidades sin DPD) valida su diseño. Descarga la <b>ficha técnica para el DPD</b>, y con su visto bueno actívalo indicando la fecha y el plazo de conservación.</p>', 'incidencias', 'incidencias'],
+    ['¿Qué escribo y qué no en un caso?', '<p>Solo trazabilidad: fechas, ámbito, tipo de situación, actuaciones y a quién se comunicó. <b>Nunca nombres, iniciales ni datos que identifiquen</b> a menores o personas implicadas. El relato va al expediente oficial.</p>', 'incidencias', 'incidencias'],
+    ['¿Por qué me pide la contraseña otra vez?', '<p>Por seguridad, el registro se abre con tu contraseña y se cierra tras <b>30 minutos</b> sin actividad. Puedes cerrarlo tú con <b>🔒 Cerrar registro</b>.</p>', 'incidencias', 'incidencias'],
+    ['¿Cómo avanzo un caso?', '<p>Cada caso sigue las fases <b>Hechos comunicados → Valoración inicial → Actuaciones → Seguimiento → Cerrado</b>. El asistente de procedimiento te dice qué toca en cada fase; añade cada actuación con fecha, destinatario y referencia.</p>', 'incidencias', 'incidencias'],
+    ['¿Puedo usar la IA en incidencias?', '<p>Solo si se activa aparte (segunda validación). La IA recibe <b>únicamente categorías</b> (tipo, ámbito, fase, riesgo) y devuelve orientación o borradores con marcadores que la app completa sin enviar datos.</p>', 'incidencias', 'incidencias'],
+    ['Me comunican algo sobre un club: ¿qué hago como Delegado municipal?', '<p>Registra lo comunicado sin valorarlo, traslada de inmediato a Servicios Sociales, Fiscalía o Fuerzas de Seguridad y al Delegado/a del club (salvo que esté implicado) y envía el acuse. Usa el documento <b>IV · Traslado y acuse</b>. No entrevistes ni recabes pruebas.</p>', 'mun', 'entidades']
+  ]],
+  ['📋', 'Encuestas a menores', [
+    ['¿Cómo lanzo una encuesta anónima?', '<p><b>Encuestas → + Nueva encuesta</b>: título, grupo y franja de edad (6-11 o 12-17). Comparte el <b>enlace</b> o imprime el <b>cartel con QR</b>. No se piden nombres ni datos.</p>', '', 'encuestas'],
+    ['¿Por qué no veo los resultados?', '<p>Se muestran a partir de <b>5 respuestas</b> para proteger el anonimato. Evita grupos muy pequeños.</p>', '', 'encuestas']
+  ]],
+  ['🤖', 'IA y documentos', [
+    ['¿Cómo funciona la IA en la app?', '<p>La app prepara el texto (prompt) y lo abre en <b>Claude con tu cuenta</b>. No envía datos automáticamente. Copia la respuesta, pégala en la app y pulsa <b>Guardar en Documentos</b>.</p>', 'ia', 'asistente'],
+    ['¿Qué no debo escribir nunca en la IA?', '<p>Nombres, DNI, teléfonos ni ningún dato que identifique a menores o a personas de un caso. La app enmascara DNI, teléfonos y correos, pero la responsabilidad es de quien escribe.</p>', 'ia'],
+    ['¿Dónde encuentro lo que he generado?', '<p>En <b>Documentos</b>: búscalo por palabras o tipo, edítalo y descárgalo en Word, PDF o texto.</p>', 'leer', 'documentos'],
+    ['¿Qué hay en Plantillas, Contenidos y Biblioteca?', '<ul><li><b>Plantillas</b>: protocolo, código de conducta, designación, carteles y autorizaciones con los datos de la entidad.</li><li><b>Contenidos RRSS</b>: publicaciones para familias y redes.</li><li><b>Biblioteca</b>: normativa oficial y documentos propios por categorías.</li></ul>', 'ia', 'plantillas']
+  ]],
+  ['📄', 'Alertas e informes', [
+    ['¿Cuándo se generan las alertas?', '<p>Cada día a las 7:00, con resumen por correo si está configurado. Pulsa <b>Recalcular</b> para actualizarlas al momento y <b>Cerrar</b> cuando estén atendidas.</p>', '', 'alertas'],
+    ['¿Qué informes puedo sacar?', '<ul><li><b>Informe de entidad</b>: implantación completa de una entidad.</li><li><b>Informe municipal</b>: todas las entidades, con opción de anonimizarlas.</li><li><b>Memoria anual o por periodo</b>: actividad con cifras agregadas.</li></ul><p>Todos en PDF o Word, con valoración técnica opcional preparada con IA.</p>', 'informes', 'informes']
+  ]],
+  ['🔐', 'Mis datos y privacidad', [
+    ['¿Cómo descargo todos los datos del club?', '<p><b>Mis datos → Descargar Excel</b>, cuando quieras. En la misma ventana ves el registro de cada consulta o copia que haya hecho el ayuntamiento.</p>', 'club', 'misdatos']
+  ]],
+  ['⚙️', 'Administración', [
+    ['¿Cómo creo usuarios y qué rol les doy?', '<p><b>Usuarios → + Nuevo usuario</b>. Roles: <b>Delegado/a</b> (todo menos administración), <b>Técnico/a</b> (lectura y escritura), <b>Entidad</b> (solo su entidad), <b>Solo lectura</b>. La contraseña temporal se muestra una vez.</p>', 'admin', 'usuarios'],
+    ['¿Dónde están el contrato de encargo y la ficha del DPD?', '<p>En <b>Documentación</b>: guarda una vez los datos del prestador y descarga los modelos en PDF o Word.</p>', 'admin', 'documentacion']
+  ]]
+];
+
+function guiaVisible(ambito) {
+  if (!ambito) return true;
+  if (ambito === 'mun') return !state.club;
+  if (ambito === 'club') return !!state.club;
+  if (ambito === 'admin') return !state.club && can('admin');
+  return can(ambito);
+}
+
+function pintarGuia() {
+  const v = $('#view-guia'); if (!v) return;
+  const q = norm(($('#guia-q') || {}).value || '').split(/\s+/).filter(Boolean);
+  let total = 0;
+  const html = GUIA.map(([ico, tema, preguntas]) => {
+    const items = preguntas.filter(p => guiaVisible(p[2]))
+      .filter(p => q.every(w => norm(tema + ' ' + p[0] + ' ' + p[1].replace(/<[^>]+>/g, ' ')).includes(w)));
+    if (!items.length) return '';
+    total += items.length;
+    return `<div class="card guia-tema"><h3>${ico} ${esc(tema)}</h3>` + items.map(([pr, resp, amb, ir]) => {
+      const destino = ir && $(`nav button[data-view="${ir}"]`);
+      const nombre = destino ? (destino.querySelector('.l-long') || destino).textContent.replace(/\d+$/, '').trim() : '';
+      return `<details class="guia-item"${q.length ? ' open' : ''}><summary>${esc(pr)}</summary><div class="md">${resp}` +
+        (destino ? `<p><button type="button" class="link" data-guia-ir="${esc(ir)}">Ir a ${esc(nombre)} →</button></p>` : '') + '</div></details>';
+    }).join('') + '</div>';
+  }).join('');
+  $('#guia-lista').innerHTML = html || '<p class="empty">No hay preguntas con esas palabras.</p>';
+  $('#guia-count').textContent = total + (total === 1 ? ' pregunta' : ' preguntas');
+  $$('[data-guia-ir]').forEach(b => b.onclick = () => show(b.dataset.guiaIr));
+}
+
+function htmlGuia() {
+  const cuerpo = GUIA.map(([ico, tema, preguntas]) => {
+    const items = preguntas.filter(p => guiaVisible(p[2]));
+    if (!items.length) return '';
+    return `<h2>${esc(tema)}</h2>` + items.map(([pr, resp]) => `<h3>${esc(pr)}</h3>${resp}`).join('');
+  }).join('');
+  return plantillaInforme('Guía de uso · Preguntas frecuentes', 'EntornoSeguro · ' + (state.club ? 'Perfil club' : 'Perfil municipal'), cuerpo, false,
+    'EntornoSeguro · Guía de uso. Las decisiones sobre casos corresponden siempre al profesional responsable.');
+}
+
+(() => {
+  const main = document.querySelector('#app main'), nav = $('#menu-principal');
+  if (!main || !nav || $('#view-guia')) return;
+  const st = document.createElement('style');
+  st.textContent = '.guia-item{border-top:1px solid var(--line);padding:2px 0}.guia-item:first-of-type{border-top:0}' +
+    '.guia-item summary{cursor:pointer;font-weight:600;padding:10px 0;min-height:44px;color:var(--ink)}' +
+    '.guia-item summary:hover{color:var(--brand-2)}.guia-item .md{padding:0 0 10px 4px}.guia-tema h3{color:var(--brand)}';
+  document.head.appendChild(st);
+  const sec = document.createElement('section'); sec.id = 'view-guia'; sec.className = 'view hidden';
+  sec.innerHTML = `<header><h2>Guía de uso · Preguntas frecuentes</h2><button class="btn ghost" type="button" id="guia-pdf">Descargar guía (PDF)</button></header>
+    <p class="nota">Cómo trabajar con EntornoSeguro, por temas. Pulsa una pregunta para ver la respuesta.</p>
+    <div class="card form"><label>Buscar<input id="guia-q" type="search" placeholder="Ej.: declaración, certificado, contraseña, encuesta"></label><p class="nota" id="guia-count" style="margin:0"></p></div>
+    <div id="guia-lista"></div>`;
+  main.appendChild(sec);
+  const grupo = document.createElement('div'); grupo.className = 'nav-grupo'; grupo.setAttribute('aria-hidden', 'true'); grupo.textContent = '❓ Ayuda';
+  const boton = document.createElement('button'); boton.dataset.view = 'guia';
+  boton.innerHTML = '<span class="l-long">Guía de uso</span><span class="l-short">Guía</span>';
+  boton.onclick = () => { show('guia'); pintarGuia(); };
+  const adm = [...nav.querySelectorAll('.nav-grupo')].find(g => /Administraci/.test(g.textContent));
+  nav.insertBefore(grupo, adm || null); nav.insertBefore(boton, adm || null);
+  $('#guia-q').oninput = pintarGuia;
+  $('#guia-pdf').onclick = () => abrirInforme(htmlGuia());
+})();
+// ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
 </body>
