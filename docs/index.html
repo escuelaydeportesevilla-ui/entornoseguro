@@ -3059,8 +3059,10 @@ function pintarCoord() {
       <div class="fields"><label>Entidad<select id="coord-entidad"></select></label>
         <label>Documento<select id="coord-doc">${COORD_DOCS.map(([k, t]) => `<option value="${k}">${esc(t)}</option>`).join('')}</select></label>
         <label>Temporada<input id="coord-temp" value="${esc(coordTemporada())}"></label></div>
-      <div class="ia-acciones"><button class="btn" type="button" id="coord-pdf">Ver / PDF</button><button class="btn ghost" type="button" id="coord-word">Word</button></div>`;
+      <div class="ia-acciones"><button class="btn" type="button" id="coord-pdf">Ver / PDF</button><button class="btn ghost" type="button" id="coord-word">Word</button></div>
+      ${can('escribir') ? '<div class="ia-acciones"><button class="btn ghost" type="button" id="coord-decl">📥 Registrar declaración recibida en la matriz</button></div>' : ''}`;
     vista.appendChild(card);
+    $('#coord-decl') && ($('#coord-decl').onclick = () => abrirDeclaracion($('#coord-entidad').value));
     $('#coord-pdf').onclick = () => abrirInforme(htmlCoord());
     $('#coord-word').onclick = () => {
       const e = state.entidades.find(x => x.id === $('#coord-entidad').value) || {};
@@ -3073,6 +3075,78 @@ function pintarCoord() {
     .map(x => `<option value="${esc(x.id)}">${esc(x.nombre)}</option>`).join('');
   sel.value = prev;
 }
+
+// ---- Registrar la declaración responsable recibida → matriz de cumplimiento (de una vez) ----
+// Cada punto de la declaración (mismo orden que COORD_DECLARA) actualiza estos requisitos de la matriz.
+const COORD_MAPA = [['A2'], ['B1', 'B2'], ['G1', 'G2'], ['K1', 'K2'], ['D1', 'D2'], ['C1', 'C2'], ['I1', 'I2'], ['E1', 'E2'], ['F1', 'F2'], ['J1']];
+
+function abrirDeclaracion(entidadId) {
+  if (!entidadId) { toast('Elige primero la entidad', true); return; }
+  const e = state.entidades.find(x => x.id === entidadId) || {};
+  const temp0 = ($('#coord-temp') && $('#coord-temp').value.trim()) || coordTemporada();
+  const f = $('#modal-form');
+  f.innerHTML = `<h3>📥 Registrar declaración responsable</h3>
+    <p class="nota" style="margin:0 0 12px"><b>${esc(e.nombre || '')}</b>. Marca lo que la entidad declara. Se actualizan de una vez los requisitos de la matriz y la declaración queda como evidencia.</p>
+    <div class="fields"><label>Temporada<input name="temp" value="${esc(temp0)}"></label>
+      <label>Fecha de presentación<input type="date" name="fecha" value="${hoyISO()}"></label>
+      <label class="full">Enlace al documento en Drive (opcional)<input type="url" name="url" placeholder="https://drive.google.com/…"></label></div>
+    <div class="rev-reqs" style="grid-template-columns:1fr">${COORD_DECLARA.map((t, i) => `<label class="check"><input type="checkbox" name="d${i}" checked style="flex:0 0 22px"> <span>${esc(t)} <small>(${COORD_MAPA[i].join(', ')})</small></span></label>`).join('')}</div>
+    <label class="check"><input type="checkbox" name="marcarNo" checked> Marcar lo no declarado como «No cumple», con acción pendiente</label>
+    <p class="nota">Registro formal y documental: refleja lo que declara la entidad, no una comprobación del contenido de sus documentos.</p>
+    <div class="actions"><button value="cancel" class="btn ghost" formnovalidate>Cancelar</button><button type="button" class="btn" id="decl-aplicar">Aplicar a la matriz</button></div>`;
+  $('#modal').onclose = null; $('#modal').oncancel = null;
+  if (!$('#modal').open) $('#modal').showModal();
+  $('#decl-aplicar').onclick = async () => {
+    const fecha = f.fecha.value, temp = f.temp.value.trim() || temp0, url = f.url.value.trim(), marcarNo = f.marcarNo.checked;
+    if (!fecha) { toast('Indica la fecha de presentación', true); return; }
+    if (url && !/^https:\/\//i.test(url)) { toast('El enlace debe empezar por https://', true); return; }
+    const decl = COORD_DECLARA.map((x, i) => f['d' + i].checked);
+    $('#modal').close('cancel');
+    let n = 0;
+    await run(async () => {
+      const mat = await API.call('matriz', { entidad_id: entidadId });
+      const porCod = {}; mat.forEach(r => { porCod[r.codigo] = r; });
+      const tareas = [];
+      COORD_MAPA.forEach((cods, i) => cods.forEach(c => {
+        const r = porCod[c];
+        if (!r || (!decl[i] && !marcarNo)) return;
+        tareas.push(async () => {
+          await API.call('guardarCumplimiento', { id: r.cumplimiento_id, entidad_id: entidadId, requisito_codigo: c,
+            estado: decl[i] ? 'cumple' : 'no_cumple', fecha_revision: fecha, proxima_revision: '',
+            responsable: r.responsable || 'Entidad · declaración responsable',
+            accion_pendiente: decl[i] ? '' : 'No declarado en la declaración responsable ' + temp });
+          if (decl[i]) await API.call('guardarEvidencia', { entidad_id: entidadId, requisito_codigo: c,
+            titulo: 'Declaración responsable ' + temp, url_drive: url, fecha_documento: fecha });
+          n++;
+        });
+      }));
+      for (let k = 0; k < tareas.length; k += 4) await Promise.all(tareas.slice(k, k + 4).map(t => t()));
+      if (decl[0] && e.acepta_protocolo_marco !== 'SI') {
+        await API.call('guardarEntidad', { id: e.id, nombre: e.nombre, acepta_protocolo_marco: 'SI', fecha_aceptacion: e.fecha_aceptacion || fecha });
+      }
+      try { await API.call('regenerarAlertas'); } catch (er) { /* sin permiso: se recalculan en el aviso diario */ }
+      state.entidades = await API.call('listarEntidades');
+    });
+    toast(n + ' requisito(s) actualizados en la matriz');
+    show('matriz');
+    setTimeout(() => { const s = $('#matriz-entidad'); if (s) { s.value = entidadId; loadMatriz(); } }, 60);
+  };
+}
+
+function coordBotonMatriz() {
+  const v = $('#view-matriz'); if (!v) return;
+  const b = $('#matriz-decl');
+  if (state.club || !can('escribir')) { if (b) b.remove(); return; }
+  if (b) return;
+  const ia = $('#matriz-ia');
+  let cont = ia ? ia.parentElement : null;
+  if (!cont) { cont = document.createElement('div'); cont.className = 'ia-acciones'; v.insertBefore(cont, $('#revision-ia')); }
+  cont.insertAdjacentHTML('beforeend', '<button class="btn ghost" type="button" id="matriz-decl">📥 Registrar declaración responsable</button>');
+  $('#matriz-decl').onclick = () => abrirDeclaracion($('#matriz-entidad').value);
+}
+
+const coordLoadMatrizOriginal = loadMatriz;
+loadMatriz = async function () { await coordLoadMatrizOriginal(); coordBotonMatriz(); };
 
 const coordLoadEntOriginal = loadEntidades;
 loadEntidades = async function () { await coordLoadEntOriginal(); pintarCoord(); };
