@@ -2920,17 +2920,19 @@ const COORD_DOCS = [
   ['traslado', 'IV · Traslado y acuse', 'Traslado de comunicaciones y acuse de recibo'],
   ['clausula', 'V · Cláusula tipo', 'Cláusula tipo para autorizaciones de uso y bases de subvenciones']
 ];
-const COORD_REQ = ['Declaración responsable firmada', 'Aceptación del Protocolo Marco', 'Designación del Delegado/a de Protección',
-  'Formación del Delegado/a', 'Protocolo propio', 'Relación de personal con certificado negativo', 'Código de conducta',
+const COORD_REQ = ['Declaración responsable firmada', 'Declaración institucional', 'Aceptación del Protocolo Marco', 'Designación del Delegado/a de Protección',
+  'Formación del Delegado/a', 'Protocolo propio', 'Procedimiento y flujograma ante incidentes', 'Relación de personal con certificado negativo', 'Código de conducta',
   'Análisis de riesgos', 'Canal de comunicación de incidencias', 'Autorizaciones de imagen y datos',
   'Medidas en desplazamientos y viajes', 'Formación de agentes deportivos'];
 const COORD_DECLARA = [
+  'Su órgano de gobierno ha aprobado una declaración institucional de compromiso con la protección de menores frente a la violencia.',
   'Ha aceptado el Protocolo Marco de Actuación para la Protección de las Personas Menores frente a la Violencia en el Deporte de Andalucía.',
   'Ha designado un Delegado/a de Protección con formación específica.',
   'Dispone de un protocolo de protección propio, aprobado y accesible para deportistas, familias y personal.',
   'Todo su personal, técnicos y voluntariado en contacto habitual con menores tiene el certificado negativo del Registro Central de Delincuentes Sexuales en vigor.',
   'Dispone de un código de conducta conocido y aceptado por sus agentes deportivos.',
   'Ha realizado un análisis de riesgos de sus actividades y aplica las medidas preventivas derivadas.',
+  'Dispone de un procedimiento de actuación ante incidentes, con personas responsables y flujograma difundido entre su personal.',
   'Dispone de un canal para comunicar incidencias, conocido por menores y familias.',
   'Gestiona las autorizaciones de uso de imagen y los datos de menores conforme a la normativa.',
   'Aplica medidas de protección en desplazamientos, viajes y actividades con pernocta.',
@@ -2973,7 +2975,7 @@ function coordDeclaracion(e, temp, cfg, h) {
       ['Teléfono y correo del Delegado/a', campo(contacto, 'TELÉFONO · CORREO')]]) +
     '<p>La persona abajo firmante, en representación de la entidad, <b>DECLARA BAJO SU RESPONSABILIDAD</b> que la entidad cumple lo siguiente y dispone de la documentación que lo acredita:</p>' +
     COORD_DECLARA.map(t => `<p style="margin:3px 0 3px 10px">☐&nbsp; ${esc(t)}</p>`).join('') +
-    pj('Se acompaña: designación del Delegado/a de Protección y su certificado de formación, y relación nominal del personal en contacto con menores con la fecha de su certificado negativo.') +
+    pj('Se acompaña: designación del Delegado/a de Protección y su certificado de formación, flujograma de actuación ante incidentes y relación nominal del personal en contacto con menores con la fecha de su certificado negativo.') +
     pj('La entidad se compromete a mantener estos requisitos durante toda la temporada, a comunicar cualquier cambio en 15 días y a poner la documentación a disposición del Ayuntamiento cuando se le solicite.') +
     pj('La entidad conoce que la comprobación municipal es formal y documental, y que la veracidad de lo declarado y el cumplimiento de estas obligaciones son responsabilidad exclusiva de la entidad.') +
     `<p>En ${coordMuni(cfg)}, a ____ de ______________ de ______</p>` +
@@ -3078,7 +3080,7 @@ function pintarCoord() {
 
 // ---- Registrar la declaración responsable recibida → matriz de cumplimiento (de una vez) ----
 // Cada punto de la declaración (mismo orden que COORD_DECLARA) actualiza estos requisitos de la matriz.
-const COORD_MAPA = [['A2'], ['B1', 'B2'], ['G1', 'G2'], ['K1', 'K2'], ['D1', 'D2'], ['C1', 'C2'], ['I1', 'I2'], ['E1', 'E2'], ['F1', 'F2'], ['J1']];
+const COORD_MAPA = [['A1'], ['A2'], ['B1', 'B2'], ['G1', 'G2'], ['K1', 'K2'], ['D1', 'D2'], ['C1', 'C2'], ['H1', 'H2'], ['I1', 'I2'], ['E1', 'E2'], ['F1', 'F2'], ['J1']];
 
 function abrirDeclaracion(entidadId) {
   if (!entidadId) { toast('Elige primero la entidad', true); return; }
@@ -3121,7 +3123,7 @@ function abrirDeclaracion(entidadId) {
         });
       }));
       for (let k = 0; k < tareas.length; k += 4) await Promise.all(tareas.slice(k, k + 4).map(t => t()));
-      if (decl[0] && e.acepta_protocolo_marco !== 'SI') {
+      if (decl[COORD_MAPA.findIndex(m => m.indexOf('A2') >= 0)] && e.acepta_protocolo_marco !== 'SI') {
         await API.call('guardarEntidad', { id: e.id, nombre: e.nombre, acepta_protocolo_marco: 'SI', fecha_aceptacion: e.fecha_aceptacion || fecha });
       }
       try { await API.call('regenerarAlertas'); } catch (er) { /* sin permiso: se recalculan en el aviso diario */ }
@@ -3192,7 +3194,7 @@ const GUIA = [
     ['¿Qué es la entidad «Actividades municipales»?', '<p>Representa las escuelas y actividades deportivas que organiza directamente el ayuntamiento. Tiene su propia matriz y aparece aparte en los informes, sin contar en las medias de las entidades.</p>', 'mun', 'entidades'],
     ['¿Qué hace el Delegado municipal respecto a los clubes?', '<p>Solo <b>coordinar y verificar</b>: recibe la declaración responsable, comprueba que la documentación está completa, requiere lo que falte y traslada las comunicaciones a quien corresponda.</p><p><b>No</b> investiga ni valora hechos, ni asume las obligaciones del club, que tiene su propio Delegado/a de Protección.</p>', 'mun'],
     ['¿Cómo envío la declaración responsable a los clubes?', '<p><b>Entidades → tarjeta «Coordinación y verificación»</b>. Entidad: <i>Modelo en blanco</i> (o un club concreto, sale con sus datos). Documento: <i>I · Declaración responsable</i>. Pulsa <b>Word</b> y envíala con el plazo.</p>', 'mun', 'entidades'],
-    ['Me ha llegado una declaración firmada: ¿cómo la paso a la matriz?', '<ol><li>Guarda el PDF en Drive y copia el enlace.</li><li><b>Matriz</b> → elige el club → <b>📥 Registrar declaración responsable</b>.</li><li>Pon la fecha, pega el enlace y <b>desmarca lo que el club no haya marcado</b>.</li><li><b>Aplicar a la matriz</b>: se actualizan de una vez hasta 18 requisitos, con su evidencia.</li></ol><p>A1, H1 y H2 no los cubre la declaración: actualízalos aparte.</p>', 'mun', 'matriz'],
+    ['Me ha llegado una declaración firmada: ¿cómo la paso a la matriz?', '<ol><li>Guarda el PDF en Drive y copia el enlace.</li><li><b>Matriz</b> → elige el club → <b>📥 Registrar declaración responsable</b>.</li><li>Pon la fecha, pega el enlace y <b>desmarca lo que el club no haya marcado</b>.</li><li><b>Aplicar a la matriz</b>: se actualizan de una vez los 21 requisitos (A–K), con su evidencia.</li></ol>', 'mun', 'matriz'],
     ['Falta documentación de un club: ¿qué hago?', '<p>En la tarjeta de coordinación elige el club y el documento <b>III · Requerimiento</b>. El club tiene <b>10 días hábiles</b>. Archiva la comprobación con la <b>II · Ficha de verificación</b>.</p>', 'mun', 'entidades'],
     ['¿Qué cláusula pongo en autorizaciones de uso y subvenciones?', '<p>Documento <b>V · Cláusula tipo</b> de la tarjeta de coordinación. Hace obligatoria la declaración responsable para usar instalaciones con menores o ser beneficiaria de subvenciones.</p>', 'mun', 'entidades'],
     ['¿Cómo creo un club alojado y le doy acceso?', '<p><b>Mis clubes → + Nuevo club</b>. Se crea su hoja propia y sus claves (se muestran una sola vez). En <b>Gestionar</b> puedes ver su informe, generar otra contraseña, desactivarlo o descargar el contrato de encargo. Ver su informe o copiar sus datos <b>queda registrado</b> y el club lo ve.</p>', 'admin', 'clubes']
