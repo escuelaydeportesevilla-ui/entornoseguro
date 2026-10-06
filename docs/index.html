@@ -2972,7 +2972,7 @@ function coordDeclaracion(e, temp, cfg, h) {
       ['Delegado/a de Protección de la entidad', campo(e.delegado_nombre, 'NOMBRE Y APELLIDOS')],
       ['Teléfono y correo del Delegado/a', campo(contacto, 'TELÉFONO · CORREO')]]) +
     '<p>La persona abajo firmante, en representación de la entidad, <b>DECLARA BAJO SU RESPONSABILIDAD</b> que la entidad cumple lo siguiente y dispone de la documentación que lo acredita:</p>' +
-    '<ul style="list-style:none;padding-left:4px">' + COORD_DECLARA.map(t => `<li>☐ ${esc(t)}</li>`).join('') + '</ul>' +
+    COORD_DECLARA.map(t => `<p style="margin:3px 0 3px 10px">☐&nbsp; ${esc(t)}</p>`).join('') +
     pj('Se acompaña: designación del Delegado/a de Protección y su certificado de formación, y relación nominal del personal en contacto con menores con la fecha de su certificado negativo.') +
     pj('La entidad se compromete a mantener estos requisitos durante toda la temporada, a comunicar cualquier cambio en 15 días y a poner la documentación a disposición del Ayuntamiento cuando se le solicite.') +
     pj('La entidad conoce que la comprobación municipal es formal y documental, y que la veracidad de lo declarado y el cumplimiento de estas obligaciones son responsabilidad exclusiva de la entidad.') +
@@ -3147,6 +3147,30 @@ function coordBotonMatriz() {
 
 const coordLoadMatrizOriginal = loadMatriz;
 loadMatriz = async function () { await coordLoadMatrizOriginal(); coordBotonMatriz(); };
+
+// ---- Ajuste de TODAS las descargas en Word de la app ----
+// Word no aplica los estilos de la página a la imagen ni a las cajas: el logo salía a tamaño completo
+// y las firmas una debajo de otra. Aquí se convierten cabecera y firmas en tablas que Word sí respeta.
+function coordParaWord(h) {
+  const sb = 'border:none;background:none;';
+  h = h.replace(/<div class="cab"><img src="([^"]+)" alt=""[^>]*>\s*<div><b>([\s\S]*?)<\/b>\s*<small>([\s\S]*?)<\/small><\/div><\/div>/g,
+    (m, src, t, s) => `<table width="100%" style="width:100%;border-collapse:collapse;margin:0 0 14px"><tr>` +
+      `<td width="66" style="${sb}width:66px;border-bottom:3px solid #0d818f;padding:0 8px 6px 0;vertical-align:middle"><img src="${src}" width="58" height="58" style="width:58px;height:58px" alt=""></td>` +
+      `<td style="${sb}border-bottom:3px solid #0d818f;padding:0 0 6px;vertical-align:middle"><b style="color:#0b3057;font-size:14pt">${t}</b><br><span style="color:#4f5d65;font-size:9pt">${s}</span></td></tr></table>`);
+  h = h.replace(/<div class="firma">((?:\s*<div>[\s\S]*?<\/div>)+)\s*<\/div>/g, (m, inner) => {
+    const celdas = [...inner.matchAll(/<div>([\s\S]*?)<\/div>/g)].map(x => x[1]);
+    const ancho = Math.floor((100 - 6 * (celdas.length - 1)) / celdas.length);
+    return '<table width="100%" style="width:100%;border-collapse:collapse;margin-top:40px"><tr>' + celdas.map((c, i) =>
+      `<td width="${ancho}%" style="${sb}width:${ancho}%;border-top:1px solid #1d2a30;padding:4px 0 0;text-align:center;font-size:9pt">${c}</td>` +
+      (i < celdas.length - 1 ? `<td width="6%" style="${sb}width:6%"></td>` : '')).join('') + '</tr></table>';
+  });
+  return h;
+}
+const coordDescargarOriginal = descargar;
+descargar = function (contenido, tipo, nombre) {
+  if (tipo === 'application/msword' && typeof contenido === 'string') contenido = coordParaWord(contenido);
+  return coordDescargarOriginal(contenido, tipo, nombre);
+};
 
 const coordLoadEntOriginal = loadEntidades;
 loadEntidades = async function () { await coordLoadEntOriginal(); pintarCoord(); };
