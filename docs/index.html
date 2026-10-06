@@ -2908,6 +2908,175 @@ if (COD_ENC) (async () => {
   if (a && !EN_SCRIPT) { try { const r = await API.call('resolverInstancia', { codigo: a }); API.base = r.api_url; } catch (e) { $('#login').classList.add('hidden'); $('#encuesta').classList.remove('hidden'); $('#enc-card').innerHTML = `<p class="ent">${esc(e.message)}</p>`; return; } }
   iniciarEncuesta(COD_ENC);
 })();
+
+// ---------- COORDINACIÓN Y VERIFICACIÓN CON ENTIDADES (v1.1) ----------
+// Pegar justo ENCIMA de la etiqueta de cierre del script, al final del archivo Index.
+// Añade en la ventana "Entidades" la tarjeta del procedimiento y genera sus documentos (PDF / Word).
+const COORD_DOCS = [
+  ['completo', 'Procedimiento completo', 'Procedimiento de coordinación y verificación con entidades deportivas'],
+  ['declaracion', 'I · Declaración responsable', 'Declaración responsable anual'],
+  ['ficha', 'II · Ficha de verificación', 'Ficha de verificación documental'],
+  ['requerimiento', 'III · Requerimiento', 'Requerimiento de subsanación'],
+  ['traslado', 'IV · Traslado y acuse', 'Traslado de comunicaciones y acuse de recibo'],
+  ['clausula', 'V · Cláusula tipo', 'Cláusula tipo para autorizaciones de uso y bases de subvenciones']
+];
+const COORD_REQ = ['Declaración responsable firmada', 'Aceptación del Protocolo Marco', 'Designación del Delegado/a de Protección',
+  'Formación del Delegado/a', 'Protocolo propio', 'Relación de personal con certificado negativo', 'Código de conducta',
+  'Análisis de riesgos', 'Canal de comunicación de incidencias', 'Autorizaciones de imagen y datos',
+  'Medidas en desplazamientos y viajes', 'Formación de agentes deportivos'];
+const COORD_DECLARA = [
+  'Ha aceptado el Protocolo Marco de Actuación para la Protección de las Personas Menores frente a la Violencia en el Deporte de Andalucía.',
+  'Ha designado un Delegado/a de Protección con formación específica.',
+  'Dispone de un protocolo de protección propio, aprobado y accesible para deportistas, familias y personal.',
+  'Todo su personal, técnicos y voluntariado en contacto habitual con menores tiene el certificado negativo del Registro Central de Delincuentes Sexuales en vigor.',
+  'Dispone de un código de conducta conocido y aceptado por sus agentes deportivos.',
+  'Ha realizado un análisis de riesgos de sus actividades y aplica las medidas preventivas derivadas.',
+  'Dispone de un canal para comunicar incidencias, conocido por menores y familias.',
+  'Gestiona las autorizaciones de uso de imagen y los datos de menores conforme a la normativa.',
+  'Aplica medidas de protección en desplazamientos, viajes y actividades con pernocta.',
+  'Ha formado a sus agentes deportivos en protección de menores.'];
+
+const coordTemporada = () => { const d = new Date(), y = d.getFullYear(); return d.getMonth() >= 7 ? y + '/' + (y + 1) : (y - 1) + '/' + y; };
+const coordOl = arr => '<ol>' + arr.map(t => `<li>${t}</li>`).join('') + '</ol>';
+const coordOrg = cfg => cfg.organismo || 'el Ayuntamiento';
+const coordMuni = cfg => campo(cfg.municipio, 'MUNICIPIO');
+const coordH = (h, txt) => h ? `<h2>${esc(txt)}</h2>` : '';
+const coordLimite = 'La verificación municipal es formal y documental. Se limita a comprobar que la documentación se ha presentado y está completa. No supone validar su contenido ni su eficacia, ni investigar o valorar hechos, ni asumir las obligaciones de la entidad, que es la única responsable de su cumplimiento.';
+
+function coordProcedimiento(cfg) {
+  return '<h2>1. Objeto, alcance y límites</h2>' +
+    pj('Este procedimiento regula cómo se coordina ' + coordOrg(cfg) + ' con las entidades deportivas que trabajan con menores y usan instalaciones municipales o reciben subvenciones municipales.') +
+    pj('Cada entidad es responsable de cumplir sus propias obligaciones de protección y de contar con su propio Delegado o Delegada de Protección. El Ayuntamiento no sustituye a la entidad en esas obligaciones.') +
+    pj('La actuación del Delegado Municipal de Protección respecto a las entidades se limita a:') +
+    lista(['recibir la declaración responsable anual;', 'comprobar que la documentación se ha presentado y está completa;',
+      'requerir la subsanación de lo que falte;', 'recibir y trasladar las comunicaciones de posibles casos a quien corresponda;',
+      'ofrecer información, orientación y formación.']) +
+    `<div class="nota">${esc(coordLimite)}</div>` +
+    '<h2>2. Funcionamiento</h2>' + pj('El procedimiento se repite cada temporada deportiva:') +
+    coordOl([
+      '<b>Apertura.</b> Al inicio de cada temporada, el Área de Deportes comunica a las entidades el plazo de presentación.',
+      '<b>Presentación.</b> La entidad presenta la declaración responsable (Anexo I) antes de iniciar el uso de instalaciones o al solicitar la subvención.',
+      '<b>Verificación.</b> El Delegado Municipal comprueba la documentación con la ficha del Anexo II en un plazo de 15 días.',
+      '<b>Subsanación.</b> Si falta algo, se requiere a la entidad (Anexo III), que dispone de 10 días hábiles para aportarlo.',
+      '<b>Resultado.</b> La ficha se cierra como <i>conforme</i> o <i>incompleta</i>. La falta de subsanación tiene los efectos previstos en la cláusula del Anexo V.',
+      '<b>Registro.</b> El resultado se incorpora a la matriz de cumplimiento de la entidad en EntornoSeguro.',
+      '<b>Cambios.</b> La entidad comunica en 15 días cualquier cambio relevante, en especial el cambio de su Delegado/a de Protección.']) +
+    pj('Las comunicaciones de posibles casos se tramitan en cualquier momento por la vía del Anexo IV, con independencia del calendario anterior.');
+}
+
+function coordDeclaracion(e, temp, cfg, h) {
+  const contacto = [e.delegado_telefono, e.delegado_email].filter(Boolean).join(' · ');
+  return coordH(h, 'Anexo I. Declaración responsable anual de la entidad deportiva') +
+    tablaKV([['Temporada', esc(temp)], ['Entidad', campo(e.nombre, 'DENOMINACIÓN DE LA ENTIDAD')], ['CIF', campo(e.cif, 'CIF')],
+      ['Representante legal', '<span class="campo">[NOMBRE Y APELLIDOS · CARGO]</span>'],
+      ['Delegado/a de Protección de la entidad', campo(e.delegado_nombre, 'NOMBRE Y APELLIDOS')],
+      ['Teléfono y correo del Delegado/a', campo(contacto, 'TELÉFONO · CORREO')]]) +
+    '<p>La persona abajo firmante, en representación de la entidad, <b>DECLARA BAJO SU RESPONSABILIDAD</b> que la entidad cumple lo siguiente y dispone de la documentación que lo acredita:</p>' +
+    '<ul style="list-style:none;padding-left:4px">' + COORD_DECLARA.map(t => `<li>☐ ${esc(t)}</li>`).join('') + '</ul>' +
+    pj('Se acompaña: designación del Delegado/a de Protección y su certificado de formación, y relación nominal del personal en contacto con menores con la fecha de su certificado negativo.') +
+    pj('La entidad se compromete a mantener estos requisitos durante toda la temporada, a comunicar cualquier cambio en 15 días y a poner la documentación a disposición del Ayuntamiento cuando se le solicite.') +
+    pj('La entidad conoce que la comprobación municipal es formal y documental, y que la veracidad de lo declarado y el cumplimiento de estas obligaciones son responsabilidad exclusiva de la entidad.') +
+    `<p>En ${coordMuni(cfg)}, a ____ de ______________ de ______</p>` +
+    '<div class="firma"><div>Firma del representante legal</div><div>Sello de la entidad</div></div>';
+}
+
+function coordFicha(e, temp, cfg, h) {
+  return coordH(h, 'Anexo II. Ficha de verificación documental') +
+    tablaKV([['Entidad', campo(e.nombre, 'DENOMINACIÓN DE LA ENTIDAD')], ['Temporada', esc(temp)], ['Fecha de presentación', '<span class="campo">[FECHA]</span>']]) +
+    '<table><thead><tr><th style="width:34%">Requisito</th><th>Presentado (Sí/No)</th><th>Documento o evidencia</th><th>Fecha</th><th>Pendiente</th></tr></thead><tbody>' +
+    COORD_REQ.map(r => `<tr><td>${esc(r)}</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>`).join('') + '</tbody></table>' +
+    '<p><b>Resultado:</b> ☐ Conforme &nbsp;&nbsp; ☐ Incompleta, se requiere subsanación</p>' +
+    tablaKV([['Verificado por', 'Delegado/a Municipal de Protección · ' + campo(cfg.delegado_municipal, 'NOMBRE Y APELLIDOS')], ['Fecha', '&nbsp;']]) +
+    `<div class="nota">${esc(coordLimite)}</div>`;
+}
+
+function coordRequerimiento(e, temp, cfg, h) {
+  return coordH(h, 'Anexo III. Requerimiento de subsanación') +
+    tablaKV([['A', campo(e.nombre, 'ENTIDAD DEPORTIVA') + ', a la atención de su representante legal y de su Delegado/a de Protección'],
+      ['Asunto', 'Requerimiento de documentación · Protección de menores · Temporada ' + esc(temp)]]) +
+    pj('Revisada la declaración responsable presentada por su entidad el [FECHA], se ha comprobado que falta o está incompleta la siguiente documentación:') +
+    lista(['[DOCUMENTO]', '[DOCUMENTO]']) +
+    '<p>Les requerimos para que la aporten en un plazo de <b>10 días hábiles</b> desde la recepción de este escrito.</p>' +
+    pj('Si no se aporta en ese plazo, la declaración quedará como incompleta, con los efectos previstos en la autorización de uso de instalaciones o en las bases de la subvención correspondiente.') +
+    pj('Quedamos a su disposición para orientarles sobre la documentación requerida.') +
+    `<p>En ${coordMuni(cfg)}, a fecha de firma electrónica.</p>` +
+    `<div class="firma"><div>Delegado/a Municipal de Protección de Menores en el Deporte<br>${campo(cfg.delegado_municipal, 'NOMBRE Y APELLIDOS')}</div><div>Recibí (entidad)</div></div>`;
+}
+
+function coordTraslado(e, temp, cfg, h) {
+  return coordH(h, 'Anexo IV. Traslado de comunicaciones y acuse de recibo') +
+    pj('Cuando llegue al Delegado Municipal una comunicación sobre un posible caso relacionado con una entidad deportiva, se actúa así:') +
+    coordOl([
+      '<b>Riesgo inmediato.</b> Si el menor está en peligro, se llama al 112 antes de cualquier otro paso.',
+      '<b>Registro.</b> Se anota la fecha, la hora, la vía de entrada y lo comunicado, con las palabras de quien comunica y sin añadir valoraciones.',
+      '<b>Traslado.</b> Se traslada de inmediato a Servicios Sociales, Fiscalía de Menores o Fuerzas de Seguridad, según el caso, y al Delegado/a de Protección de la entidad, salvo que esa persona esté implicada.',
+      '<b>Acuse de recibo.</b> Se confirma a quien comunicó que su comunicación ha sido recibida y trasladada.',
+      '<b>Archivo.</b> Se custodia con acceso restringido y se anota el traslado en el registro municipal.']) +
+    '<p>El Delegado Municipal <b>no</b> entrevista a menores ni a personas implicadas, no recaba pruebas, no contrasta versiones y no emite conclusiones sobre los hechos. Esas funciones corresponden a los servicios y autoridades competentes.</p>' +
+    '<h3>Modelo de acuse de recibo</h3>' +
+    pj('Hemos recibido su comunicación de fecha [FECHA]. Le confirmamos que ha sido trasladada a los servicios competentes, que son quienes deben valorarla y actuar.') +
+    pj('Su comunicación se tratará con confidencialidad. Si conoce nuevos datos o la situación cambia, puede comunicarlo por la misma vía.') +
+    pj('Si en algún momento existe un riesgo inmediato para un menor, llame al 112.') +
+    `<div class="firma"><div>Delegado/a Municipal de Protección de Menores en el Deporte<br>${campo(cfg.delegado_municipal, 'NOMBRE Y APELLIDOS')}</div><div>Fecha</div></div>`;
+}
+
+function coordClausula(e, temp, cfg, h) {
+  return coordH(h, 'Anexo V. Cláusula tipo para autorizaciones de uso y bases de subvenciones') +
+    '<h3>En autorizaciones de uso de instalaciones deportivas</h3>' +
+    pj('La entidad autorizada que desarrolle actividades con menores deberá presentar, antes del inicio del uso y en cada temporada, la declaración responsable en materia de protección de menores aprobada por el Ayuntamiento. También deberá mantener vigentes durante toda la autorización los requisitos declarados.') +
+    pj('La falta de presentación, o la falta de subsanación en el plazo concedido, impedirá iniciar o continuar el uso de las instalaciones con menores. El cumplimiento de las obligaciones de protección corresponde exclusivamente a la entidad. La comprobación municipal es formal y documental.') +
+    '<h3>En bases de subvenciones a entidades deportivas</h3>' +
+    pj('Será requisito para obtener la condición de beneficiaria, en las entidades que desarrollen actividades con menores, haber presentado la declaración responsable en materia de protección de menores de la temporada correspondiente, con resultado conforme.') +
+    pj('El incumplimiento sobrevenido de los requisitos declarados durante el periodo subvencionado podrá dar lugar al reintegro, en los términos previstos en las bases.');
+}
+
+const COORD_PARTES = { declaracion: coordDeclaracion, ficha: coordFicha, requerimiento: coordRequerimiento, traslado: coordTraslado, clausula: coordClausula };
+
+function htmlCoord() {
+  const tipo = $('#coord-doc').value, cfg = state.cfg || {};
+  const e = state.entidades.find(x => x.id === $('#coord-entidad').value) || {};
+  const temp = $('#coord-temp').value.trim() || coordTemporada();
+  let titulo, cuerpo;
+  titulo = (COORD_DOCS.find(x => x[0] === tipo) || ['', '', 'Documento'])[2];
+  if (tipo === 'completo') {
+    cuerpo = coordProcedimiento(cfg) + Object.keys(COORD_PARTES).map(k => '<div style="page-break-before:always"></div>' + COORD_PARTES[k](e, temp, cfg, true)).join('');
+  } else {
+    cuerpo = COORD_PARTES[tipo](e, temp, cfg, false);
+  }
+  const sub = (e.nombre ? e.nombre : 'Modelo') + ' · Temporada ' + temp;
+  return plantillaInforme(titulo, sub, '<div class="just">' + cuerpo + '</div>', false,
+    'EntornoSeguro · ' + esc(coordOrg(cfg)) + ' · Coordinación con entidades deportivas en protección de menores. La verificación municipal es formal y documental.');
+}
+
+function pintarCoord() {
+  const vista = $('#view-entidades'); if (!vista) return;
+  let card = $('#coord-card');
+  if (state.club) { if (card) card.remove(); return; }
+  if (!card) {
+    card = document.createElement('div'); card.className = 'card form'; card.id = 'coord-card';
+    card.innerHTML = `<h3>🤝 Coordinación y verificación con entidades</h3>
+      <p class="nota" style="margin:0 0 12px">Declaración responsable anual, verificación documental, subsanación y traslado de comunicaciones. La verificación municipal es formal y documental: no valida el contenido de los documentos ni investiga hechos.</p>
+      <div class="fields"><label>Entidad<select id="coord-entidad"></select></label>
+        <label>Documento<select id="coord-doc">${COORD_DOCS.map(([k, t]) => `<option value="${k}">${esc(t)}</option>`).join('')}</select></label>
+        <label>Temporada<input id="coord-temp" value="${esc(coordTemporada())}"></label></div>
+      <div class="ia-acciones"><button class="btn" type="button" id="coord-pdf">Ver / PDF</button><button class="btn ghost" type="button" id="coord-word">Word</button></div>`;
+    vista.appendChild(card);
+    $('#coord-pdf').onclick = () => abrirInforme(htmlCoord());
+    $('#coord-word').onclick = () => {
+      const e = state.entidades.find(x => x.id === $('#coord-entidad').value) || {};
+      descargar('﻿' + htmlCoord(), 'application/msword', nombreInf('coordinacion-' + $('#coord-doc').value + '-' + (e.nombre || 'modelo')));
+    };
+  }
+  const sel = $('#coord-entidad'), prev = sel.value;
+  sel.innerHTML = '<option value="">— Modelo en blanco —</option>' + state.entidades
+    .filter(x => x.trabaja_menores === 'SI' && x.propia !== 'SI' && x.activo !== 'NO')
+    .map(x => `<option value="${esc(x.id)}">${esc(x.nombre)}</option>`).join('');
+  sel.value = prev;
+}
+
+const coordLoadEntOriginal = loadEntidades;
+loadEntidades = async function () { await coordLoadEntOriginal(); pintarCoord(); };
+
 </script>
 </body>
 </html>
