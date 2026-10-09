@@ -3187,6 +3187,46 @@ const COORD_FALTA = {
 };
 const COORD_SIT = { no_cumple: 'No cumple', parcial: 'Parcial', pendiente: 'No acreditado' };
 
+// ---- Días hábiles (Ley 39/2015, art. 30): sin sábados, domingos ni festivos ----
+// Festivos de Andalucía según BOJA: 2026 (Decreto 101/2025) y 2027 (Decreto 84/2026). Otros años: cálculo estimado.
+const FESTIVOS_AND = {
+  2026: ['2026-01-01', '2026-01-06', '2026-02-28', '2026-04-02', '2026-04-03', '2026-05-01', '2026-08-15', '2026-10-12', '2026-11-02', '2026-12-07', '2026-12-08', '2026-12-25'],
+  2027: ['2027-01-01', '2027-01-06', '2027-03-01', '2027-03-25', '2027-03-26', '2027-05-01', '2027-08-16', '2027-10-12', '2027-11-01', '2027-12-06', '2027-12-08', '2027-12-25']
+};
+const isoDia = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+function pascua(y) {
+  const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+  return new Date(y, Math.floor((h + l - 7 * m + 114) / 31) - 1, ((h + l - 7 * m + 114) % 31) + 1, 12);
+}
+function festivosAnio(y) {
+  if (FESTIVOS_AND[y]) return { lista: FESTIVOS_AND[y], estimado: false };
+  const fijos = ['01-01', '01-06', '02-28', '05-01', '08-15', '10-12', '11-01', '12-06', '12-08', '12-25'].map(md => {
+    const d = new Date(y + '-' + md + 'T12:00'); if (d.getDay() === 0) d.setDate(d.getDate() + 1); return isoDia(d);
+  });
+  const p = pascua(y), js = new Date(p), vs = new Date(p); js.setDate(p.getDate() - 3); vs.setDate(p.getDate() - 2);
+  return { lista: fijos.concat([isoDia(js), isoDia(vs)]), estimado: true };
+}
+function leerLocales(txt) {
+  return String(txt || '').split(/[\s,;]+/).map(t => {
+    let m = t.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
+    if (m) return m[3] + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0');
+    m = t.match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? t : '';
+  }).filter(Boolean);
+}
+/** Suma n días hábiles desde el día siguiente a la fecha dada. Devuelve {fecha, estimado}. */
+function sumarHabiles(desdeISO, n, locales) {
+  const d = new Date(desdeISO + 'T12:00'); let c = 0, estimado = false;
+  const fest = {}, extra = new Set(locales || []);
+  const esFestivo = x => { const y = x.getFullYear(); if (!fest[y]) { fest[y] = festivosAnio(y); } if (fest[y].estimado) estimado = true; return fest[y].lista.indexOf(isoDia(x)) >= 0 || extra.has(isoDia(x)); };
+  while (c < n) { d.setDate(d.getDate() + 1); if (d.getDay() !== 0 && d.getDay() !== 6 && !esFestivo(d)) c++; }
+  return { fecha: isoDia(d), estimado };
+}
+const fmtCorta = iso => iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) + '/' + iso.slice(0, 4) : '';
+const claveLocales = () => 'es_festivos_locales_' + (state.inst || 'principal');
+function localesGuardados() { try { return localStorage.getItem(claveLocales()) || ''; } catch (e) { return ''; } }
+function guardarLocales(v) { try { localStorage.setItem(claveLocales(), v); } catch (e) { /* sin almacenamiento */ } }
+
 function coordRequerimientoMd(e, temp, cfg, items, plazo, fecha) {
   const nom = String(e.nombre || '').trim(), cel = t => String(t || '').replace(/\|/g, '/').replace(/\n+/g, ' ');
   return ['**A:** ' + nom + ', a la atención de su representante legal y de su Delegado/a de Protección',
@@ -3224,7 +3264,7 @@ async function abrirRequerimiento(entidadId) {
   const pend = mat.filter(r => ['no_cumple', 'parcial', 'pendiente'].indexOf(r.estado) >= 0);
   if (!pend.length) { toast('Esta entidad no tiene requisitos pendientes: no hace falta requerimiento'); return; }
   const sit = r => COORD_SIT[r.estado] || 'No acreditado';
-  const falta = r => String(r.accion_pendiente || '').replace(/^Requerido el [^·]*·\s*/, '').trim() ||
+  const falta = r => String(r.accion_pendiente || '').replace(/^Requerido el [^·]*·\s*(plazo hasta [^·]*·\s*)?/, '').trim() ||
     COORD_FALTA[r.codigo] || 'Aportar la documentación que acredite este requisito.';
   const temp0 = ($('#coord-temp') && $('#coord-temp').value.trim()) || coordTemporada();
   const f = $('#modal-form');
@@ -3232,11 +3272,15 @@ async function abrirRequerimiento(entidadId) {
     <p class="nota" style="margin:0 0 12px"><b>${esc(e.nombre || '')}</b>. Estos son los requisitos que la matriz tiene en No cumple, Parcial o Pendiente. Desmarca los que no quieras incluir y revisa el texto de lo que deben aportar.</p>
     <div class="fields"><label>Temporada<input name="temp" value="${esc(temp0)}"></label>
       <label>Plazo (días hábiles)<input type="number" name="plazo" min="1" max="60" value="10"></label>
+      <label>Fecha de envío o notificación<input type="date" name="notif" value="${hoyISO()}"></label>
+      <label>Vence el (calculado, editable)<input type="date" name="venc"></label>
+      <label class="full">Festivos locales del municipio (dd/mm/aaaa, separados por comas)<input name="locales" value="${esc(localesGuardados())}" placeholder="Ej.: 20/04/2026, 08/09/2026"></label>
+      <p class="nota full" id="req-venc-nota" style="margin:-6px 0 8px"></p>
       <label class="full">Fecha de la documentación revisada (opcional)<input type="date" name="fecha"></label></div>
     <div class="req-lista">${pend.map((r, i) => `<div class="req-fila"><label class="check"><input type="checkbox" name="r${i}" checked style="flex:0 0 22px"> <span><b>${esc(r.codigo)}</b> ${esc(r.requisito)} <span class="st ${(ESTADOS[r.estado] || ESTADOS.pendiente)[1]}">${esc(sit(r))}</span></span></label>
       <input name="f${i}" value="${esc(falta(r))}" aria-label="Qué deben aportar · ${esc(r.codigo)}"></div>`).join('')}</div>
     <label class="check"><input type="checkbox" name="guardar" checked> Guardar una copia en Documentos (para volver a consultarlo)</label>
-    <label class="check"><input type="checkbox" name="anotar" checked> Anotar en la matriz «Requerido el ${esc(new Date().toLocaleDateString('es-ES'))}» en cada punto incluido</label>
+    <label class="check"><input type="checkbox" name="anotar" checked> Anotar en la matriz «Requerido el ${esc(new Date().toLocaleDateString('es-ES'))}» y poner el vencimiento como próxima revisión (genera alerta)</label>
     <div class="actions"><button value="cancel" class="btn ghost" formnovalidate>Cancelar</button><button type="button" class="btn ghost" id="req-word">Word</button><button type="button" class="btn" id="req-pdf">Ver / PDF</button></div>`;
   if (!$('#req-estilo')) {
     const st = document.createElement('style'); st.id = 'req-estilo';
@@ -3246,10 +3290,22 @@ async function abrirRequerimiento(entidadId) {
   }
   $('#modal').onclose = null; $('#modal').oncancel = null;
   if (!$('#modal').open) $('#modal').showModal();
+  const recalcular = () => {
+    const n = Math.max(1, Math.min(60, Number(f.plazo.value) || 10)), base = f.notif.value || hoyISO();
+    const r = sumarHabiles(base, n, leerLocales(f.locales.value));
+    f.venc.value = r.fecha;
+    $('#req-venc-nota').textContent = n + ' días hábiles desde el día siguiente a la notificación, sin sábados, domingos ni festivos de Andalucía' +
+      (leerLocales(f.locales.value).length ? ' ni locales' : '') + '. Vence el ' + fmtCorta(r.fecha) + '.' +
+      (r.estimado ? ' Festivos autonómicos de ese año estimados: compruébalos en el BOJA.' : '');
+  };
+  ['plazo', 'notif', 'locales'].forEach(k => f[k].addEventListener('input', recalcular));
+  recalcular();
   const generar = async fmt => {
     const items = pend.map((r, i) => f['r' + i].checked ? { codigo: r.codigo, requisito: r.requisito, situacion: sit(r), falta: f['f' + i].value.trim() || falta(r), r } : null).filter(Boolean);
     if (!items.length) { toast('Marca al menos un requisito', true); return; }
     const temp = f.temp.value.trim() || temp0, plazo = Math.max(1, Math.min(60, Number(f.plazo.value) || 10)), fecha = f.fecha.value, anotar = f.anotar.checked, guardar = f.guardar.checked;
+    const venc = f.venc.value;
+    guardarLocales(f.locales.value.trim());
     const cfg = state.cfg || {};
     const html = plantillaInforme('Requerimiento de subsanación', (e.nombre || '') + ' · Temporada ' + temp,
       '<div class="just">' + coordRequerimiento(e, temp, cfg, false, { items, plazo, fecha }) + '</div>', false,
@@ -3271,9 +3327,9 @@ async function abrirRequerimiento(entidadId) {
       if (anotar) {
         for (let k = 0; k < items.length; k += 4) await Promise.all(items.slice(k, k + 4).map(x => API.call('guardarCumplimiento', {
           id: x.r.cumplimiento_id, entidad_id: entidadId, requisito_codigo: x.codigo, estado: x.r.estado,
-          fecha_revision: x.r.fecha_revision || '', proxima_revision: x.r.proxima_revision || '', responsable: x.r.responsable || '',
-          accion_pendiente: ('Requerido el ' + hoyTxt + ' · ' + x.falta).slice(0, 300) })));
-        avisos.push(items.length + ' punto(s) anotados en la matriz');
+          fecha_revision: x.r.fecha_revision || '', proxima_revision: venc || x.r.proxima_revision || '', responsable: x.r.responsable || '',
+          accion_pendiente: ('Requerido el ' + hoyTxt + (venc ? ' · plazo hasta ' + fmtCorta(venc) : '') + ' · ' + x.falta).slice(0, 300) })));
+        avisos.push(items.length + ' punto(s) anotados en la matriz' + (venc ? ' con vencimiento el ' + fmtCorta(venc) : ''));
       }
     });
     toast('Requerimiento generado · ' + avisos.join(' · '));
@@ -3331,7 +3387,7 @@ const GUIA = [
     ['¿Qué hace el Delegado municipal respecto a los clubes?', '<p>Solo <b>coordinar y verificar</b>: recibe la declaración responsable, comprueba que la documentación está completa, requiere lo que falte y traslada las comunicaciones a quien corresponda.</p><p><b>No</b> investiga ni valora hechos, ni asume las obligaciones del club, que tiene su propio Delegado/a de Protección.</p>', 'mun'],
     ['¿Cómo envío la declaración responsable a los clubes?', '<p><b>Entidades → tarjeta «Coordinación y verificación»</b>. Entidad: <i>Modelo en blanco</i> (o un club concreto, sale con sus datos). Documento: <i>I · Declaración responsable</i>. Pulsa <b>Word</b> y envíala con el plazo.</p>', 'mun', 'entidades'],
     ['Me ha llegado una declaración firmada: ¿cómo la paso a la matriz?', '<ol><li>Guarda el PDF en Drive y copia el enlace.</li><li><b>Matriz</b> → elige el club → <b>📥 Registrar declaración responsable</b>.</li><li>Pon la fecha, pega el enlace y <b>desmarca lo que el club no haya marcado</b>.</li><li><b>Aplicar a la matriz</b>: se actualizan de una vez los 21 requisitos (A–K), con su evidencia.</li></ol>', 'mun', 'matriz'],
-    ['Falta documentación de un club: ¿qué hago?', '<p><b>Matriz</b> → elige el club → <b>📨 Generar requerimiento</b>. La app lista sola lo que está en No cumple, Parcial o Pendiente, con lo que falta. Quita lo que no quieras incluir, ajusta el plazo (10 días hábiles por defecto) y pulsa <b>Ver / PDF</b> o <b>Word</b>: sale ya relleno.</p><p>Si dejas marcado «Anotar en la matriz», cada punto queda con «Requerido el [fecha]» para su seguimiento. Archiva la comprobación con la <b>II · Ficha de verificación</b>.</p>', 'mun', 'matriz'],
+    ['Falta documentación de un club: ¿qué hago?', '<p><b>Matriz</b> → elige el club → <b>📨 Generar requerimiento</b>. La app lista sola lo que está en No cumple, Parcial o Pendiente, con lo que falta. Quita lo que no quieras incluir, ajusta el plazo (10 días hábiles por defecto) y pulsa <b>Ver / PDF</b> o <b>Word</b>: sale ya relleno.</p><p>La app calcula el <b>vencimiento</b>: los días hábiles cuentan desde el día siguiente a la notificación, sin sábados, domingos ni festivos de Andalucía ni los <b>festivos locales</b> que indiques (la app los recuerda). Si dejas marcado «Anotar en la matriz», cada punto queda con «Requerido el [fecha] · plazo hasta [fecha]» y el vencimiento pasa a ser su próxima revisión: te avisa en Alertas cuando se acerque y, si vence sin respuesta, como alerta alta. Archiva la comprobación con la <b>II · Ficha de verificación</b>.</p>', 'mun', 'matriz'],
     ['¿Dónde vuelvo a consultar un requerimiento que ya envié?', '<p>En <b>Documentos</b>: en «Tipo» elige <b>Requerimientos</b> o busca el nombre del club. Cada uno se guarda como «Requerimiento · [entidad] · [fecha]». Ábrelo para verlo y descárgalo de nuevo en <b>Word</b> o <b>PDF</b>.</p><p>Se guarda si dejas marcada la casilla «Guardar una copia en Documentos» al generarlo. Además, en la matriz cada punto requerido muestra «Requerido el [fecha]».</p>', 'mun', 'documentos'],
     ['¿Qué cláusula pongo en autorizaciones de uso y subvenciones?', '<p>Documento <b>V · Cláusula tipo</b> de la tarjeta de coordinación. Hace obligatoria la declaración responsable para usar instalaciones con menores o ser beneficiaria de subvenciones.</p>', 'mun', 'entidades'],
     ['¿Cómo creo un club alojado y le doy acceso?', '<p><b>Mis clubes → + Nuevo club</b>. Se crea su hoja propia y sus claves (se muestran una sola vez). En <b>Gestionar</b> puedes ver su informe, generar otra contraseña, desactivarlo o descargar el contrato de encargo. Ver su informe o copiar sus datos <b>queda registrado</b> y el club lo ve.</p>', 'admin', 'clubes']
