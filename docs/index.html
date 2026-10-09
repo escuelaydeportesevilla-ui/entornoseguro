@@ -2969,7 +2969,7 @@ function coordProcedimiento(cfg) {
 function coordDeclaracion(e, temp, cfg, h) {
   const contacto = [e.delegado_telefono, e.delegado_email].filter(Boolean).join(' · ');
   return coordH(h, 'Anexo I. Declaración responsable anual de la entidad deportiva') +
-    tablaKV([['Temporada', esc(temp)], ['Entidad', campo(e.nombre, 'DENOMINACIÓN DE LA ENTIDAD')], ['CIF', campo(e.cif, 'CIF')],
+    tablaKV([['Temporada', esc(temp)], ['Entidad', campo(String(e.nombre || '').trim(), 'DENOMINACIÓN DE LA ENTIDAD')], ['CIF', campo(e.cif, 'CIF')],
       ['Representante legal', '<span class="campo">[NOMBRE Y APELLIDOS · CARGO]</span>'],
       ['Delegado/a de Protección de la entidad', campo(e.delegado_nombre, 'NOMBRE Y APELLIDOS')],
       ['Teléfono y correo del Delegado/a', campo(contacto, 'TELÉFONO · CORREO')]]) +
@@ -2984,7 +2984,7 @@ function coordDeclaracion(e, temp, cfg, h) {
 
 function coordFicha(e, temp, cfg, h) {
   return coordH(h, 'Anexo II. Ficha de verificación documental') +
-    tablaKV([['Entidad', campo(e.nombre, 'DENOMINACIÓN DE LA ENTIDAD')], ['Temporada', esc(temp)], ['Fecha de presentación', '<span class="campo">[FECHA]</span>']]) +
+    tablaKV([['Entidad', campo(String(e.nombre || '').trim(), 'DENOMINACIÓN DE LA ENTIDAD')], ['Temporada', esc(temp)], ['Fecha de presentación', '<span class="campo">[FECHA]</span>']]) +
     '<table><thead><tr><th style="width:34%">Requisito</th><th>Presentado (Sí/No)</th><th>Documento o evidencia</th><th>Fecha</th><th>Pendiente</th></tr></thead><tbody>' +
     COORD_REQ.map(r => `<tr><td>${esc(r)}</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>`).join('') + '</tbody></table>' +
     '<p><b>Resultado:</b> ☐ Conforme &nbsp;&nbsp; ☐ Incompleta, se requiere subsanación</p>' +
@@ -3005,7 +3005,7 @@ function coordRequerimiento(e, temp, cfg, h, req) {
     cuerpoLista = lista(['[DOCUMENTO]', '[DOCUMENTO]']);
   }
   return coordH(h, 'Anexo III. Requerimiento de subsanación') +
-    tablaKV([['A', campo(e.nombre, 'ENTIDAD DEPORTIVA') + ', a la atención de su representante legal y de su Delegado/a de Protección'],
+    tablaKV([['A', campo(String(e.nombre || '').trim(), 'ENTIDAD DEPORTIVA') + ', a la atención de su representante legal y de su Delegado/a de Protección'],
       ['Asunto', 'Requerimiento de documentación · Protección de menores · Temporada ' + esc(temp)]]) +
     intro + cuerpoLista +
     `<p>Les requerimos para que la aporten en un plazo de <b>${esc(plazo)} días hábiles</b> desde la recepción de este escrito.</p>` +
@@ -3162,15 +3162,70 @@ function coordBotonMatriz() {
 }
 
 // ---- Requerimiento automático desde la matriz ----
+const COORD_FALTA = {
+  A1: 'Acuerdo del órgano de gobierno aprobando la declaración institucional de compromiso con la protección de menores.',
+  A2: 'Acuerdo o documento de aceptación del Protocolo Marco de Andalucía.',
+  B1: 'Acuerdo de designación del Delegado/a de Protección, con sus datos de contacto y funciones.',
+  B2: 'Certificado de formación específica del Delegado/a de Protección.',
+  C1: 'Análisis de riesgos de las actividades, con la valoración de cada riesgo y su fecha.',
+  C2: 'Medidas preventivas de cada riesgo, con responsable y fechas de implantación y revisión.',
+  D1: 'Código de conducta aprobado por la entidad.',
+  D2: 'Registro de aceptación del código de conducta por los agentes deportivos.',
+  E1: 'Modelo de autorización familiar de uso de imagen y control de las autorizaciones recibidas.',
+  E2: 'Procedimiento de uso de imágenes y redes sociales.',
+  F1: 'Modelo de autorización familiar para desplazamientos.',
+  F2: 'Medidas de protección en viajes y pernoctas: responsables, ratios, alojamiento y normas.',
+  G1: 'Protocolo de protección de la entidad, aprobado y con fecha.',
+  G2: 'Acreditación de la difusión del protocolo al personal, las familias y los menores.',
+  H1: 'Procedimiento de actuación ante incidentes, con personas responsables y pasos a seguir.',
+  H2: 'Flujograma de actuación ante incidentes y acreditación de su difusión.',
+  I1: 'Descripción del canal de comunicación y de sus garantías de confidencialidad.',
+  I2: 'Información sobre el canal adaptada a los menores y a las familias.',
+  J1: 'Plan o registro de formación de los agentes deportivos.',
+  K1: 'Relación de agentes deportivos en contacto habitual con menores.',
+  K2: 'Relación del personal con la fecha de su certificado negativo de delitos sexuales.'
+};
+const COORD_SIT = { no_cumple: 'No cumple', parcial: 'Parcial', pendiente: 'No acreditado' };
+
+function coordRequerimientoMd(e, temp, cfg, items, plazo, fecha) {
+  const nom = String(e.nombre || '').trim(), cel = t => String(t || '').replace(/\|/g, '/').replace(/\n+/g, ' ');
+  return ['**A:** ' + nom + ', a la atención de su representante legal y de su Delegado/a de Protección',
+    '**Asunto:** Requerimiento de documentación · Protección de menores · Temporada ' + temp, '',
+    'Revisada la documentación del sistema de protección de menores de su entidad' + (fecha ? ' presentada el ' + fmtFecha(fecha) : '') + ', se ha comprobado que falta o está incompleta la siguiente:', '',
+    '| Requisito del Protocolo Marco | Situación | Qué deben aportar o completar |', '| --- | --- | --- |']
+    .concat(items.map(x => '| **' + x.codigo + '** · ' + cel(x.requisito) + ' | ' + cel(x.situacion) + ' | ' + cel(x.falta) + ' |'))
+    .concat(['', 'Les requerimos para que la aporten en un plazo de **' + plazo + ' días hábiles** desde la recepción de este escrito.', '',
+      'Si no se aporta en ese plazo, la declaración quedará como incompleta, con los efectos previstos en la autorización de uso de instalaciones o en las bases de la subvención correspondiente.', '',
+      'Quedamos a su disposición para orientarles sobre la documentación requerida.', '',
+      'En ' + (cfg.municipio || '[MUNICIPIO]') + ', a fecha de firma electrónica.', '',
+      'Delegado/a Municipal de Protección de Menores en el Deporte' + (cfg.delegado_municipal ? ' · ' + cfg.delegado_municipal : '')]).join('\n');
+}
+
+(() => {
+  TIPOS_DOC.requerimiento = 'Requerimientos';
+  const sel = $('#doc-tipo');
+  if (sel && !sel.querySelector('option[value="requerimiento"]')) sel.insertAdjacentHTML('beforeend', '<option value="requerimiento">Requerimientos</option>');
+  const orig = htmlDocumento;
+  htmlDocumento = function (paraWord) {
+    const h = orig(paraWord);
+    return state.doc && state.doc.tipo === 'requerimiento'
+      ? h.replace('Borrador generado con apoyo de IA, sujeto a validación profesional.', 'Requerimiento generado desde la matriz de cumplimiento.') : h;
+  };  const origAbrir = abrirDoc;
+  abrirDoc = function (id) {
+    origAbrir(id);
+    const d = $('.doc-prompt'); if (d) d.classList.toggle('hidden', !(state.doc && state.doc.prompt));
+  };
+})();
+
 async function abrirRequerimiento(entidadId) {
   if (!entidadId) { toast('Elige primero la entidad', true); return; }
   const e = state.entidades.find(x => x.id === entidadId) || {};
   const mat = await run(() => API.call('matriz', { entidad_id: entidadId }));
   const pend = mat.filter(r => ['no_cumple', 'parcial', 'pendiente'].indexOf(r.estado) >= 0);
   if (!pend.length) { toast('Esta entidad no tiene requisitos pendientes: no hace falta requerimiento'); return; }
-  const sit = r => (ESTADOS[r.estado] || ESTADOS.pendiente)[2];
+  const sit = r => COORD_SIT[r.estado] || 'No acreditado';
   const falta = r => String(r.accion_pendiente || '').replace(/^Requerido el [^·]*·\s*/, '').trim() ||
-    (r.estado === 'pendiente' ? 'Aportar la documentación que acredite este requisito.' : 'Completar este requisito conforme al Protocolo Marco.');
+    COORD_FALTA[r.codigo] || 'Aportar la documentación que acredite este requisito.';
   const temp0 = ($('#coord-temp') && $('#coord-temp').value.trim()) || coordTemporada();
   const f = $('#modal-form');
   f.innerHTML = `<h3>📨 Requerimiento de subsanación</h3>
@@ -3180,6 +3235,7 @@ async function abrirRequerimiento(entidadId) {
       <label class="full">Fecha de la documentación revisada (opcional)<input type="date" name="fecha"></label></div>
     <div class="req-lista">${pend.map((r, i) => `<div class="req-fila"><label class="check"><input type="checkbox" name="r${i}" checked style="flex:0 0 22px"> <span><b>${esc(r.codigo)}</b> ${esc(r.requisito)} <span class="st ${(ESTADOS[r.estado] || ESTADOS.pendiente)[1]}">${esc(sit(r))}</span></span></label>
       <input name="f${i}" value="${esc(falta(r))}" aria-label="Qué deben aportar · ${esc(r.codigo)}"></div>`).join('')}</div>
+    <label class="check"><input type="checkbox" name="guardar" checked> Guardar una copia en Documentos (para volver a consultarlo)</label>
     <label class="check"><input type="checkbox" name="anotar" checked> Anotar en la matriz «Requerido el ${esc(new Date().toLocaleDateString('es-ES'))}» en cada punto incluido</label>
     <div class="actions"><button value="cancel" class="btn ghost" formnovalidate>Cancelar</button><button type="button" class="btn ghost" id="req-word">Word</button><button type="button" class="btn" id="req-pdf">Ver / PDF</button></div>`;
   if (!$('#req-estilo')) {
@@ -3193,7 +3249,7 @@ async function abrirRequerimiento(entidadId) {
   const generar = async fmt => {
     const items = pend.map((r, i) => f['r' + i].checked ? { codigo: r.codigo, requisito: r.requisito, situacion: sit(r), falta: f['f' + i].value.trim() || falta(r), r } : null).filter(Boolean);
     if (!items.length) { toast('Marca al menos un requisito', true); return; }
-    const temp = f.temp.value.trim() || temp0, plazo = Math.max(1, Math.min(60, Number(f.plazo.value) || 10)), fecha = f.fecha.value, anotar = f.anotar.checked;
+    const temp = f.temp.value.trim() || temp0, plazo = Math.max(1, Math.min(60, Number(f.plazo.value) || 10)), fecha = f.fecha.value, anotar = f.anotar.checked, guardar = f.guardar.checked;
     const cfg = state.cfg || {};
     const html = plantillaInforme('Requerimiento de subsanación', (e.nombre || '') + ' · Temporada ' + temp,
       '<div class="just">' + coordRequerimiento(e, temp, cfg, false, { items, plazo, fecha }) + '</div>', false,
@@ -3201,15 +3257,26 @@ async function abrirRequerimiento(entidadId) {
     if (fmt === 'word') descargar('\uFEFF' + html, 'application/msword', nombreInf('requerimiento-' + (e.nombre || 'entidad')));
     else abrirInforme(html);
     $('#modal').close('cancel');
-    if (!anotar) return;
+    if (!anotar && !guardar) return;
     const hoyTxt = new Date().toLocaleDateString('es-ES');
+    const avisos = [];
     await run(async () => {
-      for (let k = 0; k < items.length; k += 4) await Promise.all(items.slice(k, k + 4).map(x => API.call('guardarCumplimiento', {
-        id: x.r.cumplimiento_id, entidad_id: entidadId, requisito_codigo: x.codigo, estado: x.r.estado,
-        fecha_revision: x.r.fecha_revision || '', proxima_revision: x.r.proxima_revision || '', responsable: x.r.responsable || '',
-        accion_pendiente: ('Requerido el ' + hoyTxt + ' · ' + x.falta).slice(0, 300) })));
+      if (guardar) {
+        try {
+          await API.call('guardarDocumento', { asunto: 'Requerimiento · ' + String(e.nombre || '').trim() + ' · ' + hoyTxt, tipo: 'requerimiento', formato: 'requerimiento',
+            publico: String(e.nombre || '').trim(), prompt: '', resultado: coordRequerimientoMd(e, temp, cfg, items, plazo, fecha) });
+          state.docs = null; avisos.push('guardado en Documentos');
+        } catch (er) { avisos.push('no se pudo guardar en Documentos (' + er.message + ')'); }
+      }
+      if (anotar) {
+        for (let k = 0; k < items.length; k += 4) await Promise.all(items.slice(k, k + 4).map(x => API.call('guardarCumplimiento', {
+          id: x.r.cumplimiento_id, entidad_id: entidadId, requisito_codigo: x.codigo, estado: x.r.estado,
+          fecha_revision: x.r.fecha_revision || '', proxima_revision: x.r.proxima_revision || '', responsable: x.r.responsable || '',
+          accion_pendiente: ('Requerido el ' + hoyTxt + ' · ' + x.falta).slice(0, 300) })));
+        avisos.push(items.length + ' punto(s) anotados en la matriz');
+      }
     });
-    toast('Requerimiento generado · ' + items.length + ' punto(s) anotados en la matriz');
+    toast('Requerimiento generado · ' + avisos.join(' · '));
     if (!$('#view-matriz').classList.contains('hidden') && $('#matriz-entidad').value === entidadId) loadMatriz();
   };
   $('#req-pdf').onclick = () => generar('pdf');
@@ -3265,6 +3332,7 @@ const GUIA = [
     ['¿Cómo envío la declaración responsable a los clubes?', '<p><b>Entidades → tarjeta «Coordinación y verificación»</b>. Entidad: <i>Modelo en blanco</i> (o un club concreto, sale con sus datos). Documento: <i>I · Declaración responsable</i>. Pulsa <b>Word</b> y envíala con el plazo.</p>', 'mun', 'entidades'],
     ['Me ha llegado una declaración firmada: ¿cómo la paso a la matriz?', '<ol><li>Guarda el PDF en Drive y copia el enlace.</li><li><b>Matriz</b> → elige el club → <b>📥 Registrar declaración responsable</b>.</li><li>Pon la fecha, pega el enlace y <b>desmarca lo que el club no haya marcado</b>.</li><li><b>Aplicar a la matriz</b>: se actualizan de una vez los 21 requisitos (A–K), con su evidencia.</li></ol>', 'mun', 'matriz'],
     ['Falta documentación de un club: ¿qué hago?', '<p><b>Matriz</b> → elige el club → <b>📨 Generar requerimiento</b>. La app lista sola lo que está en No cumple, Parcial o Pendiente, con lo que falta. Quita lo que no quieras incluir, ajusta el plazo (10 días hábiles por defecto) y pulsa <b>Ver / PDF</b> o <b>Word</b>: sale ya relleno.</p><p>Si dejas marcado «Anotar en la matriz», cada punto queda con «Requerido el [fecha]» para su seguimiento. Archiva la comprobación con la <b>II · Ficha de verificación</b>.</p>', 'mun', 'matriz'],
+    ['¿Dónde vuelvo a consultar un requerimiento que ya envié?', '<p>En <b>Documentos</b>: en «Tipo» elige <b>Requerimientos</b> o busca el nombre del club. Cada uno se guarda como «Requerimiento · [entidad] · [fecha]». Ábrelo para verlo y descárgalo de nuevo en <b>Word</b> o <b>PDF</b>.</p><p>Se guarda si dejas marcada la casilla «Guardar una copia en Documentos» al generarlo. Además, en la matriz cada punto requerido muestra «Requerido el [fecha]».</p>', 'mun', 'documentos'],
     ['¿Qué cláusula pongo en autorizaciones de uso y subvenciones?', '<p>Documento <b>V · Cláusula tipo</b> de la tarjeta de coordinación. Hace obligatoria la declaración responsable para usar instalaciones con menores o ser beneficiaria de subvenciones.</p>', 'mun', 'entidades'],
     ['¿Cómo creo un club alojado y le doy acceso?', '<p><b>Mis clubes → + Nuevo club</b>. Se crea su hoja propia y sus claves (se muestran una sola vez). En <b>Gestionar</b> puedes ver su informe, generar otra contraseña, desactivarlo o descargar el contrato de encargo. Ver su informe o copiar sus datos <b>queda registrado</b> y el club lo ve.</p>', 'admin', 'clubes']
   ]],
