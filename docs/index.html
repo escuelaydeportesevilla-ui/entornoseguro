@@ -2992,13 +2992,23 @@ function coordFicha(e, temp, cfg, h) {
     `<div class="nota">${esc(coordLimite)}</div>`;
 }
 
-function coordRequerimiento(e, temp, cfg, h) {
+function coordRequerimiento(e, temp, cfg, h, req) {
+  const plazo = (req && req.plazo) || 10;
+  let intro, cuerpoLista;
+  if (req && req.items && req.items.length) {
+    intro = '<p>Revisada la documentación del sistema de protección de menores de su entidad' + (req.fecha ? ' presentada el ' + esc(fmtFecha(req.fecha)) : '') +
+      ', se ha comprobado que falta o está incompleta la siguiente:</p>';
+    cuerpoLista = '<table><thead><tr><th style="width:38%">Requisito del Protocolo Marco</th><th style="width:14%">Situación</th><th>Qué deben aportar o completar</th></tr></thead><tbody>' +
+      req.items.map(x => `<tr><td><b>${esc(x.codigo)}</b> · ${esc(x.requisito)}</td><td>${esc(x.situacion)}</td><td>${esc(x.falta)}</td></tr>`).join('') + '</tbody></table>';
+  } else {
+    intro = pj('Revisada la declaración responsable presentada por su entidad el [FECHA], se ha comprobado que falta o está incompleta la siguiente documentación:');
+    cuerpoLista = lista(['[DOCUMENTO]', '[DOCUMENTO]']);
+  }
   return coordH(h, 'Anexo III. Requerimiento de subsanación') +
     tablaKV([['A', campo(e.nombre, 'ENTIDAD DEPORTIVA') + ', a la atención de su representante legal y de su Delegado/a de Protección'],
       ['Asunto', 'Requerimiento de documentación · Protección de menores · Temporada ' + esc(temp)]]) +
-    pj('Revisada la declaración responsable presentada por su entidad el [FECHA], se ha comprobado que falta o está incompleta la siguiente documentación:') +
-    lista(['[DOCUMENTO]', '[DOCUMENTO]']) +
-    '<p>Les requerimos para que la aporten en un plazo de <b>10 días hábiles</b> desde la recepción de este escrito.</p>' +
+    intro + cuerpoLista +
+    `<p>Les requerimos para que la aporten en un plazo de <b>${esc(plazo)} días hábiles</b> desde la recepción de este escrito.</p>` +
     pj('Si no se aporta en ese plazo, la declaración quedará como incompleta, con los efectos previstos en la autorización de uso de instalaciones o en las bases de la subvención correspondiente.') +
     pj('Quedamos a su disposición para orientarles sobre la documentación requerida.') +
     `<p>En ${coordMuni(cfg)}, a fecha de firma electrónica.</p>` +
@@ -3065,8 +3075,10 @@ function pintarCoord() {
       ${can('escribir') ? '<div class="ia-acciones"><button class="btn ghost" type="button" id="coord-decl">📥 Registrar declaración recibida en la matriz</button></div>' : ''}`;
     vista.appendChild(card);
     $('#coord-decl') && ($('#coord-decl').onclick = () => abrirDeclaracion($('#coord-entidad').value));
-    $('#coord-pdf').onclick = () => abrirInforme(htmlCoord());
+    const coordReqAuto = () => $('#coord-doc').value === 'requerimiento' && $('#coord-entidad').value && can('escribir');
+    $('#coord-pdf').onclick = () => coordReqAuto() ? abrirRequerimiento($('#coord-entidad').value) : abrirInforme(htmlCoord());
     $('#coord-word').onclick = () => {
+      if (coordReqAuto()) return abrirRequerimiento($('#coord-entidad').value);
       const e = state.entidades.find(x => x.id === $('#coord-entidad').value) || {};
       descargar('﻿' + htmlCoord(), 'application/msword', nombreInf('coordinacion-' + $('#coord-doc').value + '-' + (e.nombre || 'modelo')));
     };
@@ -3143,8 +3155,65 @@ function coordBotonMatriz() {
   const ia = $('#matriz-ia');
   let cont = ia ? ia.parentElement : null;
   if (!cont) { cont = document.createElement('div'); cont.className = 'ia-acciones'; v.insertBefore(cont, $('#revision-ia')); }
-  cont.insertAdjacentHTML('beforeend', '<button class="btn ghost" type="button" id="matriz-decl">📥 Registrar declaración responsable</button>');
+  cont.insertAdjacentHTML('beforeend', '<button class="btn ghost" type="button" id="matriz-decl">📥 Registrar declaración responsable</button>' +
+    '<button class="btn ghost" type="button" id="matriz-req">📨 Generar requerimiento</button>');
   $('#matriz-decl').onclick = () => abrirDeclaracion($('#matriz-entidad').value);
+  $('#matriz-req').onclick = () => abrirRequerimiento($('#matriz-entidad').value);
+}
+
+// ---- Requerimiento automático desde la matriz ----
+async function abrirRequerimiento(entidadId) {
+  if (!entidadId) { toast('Elige primero la entidad', true); return; }
+  const e = state.entidades.find(x => x.id === entidadId) || {};
+  const mat = await run(() => API.call('matriz', { entidad_id: entidadId }));
+  const pend = mat.filter(r => ['no_cumple', 'parcial', 'pendiente'].indexOf(r.estado) >= 0);
+  if (!pend.length) { toast('Esta entidad no tiene requisitos pendientes: no hace falta requerimiento'); return; }
+  const sit = r => (ESTADOS[r.estado] || ESTADOS.pendiente)[2];
+  const falta = r => String(r.accion_pendiente || '').replace(/^Requerido el [^·]*·\s*/, '').trim() ||
+    (r.estado === 'pendiente' ? 'Aportar la documentación que acredite este requisito.' : 'Completar este requisito conforme al Protocolo Marco.');
+  const temp0 = ($('#coord-temp') && $('#coord-temp').value.trim()) || coordTemporada();
+  const f = $('#modal-form');
+  f.innerHTML = `<h3>📨 Requerimiento de subsanación</h3>
+    <p class="nota" style="margin:0 0 12px"><b>${esc(e.nombre || '')}</b>. Estos son los requisitos que la matriz tiene en No cumple, Parcial o Pendiente. Desmarca los que no quieras incluir y revisa el texto de lo que deben aportar.</p>
+    <div class="fields"><label>Temporada<input name="temp" value="${esc(temp0)}"></label>
+      <label>Plazo (días hábiles)<input type="number" name="plazo" min="1" max="60" value="10"></label>
+      <label class="full">Fecha de la documentación revisada (opcional)<input type="date" name="fecha"></label></div>
+    <div class="req-lista">${pend.map((r, i) => `<div class="req-fila"><label class="check"><input type="checkbox" name="r${i}" checked style="flex:0 0 22px"> <span><b>${esc(r.codigo)}</b> ${esc(r.requisito)} <span class="st ${(ESTADOS[r.estado] || ESTADOS.pendiente)[1]}">${esc(sit(r))}</span></span></label>
+      <input name="f${i}" value="${esc(falta(r))}" aria-label="Qué deben aportar · ${esc(r.codigo)}"></div>`).join('')}</div>
+    <label class="check"><input type="checkbox" name="anotar" checked> Anotar en la matriz «Requerido el ${esc(new Date().toLocaleDateString('es-ES'))}» en cada punto incluido</label>
+    <div class="actions"><button value="cancel" class="btn ghost" formnovalidate>Cancelar</button><button type="button" class="btn ghost" id="req-word">Word</button><button type="button" class="btn" id="req-pdf">Ver / PDF</button></div>`;
+  if (!$('#req-estilo')) {
+    const st = document.createElement('style'); st.id = 'req-estilo';
+    st.textContent = '.req-lista{max-height:46vh;overflow-y:auto;border:1px solid var(--line);border-radius:8px;padding:6px 10px;margin:4px 0 12px}' +
+      '.req-fila{padding:8px 0;border-bottom:1px solid var(--line)}.req-fila:last-child{border-bottom:0}.req-fila label.check{margin:0 0 6px}.req-fila .st{margin-left:6px}';
+    document.head.appendChild(st);
+  }
+  $('#modal').onclose = null; $('#modal').oncancel = null;
+  if (!$('#modal').open) $('#modal').showModal();
+  const generar = async fmt => {
+    const items = pend.map((r, i) => f['r' + i].checked ? { codigo: r.codigo, requisito: r.requisito, situacion: sit(r), falta: f['f' + i].value.trim() || falta(r), r } : null).filter(Boolean);
+    if (!items.length) { toast('Marca al menos un requisito', true); return; }
+    const temp = f.temp.value.trim() || temp0, plazo = Math.max(1, Math.min(60, Number(f.plazo.value) || 10)), fecha = f.fecha.value, anotar = f.anotar.checked;
+    const cfg = state.cfg || {};
+    const html = plantillaInforme('Requerimiento de subsanación', (e.nombre || '') + ' · Temporada ' + temp,
+      '<div class="just">' + coordRequerimiento(e, temp, cfg, false, { items, plazo, fecha }) + '</div>', false,
+      'EntornoSeguro · ' + esc(coordOrg(cfg)) + ' · Coordinación con entidades deportivas en protección de menores. La verificación municipal es formal y documental.');
+    if (fmt === 'word') descargar('\uFEFF' + html, 'application/msword', nombreInf('requerimiento-' + (e.nombre || 'entidad')));
+    else abrirInforme(html);
+    $('#modal').close('cancel');
+    if (!anotar) return;
+    const hoyTxt = new Date().toLocaleDateString('es-ES');
+    await run(async () => {
+      for (let k = 0; k < items.length; k += 4) await Promise.all(items.slice(k, k + 4).map(x => API.call('guardarCumplimiento', {
+        id: x.r.cumplimiento_id, entidad_id: entidadId, requisito_codigo: x.codigo, estado: x.r.estado,
+        fecha_revision: x.r.fecha_revision || '', proxima_revision: x.r.proxima_revision || '', responsable: x.r.responsable || '',
+        accion_pendiente: ('Requerido el ' + hoyTxt + ' · ' + x.falta).slice(0, 300) })));
+    });
+    toast('Requerimiento generado · ' + items.length + ' punto(s) anotados en la matriz');
+    if (!$('#view-matriz').classList.contains('hidden') && $('#matriz-entidad').value === entidadId) loadMatriz();
+  };
+  $('#req-pdf').onclick = () => generar('pdf');
+  $('#req-word').onclick = () => generar('word');
 }
 
 const coordLoadMatrizOriginal = loadMatriz;
@@ -3195,7 +3264,7 @@ const GUIA = [
     ['¿Qué hace el Delegado municipal respecto a los clubes?', '<p>Solo <b>coordinar y verificar</b>: recibe la declaración responsable, comprueba que la documentación está completa, requiere lo que falte y traslada las comunicaciones a quien corresponda.</p><p><b>No</b> investiga ni valora hechos, ni asume las obligaciones del club, que tiene su propio Delegado/a de Protección.</p>', 'mun'],
     ['¿Cómo envío la declaración responsable a los clubes?', '<p><b>Entidades → tarjeta «Coordinación y verificación»</b>. Entidad: <i>Modelo en blanco</i> (o un club concreto, sale con sus datos). Documento: <i>I · Declaración responsable</i>. Pulsa <b>Word</b> y envíala con el plazo.</p>', 'mun', 'entidades'],
     ['Me ha llegado una declaración firmada: ¿cómo la paso a la matriz?', '<ol><li>Guarda el PDF en Drive y copia el enlace.</li><li><b>Matriz</b> → elige el club → <b>📥 Registrar declaración responsable</b>.</li><li>Pon la fecha, pega el enlace y <b>desmarca lo que el club no haya marcado</b>.</li><li><b>Aplicar a la matriz</b>: se actualizan de una vez los 21 requisitos (A–K), con su evidencia.</li></ol>', 'mun', 'matriz'],
-    ['Falta documentación de un club: ¿qué hago?', '<p>En la tarjeta de coordinación elige el club y el documento <b>III · Requerimiento</b>. El club tiene <b>10 días hábiles</b>. Archiva la comprobación con la <b>II · Ficha de verificación</b>.</p>', 'mun', 'entidades'],
+    ['Falta documentación de un club: ¿qué hago?', '<p><b>Matriz</b> → elige el club → <b>📨 Generar requerimiento</b>. La app lista sola lo que está en No cumple, Parcial o Pendiente, con lo que falta. Quita lo que no quieras incluir, ajusta el plazo (10 días hábiles por defecto) y pulsa <b>Ver / PDF</b> o <b>Word</b>: sale ya relleno.</p><p>Si dejas marcado «Anotar en la matriz», cada punto queda con «Requerido el [fecha]» para su seguimiento. Archiva la comprobación con la <b>II · Ficha de verificación</b>.</p>', 'mun', 'matriz'],
     ['¿Qué cláusula pongo en autorizaciones de uso y subvenciones?', '<p>Documento <b>V · Cláusula tipo</b> de la tarjeta de coordinación. Hace obligatoria la declaración responsable para usar instalaciones con menores o ser beneficiaria de subvenciones.</p>', 'mun', 'entidades'],
     ['¿Cómo creo un club alojado y le doy acceso?', '<p><b>Mis clubes → + Nuevo club</b>. Se crea su hoja propia y sus claves (se muestran una sola vez). En <b>Gestionar</b> puedes ver su informe, generar otra contraseña, desactivarlo o descargar el contrato de encargo. Ver su informe o copiar sus datos <b>queda registrado</b> y el club lo ve.</p>', 'admin', 'clubes']
   ]],
@@ -3204,6 +3273,29 @@ const GUIA = [
     ['¿Cómo actualizo un requisito y adjunto la evidencia?', '<p>En su fila, <b>Actualizar</b>: estado, fecha de revisión, responsable y acción pendiente. Añade la evidencia con un título y el <b>enlace de Drive</b>. Si dejas vacía la próxima revisión, se calcula sola según la periodicidad del requisito.</p>', '', 'matriz'],
     ['¿Qué diferencia hay entre «Registrar declaración» y «Revisar documento con IA»?', '<ul><li><b>Registrar declaración</b> anota <b>lo que el club dice que tiene</b>: marcas casillas y la matriz se actualiza. No mira ningún documento. Es el registro anual rápido de todos los clubes.</li><li><b>Revisar documento con IA</b> comprueba <b>si un documento concreto</b> (protocolo, código de conducta, flujograma…) contiene lo que exige el Protocolo Marco. Claude lo lee y dice, elemento por elemento, qué consta y qué falta.</li></ul><p>Usa la revisión cuando quieras ir más allá de lo declarado en algo sensible (por ejemplo, el procedimiento de incidentes, H1) o para saber qué pedir en un requerimiento. Si la aplicas, sobrescribe el estado que dejó la declaración: lo revisado pesa más que lo declarado.</p>', 'mun', 'matriz'],
     ['¿Cómo reviso un documento del club con IA?', '<ol><li><b>Matriz → 🔎 Revisar documento con IA</b>. Elige el <b>tipo de documento</b> y la app marca sola los requisitos que debe cubrir (con «Otro documento» los marcas tú).</li><li>Escribe el nombre del documento y pulsa <b>Preparar prompt → Abrir en Claude</b>.</li><li>En Claude, <b>adjunta el PDF o Word del club antes de enviar</b>: es el paso clave.</li><li>Copia la respuesta, pégala en la app y pulsa <b>Ver propuesta</b>.</li><li>Revisa la propuesta fila a fila (Cumple / Parcial / No cumple y qué falta), marca las que aceptas y pulsa <b>Aplicar a la matriz</b>.</li></ol><p>Es una ayuda orientativa: la decisión final es tuya. No adjuntes documentos con datos de menores.</p>', 'ia', 'matriz']
+  ]],
+  ['🧪', 'Casos prácticos', [
+    ['Caso práctico: revisar el protocolo de protección de un club, paso a paso', '<p><b>Situación:</b> un club te envía su protocolo de protección y quieres saber qué cumple y qué le falta.</p><ol>' +
+      '<li><b>Que exista la entidad.</b> Si no está: <b>Entidades → + Nueva entidad</b>, con «¿Trabaja con menores?» en <b>SI</b>.</li>' +
+      '<li><b>Abrir la revisión.</b> <b>Matriz de cumplimiento</b> → elige el club arriba a la derecha → <b>🔎 Revisar documento con IA</b>.</li>' +
+      '<li><b>Configurarla.</b> Tipo de documento: <i>Protocolo de protección de la entidad</i> (se marcan solos 12 requisitos). Si el club tiene el código de conducta completo en otro documento, <b>desmarca D1</b>. Escribe el nombre, p. ej. «Protocolo de protección 2026/2027», y pulsa <b>Preparar prompt</b>.</li>' +
+      '<li><b>Enviar a Claude.</b> <b>Abrir en Claude</b> → <b>antes de enviar, adjunta el PDF</b> con el clip 📎 → envía.</li>' +
+      '<li><b>Traer la respuesta.</b> En Claude pulsa <b>Copiar</b> (abajo de la respuesta) → pégala en la app → <b>Ver propuesta</b>.</li>' +
+      '<li><b>Revisar la propuesta.</b> Cada fila muestra el estado actual, el propuesto y lo que falta. Puedes cambiar el estado, retocar la acción pendiente o desmarcar la fila para no aplicarla.</li>' +
+      '<li><b>Aplicar.</b> Deja marcado «Guardar el informe de Claude en Documentos» y pulsa <b>Aplicar a la matriz</b>.</li>' +
+      '<li><b>Cerrar el círculo.</b> En la misma matriz pulsa <b>📨 Generar requerimiento</b>: sale relleno con lo que haya quedado en No cumple, Parcial o Pendiente. Revisa la lista, pulsa <b>Word</b> o <b>Ver / PDF</b> y envíalo (10 días hábiles).</li></ol>' +
+      '<p><b>Ejemplo de resultado</b> con un protocolo típico de una asociación con campamento:</p>' +
+      '<div class="md-scroll"><table class="md-tabla"><thead><tr><th>Requisito</th><th>Propuesta</th><th>Motivo</th></tr></thead><tbody>' +
+      '<tr><td>B1 Designación</td><td>Cumple</td><td>Órgano, fecha, funciones, vigencia y difusión</td></tr>' +
+      '<tr><td>C1 Análisis de riesgos</td><td>Parcial</td><td>Enumera espacios pero no valora el nivel</td></tr>' +
+      '<tr><td>C2 Medidas preventivas</td><td>Parcial</td><td>Sin responsable ni fechas</td></tr>' +
+      '<tr><td>F2 Viajes y pernoctas</td><td>Parcial</td><td>Nada sobre habitaciones ni normas nocturnas</td></tr>' +
+      '<tr><td>G1 Protocolo propio</td><td>Parcial</td><td>Sin previsión de revisión</td></tr>' +
+      '<tr><td>H2 Flujograma</td><td>No cumple</td><td>No existe</td></tr>' +
+      '<tr><td>I1 Canal</td><td>Parcial</td><td>No garantiza la confidencialidad</td></tr>' +
+      '<tr><td>I2 Información a menores</td><td>No cumple</td><td>Nada adaptado a su edad ni teléfono ANAR</td></tr>' +
+      '</tbody></table></div>' +
+      '<p>La propuesta es orientativa: la decisión final es tuya. No adjuntes documentos con datos de menores.</p>', 'ia', 'matriz']
   ]],
   ['👥', 'Agentes, formación y autorizaciones', [
     ['¿A quién registro como agente deportivo?', '<p>A todas las personas adultas que intervienen con menores: entrenadores, monitores, directivos, voluntarios, árbitros y personal externo.</p>', '', 'agentes'],
