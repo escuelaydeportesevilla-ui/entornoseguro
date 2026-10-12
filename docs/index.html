@@ -1730,7 +1730,7 @@ function construirInformeEntidad(d) {
     d.alertas.sort((a, c) => orden[a.prioridad] - orden[c.prioridad]).map(a => `<tr><td class="st ${a.prioridad === 'alta' ? 'bad' : a.prioridad === 'media' ? 'warn' : 'muted'}">${esc(a.prioridad)}</td><td>${esc(String(a.mensaje).replace(e.nombre + ': ', ''))}</td><td>${esc(a.fecha_limite) || '—'}</td></tr>`).join('') + '</tbody></table>'
     : '<p class="ok st">Sin actuaciones pendientes.</p>');
   b += `<div style="page-break-inside:avoid"><div class="nota">Referencias: LO 8/2021 (LOPIVI), Ley 4/2021 de Infancia y Adolescencia de Andalucía y Protocolo Marco aprobado por Orden de 18 de noviembre de 2024. Periodicidades de revisión orientativas.</div>`;
-  b += `<div class="firma"><div>Delegado/a de Protección de la entidad<br>${esc(e.delegado_nombre || '')}</div><div>Delegado/a de Protección municipal<br>${esc(d.config.delegado_municipal || '')}</div></div></div>`;
+  b += `<div class="firma"><div>Delegado/a de Protección de la entidad<br>${esc(e.delegado_nombre || '')}</div>${state.club ? '<div>Presidencia u órgano de gobierno<br></div>' : '<div>Delegado/a de Protección municipal<br>' + esc(d.config.delegado_municipal || '') + '</div>'}</div></div>`;
   return plantillaInforme('Informe de implantación del sistema de protección', e.nombre, b);
 }
 
@@ -2292,7 +2292,7 @@ const GUIA_FASES = {
     'Valora si hay riesgo inmediato para el menor. Si lo hay, marca «Riesgo inmediato: Sí» y sigue los pasos urgentes.']],
   valorada: ['¿Qué actuación corresponde? ¿A quién debe comunicarse?', [
     'Ante indicios de violencia existe deber de comunicación a los servicios sociales y, en su caso, a las Fuerzas y Cuerpos de Seguridad, la Fiscalía o la autoridad judicial (LOPIVI, arts. 15 y 16).',
-    'Informa al Delegado/a de Protección municipal cuando proceda según el Protocolo Marco.',
+    'Informa, cuando proceda, al Delegado/a de Protección municipal y, en su caso, a la federación deportiva, según el Protocolo Marco.',
     'Informa a la familia, salvo que pueda perjudicar al menor.',
     'Valora medidas de protección provisionales en la entidad (supervisión, reorganización de grupos…), sin prejuzgar responsabilidades.']],
   en_actuacion: ['¿Qué documentación debe generarse? ¿Qué actuaciones deben realizarse?', [
@@ -2314,7 +2314,7 @@ const PASOS_URGENTES = ['Garantiza la seguridad del menor: sepáralo de la situa
   'Si necesita atención sanitaria, avisa a emergencias o acompáñalo al centro sanitario.',
   'Comunica los hechos a Policía Nacional (091) o Guardia Civil (062) cuando proceda.',
   'Informa a la familia, salvo que pueda perjudicar al menor.',
-  'Avisa al Delegado/a de Protección municipal.',
+  'Avisa al Delegado/a de Protección de la entidad y, si procede, al Delegado/a de Protección municipal.',
   'Registra aquí cada actuación con fecha y hora.'];
 async function abrirCaso(id) {
   const d = state.caso = await incCall('verCaso', { id });
@@ -3450,6 +3450,7 @@ const GUIA = [
     ['¿Qué no debo escribir nunca en la IA?', '<p>Nombres, DNI, teléfonos ni ningún dato que identifique a menores o a personas de un caso. La app enmascara DNI, teléfonos y correos, pero la responsabilidad es de quien escribe.</p>', 'ia'],
     ['¿Dónde encuentro lo que he generado?', '<p>En <b>Documentos</b>: búscalo por palabras o tipo, edítalo y descárgalo en Word, PDF o texto.</p>', 'leer', 'documentos'],
     ['¿Cómo consigo que las plantillas salgan completas, sin huecos?', '<ol><li>Completa la <b>ficha de la entidad</b> (Entidades → Editar): identificación, actividad, gobierno, protección, canal, imagen y datos, y procedimiento.</li><li>Completa una vez el <b>📇 Directorio de recursos locales</b>, arriba en Plantillas: Servicios Sociales, Policía Local, Fiscalía de Menores, centro de salud y Delegado/a municipal.</li><li>Al pulsar una plantilla, la app comprueba la ficha. Si falta algo, lo lista y te lleva al campo exacto con <b>Completar la ficha</b> o <b>Completar el directorio</b>.</li><li>Prepara el prompt y pega la respuesta de Claude: la app sustituye sola los nombres, teléfonos y correos.</li></ol><p><b>Privacidad:</b> los datos de personas y contactos nunca se envían a la IA. Viajan como marcadores (por ejemplo, [DELEGADO_NOMBRE]) y se completan en tu navegador. Solo quedan para rellenar a mano las firmas y los formularios de cada menor o de cada caso.</p>', 'ia', 'plantillas'],
+    ['¿Hay una guía rápida para el club?', '<p>Sí: en <b>Guía de uso → Guía rápida del club (PDF)</b>. Una página con cómo entrar, los primeros pasos, la rutina de la temporada, qué hacer si ocurre algo y dónde pedir ayuda. Se puede imprimir o enviar a la junta directiva.</p>', 'club'],
     ['¿Qué son los «Primeros pasos» y el «Siguiente paso» del panel?', '<p>Al entrar, el panel del club muestra <b>5 primeros pasos</b>: ficha del club, Delegado/a y Protocolo Marco, documentos básicos (protocolo, código y cartel), agentes deportivos y primera encuesta. Cada paso tiene su botón y se marca solo cuando está hecho.</p><p>Completados los cinco, aparece el <b>Siguiente paso recomendado</b>: primero las revisiones vencidas y después el primer requisito pendiente de la Matriz, con acceso directo a la plantilla o a la pantalla donde se resuelve.</p>', 'club', 'panel'],
     ['¿Cómo hago un cartel visual con ChatGPT?', '<ol><li>En <b>Plantillas</b>, elige la entidad y pulsa <b>Cartel del canal de comunicación</b>.</li><li>Abajo aparece <b>🎨 Cartel visual con ChatGPT</b>: elige público (adolescentes y familias, o niños y niñas de 6 a 11 años) y activa o no la casilla <b>Incluir nombre y contacto del Delegado/a</b> (por defecto, desactivada: huecos en blanco).</li><li>Pulsa <b>Generar prompt</b> y luego <b>Abrir en ChatGPT</b> (o cópialo).</li><li>Pega el logotipo real y el QR en los recuadros blancos (Canva, Word o PowerPoint).</li><li><b>Antes de imprimir, comprueba cifra a cifra cada teléfono y correo.</b> Los generadores de imagen se equivocan con números y letras.</li></ol><p>El prompt nunca incluye datos internos de la entidad (número de menores, ratios, pernoctas, CIF). Con la casilla activada, solo lleva el nombre y el contacto del Delegado/a y del canal, que van a figurar en un cartel público.</p>', 'ia', 'plantillas'],
     ['¿Qué hay en Plantillas, Contenidos y Biblioteca?', '<ul><li><b>Plantillas</b>: protocolo, código de conducta, designación, carteles y autorizaciones con los datos de la entidad.</li><li><b>Contenidos RRSS</b>: publicaciones para familias y redes.</li><li><b>Biblioteca</b>: normativa oficial y documentos propios por categorías.</li></ul>', 'ia', 'plantillas']
@@ -3642,7 +3643,7 @@ async function pintarDirectorio() {
   if (!card) {
     card = document.createElement('details'); card.id = 'dir-card'; card.className = 'card';
     card.innerHTML = `<summary style="cursor:pointer;min-height:40px"><b>📇 Directorio de recursos locales</b> <small id="dir-estado" class="nota"></small></summary>
-      <p class="nota" style="margin:8px 0 12px">Teléfonos y direcciones del municipio que se incluyen en protocolos, guías y carteles. Se rellena una vez y sirve para todas las entidades.</p>
+      <p class="nota" style="margin:8px 0 12px">${state.club ? 'Teléfonos y direcciones de tu zona que se incluyen en tus protocolos, guías y carteles. Se rellena una vez. Si tu club depende de un ayuntamiento, se usan los suyos mientras no guardes los tuyos.' : 'Teléfonos y direcciones del municipio que se incluyen en protocolos, guías y carteles. Se rellena una vez y sirve para todas las entidades.'}</p>
       <form id="form-dir" class="form"><div class="fields">${DIR_CAMPOS.map(([k, l, t]) => t === 'textarea'
         ? `<label class="full">${esc(l)}<textarea name="${k}" rows="2"></textarea></label>` : `<label>${esc(l)}<input name="${k}"></label>`).join('')}</div>
       ${puede ? '<div class="ia-acciones"><button class="btn" type="submit">Guardar directorio</button></div>' : ''}</form>`;
@@ -4075,6 +4076,81 @@ function htmlModeloComercial() {
       : p.max === null ? p.usados + ' clubes dados de alta.'
       : p.max === 0 ? '<b>Tu contrato no incluye clubes con espacio propio.</b> Tus entidades pueden entrar con usuario «Entidad» (Usuarios). Para clubes completos, amplía el paquete con Escuela&amp;Deporte.'
       : '<b>' + p.usados + ' de ' + p.max + '</b> clubes de tu paquete.' + (lleno ? ' Has llegado al máximo: da de baja uno o amplía el paquete con Escuela&amp;Deporte.' : '');
+  };
+})();
+
+// ---------- CLUBES · ENTREGA 2: textos del club, panel y kit de bienvenida ----------
+
+// Panel del club: sin la tarjeta «Implantación por entidad» (solo hay una) y alertas a todo el ancho.
+(function () {
+  const base = loadPanel;
+  loadPanel = async function () {
+    await base();
+    const card = $('#panel-entidades') && $('#panel-entidades').closest('.card');
+    if (!card) return;
+    card.classList.toggle('hidden', !!state.club);
+    card.parentElement.style.gridTemplateColumns = state.club ? '1fr' : '';
+  };
+})();
+
+// Mis datos: quién es el gestor del servicio (ayuntamiento o Escuela&Deporte).
+(function () {
+  if (typeof loadMisDatos !== 'function') return;
+  const base = loadMisDatos;
+  loadMisDatos = async function () {
+    await base();
+    const v = $('#view-misdatos'); if (!v) return;
+    v.querySelectorAll('p').forEach(p => {
+      if (/separada de la del ayuntamiento/.test(p.textContent)) p.textContent = 'Los datos del club se guardan en una hoja propia, separada de la de cualquier otra entidad.';
+      if (/como gestor del servicio, solo ve indicadores/.test(p.textContent)) p.dataset.gestor = '1';
+      if (p.dataset.gestor) p.textContent = (state.inst ? 'El ayuntamiento, como gestor del servicio,' : 'Escuela&Deporte, como prestador del servicio,') + ' solo ve indicadores. Cualquier consulta de detalle o copia de tus datos aparece en el registro de abajo.';
+    });
+    v.querySelectorAll('h3').forEach(h => { if (/Registro de accesos del ayuntamiento/.test(h.textContent)) h.textContent = 'Registro de accesos del gestor del servicio'; });
+    const vacio = v.querySelector('#tabla-accesos .empty');
+    if (vacio) vacio.textContent = 'Nadie ha consultado datos de detalle del club.';
+  };
+})();
+
+// Kit de bienvenida: guía rápida del club (1 página) y mensaje de bienvenida al dar de alta un club.
+function htmlGuiaRapidaClub() {
+  const web = WEB_PUBLICA.replace(/\/$/, '') + '/?perfil=club';
+  const cuerpo =
+    '<h2>1. Cómo entrar</h2><ul><li>Web: <b>' + esc(web) + '</b> · perfil <b>MI CLUB</b>.</li><li>Usuario: el de tu club (con <b>@código</b> si te dio de alta un ayuntamiento).</li><li>La primera vez se pide cambiar la contraseña. Guárdala: solo la tiene el Delegado/a.</li></ul>' +
+    '<h2>2. Primeros pasos (el panel te guía)</h2><ol><li>Ficha del club: identificación y actividad.</li><li>Delegado/a de Protección y aceptación del Protocolo Marco (Anexos I y II, con su registro en la Junta).</li><li>Documentos básicos con <b>Plantillas</b>: protocolo, código de conducta y cartel del canal.</li><li>Agentes deportivos: certificado negativo, código y formación de cada persona.</li><li>Primera encuesta anónima a los menores.</li></ol>' +
+    '<h2>3. Durante la temporada</h2><ul><li>Atiende las <b>Alertas</b>: te avisan de lo pendiente y de lo que caduca.</li><li>Marca en la <b>Matriz</b> lo que vas acreditando y enlaza la evidencia.</li><li>Sigue el <b>Siguiente paso recomendado</b> del panel.</li><li>Al cerrar la temporada: <b>Informes → Memoria</b>.</li></ul>' +
+    '<h2>4. Si ocurre algo</h2><ol><li>Protege al menor y, si hay peligro, llama al <b>112</b>.</li><li>Escucha sin interrogar y no confrontes a nadie.</li><li>Comunica a quien corresponda: Servicios Sociales, 091 / 062, Fiscalía. Junta de Andalucía, maltrato infantil: <b>900 851 818</b>.</li><li>Registra fechas y actuaciones en <b>Incidencias</b>, sin relatos ni datos personales.</li></ol>' +
+    '<h2>5. Ayuda</h2><ul><li>Menú <b>Guía de uso</b>: preguntas frecuentes con buscador.</li><li>Línea de ayuda a la infancia: <b>116 111</b> · Fundación ANAR: <b>900 20 20 10</b>.</li></ul>';
+  return plantillaInforme('Guía rápida del club', 'EntornoSeguro · Protección de menores en el deporte', cuerpo, false, 'EntornoSeguro · Guía rápida para el Delegado/a de Protección del club.');
+}
+(function () {
+  const base = pintarGuia;
+  pintarGuia = function () {
+    base();
+    const h = document.querySelector('#view-guia header');
+    if (h && !$('#guia-rapida') && (state.club || can('admin'))) {
+      const b = document.createElement('button'); b.type = 'button'; b.id = 'guia-rapida'; b.className = 'btn ghost';
+      b.textContent = 'Guía rápida del club (PDF)'; b.onclick = () => abrirInforme(htmlGuiaRapidaClub());
+      h.appendChild(b);
+    }
+  };
+})();
+(function () {
+  if (typeof mostrarClaves !== 'function') return;
+  const base = mostrarClaves;
+  mostrarClaves = function (nombre, usuario, clave) {
+    base(nombre, usuario, clave);
+    const u = state.inst ? usuario + '@' + state.inst : usuario;
+    const web = location.origin + location.pathname + '?perfil=club';
+    const msg = 'Hola:\n\nYa tenéis activo EntornoSeguro para ' + nombre + ', la herramienta para organizar el sistema de protección de menores del club.\n\n' +
+      'Acceso (solo para el Delegado/a de Protección):\n· Web: ' + web + '\n· Perfil: MI CLUB\n· Usuario: ' + u + '\n· Contraseña temporal: ' + clave + ' (se cambia al entrar)\n\n' +
+      'Al entrar, el panel os guía en 5 primeros pasos: ficha del club, Delegado/a y Protocolo Marco, documentos básicos, agentes deportivos y primera encuesta. ' +
+      'En el menú «Guía de uso» tenéis las preguntas frecuentes y la guía rápida en PDF.\n\nUn saludo.';
+    const acc = $('#modal-form .actions');
+    if (acc && !$('#copiar-bienvenida')) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost'; b.id = 'copiar-bienvenida';
+      b.textContent = 'Copiar mensaje de bienvenida'; b.onclick = () => copiarTexto(msg);
+      acc.insertBefore(b, acc.firstChild);
+    }
   };
 })();
 
