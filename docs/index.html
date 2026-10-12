@@ -3450,6 +3450,7 @@ const GUIA = [
     ['¿Qué no debo escribir nunca en la IA?', '<p>Nombres, DNI, teléfonos ni ningún dato que identifique a menores o a personas de un caso. La app enmascara DNI, teléfonos y correos, pero la responsabilidad es de quien escribe.</p>', 'ia'],
     ['¿Dónde encuentro lo que he generado?', '<p>En <b>Documentos</b>: búscalo por palabras o tipo, edítalo y descárgalo en Word, PDF o texto.</p>', 'leer', 'documentos'],
     ['¿Cómo consigo que las plantillas salgan completas, sin huecos?', '<ol><li>Completa la <b>ficha de la entidad</b> (Entidades → Editar): identificación, actividad, gobierno, protección, canal, imagen y datos, y procedimiento.</li><li>Completa una vez el <b>📇 Directorio de recursos locales</b>, arriba en Plantillas: Servicios Sociales, Policía Local, Fiscalía de Menores, centro de salud y Delegado/a municipal.</li><li>Al pulsar una plantilla, la app comprueba la ficha. Si falta algo, lo lista y te lleva al campo exacto con <b>Completar la ficha</b> o <b>Completar el directorio</b>.</li><li>Prepara el prompt y pega la respuesta de Claude: la app sustituye sola los nombres, teléfonos y correos.</li></ol><p><b>Privacidad:</b> los datos de personas y contactos nunca se envían a la IA. Viajan como marcadores (por ejemplo, [DELEGADO_NOMBRE]) y se completan en tu navegador. Solo quedan para rellenar a mano las firmas y los formularios de cada menor o de cada caso.</p>', 'ia', 'plantillas'],
+    ['¿Cómo hago un cartel visual con ChatGPT?', '<ol><li>En <b>Plantillas</b>, elige la entidad y pulsa <b>Cartel del canal de comunicación</b>.</li><li>Abajo aparece <b>🎨 Cartel visual con ChatGPT</b>: elige público (adolescentes y familias, o niños y niñas de 6 a 11 años) y activa o no la casilla <b>Incluir nombre y contacto del Delegado/a</b> (por defecto, desactivada: huecos en blanco).</li><li>Pulsa <b>Generar prompt</b> y luego <b>Abrir en ChatGPT</b> (o cópialo).</li><li>Pega el logotipo real y el QR en los recuadros blancos (Canva, Word o PowerPoint).</li><li><b>Antes de imprimir, comprueba cifra a cifra cada teléfono y correo.</b> Los generadores de imagen se equivocan con números y letras.</li></ol><p>El prompt nunca incluye datos internos de la entidad (número de menores, ratios, pernoctas, CIF). Con la casilla activada, solo lleva el nombre y el contacto del Delegado/a y del canal, que van a figurar en un cartel público.</p>', 'ia', 'plantillas'],
     ['¿Qué hay en Plantillas, Contenidos y Biblioteca?', '<ul><li><b>Plantillas</b>: protocolo, código de conducta, designación, carteles y autorizaciones con los datos de la entidad.</li><li><b>Contenidos RRSS</b>: publicaciones para familias y redes.</li><li><b>Biblioteca</b>: normativa oficial y documentos propios por categorías.</li></ul>', 'ia', 'plantillas']
   ]],
   ['📄', 'Alertas e informes', [
@@ -3776,6 +3777,91 @@ prepararPlantilla = async function (id, boton) {
   if (!faltan.length && id !== 'aut_desplaz') $('#plant-preparar').click();
   out.scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
+
+// ---------- Cartel visual: prompt para ChatGPT (imagen) ----------
+function promptCartelVisual(e, publico, conDatos) {
+  const v = k => conDatos ? String(e[k] || '').trim() : '';
+  const hueco = etq => 'recuadro blanco con la etiqueta «' + etq + ':» y espacio para escribir a mano';
+  const linea = (etq, val) => '- ' + (val ? etq + ': «' + val + '»' : hueco(etq));
+  const entidad = String(e.nombre || '').trim();
+  const nino = publico === 'infantil';
+  const textos = nino ? [
+    'TÍTULO (muy grande): «¿Algo te hace sentir mal? ¡Cuéntalo!»',
+    'MENSAJE: «Tu cuerpo es tuyo. Nadie puede hacerte daño. Nadie puede pedirte un secreto que te haga sentir mal.»',
+    'BLOQUE «Díselo a»:', '- «Tu monitor o monitora»',
+    v('delegado_nombre') ? '- «' + v('delegado_nombre') + ', que cuida de que todos y todas estéis bien»' : '- ' + hueco('Persona que te cuida aquí'),
+    '- «Tu familia o la persona que te cuida»',
+    'BLOQUE «Recuerda»: «Te vamos a escuchar. Te vamos a creer. No es culpa tuya. Contarlo es ser valiente.»',
+    'PIE: «Teléfono gratis: 116 111 · Si hay peligro: 112»'
+  ] : [
+    'TÍTULO (muy grande): «¿Algo no va bien? Cuéntalo.»',
+    'SUBTÍTULO: «Aquí te escuchamos, te creemos y te protegemos.»',
+    'BLOQUE DESTACADO «Habla con nuestro Delegado/a de Protección»:',
+    linea('Nombre', v('delegado_nombre')), linea('Teléfono', v('delegado_telefono')), linea('Correo', v('delegado_email')),
+    'BLOQUE «También puedes»:', '- «Hablar con cualquier monitor/a o persona adulta del equipo»',
+    (v('canal_buzon') ? '- «Dejar una nota, sin firmar si quieres, en el buzón: ' + v('canal_buzon') + '»' : '- «Dejar una nota en el buzón, sin firmar si quieres»'),
+    'BLOQUE «Puedes contarnos»: «Insultos, golpes, amenazas, que te toquen o te miren de forma que no te gusta, mensajes o fotos que te hacen sentir mal, o algo que le pasa a otra persona.»',
+    'BLOQUE «Importante»: «No necesitas pruebas. No es tu culpa. No tendrás ningún problema por contarlo.»',
+    'PIE: «Peligro inmediato: 112 · Fundación ANAR (gratis, 24 h): 900 20 20 10 · Ayuda a la infancia: 116 111»'
+  ];
+  return ['Diseña un CARTEL vertical en formato A3 (proporción 297 × 420) para colgar en las instalaciones de una entidad deportiva.',
+    'Público: ' + (nino ? 'niños y niñas de 6 a 11 años. Lenguaje muy sencillo, iconos grandes y amables.' : 'adolescentes y familias. Tono cercano y serio a la vez.'),
+    'Objetivo: que cualquier menor sepa en 10 segundos a quién acudir si algo no va bien.', '',
+    'TEXTO DEL CARTEL. Escribe EXACTAMENTE estos textos, letra por letra y cifra por cifra, en este orden:']
+    .concat(textos, entidad ? ['- Nombre de la entidad, pequeño, al pie: «' + entidad + '»'] : [])
+    .concat(['', 'ELEMENTOS RESERVADOS:',
+      '- Arriba a la derecha, un rectángulo blanco vacío para el logotipo. No dibujes ni inventes ningún logotipo.',
+      '- Abajo a la derecha, un cuadrado blanco vacío de unos 5 cm con el texto «Escanea para contarlo». No dibujes ningún código QR.',
+      '', 'DISEÑO:',
+      '- Legible a 2 metros: título muy grande, como máximo 90 palabras en total y mucho espacio en blanco.',
+      '- Tipografía sin serifa, alto contraste, como máximo tres colores más el blanco.',
+      '- Ilustración plana, no fotográfica. Niños y niñas diversos, con ropa deportiva, en actitud tranquila. Nunca escenas de violencia, peligro, llanto ni poca ropa.',
+      '', 'PROHIBIDO: añadir cualquier otro texto, dato, cifra, teléfono, correo, dirección, nombre, número de registro, ley o logotipo que no aparezca arriba.']).join('\n');
+}
+
+function pintarCartelVisual(e) {
+  const out = $('#plant-out'); if (!out || !e) return;
+  const caja = document.createElement('details'); caja.className = 'card'; caja.id = 'cartel-visual'; caja.open = true;
+  caja.innerHTML = `<summary><b>🎨 Cartel visual con ChatGPT</b></summary>
+    <p class="nota" style="margin:8px 0">Prompt para generar la imagen del cartel. Solo lleva textos breves, sin datos internos de la entidad.</p>
+    <div class="form"><div class="fields">
+      <label>Público<select name="publico"><option value="general">Adolescentes y familias</option><option value="infantil">Niños y niñas de 6 a 11 años</option></select></label>
+    </div>
+    <label style="display:flex;gap:10px;align-items:flex-start;margin:10px 0;cursor:pointer"><input type="checkbox" name="datos" style="width:auto;margin-top:3px">
+      <span><b>Incluir nombre y contacto del Delegado/a</b><br><span class="nota">Desactivado: solo diseño, con huecos en blanco para escribir los datos encima (riesgo cero). Activado: el prompt lleva nombre, teléfono, correo y buzón, que se envían a ChatGPT.</span></span></label></div>
+    <div class="ia-acciones"><button class="btn" type="button" id="cv-generar">Generar prompt</button></div>
+    <div id="cv-out"></div>`;
+  out.append(caja);
+  const sel = n => caja.querySelector('[name="' + n + '"]');
+  caja.querySelector('#cv-generar').onclick = () => {
+    const conDatos = sel('datos').checked;
+    const prompt = promptCartelVisual(e, sel('publico').value, conDatos);
+    const res = caja.querySelector('#cv-out'); res.innerHTML = '';
+    const acc = document.createElement('div'); acc.className = 'ia-acciones';
+    const abrir = document.createElement('a'); abrir.className = 'btn'; abrir.target = '_blank'; abrir.rel = 'noopener';
+    abrir.href = 'https://chatgpt.com/?q=' + encodeURIComponent(prompt); abrir.textContent = 'Abrir en ChatGPT';
+    const copiar = document.createElement('button'); copiar.type = 'button'; copiar.className = 'btn ghost'; copiar.textContent = 'Copiar prompt';
+    copiar.onclick = () => copiarTexto(prompt);
+    acc.append(abrir, copiar);
+    const aviso = document.createElement('div'); aviso.className = 'plant-aviso';
+    aviso.innerHTML = '<b>Antes de imprimir:</b><ul><li>Comprueba cifra a cifra cada teléfono y correo. Los generadores de imagen se equivocan con números y letras.</li>' +
+      '<li>Pega el logotipo real y el QR del canal en los recuadros blancos (Canva, Word o PowerPoint).</li>' +
+      (conDatos ? '<li>Este prompt incluye el nombre y el contacto del Delegado/a, que van a figurar en un cartel público. No incluye ningún otro dato de la entidad.</li>' : '') + '</ul>';
+    const pre = document.createElement('pre'); pre.className = 'out prompt'; pre.textContent = prompt;
+    res.append(acc, aviso, pre);
+  };
+}
+
+(function () {
+  const base = prepararPlantilla;
+  prepararPlantilla = async function (id, boton) {
+    await base(id, boton);
+    if (id !== 'canal') return;
+    const entId = $('#plant-entidad') && $('#plant-entidad').value;
+    const e = (state.entidades || []).find(x => x.id === entId) || (state.club ? (state.entidades || [])[0] : null);
+    pintarCartelVisual(e);
+  };
+})();
 
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
