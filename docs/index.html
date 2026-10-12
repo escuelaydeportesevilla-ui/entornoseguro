@@ -1195,7 +1195,7 @@ function copiarRico(md) {
 
 // ---------- IA (prompts automáticos → Claude) ----------
 const CONTEXTO_IA = [
-  'Actúa como asistente técnico del Delegado de Protección de Menores en el Deporte de un ayuntamiento andaluz.',
+  'Actúa como asistente técnico del Delegado/a de Protección de Menores en el Deporte, que puede serlo de un ayuntamiento o de una entidad deportiva de Andalucía.',
   'Marco normativo: LO 8/2021 (LOPIVI, Capítulo IX deporte y ocio), Ley 4/2021 de Infancia y Adolescencia de Andalucía, Ley 5/2016 del Deporte de Andalucía, Decreto 41/2022 y Protocolo Marco de protección de menores en el deporte (Orden de 18 de noviembre de 2024).',
   'Reglas: no emitas conclusiones jurídicas categóricas; no atribuyas responsabilidad ni califiques hechos como violencia; cita la norma o apartado que fundamenta cada afirmación cuando sea posible; indica qué debe validar una persona responsable.',
   'Estilo: español de España, técnico, conciso.',
@@ -2025,7 +2025,7 @@ function htmlContrato(p, e) {
   const hoy = new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
   let b = `<p>En ${campo(p.localidad, 'LOCALIDAD')}, a ${esc(hoy)}.</p>
   <h3 class="centro">REUNIDOS</h3>
-  <p>De una parte, <span class="campo">[NOMBRE Y APELLIDOS DEL REPRESENTANTE]</span>, con DNI <span class="campo">[DNI]</span>, en nombre y representación de ${ENT}, con CIF ${campo(e.cif, 'CIF')} y domicilio en <span class="campo">[DOMICILIO]</span>, en su condición de <span class="campo">[CARGO]</span>, en adelante el RESPONSABLE DEL TRATAMIENTO o la ENTIDAD.</p>
+  <p>De una parte, ${campo(e.presidencia, 'NOMBRE Y APELLIDOS DEL REPRESENTANTE')}, con DNI <span class="campo">[DNI]</span>, en nombre y representación de ${ENT}, con CIF ${campo(e.cif, 'CIF')} y domicilio en ${campo(e.domicilio, 'DOMICILIO')}, en su condición de ${campo(e.presidencia ? 'Presidente/a' : '', 'CARGO')}, en adelante el RESPONSABLE DEL TRATAMIENTO o la ENTIDAD.</p>
   <p>De otra parte, ${campo(p.representante, 'NOMBRE Y APELLIDOS')}, con DNI <span class="campo">[DNI]</span>, en nombre y representación de ${PRE}, con CIF/NIF ${campo(p.cif, 'CIF')} y domicilio en ${campo(p.domicilio, 'DOMICILIO')}, en su condición de ${campo(p.cargo, 'CARGO')}, en adelante el ENCARGADO DEL TRATAMIENTO.</p>
   <p>Ambas partes se reconocen capacidad suficiente para suscribir el presente contrato y</p>
   <h3 class="centro">EXPONEN</h3><ol type="I">
@@ -2968,9 +2968,10 @@ function coordProcedimiento(cfg) {
 
 function coordDeclaracion(e, temp, cfg, h) {
   const contacto = [e.delegado_telefono, e.delegado_email].filter(Boolean).join(' · ');
+  const repr = e.presidencia_nombre ? esc(String(e.presidencia_nombre).trim()) + ' · Presidente/a' : '';
   return coordH(h, 'Anexo I. Declaración responsable anual de la entidad deportiva') +
     tablaKV([['Temporada', esc(temp)], ['Entidad', campo(String(e.nombre || '').trim(), 'DENOMINACIÓN DE LA ENTIDAD')], ['CIF', campo(e.cif, 'CIF')],
-      ['Representante legal', '<span class="campo">[NOMBRE Y APELLIDOS · CARGO]</span>'],
+      ['Representante legal', campo(repr ? String(e.presidencia_nombre).trim() + ' · Presidente/a' : '', 'NOMBRE Y APELLIDOS · CARGO')],
       ['Delegado/a de Protección de la entidad', campo(e.delegado_nombre, 'NOMBRE Y APELLIDOS')],
       ['Teléfono y correo del Delegado/a', campo(contacto, 'TELÉFONO · CORREO')]]) +
     '<p>La persona abajo firmante, en representación de la entidad, <b>DECLARA BAJO SU RESPONSABILIDAD</b> que la entidad cumple lo siguiente y dispone de la documentación que lo acredita:</p>' +
@@ -2978,8 +2979,8 @@ function coordDeclaracion(e, temp, cfg, h) {
     pj('Se acompaña: designación del Delegado/a de Protección y su certificado de formación, flujograma de actuación ante incidentes y relación nominal del personal en contacto con menores con la fecha de su certificado negativo.') +
     pj('La entidad se compromete a mantener estos requisitos durante toda la temporada, a comunicar cualquier cambio en 15 días y a poner la documentación a disposición del Ayuntamiento cuando se le solicite.') +
     pj('La entidad conoce que la comprobación municipal es formal y documental, y que la veracidad de lo declarado y el cumplimiento de estas obligaciones son responsabilidad exclusiva de la entidad.') +
-    `<p>En ${coordMuni(cfg)}, a ____ de ______________ de ______</p>` +
-    '<div class="firma"><div>Firma del representante legal</div><div>Sello de la entidad</div></div>';
+    `<p>En ${campo(e.municipio || cfg.municipio, 'MUNICIPIO')}, a ____ de ______________ de ______</p>` +
+    '<div class="firma"><div>Firma del representante legal' + (repr ? '<br>' + repr : '') + '</div><div>Sello de la entidad</div></div>';
 }
 
 function coordFicha(e, temp, cfg, h) {
@@ -3448,6 +3449,7 @@ const GUIA = [
     ['¿Cómo funciona la IA en la app?', '<p>La app prepara el texto (prompt) y lo abre en <b>Claude con tu cuenta</b>. No envía datos automáticamente. Copia la respuesta, pégala en la app y pulsa <b>Guardar en Documentos</b>.</p>', 'ia', 'asistente'],
     ['¿Qué no debo escribir nunca en la IA?', '<p>Nombres, DNI, teléfonos ni ningún dato que identifique a menores o a personas de un caso. La app enmascara DNI, teléfonos y correos, pero la responsabilidad es de quien escribe.</p>', 'ia'],
     ['¿Dónde encuentro lo que he generado?', '<p>En <b>Documentos</b>: búscalo por palabras o tipo, edítalo y descárgalo en Word, PDF o texto.</p>', 'leer', 'documentos'],
+    ['¿Cómo consigo que las plantillas salgan completas, sin huecos?', '<ol><li>Completa la <b>ficha de la entidad</b> (Entidades → Editar): identificación, actividad, gobierno, protección, canal, imagen y datos, y procedimiento.</li><li>Completa una vez el <b>📇 Directorio de recursos locales</b>, arriba en Plantillas: Servicios Sociales, Policía Local, Fiscalía de Menores, centro de salud y Delegado/a municipal.</li><li>Al pulsar una plantilla, la app comprueba la ficha. Si falta algo, lo lista y te lleva al campo exacto con <b>Completar la ficha</b> o <b>Completar el directorio</b>.</li><li>Prepara el prompt y pega la respuesta de Claude: la app sustituye sola los nombres, teléfonos y correos.</li></ol><p><b>Privacidad:</b> los datos de personas y contactos nunca se envían a la IA. Viajan como marcadores (por ejemplo, [DELEGADO_NOMBRE]) y se completan en tu navegador. Solo quedan para rellenar a mano las firmas y los formularios de cada menor o de cada caso.</p>', 'ia', 'plantillas'],
     ['¿Qué hay en Plantillas, Contenidos y Biblioteca?', '<ul><li><b>Plantillas</b>: protocolo, código de conducta, designación, carteles y autorizaciones con los datos de la entidad.</li><li><b>Contenidos RRSS</b>: publicaciones para familias y redes.</li><li><b>Biblioteca</b>: normativa oficial y documentos propios por categorías.</li></ul>', 'ia', 'plantillas']
   ]],
   ['📄', 'Alertas e informes', [
@@ -3525,6 +3527,256 @@ function htmlGuia() {
   $('#guia-q').oninput = pintarGuia;
   $('#guia-pdf').onclick = () => abrirInforme(htmlGuia());
 })();
+
+// ---------- FICHA AMPLIADA, DIRECTORIO Y PLANTILLAS COMPLETAS (v1.3) ----------
+// Requiere Ampliacion.gs en el servidor. Las plantillas salen completas con los datos de la entidad:
+// los datos no personales van a la IA; los de personas y contactos van como marcadores que la app rellena en local.
+const FICHA_SECCIONES = [
+  ['🏷️ Identificación', [['nombre', 'Nombre de la entidad', 'text', true], ['cif', 'CIF'],
+    ['tipo', 'Naturaleza', ['Club', 'Asociación', 'Escuela deportiva', 'Empresa de servicios', 'Ayuntamiento', 'Otro']],
+    ['n_registro', 'Nº de inscripción registral'], ['domicilio', 'Domicilio social'], ['municipio', 'Municipio'], ['provincia', 'Provincia'],
+    ['web', 'Web o página de la entidad']]],
+  ['⚽ Actividad', [['modalidad', 'Modalidad deportiva'], ['actividades', 'Actividades (escuela, competición, campamento…)', 'textarea'],
+    ['trabaja_menores', '¿Trabaja con menores?', ['SI', 'NO']], ['n_menores', 'Nº aproximado de menores', 'number'],
+    ['edades', 'Edades de los participantes (ej. de 6 a 16 años)'], ['lugar_actividad', 'Instalaciones o lugar habitual'],
+    ['competicion', 'Competición', ['NO', 'SI']], ['desplazamientos', 'Desplazamientos', ['NO', 'SI']], ['pernocta', 'Actividades con pernocta', ['NO', 'SI']],
+    ['ratio', 'Ratio de personas adultas por menores (ej. 1 por cada 10)'], ['direccion_telefono', 'Teléfono de la dirección o coordinación de actividades']]],
+  ['🏛️ Gobierno', [['organo_gobierno', 'Órgano de gobierno (ej. Junta Directiva)'], ['presidencia_nombre', 'Presidente/a'],
+    ['secretaria_nombre', 'Secretario/a'], ['regimen_disciplinario', 'Norma disciplinaria de referencia (estatutos, reglamento interno…)']]],
+  ['🛡️ Protección', [['delegado_nombre', 'Delegado/a de Protección'], ['delegado_email', 'Correo del Delegado/a', 'email'],
+    ['delegado_telefono', 'Teléfono del Delegado/a'], ['fecha_designacion', 'Fecha de designación', 'date'],
+    ['designacion_vigencia', 'Vigencia de la designación (ej. dos temporadas)'], ['suplente_nombre', 'Suplente del Delegado/a'],
+    ['suplente_telefono', 'Teléfono del suplente'], ['acepta_protocolo_marco', 'Acepta el Protocolo Marco', ['NO', 'SI']],
+    ['fecha_aceptacion', 'Fecha de aceptación', 'date'], ['protocolo_fecha', 'Fecha de aprobación del protocolo propio', 'date'],
+    ['protocolo_version', 'Versión del protocolo (ej. 1.0)']]],
+  ['📣 Canal de comunicación', [['canal_email', 'Correo del canal', 'email'], ['canal_telefono', 'Teléfono o WhatsApp del canal'],
+    ['canal_buzon', 'Ubicación del buzón'], ['canal_presencial', 'Atención presencial (lugar y horario)'], ['canal_enlace', 'Enlace a formulario o código QR']]],
+  ['📷 Imagen y datos', [['datos_email', 'Correo para ejercer los derechos de protección de datos', 'email'],
+    ['redes_oficiales', 'Redes sociales oficiales (ej. Instagram @entidad)'], ['conservacion_imagenes', 'Plazo de conservación de las imágenes (ej. dos temporadas)']]],
+  ['⏱️ Procedimiento', [['plazo_comunicacion_h', 'Plazo para comunicar al Delegado/a (horas)', 'number'],
+    ['revision_meses', 'Revisión del protocolo (cada cuántos meses)', 'number'], ['observaciones', 'Observaciones', 'textarea'], ['activo', 'Activa', ['SI', 'NO']]]]
+];
+const DIR_CAMPOS = [['servicios_sociales', 'Servicios Sociales Comunitarios (teléfono y dirección)'], ['policia_local', 'Policía Local (teléfono)'],
+  ['fiscalia_menores', 'Fiscalía Provincial · Sección de Menores (teléfono)'], ['centro_salud', 'Centro de salud de referencia (teléfono)'],
+  ['delegado_municipal', 'Delegado/a municipal de Protección (teléfono y correo)'], ['otros', 'Otros recursos locales (uno por línea)', 'textarea']];
+const ETIQ_DATO = {};
+FICHA_SECCIONES.forEach(s => s[1].forEach(c => { ETIQ_DATO[c[0]] = c[1]; }));
+DIR_CAMPOS.forEach(c => { ETIQ_DATO['rec_' + c[0]] = 'Directorio · ' + c[1]; });
+
+let ampliacionPromesa = null;
+function comprobarAmpliacion() {
+  if (!ampliacionPromesa) ampliacionPromesa = API.call('ampliacion').then(() => { state.sinAmpliacion = false; }, () => { state.sinAmpliacion = true; });
+  return ampliacionPromesa;
+}
+
+if (!$('#ficha-estilo')) {
+  const st = document.createElement('style'); st.id = 'ficha-estilo';
+  st.textContent = '.ficha-sec{border:1px solid var(--line);border-radius:10px;margin:0 0 10px;padding:0 12px}' +
+    '.ficha-sec summary{cursor:pointer;font-weight:700;color:var(--brand);padding:10px 0;min-height:44px;display:flex;justify-content:space-between;align-items:center}' +
+    '.ficha-sec summary small{color:var(--muted);font-weight:600}.ficha-sec .fields{padding-bottom:6px}' +
+    '.plant-aviso{background:color-mix(in srgb,var(--warn) 10%,var(--panel));border:1px solid color-mix(in srgb,var(--warn) 40%,transparent);border-radius:10px;padding:10px 14px;margin-bottom:12px}' +
+    '.plant-aviso ul{margin:6px 0 0;padding-left:20px}.plant-ok{color:var(--ok);font-weight:600}';
+  document.head.appendChild(st);
+}
+
+/** Ficha de la entidad ampliada, por bloques plegables. */
+formEntidad = async function (e, despues, resaltar) {
+  e = e || {}; resaltar = resaltar || [];
+  await comprobarAmpliacion();
+  const def = { plazo_comunicacion_h: 24, revision_meses: 12, activo: 'SI', trabaja_menores: 'SI' };
+  const val = k => esc(e[k] !== undefined && e[k] !== '' ? e[k] : (e.id ? '' : (def[k] ?? '')));
+  const pinta = ([n, l, t = 'text', req]) => {
+    if (Array.isArray(t)) return `<label>${esc(l)}<select name="${n}">${t.map(o => `<option value="${esc(o)}" ${String(e[n] ?? def[n] ?? t[0]) === String(o) ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select></label>`;
+    if (t === 'textarea') return `<label class="full">${esc(l)}<textarea name="${n}" rows="2">${val(n)}</textarea></label>`;
+    return `<label>${esc(l)}<input type="${t}" name="${n}" value="${val(n)}" ${req ? 'required' : ''}></label>`;
+  };
+  const lleno = c => e[c[0]] !== undefined && String(e[c[0]]).trim() !== '';
+  const f = $('#modal-form');
+  f.innerHTML = `<h3>${e.id ? 'Ficha de la entidad' : 'Nueva entidad'}</h3>` +
+    (state.sinAmpliacion ? '<p class="aviso-inc">Falta instalar <b>Ampliacion.gs</b> en el servidor: solo se guardarán los campos básicos.</p>' : '') +
+    '<p class="nota" style="margin:0 0 10px">Cuantos más datos completes, más completos saldrán los documentos de Plantillas, la declaración y el contrato.</p>' +
+    (resaltar.length ? '<p class="plant-aviso" style="margin:0 0 10px">Completa los campos marcados para que el documento salga completo.</p>' : '') +
+    FICHA_SECCIONES.map(([tit, campos], i) => `<details class="ficha-sec"${(resaltar.length ? campos.some(c => resaltar.indexOf(c[0]) >= 0) : (i === 0 || !e.id)) ? ' open' : ''}><summary>${esc(tit)} <small>${campos.filter(lleno).length}/${campos.length}</small></summary><div class="fields">${campos.map(pinta).join('')}</div></details>`).join('') +
+    '<div class="actions"><button value="cancel" class="btn ghost" formnovalidate>Cancelar</button><button value="ok" class="btn">Guardar</button></div>';
+  resaltar.forEach(k => { const el = f.querySelector('[name="' + k + '"]'); if (el) { el.style.outline = '3px solid var(--warn)'; el.style.outlineOffset = '1px'; } });
+  const dlg = $('#modal');
+  dlg.oncancel = null;
+  dlg.onclose = async () => {
+    if (dlg.returnValue !== 'ok') return;
+    const d = Object.fromEntries(new FormData(f)); d.id = e.id;
+    await run(() => API.call('guardarEntidad', d));
+    toast('Ficha guardada');
+    state.entidades = await run(() => API.call('listarEntidades'));
+    if (!$('#view-entidades').classList.contains('hidden')) loadEntidades();
+    if (typeof despues === 'function') despues();
+  };
+  dlg.returnValue = '';
+  if (!dlg.open) dlg.showModal();
+  const primero = resaltar.map(k => f.querySelector('[name="' + k + '"]')).find(Boolean);
+  if (primero) setTimeout(() => primero.focus(), 50);
+};
+
+// ---- Directorio de recursos locales (tarjeta en Plantillas) ----
+async function pintarDirectorio() {
+  const v = $('#view-plantillas'); if (!v) return;
+  let card = $('#dir-card');
+  const puede = can('escribir') || state.club;
+  if (!card) {
+    card = document.createElement('details'); card.id = 'dir-card'; card.className = 'card';
+    card.innerHTML = `<summary style="cursor:pointer;min-height:40px"><b>📇 Directorio de recursos locales</b> <small id="dir-estado" class="nota"></small></summary>
+      <p class="nota" style="margin:8px 0 12px">Teléfonos y direcciones del municipio que se incluyen en protocolos, guías y carteles. Se rellena una vez y sirve para todas las entidades.</p>
+      <form id="form-dir" class="form"><div class="fields">${DIR_CAMPOS.map(([k, l, t]) => t === 'textarea'
+        ? `<label class="full">${esc(l)}<textarea name="${k}" rows="2"></textarea></label>` : `<label>${esc(l)}<input name="${k}"></label>`).join('')}</div>
+      ${puede ? '<div class="ia-acciones"><button class="btn" type="submit">Guardar directorio</button></div>' : ''}</form>`;
+    const lista = $('#plant-lista'); v.insertBefore(card, lista);
+    $('#form-dir').onsubmit = async ev => {
+      ev.preventDefault();
+      if (!puede) return;
+      state.dir = await run(() => API.call('guardarDirectorio', Object.fromEntries(new FormData(ev.target))));
+      toast('Directorio guardado'); pintarDirectorio();
+      const act = $('.plantilla.activa'); if (act) prepararPlantilla(act.dataset.plant, act);
+    };
+  }
+  try { state.dir = await API.call('directorio'); } catch (er) { state.dir = {}; $('#dir-estado').textContent = '· requiere Ampliacion.gs'; return; }
+  const fd = $('#form-dir');
+  DIR_CAMPOS.forEach(([k]) => { if (fd[k]) fd[k].value = state.dir[k] || ''; });
+  const n = DIR_CAMPOS.filter(([k]) => state.dir[k]).length;
+  $('#dir-estado').textContent = '· ' + n + ' de ' + DIR_CAMPOS.length + ' completos' + (state.dir.heredado ? ' (heredado del ayuntamiento)' : '');
+}
+const plantLoadOrig = loadPlantillas;
+loadPlantillas = async function () { await plantLoadOrig(); comprobarAmpliacion(); pintarDirectorio(); };
+
+// ---- Plantillas: tareas, datos necesarios y marcadores ----
+const PLANT_TAREAS = {
+  protocolo: 'Redacta el PROTOCOLO DE PROTECCIÓN frente a la violencia de la entidad, completo y listo para que lo apruebe su órgano de gobierno. Apartados: 1. Datos de la entidad y control de versiones. 2. Objeto y ámbito (todas sus actividades). 3. Principios. 4. Delegado/a de Protección y suplente: funciones y contacto. 5. Análisis de riesgos y medidas preventivas adaptados a sus actividades (incluye pernocta y desplazamientos solo si los realiza). 6. Código de conducta (resumen). 7. Protección de datos e imágenes. 8. Desplazamientos y pernoctas (solo si procede). 9. Procedimiento de comunicación y actuación ante incidentes, con plazos y flujograma en pasos. 10. Canal de comunicación para menores y familias. 11. Formación. 12. Difusión. 13. Revisión. 14. Aprobación y firmas. Anexo I: hoja de registro de comunicación, como formulario con líneas de puntos. Anexo II: directorio de contactos con los marcadores y recursos indicados.',
+  codigo: 'Redacta el CÓDIGO DE CONDUCTA de la entidad para sus agentes deportivos (entrenadores, monitores, directivos, voluntariado): conductas esperadas y no permitidas en el trato, contacto físico, comunicación digital y redes sociales, vestuarios, imágenes y, si los realiza, desplazamientos y pernoctas; consecuencias del incumplimiento conforme a la norma disciplinaria indicada; aprobación por el órgano de gobierno. Al final, una HOJA DE ACEPTACIÓN individual con líneas de puntos para nombre, rol, fecha y firma.',
+  designacion: 'Redacta el ACUERDO DE DESIGNACIÓN DEL DELEGADO/A DE PROTECCIÓN adoptado por el órgano de gobierno de la entidad: encabezado, antecedentes normativos (LOPIVI, art. 48, y Protocolo Marco), acuerdo de designación del titular y, si consta, del suplente, funciones, datos de contacto para las comunicaciones, vigencia y firmas de la Presidencia y la Secretaría, más la aceptación del Delegado/a con líneas de puntos para firma y DNI.',
+  canal: 'Redacta el texto de un CARTEL sobre el canal de comunicación para menores y familias: a quién acudir, cómo contactar (solo con los canales indicados), qué se puede contar, qué pasa después, confidencialidad y teléfonos de ayuda. Añade una versión corta para niños y niñas de 6 a 11 años. Es un cartel: frases cortas y directas, sin bloques de fundamento legal (como mucho, una línea final con la norma).',
+  aut_imagen: 'Redacta la AUTORIZACIÓN FAMILIAR para la captación y el uso de imágenes de menores, conforme al RGPD, la LOPDGDD y la LO 1/1982: responsable del tratamiento (la entidad, con sus datos), finalidades separadas y marcables (web, redes sociales oficiales, prensa, uso interno), plazo de conservación, derechos y cómo ejercerlos, y revocación. Datos del menor, de la persona tutora y firma, con líneas de puntos.',
+  aut_desplaz: 'Redacta la AUTORIZACIÓN FAMILIAR para el desplazamiento o la actividad descrita: datos de la actividad, responsables y teléfono de contacto durante la actividad, transporte, alojamiento y distribución por edades si hay pernocta, normas de convivencia, contacto de emergencia de la familia e información de salud relevante que la familia quiera comunicar. Datos del menor, de la persona tutora y firma, con líneas de puntos.',
+  actuacion: 'Redacta una GUÍA RÁPIDA DE ACTUACIÓN ANTE INCIDENTES (una página) para monitores y entrenadores: qué hacer y qué no hacer ante una sospecha o una revelación, protección inmediata del menor, comunicación al Delegado/a en el plazo indicado, registro de hechos objetivos, cuándo llamar a emergencias o a Servicios Sociales y deber de comunicación (LOPIVI, arts. 15 y 16). Termina con un cuadro de contactos.',
+  familias: 'Redacta una CARTA a las familias para la temporada, presentando el sistema de protección de la entidad: compromiso, Delegado/a de Protección y cómo contactar, medidas principales, uso de imágenes y canal de comunicación. Tono cercano, una página, firmada por la Presidencia en nombre del órgano de gobierno.'
+};
+PLANTILLAS.forEach(p => { if (PLANT_TAREAS[p[0]]) p[3] = PLANT_TAREAS[p[0]]; });
+
+const PLANT_REQ = {
+  protocolo: ['municipio', 'provincia', 'actividades', 'organo_gobierno', 'presidencia_nombre', 'secretaria_nombre', 'delegado_nombre', 'delegado_telefono', 'delegado_email',
+    'canal_email|canal_telefono|canal_buzon', 'protocolo_fecha', 'rec_servicios_sociales', 'rec_policia_local'],
+  codigo: ['municipio', 'actividades', 'organo_gobierno'],
+  designacion: ['municipio', 'organo_gobierno', 'fecha_designacion', 'designacion_vigencia', 'delegado_nombre', 'delegado_telefono', 'delegado_email', 'presidencia_nombre', 'secretaria_nombre'],
+  canal: ['delegado_nombre', 'canal_email|canal_telefono|canal_buzon|canal_presencial', 'web|canal_enlace'],
+  aut_imagen: ['cif', 'domicilio', 'municipio', 'datos_email', 'redes_oficiales|web', 'conservacion_imagenes'],
+  aut_desplaz: ['municipio', 'direccion_telefono|delegado_telefono'],
+  actuacion: ['delegado_nombre', 'delegado_telefono', 'rec_servicios_sociales', 'rec_policia_local'],
+  familias: ['municipio', 'presidencia_nombre', 'delegado_nombre', 'delegado_email|delegado_telefono', 'canal_email|canal_telefono|canal_buzon']
+};
+// Datos de personas y contactos: nunca se envían a la IA; se sustituyen en local al pegar la respuesta.
+const PLANT_MARCAS = [
+  ['DELEGADO_NOMBRE', 'delegado_nombre', 'nombre y apellidos del Delegado/a de Protección'], ['DELEGADO_TELEFONO', 'delegado_telefono', 'teléfono del Delegado/a'],
+  ['DELEGADO_EMAIL', 'delegado_email', 'correo del Delegado/a'], ['SUPLENTE_NOMBRE', 'suplente_nombre', 'nombre y apellidos del suplente'],
+  ['SUPLENTE_TELEFONO', 'suplente_telefono', 'teléfono del suplente'], ['PRESIDENCIA_NOMBRE', 'presidencia_nombre', 'nombre y apellidos de la Presidencia'],
+  ['SECRETARIA_NOMBRE', 'secretaria_nombre', 'nombre y apellidos de la Secretaría'], ['DOMICILIO', 'domicilio', 'domicilio social'],
+  ['CANAL_EMAIL', 'canal_email', 'correo del canal de comunicación'], ['CANAL_TELEFONO', 'canal_telefono', 'teléfono o WhatsApp del canal'],
+  ['CANAL_BUZON', 'canal_buzon', 'ubicación del buzón'], ['CANAL_PRESENCIAL', 'canal_presencial', 'lugar y horario de atención presencial'],
+  ['CANAL_ENLACE', 'canal_enlace', 'enlace al formulario o código QR'], ['WEB', 'web', 'web de la entidad'],
+  ['DIRECCION_TELEFONO', 'direccion_telefono', 'teléfono de la dirección o coordinación de actividades'], ['DATOS_EMAIL', 'datos_email', 'correo para ejercer los derechos de protección de datos'],
+  ['REDES', 'redes_oficiales', 'redes sociales oficiales'], ['DELEGADO_MUNICIPAL', 'rec_delegado_municipal', 'contacto del Delegado/a municipal de Protección'],
+  ['RESPONSABLE_NOMBRE', 'ev_responsable', 'nombre de la persona responsable de la actividad'], ['RESPONSABLE_TELEFONO', 'ev_responsable_tel', 'teléfono de contacto durante la actividad']
+];
+const plantDato = (k, e, dir, ev) => {
+  if (k.indexOf('rec_') === 0) return String((dir || {})[k.slice(4)] || '').trim();
+  if (k.indexOf('ev_') === 0) return String((ev || {})[k.slice(3)] || '').trim();
+  return String(e[k] ?? '').trim();
+};
+const fechaLarga = iso => { const s = String(iso || '').slice(0, 10); return /^\d{4}-\d{2}-\d{2}$/.test(s) ? fmtFecha(s) : ''; };
+
+function promptPlantilla(p, e, dir, ev) {
+  const si = v => String(v || '').toUpperCase() === 'SI';
+  const d = (etq, v) => v ? '- ' + etq + ': ' + v : '';
+  const hoy = fechaLarga(hoyISO());
+  const datos = [d('Nombre', e.nombre), d('CIF', e.cif), d('Naturaleza', e.tipo), d('Nº de inscripción registral', e.n_registro),
+    d('Municipio y provincia', [e.municipio, e.provincia].filter(Boolean).join(' (') + (e.provincia && e.municipio ? ')' : '')),
+    d('Modalidad deportiva', e.modalidad), d('Actividades', e.actividades), d('Edades', e.edades), d('Nº aproximado de menores', e.n_menores),
+    d('Instalaciones o lugar habitual', e.lugar_actividad),
+    '- Competición: ' + (si(e.competicion) ? 'sí' : 'no') + ' · Desplazamientos: ' + (si(e.desplazamientos) ? 'sí' : 'no') + ' · Pernocta: ' + (si(e.pernocta) ? 'sí' : 'no'),
+    d('Ratio de personas adultas', e.ratio), d('Órgano de gobierno', e.organo_gobierno), d('Norma disciplinaria de referencia', e.regimen_disciplinario),
+    d('Fecha de designación del Delegado/a', fechaLarga(e.fecha_designacion)), d('Vigencia de la designación', e.designacion_vigencia),
+    d('Hay suplente del Delegado/a', e.suplente_nombre ? 'sí' : ''), d('Aceptación del Protocolo Marco', si(e.acepta_protocolo_marco) ? 'sí' + (e.fecha_aceptacion ? ', el ' + fechaLarga(e.fecha_aceptacion) : '') : ''),
+    d('Fecha de aprobación del protocolo', fechaLarga(e.protocolo_fecha)), d('Versión del protocolo', e.protocolo_version),
+    d('Plazo de conservación de imágenes', e.conservacion_imagenes), d('Plazo para comunicar al Delegado/a', e.plazo_comunicacion_h ? e.plazo_comunicacion_h + ' horas como máximo' : ''),
+    d('Revisión del protocolo', e.revision_meses ? 'cada ' + e.revision_meses + ' meses' : '')].filter(Boolean);
+  if (ev) datos.push(d('Actividad', ev.actividad), d('Fechas', ev.fechas), d('Destino', ev.destino), d('Transporte', ev.transporte), d('Alojamiento', ev.alojamiento));
+  const marcas = PLANT_MARCAS.filter(m => plantDato(m[1], e, dir, ev)).map(m => '- [' + m[0] + ']: ' + m[2]);
+  const rec = [d('Servicios Sociales Comunitarios', dir.servicios_sociales), d('Policía Local', dir.policia_local),
+    d('Fiscalía Provincial · Sección de Menores', dir.fiscalia_menores), d('Centro de salud de referencia', dir.centro_salud),
+    dir.otros ? '- Otros: ' + String(dir.otros).replace(/\n+/g, '; ') : ''].filter(Boolean);
+  return ['Actúas como técnico/a experto/a en protección de la infancia y la adolescencia en el deporte en Andalucía. Redactas documentos que la propia entidad aprueba y utiliza. Marco normativo: LO 8/2021 (LOPIVI), Ley 4/2021 de Infancia y Adolescencia de Andalucía, Ley 5/2016 del Deporte de Andalucía, Decreto 41/2022 y Protocolo Marco (Orden de 18 de noviembre de 2024).', '',
+    'TAREA: ' + p[3], '',
+    'DATOS DE LA ENTIDAD (úsalos tal cual):'].concat(datos.filter(Boolean)).concat(['- Temporada: ' + coordTemporada(), '- Fecha del documento: ' + hoy, ''])
+    .concat(marcas.length ? ['DATOS QUE NO CONOCES: escribe EXACTAMENTE estos marcadores donde corresponda; la aplicación los sustituirá por los datos reales:'].concat(marcas, ['']) : [])
+    .concat(['TELÉFONOS DE AYUDA OFICIALES: Emergencias 112 · Policía Nacional 091 · Guardia Civil 062 · Fundación ANAR 900 20 20 10 · Línea de ayuda a la infancia 116 111 · Junta de Andalucía, notificación de maltrato infantil 900 851 818.'])
+    .concat(rec.length ? ['RECURSOS LOCALES:'].concat(rec) : [])
+    .concat(['', 'REGLAS:',
+      '1. Entrega solo el documento final, completo y listo para aprobar y usar. Sin introducción, comentarios ni preguntas.',
+      '2. No uses corchetes salvo los marcadores indicados. No escribas «VALIDAR», «COMPLETAR», notas para quien lo revisa ni apartados de aspectos a validar.',
+      '3. No inventes datos: nombres, teléfonos, direcciones, fechas o canales. Si un dato no figura aquí, redacta sin él.',
+      '4. Lo que se rellena a mano (firmas, DNI, datos de cada menor o de cada caso) va con líneas de puntos: «……………………………».',
+      '5. Los flujogramas, como pasos numerados unidos con «→», sin corchetes ni cajas.',
+      '6. Fechas en formato largo (por ejemplo, ' + hoy + ').',
+      '7. Español de España, lenguaje claro e inclusivo. Cita la norma solo donde aporte.',
+      '', 'FORMATO: Markdown con títulos (#, ##), listas y tablas cuando ayuden.']).join('\n');
+}
+
+function plantillaFaltan(id, e, dir) {
+  return (PLANT_REQ[id] || []).filter(req => !req.split('|').some(k => plantDato(k, e, dir)));
+}
+
+prepararPlantilla = async function (id, boton) {
+  $$('.plantilla').forEach(x => x.classList.toggle('activa', x === boton));
+  const p = PLANTILLAS.find(x => x[0] === id); if (!p) return;
+  await comprobarAmpliacion();
+  if (!state.entidades.length) state.entidades = await run(() => API.call('listarEntidades'));
+  const entId = $('#plant-entidad').value;
+  const e = state.entidades.find(x => x.id === entId) || (state.club ? state.entidades[0] : null);
+  const out = $('#plant-out');
+  if (!e) { out.innerHTML = '<p class="aviso-inc">Elige primero la entidad.</p>'; return; }
+  if (!state.dir) { try { state.dir = await API.call('directorio'); } catch (er) { state.dir = {}; } }
+  const dir = state.dir || {};
+  const faltanReq = plantillaFaltan(id, e, dir);
+  const faltan = faltanReq.map(req => req.split('|').map(k => ETIQ_DATO[k] || k).join(' o '));
+  const faltanFicha = [].concat(...faltanReq.map(r => r.split('|'))).filter(k => k.indexOf('rec_') !== 0);
+  const faltanDir = faltanReq.some(r => r.indexOf('rec_') === 0);
+  const evForm = id === 'aut_desplaz' ? `<div class="card form"><h3>Datos de la salida o actividad</h3><p class="nota" style="margin:0 0 8px">Rellena lo que conozcas; lo que dejes vacío saldrá con líneas para completar a mano.</p><div class="fields">
+      <label class="full">Actividad<input name="actividad" placeholder="Ej.: Campamento de verano"></label><label>Fechas<input name="fechas" placeholder="Ej.: del 1 al 10 de julio de 2027"></label>
+      <label>Destino<input name="destino"></label><label>Transporte<input name="transporte" placeholder="Ej.: autobús contratado"></label><label>Alojamiento<input name="alojamiento"></label>
+      <label>Persona responsable<input name="responsable"></label><label>Teléfono durante la actividad<input name="responsable_tel"></label></div></div>` : '';
+  out.innerHTML = (faltan.length ? `<div class="plant-aviso"><b>Faltan ${faltan.length} dato(s) para que «${esc(p[1])}» salga completo:</b><ul>${faltan.map(f => `<li>${esc(f)}</li>`).join('')}</ul></div>`
+      : `<p class="plant-ok">✓ La ficha de ${esc(e.nombre)} tiene todos los datos para este documento.</p>`) + evForm +
+    `<div class="ia-acciones">${faltanFicha.length ? '<button class="btn" type="button" id="plant-ficha">Completar la ficha</button>' : ''}${faltanDir ? '<button class="btn" type="button" id="plant-dir">Completar el directorio</button>' : ''}<button class="btn${faltan.length ? ' ghost' : ''}" type="button" id="plant-preparar">${faltan.length ? 'Preparar igualmente' : 'Preparar prompt'}</button></div><div id="plant-prompt"></div>`;
+  $('#plant-ficha') && ($('#plant-ficha').onclick = () => formEntidad(e, () => prepararPlantilla(id, boton), faltanFicha));
+  $('#plant-dir') && ($('#plant-dir').onclick = () => { const c = $('#dir-card'); if (!c) return; c.open = true; c.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const k = faltanReq.filter(r => r.indexOf('rec_') === 0).map(r => r.split('|')[0].slice(4))[0]; const el = k && $('#form-dir')[k]; if (el) setTimeout(() => el.focus(), 300); });
+  $('#plant-preparar').onclick = () => {
+    const ev = id === 'aut_desplaz' ? Object.fromEntries([...out.querySelectorAll('.card.form input')].map(i => [i.name, i.value.trim()])) : null;
+    const mapa = {}; PLANT_MARCAS.forEach(m => { const v = plantDato(m[1], e, dir, ev); if (v) mapa[m[0]] = v; });
+    const caja = $('#plant-prompt');
+    mostrarPrompt(caja, promptPlantilla(p, e, dir, ev), { asunto: p[1] + ' · ' + e.nombre, tipo: 'plantilla' });
+    const ta = caja.querySelector('.guardar-res textarea'); if (!ta) return;
+    const nota = document.createElement('p'); nota.className = 'nota'; ta.closest('label').after(nota);
+    const aplicar = () => {
+      const nuevo = ta.value.replace(/\[([A-Z_]+)\]/g, (m, k) => mapa[k] || m);
+      if (nuevo !== ta.value) { ta.value = nuevo; ta.dispatchEvent(new Event('input')); return; }
+      const q = [...new Set(ta.value.match(/\[[^\]\n]{1,60}\]/g) || [])];
+      nota.innerHTML = !ta.value.trim() ? '' : q.length ? '⚠ Quedan ' + q.length + ' dato(s) entre corchetes: ' + esc(q.slice(0, 6).join(', ')) + '. Complétalos en la ficha o al editar el documento.'
+        : '<span class="plant-ok">✓ Datos de la entidad incorporados. Documento completo, listo para revisar y guardar.</span>';
+    };
+    ta.addEventListener('input', aplicar); ta.addEventListener('paste', () => setTimeout(aplicar, 0));
+    caja.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+  if (!faltan.length && id !== 'aut_desplaz') $('#plant-preparar').click();
+  out.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
