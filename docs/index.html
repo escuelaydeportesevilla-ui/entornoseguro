@@ -1959,7 +1959,7 @@ $('#nuevo-club') && ($('#nuevo-club').onclick = () => {
 });
 function mostrarClaves(nombre, usuario, clave) {
   if (state.inst) usuario = usuario + '@' + state.inst;
-  const url = location.origin + location.pathname;
+  const url = location.origin + location.pathname + '?perfil=club';
   const f = $('#modal-form');
   f.innerHTML = `<h3>Claves de acceso · ${esc(nombre)}</h3>
     <p>Entrega estos datos al Delegado/a de Protección del club. Deberá entrar con el perfil <b>MI CLUB</b>.</p>
@@ -3379,7 +3379,7 @@ const GUIA = [
     ['¿Qué es EntornoSeguro y qué no es?', '<p>Es la herramienta del Delegado/a de Protección para organizar, documentar y hacer seguimiento del sistema de protección de menores en el deporte: entidades, requisitos del Protocolo Marco, riesgos, agentes, formación, alertas, informes e incidencias.</p><p><b>No valora a personas ni entidades</b> y no sustituye la decisión profesional. Los estados reflejan la implantación documental.</p>', ''],
     ['¿Por dónde empiezo?', '<ol><li><b>Entidades</b>: da de alta las entidades y marca si trabajan con menores.</li><li><b>Matriz</b>: revisa los requisitos A–K de cada una.</li><li><b>Agentes</b> y <b>Formación</b>: registra al personal y su formación.</li><li><b>Riesgos</b>: elabora el análisis de riesgos.</li><li><b>Alertas</b>: atiende lo que el sistema te avise cada día.</li></ol>', 'mun', 'entidades'],
     ['¿Por dónde empiezo con mi club?', '<ol><li><b>Mi club</b>: completa la ficha, el Delegado/a y la aceptación del Protocolo Marco.</li><li><b>Plantillas</b>: genera protocolo, código de conducta y designación.</li><li><b>Agentes</b>: registra a entrenadores, monitores y voluntarios.</li><li><b>Matriz</b>: marca lo que ya tienes y sube las evidencias.</li><li><b>Encuestas</b>: lanza la primera encuesta anónima.</li></ol>', 'club', 'entidades'],
-    ['¿Cómo entro y cómo cambio mi contraseña?', '<p>Elige el perfil (<b>ADMINISTRADOR</b> o <b>MI CLUB</b>) y escribe usuario y contraseña. Si tu ayuntamiento tiene código, entra como <b>usuario@código</b>.</p><p>La primera vez se pide cambiar la contraseña temporal. Después, en <b>Cambiar contraseña</b>, abajo del menú. Tras 5 intentos fallidos el acceso se bloquea 15 minutos.</p>', ''],
+    ['¿Cómo entro y cómo cambio mi contraseña?', '<p>Elige el perfil y escribe usuario y contraseña:</p><ul><li><b>AYUNTAMIENTO / EQUIPO</b>: administración, delegado/a municipal, técnicos y entidades con usuario propio del ayuntamiento.</li><li><b>MI CLUB</b>: clubes y asociaciones con espacio propio (los dados de alta en <b>Mis clubes</b>).</li></ul><p>Si tu ayuntamiento tiene código, entra como <b>usuario@código</b>. Si te equivocas de perfil, la app te indica cuál es el tuyo. Enlace directo para clubes: <b>entornoseguro.escuelaydeporte.com/?perfil=club</b>.</p><p>La primera vez se pide cambiar la contraseña temporal. Después, en <b>Cambiar contraseña</b>, abajo del menú. Tras 5 intentos fallidos el acceso se bloquea 15 minutos.</p>', ''],
     ['¿Puedo agrandar el texto?', '<p>Sí. Usa los botones <b>A · A+ · A++</b> abajo del menú (o en la pantalla de acceso). La app recuerda tu elección.</p>', '']
   ]],
   ['🤝', 'Entidades y coordinación con clubes', [
@@ -3450,6 +3450,7 @@ const GUIA = [
     ['¿Qué no debo escribir nunca en la IA?', '<p>Nombres, DNI, teléfonos ni ningún dato que identifique a menores o a personas de un caso. La app enmascara DNI, teléfonos y correos, pero la responsabilidad es de quien escribe.</p>', 'ia'],
     ['¿Dónde encuentro lo que he generado?', '<p>En <b>Documentos</b>: búscalo por palabras o tipo, edítalo y descárgalo en Word, PDF o texto.</p>', 'leer', 'documentos'],
     ['¿Cómo consigo que las plantillas salgan completas, sin huecos?', '<ol><li>Completa la <b>ficha de la entidad</b> (Entidades → Editar): identificación, actividad, gobierno, protección, canal, imagen y datos, y procedimiento.</li><li>Completa una vez el <b>📇 Directorio de recursos locales</b>, arriba en Plantillas: Servicios Sociales, Policía Local, Fiscalía de Menores, centro de salud y Delegado/a municipal.</li><li>Al pulsar una plantilla, la app comprueba la ficha. Si falta algo, lo lista y te lleva al campo exacto con <b>Completar la ficha</b> o <b>Completar el directorio</b>.</li><li>Prepara el prompt y pega la respuesta de Claude: la app sustituye sola los nombres, teléfonos y correos.</li></ol><p><b>Privacidad:</b> los datos de personas y contactos nunca se envían a la IA. Viajan como marcadores (por ejemplo, [DELEGADO_NOMBRE]) y se completan en tu navegador. Solo quedan para rellenar a mano las firmas y los formularios de cada menor o de cada caso.</p>', 'ia', 'plantillas'],
+    ['¿Qué son los «Primeros pasos» y el «Siguiente paso» del panel?', '<p>Al entrar, el panel del club muestra <b>5 primeros pasos</b>: ficha del club, Delegado/a y Protocolo Marco, documentos básicos (protocolo, código y cartel), agentes deportivos y primera encuesta. Cada paso tiene su botón y se marca solo cuando está hecho.</p><p>Completados los cinco, aparece el <b>Siguiente paso recomendado</b>: primero las revisiones vencidas y después el primer requisito pendiente de la Matriz, con acceso directo a la plantilla o a la pantalla donde se resuelve.</p>', 'club', 'panel'],
     ['¿Cómo hago un cartel visual con ChatGPT?', '<ol><li>En <b>Plantillas</b>, elige la entidad y pulsa <b>Cartel del canal de comunicación</b>.</li><li>Abajo aparece <b>🎨 Cartel visual con ChatGPT</b>: elige público (adolescentes y familias, o niños y niñas de 6 a 11 años) y activa o no la casilla <b>Incluir nombre y contacto del Delegado/a</b> (por defecto, desactivada: huecos en blanco).</li><li>Pulsa <b>Generar prompt</b> y luego <b>Abrir en ChatGPT</b> (o cópialo).</li><li>Pega el logotipo real y el QR en los recuadros blancos (Canva, Word o PowerPoint).</li><li><b>Antes de imprimir, comprueba cifra a cifra cada teléfono y correo.</b> Los generadores de imagen se equivocan con números y letras.</li></ol><p>El prompt nunca incluye datos internos de la entidad (número de menores, ratios, pernoctas, CIF). Con la casilla activada, solo lleva el nombre y el contacto del Delegado/a y del canal, que van a figurar en un cartel público.</p>', 'ia', 'plantillas'],
     ['¿Qué hay en Plantillas, Contenidos y Biblioteca?', '<ul><li><b>Plantillas</b>: protocolo, código de conducta, designación, carteles y autorizaciones con los datos de la entidad.</li><li><b>Contenidos RRSS</b>: publicaciones para familias y redes.</li><li><b>Biblioteca</b>: normativa oficial y documentos propios por categorías.</li></ul>', 'ia', 'plantillas']
   ]],
@@ -3463,14 +3464,26 @@ const GUIA = [
   ['⚙️', 'Administración', [
     ['¿Cómo creo usuarios y qué rol les doy?', '<p><b>Usuarios → + Nuevo usuario</b>. Roles: <b>Delegado/a</b> (todo menos administración), <b>Técnico/a</b> (lectura y escritura), <b>Entidad</b> (solo su entidad), <b>Solo lectura</b>. La contraseña temporal se muestra una vez.</p>', 'admin', 'usuarios'],
     ['¿Dónde están el contrato de encargo y la ficha del DPD?', '<p>En <b>Documentación</b>: guarda una vez los datos del prestador y descarga los modelos en PDF o Word.</p>', 'admin', 'documentacion']
+  ]],
+  ['💼', 'Modelo comercial y versiones (solo versión maestra)', [
+    ['¿Qué productos ofrece EntornoSeguro?', '<p>Tres productos sobre la misma aplicación. Lo que cambia es quién paga y cuántos clubes completos incluye.</p><table><thead><tr><th>Producto</th><th>Paga</th><th>Incluye</th></tr></thead><tbody><tr><td><b>1. Ayuntamiento Base</b></td><td>Ayuntamiento</td><td>Función municipal completa: actividades propias, incidencias, coordinación y verificación. Entidades ilimitadas en <b>modo A</b> (usuario «Entidad»: declaración, matriz, requerimientos). <b>Sin clubes con espacio propio</b> (max_clubes = 0).</td></tr><tr><td><b>2. Ayuntamiento + Clubes</b></td><td>Ayuntamiento</td><td>Lo anterior más un <b>paquete de N clubes completos</b> (5, 10, 20…). Cada club adicional, aparte. Precio por club con descuento por volumen.</td></tr><tr><td><b>3. SOLO CLUBES</b></td><td>El club</td><td>Un club completo con cuota anual. Para clubes sin ayuntamiento cliente o de un ayuntamiento Base que quieren la versión completa.</td></tr></tbody></table><p><b>Regla:</b> se cobra por <b>club completo</b>, lo pague el ayuntamiento o el club. Nunca se recortan funciones de protección a un club completo.</p>', 'maestro', 'clubes'],
+    ['¿Por dónde entra cada usuario?', '<table><thead><tr><th>Perfil en la portada</th><th>Quién entra</th><th>Usuario</th></tr></thead><tbody><tr><td><b>AYUNTAMIENTO / EQUIPO</b></td><td>Administración, delegado/a municipal, técnicos, solo lectura y entidades en modo A</td><td><code>usuario</code> en la maestra · <code>usuario@código</code> en un ayuntamiento</td></tr><tr><td><b>MI CLUB</b></td><td>Clubes con espacio propio (dados de alta en Mis clubes)</td><td><code>club</code> si es SOLO CLUBES · <code>club@código</code> si es de un ayuntamiento</td></tr></tbody></table><p>Enlace directo para clubes: <b>entornoseguro.escuelaydeporte.com/?perfil=club</b> (va incluido en las claves que genera Mis clubes). Si alguien elige el perfil equivocado con su contraseña correcta, la app le indica cuál es el suyo.</p>', 'maestro'],
+    ['¿Qué diferencia a un club de un ayuntamiento de uno SOLO CLUBES?', '<p>Técnicamente es el <b>mismo perfil</b> con las mismas funciones. La diferencia es contractual y de supervisión. Ejemplo: el club «Eslora».</p><table><thead><tr><th></th><th>Club de un ayuntamiento (eslora@sanlucar)</th><th>Club SOLO CLUBES (eslora)</th></tr></thead><tbody><tr><td>Hoja de datos</td><td>Instalación del ayuntamiento</td><td>Maestra (Escuela&amp;Deporte)</td></tr><tr><td>Supervisa</td><td>El ayuntamiento: resumen, informe y copia, todo registrado</td><td>Solo Escuela&amp;Deporte como prestador, registrado</td></tr><tr><td>Directorio de recursos</td><td>Hereda el del ayuntamiento</td><td>Lo rellena el club</td></tr><tr><td>Paga</td><td>El ayuntamiento (dentro de su paquete)</td><td>El club</td></tr><tr><td>Contrato de encargo</td><td>Dentro del contrato del ayuntamiento</td><td>Club ↔ Escuela&amp;Deporte</td></tr><tr><td>Soporte</td><td>Primero, el delegado/a municipal</td><td>Escuela&amp;Deporte</td></tr></tbody></table>', 'maestro', 'clubes'],
+    ['¿Por qué no hay clubes de «solo visualización»?', '<ul><li>El club no podría cumplir sus obligaciones (protocolo, canal, riesgos, Delegado/a): son suyas, no del ayuntamiento.</li><li>Ese modo ya existe: el usuario «Entidad» (modo A) rinde cuentas y ve lo suyo.</li><li>Una herramienta que aparenta cumplimiento sin permitirlo es un riesgo reputacional.</li></ul><p>Por eso el límite es de <b>número de clubes completos</b>, no de funciones.</p>', 'maestro'],
+    ['¿Cómo fijo el paquete de clubes de un ayuntamiento?', '<ol><li>Abre la <b>hoja de cálculo del ayuntamiento</b> (está en tu Drive; el cliente no tiene acceso a la hoja).</li><li>Pestaña <b>Config_Municipio</b> → fila <b>max_clubes</b> (aparece sola al actualizar a Ampliacion v1.4).</li><li>Escribe el valor: <b>0</b> = Ayuntamiento Base · <b>N</b> = paquete de N clubes · <b>vacío</b> = sin límite (solo demos o acuerdos especiales).</li></ol><ul><li>Cuentan todos los clubes dados de alta, también los desactivados. Dar de <b>baja</b> un club libera la plaza.</li><li>Al llegar al límite, <b>+ Nuevo club</b> se bloquea con el aviso «amplía el paquete con Escuela&amp;Deporte».</li><li>En la maestra no hay límite: es donde se alojan los clubes SOLO CLUBES.</li><li>En <b>Mis clubes</b> el ayuntamiento ve «X de N clubes de tu paquete».</li></ul>', 'maestro', 'instancias'],
+    ['¿Cómo doy de alta un ayuntamiento nuevo?', '<ol><li>Hoja de cálculo nueva → Extensiones → Apps Script.</li><li>Pega <b>Código.gs</b>, <b>Ampliacion.gs</b> y el HTML <b>Index</b>.</li><li>Ejecuta <b>setupSistema</b> y apunta la contraseña temporal de admin.</li><li>Config_Municipio: municipio, organismo, delegado_municipal, email_alertas, <b>tipo_instancia = CLON</b> y <b>max_clubes</b> según el producto contratado.</li><li>Implementar → Nueva implementación → Aplicación web (Yo · Cualquier usuario) → copia la URL /exec.</li><li>En la maestra: <b>Ayuntamientos → + Nuevo</b> (código, nombre y URL).</li><li>Entrega <b>admin@código</b> y la contraseña temporal. Contrato de encargo: Documentación.</li></ol><p>Mejora prevista: botón «Crear ayuntamiento» que automatice los pasos 1 a 4 y 6.</p>', 'maestro', 'instancias'],
+    ['¿Cómo doy de alta un club SOLO CLUBES?', '<ol><li>En la maestra: <b>Mis clubes → + Nuevo club</b>. Se crea su hoja en la carpeta «EntornoSeguro · Clubes».</li><li>Copia las claves: incluyen el enlace directo <b>?perfil=club</b>. La contraseña se muestra una sola vez.</li><li>En <b>Gestionar</b>, descarga el <b>contrato de encargo</b> club ↔ Escuela&amp;Deporte y la ficha DPD si va a usar Incidencias (en clubes sin DPD, acuerdo de su junta directiva).</li><li>Al entrar, el club ve los <b>Primeros pasos</b> y después el <b>Siguiente paso recomendado</b>.</li></ol>', 'maestro', 'clubes'],
+    ['¿Qué queda pendiente de decidir?', '<ul><li>Precios: tramos de SOLO CLUBES por número de menores y tamaño de los paquetes municipales.</li><li>Que el producto 2 quepa en un <b>contrato menor de servicios</b>.</li><li>Cómo justifica el ayuntamiento pagar la herramienta para clubes privados (apoyo al cumplimiento del Protocolo Marco en el deporte local).</li><li>Nombre comercial de SOLO CLUBES y criterio del <b>sello de implantación</b>.</li><li>Acuerdos con <b>federaciones</b> como multiplicador.</li></ul>', 'maestro']
   ]]
 ];
 
+const esMaestra = () => !state.club && can('admin') && !state.inst && String((state.cfg || {}).tipo || '').toUpperCase() === 'MAESTRO';
 function guiaVisible(ambito) {
   if (!ambito) return true;
   if (ambito === 'mun') return !state.club;
   if (ambito === 'club') return !!state.club;
   if (ambito === 'admin') return !state.club && can('admin');
+  if (ambito === 'maestro') return esMaestra();
   return can(ambito);
 }
 
@@ -3497,7 +3510,7 @@ function pintarGuia() {
 
 function htmlGuia() {
   const cuerpo = GUIA.map(([ico, tema, preguntas]) => {
-    const items = preguntas.filter(p => guiaVisible(p[2]));
+    const items = preguntas.filter(p => p[2] !== 'maestro' && guiaVisible(p[2]));
     if (!items.length) return '';
     return `<h2>${esc(tema)}</h2>` + items.map(([pr, resp]) => `<h3>${esc(pr)}</h3>${resp}`).join('');
   }).join('');
@@ -3605,6 +3618,10 @@ formEntidad = async function (e, despues, resaltar) {
   dlg.onclose = async () => {
     if (dlg.returnValue !== 'ok') return;
     const d = Object.fromEntries(new FormData(f)); d.id = e.id;
+    const av = avisosFicha(d);
+    if (av.length && !confirm('Revisa estos datos antes de guardar:\n\n• ' + av.map(a => a[1]).join('\n• ') + '\n\n¿Guardar igualmente?')) {
+      return formEntidad(Object.assign({}, e, d), despues, av.map(a => a[0]));
+    }
     await run(() => API.call('guardarEntidad', d));
     toast('Ficha guardada');
     state.entidades = await run(() => API.call('listarEntidades'));
@@ -3633,7 +3650,12 @@ async function pintarDirectorio() {
     $('#form-dir').onsubmit = async ev => {
       ev.preventDefault();
       if (!puede) return;
-      state.dir = await run(() => API.call('guardarDirectorio', Object.fromEntries(new FormData(ev.target))));
+      const datosDir = Object.fromEntries(new FormData(ev.target));
+      const avd = avisosDirectorio(datosDir);
+      if (avd.length && !confirm('Revisa estos datos antes de guardar:\n\n• ' + avd.map(a => a[1]).join('\n• ') + '\n\n¿Guardar igualmente?')) {
+        const el = ev.target[avd[0][0]]; if (el) el.focus(); return;
+      }
+      state.dir = await run(() => API.call('guardarDirectorio', datosDir));
       toast('Directorio guardado'); pintarDirectorio();
       const act = $('.plantilla.activa'); if (act) prepararPlantilla(act.dataset.plant, act);
     };
@@ -3860,6 +3882,199 @@ function pintarCartelVisual(e) {
     const entId = $('#plant-entidad') && $('#plant-entidad').value;
     const e = (state.entidades || []).find(x => x.id === entId) || (state.club ? (state.entidades || [])[0] : null);
     pintarCartelVisual(e);
+  };
+})();
+
+// ---------- CLUBES · ENTREGA 1: acceso, primeros pasos, siguiente paso y validación de datos ----------
+// Validación de CIF y teléfonos (avisos, nunca bloquea el guardado).
+function cifInfo(v) {
+  const c = String(v || '').toUpperCase().replace(/[\s.\-]/g, '');
+  if (!c) return null;
+  if (/^[0-9XYZ]\d{7}[A-Z]$/.test(c)) return { ok: true, letra: c[0], persona: true };
+  if (!/^[ABCDEFGHJNPQRSUVW]\d{7}[0-9A-J]$/.test(c)) return { ok: false };
+  const d = c.slice(1, 8).split('').map(Number);
+  let suma = d[1] + d[3] + d[5];
+  [0, 2, 4, 6].forEach(i => { const x = d[i] * 2; suma += Math.floor(x / 10) + (x % 10); });
+  const ctrl = (10 - (suma % 10)) % 10, ult = c[8], letraCtrl = 'JABCDEFGHI'[ctrl];
+  const ok = 'NPQRSW'.includes(c[0]) ? ult === letraCtrl : 'ABEH'.includes(c[0]) ? ult === String(ctrl) : (ult === String(ctrl) || ult === letraCtrl);
+  return { ok, letra: c[0] };
+}
+const TEL_CORTOS = ['112', '091', '092', '062', '061', '080', '085', '016', '116111', '116000'];
+function telValido(v) {
+  const t = String(v || '').replace(/(\d)[\s.\-]+(?=\d)/g, '$1').replace(/(\+|00)34(?=\d{9}\b)/g, '');
+  return (t.match(/\d+/g) || []).some(n => (n.length === 9 && /^[6789]/.test(n)) || TEL_CORTOS.includes(n));
+}
+function avisosFicha(d) {
+  const av = [], ci = cifInfo(d.cif), tipo = String(d.tipo || '');
+  if (ci && !ci.ok) av.push(['cif', 'El CIF «' + d.cif + '» no tiene un formato válido (letra + 7 cifras + control).']);
+  else if (ci && ci.persona) av.push(['cif', 'El CIF «' + d.cif + '» parece un DNI o NIE de una persona, no el de la entidad.']);
+  else if (ci) {
+    const esperada = { Club: 'G', 'Asociación': 'G', 'Escuela deportiva': 'G', Ayuntamiento: 'P' }[tipo];
+    if (esperada && ci.letra !== esperada) av.push(['cif', 'El CIF empieza por «' + ci.letra + '», pero una entidad de tipo «' + tipo + '» suele empezar por «' + esperada + '»' + (ci.letra === 'P' ? ' (la P es de ayuntamientos y entidades locales)' : '') + '.']);
+  }
+  [['delegado_telefono', 'Teléfono del Delegado/a'], ['suplente_telefono', 'Teléfono del suplente'], ['canal_telefono', 'Teléfono del canal'],
+    ['direccion_telefono', 'Teléfono de la dirección o coordinación']].forEach(([k, l]) => {
+    if (String(d[k] || '').trim() && !telValido(d[k])) av.push([k, l + ': «' + d[k] + '» no parece un teléfono completo.']);
+  });
+  return av;
+}
+function avisosDirectorio(d) {
+  const av = [];
+  [['servicios_sociales', 'Servicios Sociales'], ['policia_local', 'Policía Local'], ['fiscalia_menores', 'Fiscalía de Menores'], ['centro_salud', 'Centro de salud']].forEach(([k, l]) => {
+    if (String(d[k] || '').trim() && !telValido(d[k])) av.push([k, l + ': «' + d[k] + '» no contiene un teléfono completo.']);
+  });
+  const dm = String(d.delegado_municipal || '').trim();
+  if (dm && !telValido(dm) && !/@/.test(dm)) av.push(['delegado_municipal', 'Delegado/a municipal: indica al menos un teléfono o un correo.']);
+  return av;
+}
+
+// Pantalla de acceso: perfiles con nombres claros y enlace directo ?perfil=club.
+(function () {
+  const pa = document.querySelector('.perfil[data-perfil="admin"]'), pc = document.querySelector('.perfil[data-perfil="club"]');
+  if (pa) { pa.querySelector('b').textContent = 'AYUNTAMIENTO / EQUIPO'; pa.querySelector('small').textContent = 'Ayuntamiento, delegado/a, técnicos y entidades con usuario del ayuntamiento'; }
+  if (pc) pc.querySelector('small').textContent = 'Clubes y asociaciones con espacio propio';
+  const lema = document.querySelector('#login .login-card > p'); if (lema) lema.textContent = 'Protección de menores en el deporte';
+  const base = elegirPerfil;
+  elegirPerfil = function (p) {
+    base(p);
+    $('#login-titulo').textContent = p === 'club' ? 'Acceso MI CLUB' : 'Acceso AYUNTAMIENTO / EQUIPO';
+    let h = $('#login-ayuda');
+    if (!h) { h = document.createElement('p'); h.id = 'login-ayuda'; h.className = 'nota'; h.style.margin = '0 0 8px'; $('#login-titulo').after(h); }
+    h.textContent = p === 'club' ? 'Usuario de tu club. Si tu club está dado de alta por un ayuntamiento: usuario@código.'
+      : 'Tu usuario personal. Si tu ayuntamiento tiene código: usuario@código.';
+  };
+  try {
+    const q = new URLSearchParams(location.search).get('perfil');
+    if ((q === 'club' || q === 'admin') && !ssGet('es_token')) elegirPerfil(q);
+  } catch (e) { /* sin parámetros */ }
+})();
+
+// Panel del club: primeros pasos (asistente de bienvenida) y siguiente paso recomendado.
+const PASO_ORDEN = ['A1', 'A2', 'B1', 'B2', 'G1', 'G2', 'D1', 'D2', 'C1', 'C2', 'I1', 'I2', 'H1', 'H2', 'E1', 'E2', 'K1', 'K2', 'J1', 'F1', 'F2'];
+const PASO_VISTA = { B2: 'formacion', J1: 'formacion', C1: 'riesgos', C2: 'riesgos', K1: 'agentes', K2: 'agentes', E1: 'autorizaciones', F1: 'autorizaciones' };
+const PASO_PLANT = { G1: 'protocolo', D1: 'codigo', I2: 'canal', I1: 'canal', B1: 'designacion', E1: 'aut_imagen', F1: 'aut_desplaz', H1: 'actuacion' };
+const hayVista = v => !!document.querySelector('nav button[data-view="' + v + '"]');
+function irPlantilla(id) {
+  show('plantillas');
+  let n = 0;
+  const t = setInterval(() => {
+    const b = document.querySelector('.plantilla[data-plant="' + id + '"]');
+    if (b || ++n > 40) { clearInterval(t); if (b) prepararPlantilla(id, b); }
+  }, 150);
+}
+
+async function pintarPrimerosPasos() {
+  const v = $('#view-panel'); if (!v || !state.club) return;
+  let card = $('#pasos-card');
+  if (!card) {
+    card = document.createElement('div'); card.id = 'pasos-card'; card.className = 'card';
+    v.querySelector('header').after(card);
+    if (!$('#pasos-estilo')) {
+      const st = document.createElement('style'); st.id = 'pasos-estilo';
+      st.textContent = '#pasos-card{border:2px solid var(--brand-2)}.pasos{list-style:none;margin:10px 0 0;padding:0}' +
+        '.pasos li{display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line);flex-wrap:wrap}' +
+        '.pasos li:first-child{border-top:0}.pasos .n{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:var(--bg);flex:none}' +
+        '.pasos li.hecho .n{background:var(--ok);color:#fff}.pasos li.hecho .t{color:var(--muted)}.pasos .t{flex:1;min-width:200px}' +
+        '.pasos li.actual{background:color-mix(in srgb,var(--brand-2) 8%,transparent);border-radius:10px;padding:10px}' +
+        '.siguiente{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.siguiente .t{flex:1;min-width:220px}' +
+        '.pasos-barra{height:8px;border-radius:4px;background:var(--bg);overflow:hidden;margin-top:6px}.pasos-barra i{display:block;height:100%;background:var(--ok)}';
+      document.head.appendChild(st);
+    }
+  }
+  card.innerHTML = '<p class="empty">Preparando tus próximos pasos…</p>';
+  const ok = p => p.then(x => x, () => null);
+  const ents = state.entidades.length ? state.entidades : (await ok(API.call('listarEntidades'))) || [];
+  if (ents.length) state.entidades = ents;
+  const e = ents[0];
+  if (!e) { card.innerHTML = '<h3>👋 Primeros pasos</h3><p>Empieza creando la ficha de tu entidad.</p><button class="btn" type="button" id="paso-crear">Crear la ficha</button>'; $('#paso-crear').onclick = () => formEntidad({}, () => pintarPrimerosPasos()); return; }
+  const [mat, ag, enc] = await Promise.all([ok(API.call('matriz', { entidad_id: e.id })), ok(API.call('listarAgentes', {})), ok(API.call('listarEncuestas', {}))]);
+  const est = {}; (mat || []).forEach(r => { est[r.codigo] = r; });
+  const cumple = c => est[c] && ['cumple', 'no_aplica'].includes(est[c].estado);
+  const faltan = campos => campos.filter(k => !String(e[k] ?? '').trim() || (k === 'acepta_protocolo_marco' && e[k] !== 'SI'));
+  const recargar = () => { state.entidades = []; pintarPrimerosPasos(); };
+  const f1 = faltan(['nombre', 'cif', 'municipio', 'provincia', 'modalidad', 'edades']);
+  const f2 = faltan(['delegado_nombre', 'delegado_telefono', 'delegado_email', 'acepta_protocolo_marco']);
+  const docs = ['G1', 'D1', 'I1'].filter(c => !cumple(c));
+  const pasos = [
+    ['Completa la ficha del club', 'Identificación y actividad: con ella salen completos los documentos.', !f1.length, 'Abrir la ficha', () => formEntidad(e, recargar, f1)],
+    ['Delegado/a de Protección y Protocolo Marco', 'Nombre, teléfono y correo del Delegado/a, y aceptación del Protocolo Marco (Anexo I).', !f2.length, 'Completar', () => formEntidad(e, recargar, f2)],
+    ['Documentos básicos', 'Protocolo, código de conducta y cartel del canal. Genéralos en Plantillas y márcalos después en la Matriz (G1, D1, I1).', !docs.length,
+      can('ia') ? 'Ir a Plantillas' : 'Ir a la Matriz', () => can('ia') ? irPlantilla({ G1: 'protocolo', D1: 'codigo', I1: 'canal' }[docs[0]] || 'protocolo') : show('matriz')],
+    ['Agentes deportivos', 'Registra a entrenadores, monitores y voluntariado: certificado negativo, código y formación.', !!(ag && ag.length), 'Ir a Agentes', () => show('agentes')],
+    ['Primera encuesta a menores', 'Encuesta anónima de percepción de seguridad, con enlace y cartel QR.', !!(enc && enc.length), 'Ir a Encuestas', () => show('encuestas')]
+  ].filter(p => p[4] && (p[3] !== 'Ir a Agentes' || hayVista('agentes')) && (p[3] !== 'Ir a Encuestas' || hayVista('encuestas')));
+  const hechos = pasos.filter(p => p[2]).length, actual = pasos.findIndex(p => !p[2]);
+  let html = '';
+  if (actual >= 0) {
+    html = `<h3>👋 Primeros pasos · ${hechos} de ${pasos.length}</h3><div class="pasos-barra"><i style="width:${Math.round(hechos * 100 / pasos.length)}%"></i></div><ol class="pasos">` +
+      pasos.map((p, i) => `<li class="${p[2] ? 'hecho' : ''}${i === actual ? ' actual' : ''}"><span class="n">${p[2] ? '✓' : i + 1}</span><span class="t"><b>${esc(p[0])}</b><br><small>${esc(p[1])}</small></span>` +
+        (p[2] ? '' : `<button class="btn${i === actual ? '' : ' ghost'}" type="button" data-paso="${i}">${esc(p[3])}</button>`) + '</li>').join('') + '</ol>';
+  } else {
+    const hoy = hoyISO();
+    const vencido = PASO_ORDEN.map(c => est[c]).find(r => r && r.proxima_revision && String(r.proxima_revision).slice(0, 10) < hoy);
+    const pendiente = vencido || PASO_ORDEN.map(c => est[c]).find(r => r && !['cumple', 'no_aplica'].includes(r.estado));
+    if (pendiente) {
+      const c = pendiente.codigo, vista = PASO_VISTA[c], plant = can('ia') && PASO_PLANT[c];
+      html = `<h3>👉 Siguiente paso recomendado</h3><div class="siguiente"><span class="t"><b>${esc(c)} · ${esc(pendiente.requisito)}</b><br><small>${vencido ? 'Revisión vencida el ' + esc(String(pendiente.proxima_revision).slice(0, 10)) + '. ' : ''}${esc(pendiente.accion_pendiente || pendiente.referencia || '')}</small></span>` +
+        (plant ? `<button class="btn" type="button" id="sig-plant">Generar en Plantillas</button>` : '') +
+        (vista && hayVista(vista) ? `<button class="btn${plant ? ' ghost' : ''}" type="button" id="sig-vista">Ir a ${esc($('nav button[data-view="' + vista + '"]').textContent.trim())}</button>` : '') +
+        `<button class="btn ghost" type="button" id="sig-matriz">Ver en la Matriz</button></div>`;
+    } else {
+      const prox = PASO_ORDEN.map(c => est[c] && est[c].proxima_revision).filter(Boolean).sort()[0];
+      html = `<h3>✓ Todo al día</h3><p style="margin:0">Todos los requisitos están acreditados.${prox ? ' Próxima revisión: <b>' + esc(String(prox).slice(0, 10)) + '</b>.' : ''}</p>`;
+    }
+  }
+  card.innerHTML = html;
+  card.querySelectorAll('[data-paso]').forEach(b => b.onclick = () => pasos[+b.dataset.paso][4]());
+  const pend = actual < 0 && card.querySelector('#sig-matriz');
+  if (pend) {
+    const r = PASO_ORDEN.map(c => est[c]).find(x => x && ((x.proxima_revision && String(x.proxima_revision).slice(0, 10) < hoyISO()) || !['cumple', 'no_aplica'].includes(x.estado)));
+    $('#sig-matriz').onclick = () => show('matriz');
+    $('#sig-plant') && ($('#sig-plant').onclick = () => irPlantilla(PASO_PLANT[r.codigo]));
+    $('#sig-vista') && ($('#sig-vista').onclick = () => show(PASO_VISTA[r.codigo]));
+  }
+}
+(function () {
+  const base = loadPanel;
+  loadPanel = async function () { await base(); if (state.club) pintarPrimerosPasos(); };
+})();
+
+// ---------- MODELO COMERCIAL: documento (solo maestra) y paquete de clubes en «Mis clubes» ----------
+function htmlModeloComercial() {
+  const t = GUIA.find(g => /Modelo comercial/.test(g[1]));
+  const cuerpo = t ? t[2].map(([pr, resp]) => `<h2>${esc(pr)}</h2>${resp}`).join('') : '';
+  return plantillaInforme('Modelo comercial y versiones', 'EntornoSeguro · Documento interno de Escuela&Deporte', cuerpo, false,
+    'EntornoSeguro · Documento interno. No se entrega a clientes.');
+}
+(function () {
+  const base = pintarGuia;
+  pintarGuia = function () {
+    base();
+    const h = document.querySelector('#view-guia header');
+    let b = $('#guia-comercial');
+    if (esMaestra() && h && !b) {
+      b = document.createElement('button'); b.type = 'button'; b.id = 'guia-comercial'; b.className = 'btn ghost';
+      b.textContent = 'Modelo comercial (PDF)'; b.onclick = () => abrirInforme(htmlModeloComercial());
+      h.appendChild(b);
+    }
+  };
+})();
+(function () {
+  if (typeof loadClubes !== 'function') return;
+  const base = loadClubes;
+  loadClubes = async function () {
+    await base();
+    let p = null; try { p = await API.call('paqueteClubes'); } catch (e) { return; }
+    const v = $('#view-clubes'); if (!v || !p) return;
+    let n = $('#paquete-clubes');
+    if (!n) { n = document.createElement('p'); n.id = 'paquete-clubes'; v.querySelector('header').after(n); }
+    const btn = $('#nuevo-club'), lleno = p.max !== null && p.usados >= p.max;
+    if (btn) btn.disabled = lleno;
+    n.className = lleno ? 'plant-aviso' : 'nota';
+    n.innerHTML = p.maestra ? 'Versión maestra: clubes SOLO CLUBES sin límite · ' + p.usados + ' dados de alta.'
+      : p.max === null ? p.usados + ' clubes dados de alta.'
+      : p.max === 0 ? '<b>Tu contrato no incluye clubes con espacio propio.</b> Tus entidades pueden entrar con usuario «Entidad» (Usuarios). Para clubes completos, amplía el paquete con Escuela&amp;Deporte.'
+      : '<b>' + p.usados + ' de ' + p.max + '</b> clubes de tu paquete.' + (lleno ? ' Has llegado al máximo: da de baja uno o amplía el paquete con Escuela&amp;Deporte.' : '');
   };
 })();
 
