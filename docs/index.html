@@ -3450,6 +3450,7 @@ const GUIA = [
     ['¿Qué no debo escribir nunca en la IA?', '<p>Nombres, DNI, teléfonos ni ningún dato que identifique a menores o a personas de un caso. La app enmascara DNI, teléfonos y correos, pero la responsabilidad es de quien escribe.</p>', 'ia'],
     ['¿Dónde encuentro lo que he generado?', '<p>En <b>Documentos</b>: búscalo por palabras o tipo, edítalo y descárgalo en Word, PDF o texto.</p>', 'leer', 'documentos'],
     ['¿Cómo consigo que las plantillas salgan completas, sin huecos?', '<ol><li>Completa la <b>ficha de la entidad</b> (Entidades → Editar): identificación, actividad, gobierno, protección, canal, imagen y datos, y procedimiento.</li><li>Completa una vez el <b>📇 Directorio de recursos locales</b>, arriba en Plantillas: Servicios Sociales, Policía Local, Fiscalía de Menores, centro de salud y Delegado/a municipal.</li><li>Al pulsar una plantilla, la app comprueba la ficha. Si falta algo, lo lista y te lleva al campo exacto con <b>Completar la ficha</b> o <b>Completar el directorio</b>.</li><li>Prepara el prompt y pega la respuesta de Claude: la app sustituye sola los nombres, teléfonos y correos.</li></ol><p><b>Privacidad:</b> los datos de personas y contactos nunca se envían a la IA. Viajan como marcadores (por ejemplo, [DELEGADO_NOMBRE]) y se completan en tu navegador. Solo quedan para rellenar a mano las firmas y los formularios de cada menor o de cada caso.</p>', 'ia', 'plantillas'],
+    ['¿Qué pasa si cierro una alerta?', '<p>La alerta pasa a <b>Cerradas</b>, al final de la lista, y puedes <b>Reabrirla</b>. Cada día el recálculo comprueba el problema de fondo:</p><ul><li><b>🔕</b> Cerrada, pero el problema sigue (por ejemplo, agentes aún sin certificado). Sigue a la vista y quien supervisa lo ve.</li><li><b>✓</b> Resuelta: el problema ya no se da. Queda como historial 180 días.</li></ul><p>Cerrar una alerta no resuelve el requisito: la Matriz y el % de cumplimiento no cambian.</p>', '', 'alertas'],
     ['¿Hay una guía rápida para el club?', '<p>Sí: en <b>Guía de uso → Guía rápida del club (PDF)</b>. Una página con cómo entrar, los primeros pasos, la rutina de la temporada, qué hacer si ocurre algo y dónde pedir ayuda. Se puede imprimir o enviar a la junta directiva.</p>', 'club'],
     ['¿Qué son los «Primeros pasos» y el «Siguiente paso» del panel?', '<p>Al entrar, el panel del club muestra <b>5 primeros pasos</b>: ficha del club, Delegado/a y Protocolo Marco, documentos básicos (protocolo, código y cartel), agentes deportivos y primera encuesta. Cada paso tiene su botón y se marca solo cuando está hecho.</p><p>Completados los cinco, aparece el <b>Siguiente paso recomendado</b>: primero las revisiones vencidas y después el primer requisito pendiente de la Matriz, con acceso directo a la plantilla o a la pantalla donde se resuelve.</p>', 'club', 'panel'],
     ['¿Cómo hago un cartel visual con ChatGPT?', '<ol><li>En <b>Plantillas</b>, elige la entidad y pulsa <b>Cartel del canal de comunicación</b>.</li><li>Abajo aparece <b>🎨 Cartel visual con ChatGPT</b>: elige público (adolescentes y familias, o niños y niñas de 6 a 11 años) y activa o no la casilla <b>Incluir nombre y contacto del Delegado/a</b> (por defecto, desactivada: huecos en blanco).</li><li>Pulsa <b>Generar prompt</b> y luego <b>Abrir en ChatGPT</b> (o cópialo).</li><li>Pega el logotipo real y el QR en los recuadros blancos (Canva, Word o PowerPoint).</li><li><b>Antes de imprimir, comprueba cifra a cifra cada teléfono y correo.</b> Los generadores de imagen se equivocan con números y letras.</li></ol><p>El prompt nunca incluye datos internos de la entidad (número de menores, ratios, pernoctas, CIF). Con la casilla activada, solo lleva el nombre y el contacto del Delegado/a y del canal, que van a figurar en un cartel público.</p>', 'ia', 'plantillas'],
@@ -4239,6 +4240,54 @@ function marcarInactivas() {
   }
   const base = loadEntidades;
   loadEntidades = async function () { await base(); marcarInactivas(); };
+})();
+
+// ---------- Alertas cerradas visibles: 🔕 cerrada pero sigue el problema · ✓ resuelta · Reabrir ----------
+(function () {
+  if (!$('#alertas-cerr-estilo')) {
+    const st = document.createElement('style'); st.id = 'alertas-cerr-estilo';
+    st.textContent = 'tr.al-cerrada td{color:var(--muted)}tr.al-cerrada td .st{opacity:.6}.al-ico{font-size:1.05rem;margin-right:6px;cursor:help}' +
+      'tr.al-sep td{background:var(--bg);font-weight:700;color:var(--ink);font-size:.85rem}#leyenda-alertas{margin:10px 0 0}';
+    document.head.appendChild(st);
+  }
+  const base = loadAlertas;
+  loadAlertas = async function () {
+    await base();
+    let c = [];
+    try { c = await API.call('alertasCerradas'); } catch (e) { return; }
+    const body = $('#tabla-alertas') && $('#tabla-alertas').tBodies[0]; if (!body) return;
+    const orden = { alta: 0, media: 1, baja: 2 };
+    c.sort((x, y) => (x.estado === y.estado ? 0 : x.estado === 'cerrada' ? -1 : 1) || orden[x.prioridad] - orden[y.prioridad]);
+    if (c.length) {
+      body.insertAdjacentHTML('beforeend', `<tr class="al-sep"><td colspan="5">Cerradas (${c.length})</td></tr>` + c.map(x => {
+        const sigue = x.estado === 'cerrada';
+        const ico = sigue ? '<span class="al-ico" title="Cerrada, pero el problema sigue sin resolver">🔕</span>' : '<span class="al-ico" title="Resuelta">✓</span>';
+        const cierre = x.cerrada_fecha ? `<br><small>Cerrada el ${esc(String(x.cerrada_fecha).slice(0, 10))}${x.cerrada_por ? ' por ' + esc(x.cerrada_por) : ''}${sigue ? ' · el problema sigue' : ' · resuelta'}</small>` : '';
+        return `<tr class="al-cerrada"><td>${ico}<span class="st ${x.prioridad === 'alta' ? 'bad' : x.prioridad === 'media' ? 'warn' : 'muted'}">${esc(x.prioridad)}</span></td>
+          <td>${esc(x.tipo)}</td><td>${esc(x.mensaje)}${cierre}</td><td>${esc(x.fecha_limite) || '—'}</td>
+          <td>${sigue && can('escribir') ? `<button class="link" data-reabrir="${esc(x.id)}">Reabrir</button>` : ''}</td></tr>`;
+      }).join(''));
+    }
+    const vacia = body.querySelector('td.empty'); if (vacia && c.length) vacia.textContent = 'Sin alertas abiertas.';
+    $$('[data-reabrir]').forEach(b => b.onclick = async () => { await run(() => API.call('reabrirAlerta', { id: b.dataset.reabrir })); toast('Alerta reabierta'); loadAlertas(); });
+    let ley = $('#leyenda-alertas');
+    if (!ley) { ley = document.createElement('p'); ley.id = 'leyenda-alertas'; ley.className = 'nota'; $('#tabla-alertas').closest('.card').appendChild(ley); }
+    ley.textContent = '🔕 Cerrada, pero el problema sigue: el recálculo diario lo comprueba. ✓ Resuelta: ya no se da. Cerrar una alerta no resuelve el requisito; la Matriz sigue indicándolo.';
+  };
+})();
+(function () {
+  if (typeof loadClubes !== 'function') return;
+  const base = loadClubes;
+  loadClubes = async function () {
+    await base();
+    $$('#tabla-clubes [data-club]').forEach(b => {
+      const c = (state.clubes || []).find(x => x.id === b.dataset.club);
+      const n = c && c.cerradas_sin_resolver;
+      if (!n) return;
+      const td = b.closest('tr').cells[4];
+      if (td && !td.querySelector('.al-ico')) td.insertAdjacentHTML('beforeend', ` <span class="al-ico" title="${n} alerta(s) cerrada(s) sin resolver">🔕 ${n}</span>`);
+    });
+  };
 })();
 
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
