@@ -4154,6 +4154,39 @@ function htmlGuiaRapidaClub() {
   };
 })();
 
+// ---------- Ver contraseña: botón «ojo» en todos los campos de contraseña ----------
+(function () {
+  if (!$('#ojo-estilo')) {
+    const st = document.createElement('style'); st.id = 'ojo-estilo';
+    st.textContent = '.pass-wrap{position:relative;display:block}.pass-wrap input{width:100%;padding-right:52px;box-sizing:border-box}' +
+      '.pass-ojo{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:44px;height:40px;border:0;background:transparent;cursor:pointer;' +
+      'font-size:1.25rem;line-height:1;border-radius:8px;color:var(--muted)}.pass-ojo:hover,.pass-ojo:focus-visible{background:var(--bg);color:var(--ink)}';
+    document.head.appendChild(st);
+  }
+  const OJO = '👁', OCULTO = '🙈';
+  function ponerOjo(inp) {
+    if (inp.dataset.ojo) return;
+    inp.dataset.ojo = '1';
+    const w = document.createElement('span'); w.className = 'pass-wrap';
+    inp.parentNode.insertBefore(w, inp); w.appendChild(inp);
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'pass-ojo';
+    b.textContent = OJO; b.setAttribute('aria-label', 'Mostrar contraseña'); b.title = 'Mostrar contraseña';
+    b.onclick = () => {
+      const ver = inp.type === 'password';
+      inp.type = ver ? 'text' : 'password';
+      b.textContent = ver ? OCULTO : OJO;
+      b.setAttribute('aria-label', ver ? 'Ocultar contraseña' : 'Mostrar contraseña'); b.title = b.getAttribute('aria-label');
+      inp.focus();
+    };
+    w.appendChild(b);
+    if (inp.form) inp.form.addEventListener('submit', () => { inp.type = 'password'; b.textContent = OJO; });
+  }
+  const revisar = raiz => (raiz.querySelectorAll ? raiz.querySelectorAll('input[type="password"]') : []).forEach(ponerOjo);
+  revisar(document);
+  new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => { if (n.nodeType !== 1) return; if (n.matches && n.matches('input[type="password"]')) ponerOjo(n); else revisar(n); })))
+    .observe(document.body, { childList: true, subtree: true });
+})();
+
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
