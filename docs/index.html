@@ -4207,6 +4207,39 @@ function htmlGuiaRapidaClub() {
   };
 })();
 
+// ---------- Entidades inactivas: ocultas por defecto, al final, en gris y con etiqueta ----------
+let verInactivas = false;
+function marcarInactivas() {
+  const tb = $('#tabla-entidades'); if (!tb || !tb.tBodies[0]) return;
+  const body = tb.tBodies[0];
+  const inact = (state.entidades || []).filter(e => e.activo === 'NO');
+  let n = 0;
+  [...body.rows].forEach(tr => {
+    const b = tr.querySelector('[data-edit]'); if (!b) return;
+    const e = state.entidades.find(x => x.id === b.dataset.edit);
+    if (!e || e.activo !== 'NO') return;
+    n++;
+    tr.classList.add('ent-inactiva'); tr.hidden = !verInactivas;
+    const cel = tr.cells[0];
+    if (cel && !cel.querySelector('.chip-inactiva')) cel.querySelector('b').insertAdjacentHTML('afterend', ' <span class="chip chip-inactiva">Inactiva</span>');
+    body.appendChild(tr);
+  });
+  let pie = $('#pie-inactivas');
+  if (!n) { if (pie) pie.remove(); return; }
+  if (!pie) { pie = document.createElement('p'); pie.id = 'pie-inactivas'; pie.className = 'nota'; tb.closest('.card').appendChild(pie); }
+  pie.innerHTML = `${n} entidad${n === 1 ? '' : 'es'} inactiva${n === 1 ? '' : 's'} · <button type="button" class="link" id="ver-inactivas">${verInactivas ? 'Ocultar' : 'Mostrar'}</button>`;
+  $('#ver-inactivas').onclick = () => { verInactivas = !verInactivas; marcarInactivas(); };
+}
+(function () {
+  if (!$('#inactiva-estilo')) {
+    const st = document.createElement('style'); st.id = 'inactiva-estilo';
+    st.textContent = 'tr.ent-inactiva td{opacity:.55}tr.ent-inactiva td:last-child{opacity:1}.chip-inactiva{background:var(--line);color:var(--ink)}#pie-inactivas{margin:8px 0 0}';
+    document.head.appendChild(st);
+  }
+  const base = loadEntidades;
+  loadEntidades = async function () { await base(); marcarInactivas(); };
+})();
+
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
