@@ -4187,6 +4187,26 @@ function htmlGuiaRapidaClub() {
     .observe(document.body, { childList: true, subtree: true });
 })();
 
+// ---------- Alta de club: usuario elegido por el administrador · botones desactivados en gris ----------
+(function () {
+  if (!$('#btn-off-estilo')) {
+    const st = document.createElement('style'); st.id = 'btn-off-estilo';
+    st.textContent = '.btn:disabled,.btn[disabled]{opacity:.45;filter:grayscale(1);cursor:not-allowed;box-shadow:none}';
+    document.head.appendChild(st);
+  }
+  const b = $('#nuevo-club'); if (!b) return;
+  b.onclick = () => {
+    modal('Nuevo club', [['nombre', 'Nombre del club', 'text', true],
+      ['usuario', 'Usuario de acceso (3-30 caracteres, sin espacios ni tildes; vacío = se genera del nombre)'],
+      ['modalidad', 'Modalidad deportiva'], ['cif', 'CIF'], ['email', 'Email de contacto (recibirá las alertas)', 'email']], {}, async d => {
+      d.usuario = String(d.usuario || '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, '');
+      toast('Creando la hoja del club…');
+      const r = await run(() => API.call('crearClub', d));
+      mostrarClaves(d.nombre, r.usuario, r.temporal); loadClubes();
+    });
+  };
+})();
+
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
