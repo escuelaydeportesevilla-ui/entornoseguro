@@ -4106,6 +4106,7 @@ function htmlModeloComercial() {
       if (p.dataset.gestor) p.textContent = (state.inst ? 'El ayuntamiento, como gestor del servicio,' : 'Escuela&Deporte, como prestador del servicio,') + ' solo ve indicadores. Cualquier consulta de detalle o copia de tus datos aparece en el registro de abajo.';
     });
     v.querySelectorAll('h3').forEach(h => { if (/Registro de accesos del ayuntamiento/.test(h.textContent)) h.textContent = 'Registro de accesos del gestor del servicio'; });
+    if (!state.inst) v.querySelectorAll('#tabla-accesos tbody td:nth-child(2)').forEach(td => { td.textContent = td.textContent.replace(/^Ayuntamiento ·/, 'Escuela&Deporte ·'); });
     const vacio = v.querySelector('#tabla-accesos .empty');
     if (vacio) vacio.textContent = 'Nadie ha consultado datos de detalle del club.';
   };
