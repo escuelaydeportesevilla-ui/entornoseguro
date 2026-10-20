@@ -1116,13 +1116,15 @@ function mdToHtml(md) {
     }
     if (itemRe.test(l)) {
       const pila = []; let html = '';
-      while (i < L.length && (itemRe.test(L[i]) || (L[i].trim() && /^\s{2,}/.test(L[i]) && pila.length))) {
+      const sigue = j => { while (j < L.length && !L[j].trim()) j++; return j < L.length && (itemRe.test(L[j]) || /^\s{2,}\S/.test(L[j])); };
+      while (i < L.length && (itemRe.test(L[i]) || (L[i].trim() && /^\s{2,}/.test(L[i]) && pila.length) || (!L[i].trim() && pila.length && sigue(i)))) {
+        if (!L[i].trim()) { i++; continue; }
         const mm = L[i].match(itemRe);
         if (!mm) { html += ' ' + mdInline(L[i].trim()); i++; continue; }
         const nivel = Math.floor(mm[1].replace(/\t/g, '  ').length / 2), tipo = /\d/.test(mm[2]) ? 'ol' : 'ul';
         while (pila.length > nivel + 1 || (pila.length === nivel + 1 && pila[pila.length - 1] !== tipo)) html += '</li></' + pila.pop() + '>';
         if (pila.length === nivel + 1) html += '</li><li>';
-        else while (pila.length < nivel + 1) { pila.push(tipo); html += '<' + tipo + '><li>'; }
+        else while (pila.length < nivel + 1) { pila.push(tipo); const n0 = parseInt(mm[2], 10); html += '<' + tipo + (tipo === 'ol' && pila.length === nivel + 1 && n0 > 1 ? ' start="' + n0 + '"' : '') + '><li>'; }
         html += mdInline(mm[3]); i++;
       }
       while (pila.length) html += '</li></' + pila.pop() + '>';
@@ -2522,9 +2524,12 @@ async function verResultados(id) {
   $('#res-word').onclick = () => descargar('﻿' + htmlResultadosEnc(r), 'application/msword', nombreInf('encuesta-' + e.titulo));
   $('#res-ia') && ($('#res-ia').onclick = () => {
     const prompt = [CONTEXTO_IA, '',
-      'TAREA: a partir de los resultados agregados de una encuesta anónima de percepción de seguridad a deportistas menores de ' + e.franja + ' años, propón una valoración breve (máx. 200 palabras) y 5 medidas de mejora concretas para la entidad deportiva, en el marco del Protocolo Marco andaluz. No interpretes los datos como prueba de violencia.',
-      'Respuestas: ' + r.n, 'Resultados (% Sí / A veces / No):',
-      r.preguntas.map((o, i) => { const [a, b, c] = pctTri(o); return `- ${P[i]}: ${a}% / ${b}% / ${c}%`; }).join('\n')].join('\n');
+      'TAREA: a partir de los resultados agregados de una encuesta anónima de percepción de seguridad a deportistas ' + ((FRANJAS.find(f => f[0] === e.franja) || ['', e.franja + ' años'])[1]).toLowerCase() + ', propón una valoración breve (máx. 200 palabras) y 5 medidas de mejora concretas para la entidad deportiva, en el marco del Protocolo Marco andaluz. No interpretes los datos como prueba de violencia.',
+      'Todos los ítems están redactados en positivo: «Sí» = percepción favorable; «A veces» y «No» = aspecto que conviene reforzar. Relaciona cada medida con los ítems concretos que la motivan (por su número y enunciado).',
+      r.n < 10 ? 'Muestra pequeña (' + r.n + ' respuestas): cada respuesta pesa ' + Math.round(100 / r.n) + ' puntos. Trata los resultados como orientativos, sin extrapolar ni dar porcentajes como conclusiones.' : '',
+      'Formato: «VALORACIÓN» en un párrafo; «MEDIDAS DE MEJORA» como lista numerada del 1 al 5, cada medida con una línea «Fundamento:» (norma o apartado; si no hay certeza, indícalo). Termina con «PENDIENTE DE VALIDAR» solo si hace falta.',
+      'Grupo: ' + (e.grupo || 'sin indicar') + ' · Respuestas: ' + r.n + (r.comentarios.length ? ' · Hay ' + r.comentarios.length + ' comentario(s) libre(s) que no se incluyen aquí por privacidad: léelos en la app.' : ''), 'Resultados por ítem (% Sí / A veces / No):',
+      r.preguntas.map((o, i) => { const [a, b, c] = pctTri(o); return `${i + 1}. ${P[i] || 'Ítem ' + (i + 1)}: ${a}% / ${b}% / ${c}%`; }).join('\n')].filter(Boolean).join('\n');
     mostrarPrompt($('#res-ia-out'), prompt, { asunto: 'Mejoras tras encuesta · ' + e.titulo, tipo: 'asistente' });
   });
   cont.scrollIntoView({ behavior: 'smooth' });
@@ -2569,7 +2574,8 @@ async function iniciarEncuesta(codigo) {
     $('#enc-otra').onclick = () => { try { localStorage.removeItem('es_enc_' + codigo); } catch {} iniciarEncuesta(codigo); };
     return;
   }
-  const P = PREGUNTAS_ENC[d.franja] || PREGUNTAS_ENC['12-17'], peq = d.franja === '6-11';
+  const fr = /^\d{4}-11-06/.test(String(d.franja)) ? '6-11' : d.franja;
+  const P = PREGUNTAS_ENC[fr] || PREGUNTAS_ENC['12-17'], peq = fr === '6-11';
   const OPC = [['si', '😊', 'Sí'], ['aveces', '😐', 'A veces'], ['no', '🙁', 'No']];
   card.innerHTML = cab + `<div class="enc-intro">${peq ? 'Hola 👋 Queremos saber cómo te sientes en el club. <b>No pongas tu nombre.</b> No hay respuestas buenas ni malas.' : 'Queremos saber cómo te sientes en el club. <b>Es anónima:</b> no pedimos tu nombre ni ningún dato personal. Responde con sinceridad.'}</div>
     <form id="form-enc">${P.map((t, i) => `<div class="preg" role="group" aria-label="${esc(t)}"><p>${i + 1}. ${esc(t)}</p><div class="resp">${OPC.map(([v, ico, tx]) => `<button type="button" data-p="p${i + 1}" data-v="${v}" aria-pressed="false"><span aria-hidden="true">${ico}</span>${tx}</button>`).join('')}</div></div>`).join('')}
