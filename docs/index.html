@@ -3388,6 +3388,18 @@ const GUIA = [
     ['¿Cómo entro y cómo cambio mi contraseña?', '<p>Elige el perfil y escribe usuario y contraseña:</p><ul><li><b>AYUNTAMIENTO / EQUIPO</b>: administración, delegado/a municipal, técnicos y entidades con usuario propio del ayuntamiento.</li><li><b>MI CLUB</b>: clubes y asociaciones con espacio propio (los dados de alta en <b>Mis clubes</b>).</li></ul><p>Si tu ayuntamiento tiene código, entra como <b>usuario@código</b>. Si te equivocas de perfil, la app te indica cuál es el tuyo. Enlace directo para clubes: <b>entornoseguro.escuelaydeporte.com/?perfil=club</b>.</p><p>La primera vez se pide cambiar la contraseña temporal. Después, en <b>Cambiar contraseña</b>, abajo del menú. Tras 5 intentos fallidos el acceso se bloquea 15 minutos.</p>', ''],
     ['¿Puedo agrandar el texto?', '<p>Sí. Usa los botones <b>A · A+ · A++</b> abajo del menú (o en la pantalla de acceso). La app recuerda tu elección.</p>', '']
   ]],
+  ['⭐', 'Matriz de cumplimiento · la pieza clave', [
+    ['★ Empieza aquí: qué es la Matriz y por qué es la pieza clave', '<p>Es la lista de los <b>21 requisitos del Protocolo Marco (A1–K2)</b>. Cada fila indica si el club <b>puede acreditar</b> ese requisito con un documento. No valora personas ni entidades: es estado documental.</p><ul><li>La <b>ficha</b> (Mi club) es lo que el club <b>declara</b>. La <b>Matriz</b> es lo que <b>acredita</b> con documento. Por eso el panel puede marcar «Delegado/a y Protocolo Marco» ✓ y la Matriz seguir en Pendiente.</li><li>El <b>% de cumplimiento</b>, las <b>alertas</b> y el <b>informe del club</b> salen de aquí.</li></ul>', '', 'matriz'],
+    ['Cómo se lee una fila', '<table class="md-tabla"><tbody><tr><td><b>Requisito</b></td><td>Código, nombre y norma de referencia.</td></tr><tr><td><b>Estado</b></td><td>✓ Cumple · ⚠ Parcial · ✗ No cumple · · Pendiente · — No aplica.</td></tr><tr><td><b>Evidencia</b></td><td>Enlace al documento que lo acredita (Drive).</td></tr><tr><td><b>Revisión</b></td><td>Fecha en que lo comprobaste.</td></tr><tr><td><b>Próxima</b></td><td>Cuándo toca revisarlo otra vez. Se calcula sola según la periodicidad.</td></tr><tr><td><b>Acción pendiente</b></td><td>Lo que falta, escrito por ti o propuesto por la IA.</td></tr></tbody></table>', '', 'matriz'],
+    ['Los dos botones de cada fila: «Actualizar» y «Revisar con IA»', '<ul><li><b>Actualizar</b>: aquí trabajas tú. Abre el formulario del requisito.</li><li><b>Revisar con IA</b> (opcional): Claude compara un documento con lo que pide ese requisito y propone estado y carencias. <b>No cambia nada</b> hasta que lo aceptas. Si revisas el protocolo contra A1 o A2 saldrá «No cumple»: esos requisitos piden <b>otros documentos</b> (declaración institucional y Anexo I).</li></ul>', '', 'matriz'],
+    ['Campos del formulario «Actualizar»', '<ul><li><b>Estado</b>: Cumple solo con el documento firmado o aprobado.</li><li><b>Fecha de revisión</b>: normalmente, hoy.</li><li><b>Próxima revisión</b>: déjala vacía, se calcula sola.</li><li><b>Responsable</b>: el Delegado/a.</li><li><b>Acción pendiente</b>: vacía si ya cumple; si no, qué falta.</li><li><b>Nueva evidencia · título</b>: p. ej. «Designación firmada 20/10/2026».</li><li><b>Nueva evidencia · enlace Drive</b>: el documento firmado, compartido como «cualquiera con el enlace».</li><li><b>Caducidad evidencia</b>: solo si el documento caduca.</li></ul>', '', 'matriz'],
+    ['El ciclo de cada requisito en 4 pasos', '<ol><li><b>Generar</b> el documento (Plantillas, el módulo que corresponda o el modelo oficial).</li><li><b>Aprobar</b>: firma o acuerdo de la Junta.</li><li><b>Subir</b> a Drive y copiar el enlace.</li><li><b>Registrar</b>: Matriz → Actualizar → Cumple, fecha y evidencia.</li></ol><p>Después, <b>Alertas → Recalcular</b>: la alerta del requisito desaparece.</p>', '', 'matriz'],
+    ['¿Dónde genero el documento de cada requisito (A1–K2)?', '<div class="md-scroll"><table class="md-tabla"><thead><tr><th>Requisito</th><th>Qué es</th><th>Dónde se genera</th></tr></thead><tbody><tr><td><b>A1</b></td><td>Declaración institucional</td><td>Modelo Anexo 0A del Protocolo Marco o <b>Asistente IA</b> (aún no hay plantilla). Aprobación de la Junta.</td></tr><tr><td><b>A2</b></td><td>Aceptación del Protocolo Marco</td><td>Anexo I oficial de la Orden 18/11/2024 → Registro Electrónico Único de la Junta. Evidencia: el justificante.</td></tr><tr><td><b>B1</b></td><td>Designación del Delegado/a</td><td><b>Plantillas</b> → Designación (Anexo II) + justificante de registro.</td></tr><tr><td><b>B2</b></td><td>Formación del Delegado/a</td><td><b>Formación</b> (colectivo Delegado/a) + certificado del curso.</td></tr><tr><td><b>C1 · C2</b></td><td>Riesgos y medidas</td><td><b>Riesgos</b>: un registro por riesgo, con medida, responsable y fecha.</td></tr><tr><td><b>D1</b></td><td>Código de conducta</td><td><b>Plantillas</b> → Código de conducta, aprobado por la Junta.</td></tr><tr><td><b>D2</b></td><td>Aceptación del código</td><td><b>Agentes</b> → «Código aceptado» de cada persona + hojas firmadas.</td></tr><tr><td><b>E1</b></td><td>Autorizaciones de imagen</td><td><b>Plantillas</b> → Autorización de imagen + recuento en <b>Autorizaciones</b>.</td></tr><tr><td><b>E2</b></td><td>Redes sociales</td><td>Apartado del protocolo o documento propio (<b>Asistente IA</b>).</td></tr><tr><td><b>F1 · F2</b></td><td>Desplazamientos y pernoctas</td><td><b>Plantillas</b> → Autorización de desplazamiento + protocolo. Si el club no viaja: <b>No aplica</b>.</td></tr><tr><td><b>G1</b></td><td>Protocolo propio</td><td><b>Plantillas</b> → Protocolo de protección, aprobado por la Junta.</td></tr><tr><td><b>G2</b></td><td>Difusión del protocolo</td><td><b>Plantillas</b> → Carta a familias + prueba de difusión (web, tablón, correo).</td></tr><tr><td><b>H1 · H2</b></td><td>Comunicación de incidentes y flujograma</td><td><b>Plantillas</b> → Guía rápida de actuación ante incidentes.</td></tr><tr><td><b>I1 · I2</b></td><td>Canal e información con el 116 111</td><td><b>Plantillas</b> → Cartel del canal + Carta a familias.</td></tr><tr><td><b>J1</b></td><td>Formación de agentes</td><td><b>Formación</b> (por persona o por lote).</td></tr><tr><td><b>K1 · K2</b></td><td>Agentes y certificados negativos</td><td><b>Agentes deportivos</b>: alta de cada persona y fecha de su certificado.</td></tr></tbody></table></div>', '', 'matriz'],
+    ['Ejemplo: marcar B2 · Formación del Delegado/a', '<ol><li>Sube el certificado del curso a Drive y copia el enlace.</li><li><b>Matriz → B2 → Actualizar</b>: Cumple · fecha de hoy · responsable · título «Certificado curso Delegado de Protección» · enlace.</li><li>Guardar. Resultado: ✓, sube el % y «Próxima» queda a 24 meses.</li></ol>', '', 'matriz'],
+    ['Reglas que conviene saber', '<ul><li>En el % solo suman <b>Cumple</b> y <b>No aplica</b>. <b>Parcial no suma</b>.</li><li>La app no guarda archivos: solo <b>enlaces de Drive</b>.</li><li>Cada «Nueva evidencia» se añade a las anteriores; no las borra.</li><li>Cerrar una alerta no resuelve el requisito: solo lo resuelve la Matriz.</li></ul>', '', 'matriz'],
+    ['¿Qué diferencia hay entre «Registrar declaración» y «Revisar documento con IA»?', '<ul><li><b>Registrar declaración</b> anota <b>lo que el club dice que tiene</b>: marcas casillas y la matriz se actualiza. No mira ningún documento. Es el registro anual rápido de todos los clubes.</li><li><b>Revisar documento con IA</b> comprueba <b>si un documento concreto</b> (protocolo, código de conducta, flujograma…) contiene lo que exige el Protocolo Marco. Claude lo lee y dice, elemento por elemento, qué consta y qué falta.</li></ul><p>Usa la revisión cuando quieras ir más allá de lo declarado en algo sensible (por ejemplo, el procedimiento de incidentes, H1) o para saber qué pedir en un requerimiento. Si la aplicas, sobrescribe el estado que dejó la declaración: lo revisado pesa más que lo declarado.</p>', 'mun', 'matriz'],
+    ['¿Cómo reviso un documento del club con IA?', '<ol><li><b>Matriz → 🔎 Revisar documento con IA</b>. Elige el <b>tipo de documento</b> y la app marca sola los requisitos que debe cubrir (con «Otro documento» los marcas tú).</li><li>Escribe el nombre del documento y pulsa <b>Preparar prompt → Abrir en Claude</b>.</li><li>En Claude, <b>adjunta el PDF o Word del club antes de enviar</b>: es el paso clave.</li><li>Copia la respuesta, pégala en la app y pulsa <b>Ver propuesta</b>.</li><li>Revisa la propuesta fila a fila (Cumple / Parcial / No cumple y qué falta), marca las que aceptas y pulsa <b>Aplicar a la matriz</b>.</li></ol><p>Es una ayuda orientativa: la decisión final es tuya. No adjuntes documentos con datos de menores.</p>', 'ia', 'matriz']
+  ], 'destacado'],
   ['🤝', 'Entidades y coordinación con clubes', [
     ['¿Cómo doy de alta una entidad?', '<p><b>Entidades → + Nueva entidad</b>. Lo imprescindible: nombre, si <b>trabaja con menores</b>, su Delegado/a de Protección y si <b>acepta el Protocolo Marco</b>. Solo las entidades con menores entran en la matriz, los informes y las alertas.</p>', 'mun', 'entidades'],
     ['¿Qué es la entidad «Actividades municipales»?', '<p>Representa las escuelas y actividades deportivas que organiza directamente el ayuntamiento. Tiene su propia matriz y aparece aparte en los informes, sin contar en las medias de las entidades.</p>', 'mun', 'entidades'],
@@ -3398,12 +3410,6 @@ const GUIA = [
     ['¿Dónde vuelvo a consultar un requerimiento que ya envié?', '<p>En <b>Documentos</b>: en «Tipo» elige <b>Requerimientos</b> o busca el nombre del club. Cada uno se guarda como «Requerimiento · [entidad] · [fecha]». Ábrelo para verlo y descárgalo de nuevo en <b>Word</b> o <b>PDF</b>.</p><p>Se guarda si dejas marcada la casilla «Guardar una copia en Documentos» al generarlo. Además, en la matriz cada punto requerido muestra «Requerido el [fecha]».</p>', 'mun', 'documentos'],
     ['¿Qué cláusula pongo en autorizaciones de uso y subvenciones?', '<p>Documento <b>V · Cláusula tipo</b> de la tarjeta de coordinación. Hace obligatoria la declaración responsable para usar instalaciones con menores o ser beneficiaria de subvenciones.</p>', 'mun', 'entidades'],
     ['¿Cómo creo un club alojado y le doy acceso?', '<p><b>Mis clubes → + Nuevo club</b>. Se crea su hoja propia y sus claves (se muestran una sola vez). En <b>Gestionar</b> puedes ver su informe, generar otra contraseña, desactivarlo o descargar el contrato de encargo. Ver su informe o copiar sus datos <b>queda registrado</b> y el club lo ve.</p>', 'admin', 'clubes']
-  ]],
-  ['✅', 'Matriz de cumplimiento', [
-    ['¿Qué significa cada estado?', '<ul><li><b>✓ Cumple</b>: el requisito está implantado.</li><li><b>⚠ Parcial</b>: implantado en parte.</li><li><b>✗ No cumple</b>: no está.</li><li><b>· Pendiente</b>: sin revisar.</li><li><b>— No aplica</b>: no procede en esta entidad.</li></ul><p>Es estado documental, no una valoración de la entidad.</p>', '', 'matriz'],
-    ['¿Cómo actualizo un requisito y adjunto la evidencia?', '<p>En su fila, <b>Actualizar</b>: estado, fecha de revisión, responsable y acción pendiente. Añade la evidencia con un título y el <b>enlace de Drive</b>. Si dejas vacía la próxima revisión, se calcula sola según la periodicidad del requisito.</p>', '', 'matriz'],
-    ['¿Qué diferencia hay entre «Registrar declaración» y «Revisar documento con IA»?', '<ul><li><b>Registrar declaración</b> anota <b>lo que el club dice que tiene</b>: marcas casillas y la matriz se actualiza. No mira ningún documento. Es el registro anual rápido de todos los clubes.</li><li><b>Revisar documento con IA</b> comprueba <b>si un documento concreto</b> (protocolo, código de conducta, flujograma…) contiene lo que exige el Protocolo Marco. Claude lo lee y dice, elemento por elemento, qué consta y qué falta.</li></ul><p>Usa la revisión cuando quieras ir más allá de lo declarado en algo sensible (por ejemplo, el procedimiento de incidentes, H1) o para saber qué pedir en un requerimiento. Si la aplicas, sobrescribe el estado que dejó la declaración: lo revisado pesa más que lo declarado.</p>', 'mun', 'matriz'],
-    ['¿Cómo reviso un documento del club con IA?', '<ol><li><b>Matriz → 🔎 Revisar documento con IA</b>. Elige el <b>tipo de documento</b> y la app marca sola los requisitos que debe cubrir (con «Otro documento» los marcas tú).</li><li>Escribe el nombre del documento y pulsa <b>Preparar prompt → Abrir en Claude</b>.</li><li>En Claude, <b>adjunta el PDF o Word del club antes de enviar</b>: es el paso clave.</li><li>Copia la respuesta, pégala en la app y pulsa <b>Ver propuesta</b>.</li><li>Revisa la propuesta fila a fila (Cumple / Parcial / No cumple y qué falta), marca las que aceptas y pulsa <b>Aplicar a la matriz</b>.</li></ol><p>Es una ayuda orientativa: la decisión final es tuya. No adjuntes documentos con datos de menores.</p>', 'ia', 'matriz']
   ]],
   ['🧪', 'Casos prácticos', [
     ['Caso práctico: revisar el protocolo de protección de un club, paso a paso', '<p><b>Situación:</b> un club te envía su protocolo de protección y quieres saber qué cumple y qué le falta.</p><ol>' +
@@ -3499,15 +3505,15 @@ function pintarGuia() {
   const v = $('#view-guia'); if (!v) return;
   const q = norm(($('#guia-q') || {}).value || '').split(/\s+/).filter(Boolean);
   let total = 0;
-  const html = GUIA.map(([ico, tema, preguntas]) => {
+  const html = GUIA.map(([ico, tema, preguntas, dest]) => {
     const items = preguntas.filter(p => guiaVisible(p[2]))
       .filter(p => q.every(w => norm(tema + ' ' + p[0] + ' ' + p[1].replace(/<[^>]+>/g, ' ')).includes(w)));
     if (!items.length) return '';
     total += items.length;
-    return `<div class="card guia-tema"><h3>${ico} ${esc(tema)}</h3>` + items.map(([pr, resp, amb, ir]) => {
+    return `<div class="card guia-tema${dest ? ' guia-destacada' : ''}"><h3>${ico} ${esc(tema)}${dest ? ' <span class="guia-badge">Imprescindible</span>' : ''}</h3>` + items.map(([pr, resp, amb, ir], k) => {
       const destino = ir && $(`nav button[data-view="${ir}"]`);
       const nombre = destino ? (destino.querySelector('.l-long') || destino).textContent.replace(/\d+$/, '').trim() : '';
-      return `<details class="guia-item"${q.length ? ' open' : ''}><summary>${esc(pr)}</summary><div class="md">${resp}` +
+      return `<details class="guia-item"${q.length || (dest && k === 0) ? ' open' : ''}><summary>${esc(pr)}</summary><div class="md">${resp}` +
         (destino ? `<p><button type="button" class="link" data-guia-ir="${esc(ir)}">Ir a ${esc(nombre)} →</button></p>` : '') + '</div></details>';
     }).join('') + '</div>';
   }).join('');
@@ -3517,10 +3523,10 @@ function pintarGuia() {
 }
 
 function htmlGuia() {
-  const cuerpo = GUIA.map(([ico, tema, preguntas]) => {
+  const cuerpo = GUIA.map(([ico, tema, preguntas, dest]) => {
     const items = preguntas.filter(p => p[2] !== 'maestro' && guiaVisible(p[2]));
     if (!items.length) return '';
-    return `<h2>${esc(tema)}</h2>` + items.map(([pr, resp]) => `<h3>${esc(pr)}</h3>${resp}`).join('');
+    return `<h2>${dest ? '★ ' : ''}${esc(tema)}${dest ? ' · imprescindible' : ''}</h2>` + items.map(([pr, resp]) => `<h3>${esc(pr)}</h3>${resp}`).join('');
   }).join('');
   return plantillaInforme('Guía de uso · Preguntas frecuentes', 'EntornoSeguro · ' + (state.club ? 'Perfil club' : 'Perfil municipal'), cuerpo, false,
     'EntornoSeguro · Guía de uso. Las decisiones sobre casos corresponden siempre al profesional responsable.');
@@ -3532,7 +3538,10 @@ function htmlGuia() {
   const st = document.createElement('style');
   st.textContent = '.guia-item{border-top:1px solid var(--line);padding:2px 0}.guia-item:first-of-type{border-top:0}' +
     '.guia-item summary{cursor:pointer;font-weight:600;padding:10px 0;min-height:44px;color:var(--ink)}' +
-    '.guia-item summary:hover{color:var(--brand-2)}.guia-item .md{padding:0 0 10px 4px}.guia-tema h3{color:var(--brand)}';
+    '.guia-item summary:hover{color:var(--brand-2)}.guia-item .md{padding:0 0 10px 4px}.guia-tema h3{color:var(--brand)}' +
+    '.guia-destacada{border:2px solid var(--brand-2);border-left-width:8px;background:linear-gradient(0deg,var(--card,#fff),rgba(31,122,90,.06))}' +
+    '.guia-badge{display:inline-block;margin-left:8px;padding:2px 10px;border-radius:999px;background:var(--brand-2);color:#fff;font-size:.75rem;font-weight:700;vertical-align:middle}' +
+    '.matriz-ayuda{display:flex;gap:10px;align-items:center;flex-wrap:wrap;border:1px solid var(--brand-2);border-left-width:6px;border-radius:10px;padding:10px 14px;margin:0 0 14px;background:rgba(31,122,90,.06)}';
   document.head.appendChild(st);
   const sec = document.createElement('section'); sec.id = 'view-guia'; sec.className = 'view hidden';
   sec.innerHTML = `<header><h2>Guía de uso · Preguntas frecuentes</h2><button class="btn ghost" type="button" id="guia-pdf">Descargar guía (PDF)</button></header>
@@ -4323,6 +4332,19 @@ function marcarInactivas() {
   // Documento: Guardar, Copiar, Word, PDF, Texto y Eliminar justo debajo del asunto, antes del contenido.
   const f = $('#form-doc'), acc = f && f.querySelector(':scope > .ia-acciones'), modo = f && f.querySelector(':scope > .modo');
   if (acc && modo) { f.insertBefore(acc, modo); acc.classList.add('arriba'); }
+})();
+
+// v22: acceso destacado a la guía de la Matriz desde la propia pantalla
+(() => {
+  const v = $('#view-matriz'), nota = v && v.querySelector(':scope > p.nota');
+  if (!nota || $('#matriz-ayuda')) return;
+  const d = document.createElement('div'); d.id = 'matriz-ayuda'; d.className = 'matriz-ayuda';
+  d.innerHTML = '<span>⭐ <b>La Matriz es la pieza clave.</b> Cómo leerla, qué hace cada botón y dónde se genera el documento de cada requisito.</span><button class="btn ghost" type="button">Ver la guía de la Matriz</button>';
+  nota.after(d);
+  d.querySelector('button').onclick = () => {
+    show('guia'); const q = $('#guia-q'); if (q) q.value = ''; pintarGuia();
+    const t = $('.guia-destacada'); if (t) { t.scrollIntoView({ behavior: 'smooth' }); const s = t.querySelector('summary'); if (s) s.focus(); }
+  };
 })();
 
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
