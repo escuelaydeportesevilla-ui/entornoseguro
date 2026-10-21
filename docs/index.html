@@ -3752,6 +3752,9 @@ function promptPlantilla(p, e, dir, ev) {
     d('Fecha de aprobación de la declaración institucional', fechaLarga(e.declaracion_fecha || e.fecha_aceptacion)),
     d('Plazo de conservación de imágenes', e.conservacion_imagenes), d('Plazo para comunicar al Delegado/a', e.plazo_comunicacion_h ? e.plazo_comunicacion_h + ' horas como máximo' : ''),
     d('Revisión del protocolo', e.revision_meses ? 'cada ' + e.revision_meses + ' meses' : '')].filter(Boolean);
+  const FECHA_APROB = { protocolo: 'protocolo_fecha', codigo: 'protocolo_fecha', declaracion: 'declaracion_fecha|fecha_aceptacion', designacion: 'fecha_designacion' };
+  const fAprob = FECHA_APROB[p[0]] ? fechaLarga(FECHA_APROB[p[0]].split('|').map(k => e[k]).find(Boolean)) : '';
+  if (fAprob) datos.push('- Fecha de aprobación de ESTE documento por el órgano de gobierno: ' + fAprob + ' (úsala en el texto, en la certificación y en el apartado de aprobación; no la dejes en blanco)');
   if (ev) datos.push(d('Actividad', ev.actividad), d('Fechas', ev.fechas), d('Destino', ev.destino), d('Transporte', ev.transporte), d('Alojamiento', ev.alojamiento));
   const marcas = PLANT_MARCAS.filter(m => plantDato(m[1], e, dir, ev)).map(m => '- [' + m[0] + ']: ' + m[2]);
   const rec = [d('Servicios Sociales Comunitarios', dir.servicios_sociales), d('Policía Local', dir.policia_local),
@@ -3771,6 +3774,9 @@ function promptPlantilla(p, e, dir, ev) {
       '5. Los flujogramas, como pasos numerados unidos con «→», sin corchetes ni cajas.',
       '6. Fechas en formato largo (por ejemplo, ' + hoy + ').',
       '7. Español de España, lenguaje claro e inclusivo. Cita la norma solo donde aporte.',
+      '8. No atribuyas a una norma lo que es decisión de la entidad. Ejemplo: el art. 57 LOPIVI exige aportar el certificado negativo antes de la actividad; su renovación cada temporada es decisión del club y así debe decirse.',
+      '9. Si tratas los mensajes privados entre personas adultas y menores, usa exactamente esta redacción: «Prohibidos los mensajes privados de una persona adulta a un menor, salvo los estrictamente organizativos y con copia a la familia».',
+      '10. En las listas de conductas permitidas o no permitidas no mezcles excepciones: escríbelas en un párrafo aparte, después de la lista.',
       '', 'FORMATO: Markdown con títulos (#, ##), listas y tablas cuando ayuden.']).join('\n');
 }
 
