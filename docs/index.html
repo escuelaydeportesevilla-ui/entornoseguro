@@ -4497,7 +4497,8 @@ function tutPintar() {
       'tr.tut-fila td{animation:tutDestello .9s ease-in-out 5;background:color-mix(in srgb,var(--brand-2) 15%,transparent)}tr.tut-fila td:first-child{box-shadow:inset 6px 0 0 var(--brand-2)}' +
       '.plantilla.tut-destello{animation:tutBorde .9s ease-in-out 5}' +
       '@media (prefers-reduced-motion:reduce){tr.tut-fila td,.plantilla.tut-destello{animation:none}.plantilla.tut-destello{box-shadow:0 0 0 4px var(--brand-2)}}' +
-      '.tut-lista{margin:8px 0 0;padding-left:20px}.tut-lista li{margin:2px 0}.tut-lista li.hecho{color:var(--muted)}';
+      '.tut-lista{margin:8px 0 0;padding-left:20px}.tut-lista li{margin:0}#tut-barra .tut-lista .tut-mini{text-decoration:none;color:var(--ink);text-align:left;min-height:32px}#tut-barra .tut-lista li.hecho .tut-mini{color:var(--muted)}#tut-barra .tut-lista .tut-mini:hover{text-decoration:underline}' +
+      '.tut-ok{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:var(--ok);color:#fff;font-size:.72rem;vertical-align:middle}#tut-barra .btn:disabled{opacity:.45;cursor:default}';
     document.head.appendChild(st);
   }
   let barra = $('#tut-barra');
@@ -4513,7 +4514,9 @@ function tutPintar() {
     $('#tut-fin').onclick = () => { tutGuardar(Object.assign(tutLeer(), { estado: 'completado' })); tutPintar(); };
     return;
   }
-  const k = i >= 0 ? i : pend, p = pasos[k];
+  const auto = i >= 0 ? i : pend;
+  if (state.tut.ver != null && (state.tut.ver < 0 || state.tut.ver >= pasos.length)) state.tut.ver = null;
+  const k = state.tut.ver != null ? state.tut.ver : auto, p = pasos[k], hecho = !!h[p.id];
   let pill = $('#tut-pill');
   if (!pill) { pill = document.createElement('button'); pill.id = 'tut-pill'; pill.type = 'button'; pill.hidden = true; document.body.appendChild(pill);
     pill.onclick = () => { window.scrollTo({ top: 0, behavior: 'smooth' }); };
@@ -4522,15 +4525,23 @@ function tutPintar() {
   barra.innerHTML = `<div class="tut-cab">🧭 <span>Tutorial · paso ${k + 1} de ${pasos.length} · ${hechos} hechos</span>
       <button type="button" class="tut-mini" id="tut-ver">Ver todos</button><button type="button" class="tut-mini" id="tut-act" title="Comprobar de nuevo">↻ Comprobar</button></div>
     <div class="pasos-barra"><i style="width:${Math.round(hechos * 100 / pasos.length)}%"></i></div>
-    <div class="tut-paso"><b>${esc(p.t)}</b><small>${esc(p.d)}</small></div>
-    <div class="tut-acc">${p.ir.map(([l, d], j) => `<button class="btn${j ? ' ghost' : ''}" type="button" data-tut-ir="${esc(d)}">${esc(l)}</button>`).join('')}
-      ${p.manual ? '<button class="btn ghost" type="button" id="tut-hecho">✓ Ya lo he hecho</button>' : ''}
-      <button class="btn ghost" type="button" id="tut-saltar">Saltar este paso</button><button class="btn ghost" type="button" id="tut-pausa">Pausar</button></div>
-    <ol class="tut-lista hidden" id="tut-todos">${pasos.map((x, j) => `<li class="${h[x.id] ? 'hecho' : ''}">${h[x.id] ? '✓ ' : salt.includes(x.id) ? '↷ ' : ''}${j === k ? '<b>' + esc(x.t) + '</b>' : esc(x.t)}</li>`).join('')}</ol>`;
+    <div class="tut-paso"><b>${hecho ? '✓ ' : ''}${esc(p.t)}${hecho ? ' <span class="tut-ok">hecho</span>' : ''}</b><small>${esc(p.d)}</small></div>
+    <div class="tut-acc"><button class="btn ghost" type="button" id="tut-ant"${k === 0 ? ' disabled' : ''} aria-label="Paso anterior">← Anterior</button>
+      ${p.ir.map(([l, d], j) => `<button class="btn${j || hecho ? ' ghost' : ''}" type="button" data-tut-ir="${esc(d)}">${esc(l)}</button>`).join('')}
+      ${p.manual && !hecho ? '<button class="btn ghost" type="button" id="tut-hecho">✓ Ya lo he hecho</button>' : ''}
+      ${!hecho && k === auto ? '<button class="btn ghost" type="button" id="tut-saltar">Saltar este paso</button>' : ''}
+      <button class="btn ghost" type="button" id="tut-sig"${k === pasos.length - 1 ? ' disabled' : ''} aria-label="Paso siguiente">Siguiente →</button>
+      ${k !== auto ? '<button class="btn" type="button" id="tut-volver">Ir al paso pendiente</button>' : ''}
+      <button class="btn ghost" type="button" id="tut-pausa">Pausar</button></div>
+    <ol class="tut-lista${state.tut.lista ? '' : ' hidden'}" id="tut-todos">${pasos.map((x, j) => `<li class="${h[x.id] ? 'hecho' : ''}"><button type="button" class="tut-mini" data-tut-ver="${j}">${h[x.id] ? '✓ ' : salt.includes(x.id) ? '↷ ' : ''}${j === k ? '<b>' + esc(x.t) + '</b>' : esc(x.t)}</button></li>`).join('')}</ol>`;
+  $('#tut-ant').onclick = () => { state.tut.ver = k - 1; tutPintar(); };
+  $('#tut-sig').onclick = () => { state.tut.ver = k + 1; tutPintar(); };
+  $('#tut-volver') && ($('#tut-volver').onclick = () => { state.tut.ver = null; tutPintar(); });
+  $$('[data-tut-ver]').forEach(b => b.onclick = () => { state.tut.ver = +b.dataset.tutVer; tutPintar(); });
   $$('[data-tut-ir]').forEach(b => b.onclick = () => tutIr(b.dataset.tutIr));
-  $('#tut-ver').onclick = () => $('#tut-todos').classList.toggle('hidden');
+  $('#tut-ver').onclick = () => { state.tut.lista = !state.tut.lista; $('#tut-todos').classList.toggle('hidden', !state.tut.lista); };
   $('#tut-act').onclick = () => tutRefrescar(true);
-  $('#tut-saltar').onclick = () => { const c = tutLeer(); c.saltados = [...new Set([...(c.saltados || []), p.id])]; tutGuardar(c); tutPintar(); };
+  $('#tut-saltar') && ($('#tut-saltar').onclick = () => { const c = tutLeer(); c.saltados = [...new Set([...(c.saltados || []), p.id])]; tutGuardar(c); state.tut.ver = null; tutPintar(); });
   $('#tut-pausa').onclick = () => { tutGuardar(Object.assign(tutLeer(), { estado: 'pausado' })); toast('Tutorial en pausa. Puedes retomarlo desde el Panel o la Guía de uso.'); tutPintar(); };
   $('#tut-hecho') && ($('#tut-hecho').onclick = () => { tutGuardar(Object.assign(tutLeer(), { [p.id]: true })); state.tut.hechos[p.id] = true; tutPintar(); });
 }
