@@ -3465,7 +3465,7 @@ const GUIA = [
     ['¿Qué pasa si cierro una alerta?', '<p>La alerta pasa a <b>Cerradas</b>, al final de la lista, y puedes <b>Reabrirla</b>. Cada día el recálculo comprueba el problema de fondo:</p><ul><li><b>🔕</b> Cerrada, pero el problema sigue (por ejemplo, agentes aún sin certificado). Sigue a la vista y quien supervisa lo ve.</li><li><b>✓</b> Resuelta: el problema ya no se da. Queda como historial 180 días.</li></ul><p>Cerrar una alerta no resuelve el requisito: la Matriz y el % de cumplimiento no cambian.</p>', '', 'alertas'],
     ['¿Hay una guía rápida para el club?', '<p>Sí: en <b>Guía de uso → Guía rápida del club (PDF)</b>. Una página con cómo entrar, los primeros pasos, la rutina de la temporada, qué hacer si ocurre algo y dónde pedir ayuda. Se puede imprimir o enviar a la junta directiva.</p>', 'club'],
     ['¿Qué son los «Primeros pasos» y el «Siguiente paso» del panel?', '<p>Al entrar, el panel del club muestra <b>5 primeros pasos</b>: ficha del club, Delegado/a y Protocolo Marco, documentos básicos (protocolo, código y cartel), agentes deportivos y primera encuesta. Cada paso tiene su botón y se marca solo cuando está hecho.</p><p>Completados los cinco, aparece el <b>Siguiente paso recomendado</b>: primero las revisiones vencidas y después el primer requisito pendiente de la Matriz, con acceso directo a la plantilla o a la pantalla donde se resuelve.</p>', 'club', 'panel'],
-    ['¿Cómo hago un cartel visual con ChatGPT?', '<ol><li>En <b>Plantillas</b>, elige la entidad y pulsa <b>Cartel del canal de comunicación</b>.</li><li>Abajo aparece <b>🎨 Cartel visual con ChatGPT</b>: elige público (adolescentes y familias, o niños y niñas de 6 a 11 años) y activa o no la casilla <b>Incluir nombre y contacto del Delegado/a</b> (por defecto, desactivada: huecos en blanco).</li><li>Pulsa <b>Generar prompt</b> y luego <b>Abrir en ChatGPT</b> (o cópialo).</li><li>Pega el logotipo real y el QR en los recuadros blancos (Canva, Word o PowerPoint).</li><li><b>Antes de imprimir, comprueba cifra a cifra cada teléfono y correo.</b> Los generadores de imagen se equivocan con números y letras.</li></ol><p>El prompt nunca incluye datos internos de la entidad (número de menores, ratios, pernoctas, CIF). Con la casilla activada, solo lleva el nombre y el contacto del Delegado/a y del canal, que van a figurar en un cartel público.</p>', 'ia', 'plantillas'],
+    ['¿Cómo hago un cartel visual con ChatGPT?', '<ol><li>En <b>Plantillas</b>, elige la entidad y pulsa <b>Cartel del canal de comunicación</b>.</li><li>Abajo aparece <b>🎨 Cartel visual con ChatGPT</b>: elige público (adolescentes y familias, o niños y niñas de 6 a 11 años) y activa o no la casilla <b>Incluir nombre y contacto del Delegado/a</b> (por defecto, desactivada: huecos en blanco).</li><li>Pulsa <b>Generar prompt</b> y luego <b>Abrir en ChatGPT</b> (o cópialo).</li><li>Pega el logotipo real y el QR en los recuadros blancos (Canva, Word o PowerPoint). El QR lo descargas en la misma pantalla: <b>🔳 Código QR del canal → Descargar QR (PNG)</b>, generado con el enlace del formulario de la ficha.</li><li><b>Antes de imprimir, comprueba cifra a cifra cada teléfono y correo.</b> Los generadores de imagen se equivocan con números y letras.</li></ol><p>El prompt nunca incluye datos internos de la entidad (número de menores, ratios, pernoctas, CIF). Con la casilla activada, solo lleva el nombre y el contacto del Delegado/a y del canal, que van a figurar en un cartel público.</p>', 'ia', 'plantillas'],
     ['¿Qué hay en Plantillas, Contenidos y Biblioteca?', '<ul><li><b>Plantillas</b>: protocolo, código de conducta, designación, carteles y autorizaciones con los datos de la entidad.</li><li><b>Contenidos RRSS</b>: publicaciones para familias y redes.</li><li><b>Biblioteca</b>: normativa oficial y documentos propios por categorías.</li></ul>', 'ia', 'plantillas']
   ]],
   ['📄', 'Alertas e informes', [
@@ -3857,7 +3857,7 @@ function promptCartelVisual(e, publico, conDatos) {
     'PIE: «Peligro inmediato: 112 · Fundación ANAR (gratis, 24 h): 900 20 20 10 · Ayuda a la infancia: 116 111»'
   ];
   return ['Diseña un CARTEL vertical en formato A3 (proporción 297 × 420) para colgar en las instalaciones de una entidad deportiva.',
-    'Público: ' + (nino ? 'niños y niñas de 6 a 11 años. Lenguaje muy sencillo, iconos grandes y amables.' : 'adolescentes y familias. Tono cercano y serio a la vez.'),
+    'Público: ' + (nino ? 'niños y niñas de ' + franjaInfantil(e) + '. Lenguaje muy sencillo, iconos grandes y amables.' : 'adolescentes y familias. Tono cercano y serio a la vez.'),
     'Objetivo: que cualquier menor sepa en 10 segundos a quién acudir si algo no va bien.', '',
     'TEXTO DEL CARTEL. Escribe EXACTAMENTE estos textos, letra por letra y cifra por cifra, en este orden:']
     .concat(textos, entidad ? ['- Nombre de la entidad, pequeño, al pie: «' + entidad + '»'] : [])
@@ -3871,13 +3871,39 @@ function promptCartelVisual(e, publico, conDatos) {
       '', 'PROHIBIDO: añadir cualquier otro texto, dato, cifra, teléfono, correo, dirección, nombre, número de registro, ley o logotipo que no aparezca arriba.']).join('\n');
 }
 
+const franjaInfantil = e => { const m = String((e && e.edades) || '').match(/\d+/); const n = m ? +m[0] : 6; return (n >= 3 && n < 11 ? n : 6) + ' a 11 años'; };
+// v26: QR del canal (enlace del formulario de la ficha) para pegarlo en los carteles
+function pintarQrCanal(e) {
+  const out = $('#plant-out'); if (!out || !e || $('#qr-canal')) return;
+  const url = String(e.canal_enlace || '').trim();
+  const caja = document.createElement('div'); caja.className = 'card'; caja.id = 'qr-canal';
+  if (!/^https?:\/\/\S+$/i.test(url)) {
+    caja.innerHTML = '<h3>🔳 Código QR del canal</h3><p class="nota">Para generar el QR, escribe el enlace del formulario en la ficha: <b>Mi club → Canal de comunicación → Enlace a formulario o código QR</b>.</p>';
+    out.append(caja); return;
+  }
+  const src = 'https://api.qrserver.com/v1/create-qr-code/?size=600x600&margin=12&format=png&data=' + encodeURIComponent(url);
+  caja.innerHTML = `<h3>🔳 Código QR del canal</h3><div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+    <img src="${esc(src)}" alt="Código QR del formulario del canal" width="160" height="160" style="border:1px solid var(--line);border-radius:8px;background:#fff">
+    <div style="flex:1;min-width:220px"><p class="nota" style="margin:0 0 8px">Lleva al formulario de la ficha:<br><span style="word-break:break-all">${esc(url)}</span></p>
+    <p class="nota" style="margin:0 0 10px">Antes de imprimirlo, comprueba con el móvil que abre el formulario <b>sin iniciar sesión</b> y que no pide nombre ni correo.</p>
+    <div class="ia-acciones"><button class="btn" type="button" id="qr-desc">Descargar QR (PNG)</button></div></div></div>`;
+  out.append(caja);
+  $('#qr-desc').onclick = async () => {
+    try {
+      const r = await fetch(src); if (!r.ok) throw new Error();
+      const b = await r.blob(), a = document.createElement('a');
+      a.href = URL.createObjectURL(b); a.download = 'QR-canal-' + String(e.nombre || 'club').replace(/[^\w-]+/g, '_') + '.png';
+      document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    } catch (er) { window.open(src, '_blank', 'noopener'); toast('Se ha abierto el QR en otra pestaña: botón derecho → Guardar imagen como…'); }
+  };
+}
 function pintarCartelVisual(e) {
   const out = $('#plant-out'); if (!out || !e) return;
   const caja = document.createElement('details'); caja.className = 'card'; caja.id = 'cartel-visual'; caja.open = true;
   caja.innerHTML = `<summary><b>🎨 Cartel visual con ChatGPT</b></summary>
     <p class="nota" style="margin:8px 0">Prompt para generar la imagen del cartel. Solo lleva textos breves, sin datos internos de la entidad.</p>
     <div class="form"><div class="fields">
-      <label>Público<select name="publico"><option value="general">Adolescentes y familias</option><option value="infantil">Niños y niñas de 6 a 11 años</option></select></label>
+      <label>Público<select name="publico"><option value="general">Adolescentes y familias</option><option value="infantil">Niños y niñas de ${franjaInfantil(e)}</option></select></label>
     </div>
     <label style="display:flex;gap:10px;align-items:flex-start;margin:10px 0;cursor:pointer"><input type="checkbox" name="datos" style="width:auto;margin-top:3px">
       <span><b>Incluir nombre y contacto del Delegado/a</b><br><span class="nota">Desactivado: solo diseño, con huecos en blanco para escribir los datos encima (riesgo cero). Activado: el prompt lleva nombre, teléfono, correo y buzón, que se envían a ChatGPT.</span></span></label></div>
@@ -3911,6 +3937,7 @@ function pintarCartelVisual(e) {
     if (id !== 'canal') return;
     const entId = $('#plant-entidad') && $('#plant-entidad').value;
     const e = (state.entidades || []).find(x => x.id === entId) || (state.club ? (state.entidades || [])[0] : null);
+    pintarQrCanal(e);
     pintarCartelVisual(e);
   };
 })();
