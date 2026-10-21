@@ -4400,7 +4400,15 @@ function matrizMejoras() {
   if (grupo) grupo.hidden = !visibles;
 }
 const v23LoadMatriz = loadMatriz;
-loadMatriz = async function () { await v23LoadMatriz(); try { matrizMejoras(); } catch (e) { console.error(e); } };
+loadMatriz = async function () {
+  await v23LoadMatriz(); try { matrizMejoras(); } catch (e) { console.error(e); }
+  const cod = state.tutResaltar; if (!cod) return; state.tutResaltar = '';
+  const fila = [...$$('#tabla-matriz tbody tr')].find(x => (x.querySelector('td b') || {}).textContent === cod);
+  if (!fila) return;
+  fila.classList.add('tut-fila'); fila.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const b = fila.querySelector('[data-req]'); if (b) setTimeout(() => b.focus({ preventScroll: true }), 600);
+  setTimeout(() => fila.classList.remove('tut-fila'), 8000);
+};
 
 // v23: TUTORIAL GUIADO DEL CLUB · misma ruta que la demo; cada paso se marca solo con los datos de la app
 const TUT_PASOS = [
@@ -4453,14 +4461,18 @@ function tutIr(dest) {
   const [tipo, val] = dest.includes(':') ? dest.split(':') : [dest, ''];
   if (tipo === 'ficha') { const e = state.entidades[0]; if (e) formEntidad(e, () => { state.entidades = []; tutRefrescar(true); }); return; }
   if (tipo === 'v') return show(val);
-  if (tipo === 'p') return can('ia') ? irPlantilla(val) : show('matriz');
-  if (tipo === 'm') {
-    state.filtroMatriz = '';
-    show('matriz');
+  if (tipo === 'p') {
+    if (!can('ia')) return show('matriz');
+    irPlantilla(val);
     let n = 0; const t = setInterval(() => {
-      const fila = [...$$('#tabla-matriz tbody tr')].find(x => (x.querySelector('td b') || {}).textContent === val);
-      if (fila || ++n > 40) { clearInterval(t); if (fila) { fila.scrollIntoView({ behavior: 'smooth', block: 'center' }); fila.classList.add('tut-fila'); setTimeout(() => fila.classList.remove('tut-fila'), 2500); } }
+      const b = document.querySelector('.plantilla[data-plant="' + val + '"]');
+      if (b || ++n > 40) { clearInterval(t); if (b) { b.classList.add('tut-destello'); setTimeout(() => b.classList.remove('tut-destello'), 5000); } }
     }, 200);
+    return;
+  }
+  if (tipo === 'm') {
+    state.filtroMatriz = ''; state.tutResaltar = val;
+    show('matriz');
   }
 }
 function tutPintar() {
@@ -4474,7 +4486,11 @@ function tutPintar() {
       '#tut-barra .pasos-barra{height:8px;border-radius:4px;background:var(--bg);overflow:hidden;margin-top:6px}#tut-barra .pasos-barra i{display:block;height:100%;background:var(--ok)}' +
       '#tut-barra .tut-mini{border:0;background:none;color:var(--brand);text-decoration:underline;cursor:pointer;font:inherit;padding:4px}' +
       '.tut-oferta{border:2px solid var(--brand-2)}.tut-oferta .tut-acc{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}' +
-      'tr.tut-fila td{background:color-mix(in srgb,var(--brand-2) 18%,transparent);transition:background .4s}' +
+      '@keyframes tutDestello{0%,100%{background:color-mix(in srgb,var(--brand-2) 10%,transparent)}50%{background:color-mix(in srgb,var(--brand-2) 45%,transparent)}}' +
+      '@keyframes tutBorde{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 0 4px var(--brand-2)}}' +
+      'tr.tut-fila td{animation:tutDestello .9s ease-in-out 5;background:color-mix(in srgb,var(--brand-2) 15%,transparent)}tr.tut-fila td:first-child{box-shadow:inset 6px 0 0 var(--brand-2)}' +
+      '.plantilla.tut-destello{animation:tutBorde .9s ease-in-out 5}' +
+      '@media (prefers-reduced-motion:reduce){tr.tut-fila td,.plantilla.tut-destello{animation:none}.plantilla.tut-destello{box-shadow:0 0 0 4px var(--brand-2)}}' +
       '.tut-lista{margin:8px 0 0;padding-left:20px}.tut-lista li{margin:2px 0}.tut-lista li.hecho{color:var(--muted)}';
     document.head.appendChild(st);
   }
