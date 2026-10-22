@@ -4961,6 +4961,31 @@ GUIA.forEach(t => { if (t[1] === 'Matriz de cumplimiento · la pieza clave') t[2
   '<tr><td><b>Personales sensibles</b></td><td>Certificados negativos de delitos sexuales (K2), hojas de aceptación con DNI (D2), autorizaciones firmadas por las familias (E1, F1)</td><td><b>No.</b> Se custodian en el club; en la Matriz, solo un título: «n de n, custodiados en Secretaría».</td></tr></tbody></table>' +
   '<ul><li>Un enlace «cualquiera con el enlace» lo abre quien lo reciba: un reenvío o un correo equivocado basta para exponerlo.</li><li>La Matriz acredita que el club <b>tiene</b> los documentos, no su contenido. Si alguien con competencia los pide, se muestran en el club.</li><li>Para cambiar el acceso en Drive: clic derecho en el archivo → <b>Compartir</b> → Acceso general → <b>Restringido</b> o <b>Cualquier persona con el enlace</b>.</li><li>El informe del club solo muestra el título de cada evidencia, nunca el enlace.</li></ul>', '', 'matriz']); });
 
+// v37: recomendaciones en cada pantalla (solo las que se resuelven en ella)
+const REC_VISTAS = { riesgos: ['riesgos', '#riesgos-entidad'], agentes: ['agentes', '#agentes-entidad'], formacion: ['formacion', null],
+  autorizaciones: ['autorizaciones', '#aut-entidad'], encuestas: ['encuestas', '#enc-entidad'], entidades: ['ficha', null] };
+async function pintarRecVista(vista) {
+  const cfgV = REC_VISTAS[vista], v = $('#view-' + vista); if (!cfgV || !v) return;
+  if (!state.club && (vista === 'formacion' || vista === 'entidades')) return; // en municipal: Entidades ya lo muestra por fila
+  const sel = cfgV[1] && $(cfgV[1]), entidad_id = sel ? sel.value : '';
+  if (!state.club && !entidad_id) return;
+  let recs; try { recs = await API.call('misRecomendaciones', entidad_id ? { entidad_id } : {}); } catch (e) { return; }
+  recEstilo(); if (!$('#tut-estilo') && typeof tutPintar === 'function') tutPintar();
+  recs = recs.filter(r => r.ir === cfgV[0]);
+  let c = $('#rec-' + vista);
+  if (!c) { c = document.createElement('div'); c.id = 'rec-' + vista; c.className = 'card rec-card'; const ref = v.querySelector(':scope > p.nota') || v.querySelector(':scope > header'); ref.after(c); }
+  if (!recs.length) { c.innerHTML = '<small class="st ok">💡 ✓ Sin recomendaciones pendientes en esta pantalla</small>'; return; }
+  c.innerHTML = `<details${recs.some(r => r.p === 'alta') ? ' open' : ''}><summary style="cursor:pointer;min-height:40px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>💡 Recomendaciones (${recs.length})</b> <small>${recCuenta(recs)}</small></summary>
+    <ul class="rec-lista">${recs.map(r => { const cods = [...new Set(r.t.match(/\b[A-K][12]\b/g) || [])];
+      return `<li><span aria-hidden="true">${REC_ICO[r.p]}</span><span class="t">${esc(r.t)}</span>${cods.map(cd => `<button type="button" class="btn ghost" data-recv="${cd}" title="Ver ${cd} en la Matriz" style="min-height:36px;padding:4px 10px">${cd} en la Matriz</button>`).join(' ')}</li>`; }).join('')}</ul></details>`;
+  c.querySelectorAll('[data-recv]').forEach(b => b.onclick = () => { state.filtroMatriz = ''; state.tutResaltar = b.dataset.recv; const rc = $('#revision-ia'); if (rc) rc.innerHTML = ''; show('matriz'); });
+}
+(function () {
+  [['riesgos', () => loadRiesgos, f => { loadRiesgos = f; }], ['agentes', () => loadAgentes, f => { loadAgentes = f; }], ['formacion', () => loadFormacion, f => { loadFormacion = f; }],
+   ['autorizaciones', () => loadAutorizaciones, f => { loadAutorizaciones = f; }], ['encuestas', () => loadEncuestas, f => { loadEncuestas = f; }], ['entidades', () => loadEntidades, f => { loadEntidades = f; }]]
+    .forEach(([vista, get, set]) => { const base = get(); if (typeof base !== 'function') return; set(async function () { await base.apply(this, arguments); pintarRecVista(vista); }); });
+})();
+
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
