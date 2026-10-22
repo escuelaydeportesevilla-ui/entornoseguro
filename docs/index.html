@@ -4693,6 +4693,41 @@ $('#riesgos-ia') && ($('#riesgos-ia').onclick = () => {
 });
 GUIA.forEach(t => { if (t[1] === 'Análisis de riesgos') t[2].unshift(['¿Cómo hago el análisis de riesgos con IA y lo paso a la tabla?', '<ol><li><b>Riesgos → Proponer con IA</b>. El prompt lleva los datos de la ficha (actividades, edades, instalación, desplazamientos, pernocta, ratio) y nunca datos personales.</li><li><b>Abrir en Claude</b> → copia la respuesta (una tabla) → pégala en la app.</li><li><b>📥 Pasar los riesgos a la tabla</b>: revisa la lista, desmarca lo que no aplique y elige el estado de las medidas. Si el protocolo ya las recoge y se aplican, marca <b>Implantada</b> para que no generen alertas.</li><li><b>Guardar los riesgos marcados</b>. Después marca <b>C1 y C2</b> en la Matriz (puedes guardar también el análisis en Documentos como evidencia).</li></ol>', '', 'riesgos']); });
 
+// v28: registro de riesgos aprobado (lo guardado en la tabla) como evidencia de C1 y C2
+function htmlRegistroRiesgos(e, rows) {
+  const NV = { 1: 'Baja', 2: 'Media', 3: 'Alta' }, NI = { 1: 'Bajo', 2: 'Medio', 3: 'Alto' };
+  const est = v => (ESTADOS_R.find(x => x[0] === v) || ['', 'Pendiente'])[1];
+  const orden = { alto: 0, medio: 1, bajo: 2 };
+  const amb = [...new Set(rows.map(r => r.ambito))];
+  const n = k => rows.filter(r => r.nivel === k).length;
+  let b = '<table>' + fila('Entidad', esc(e.nombre || '')) + (e.actividades ? fila('Actividades', esc(e.actividades)) : '') + (e.edades ? fila('Edades', esc(e.edades)) : '') +
+    (e.lugar_actividad ? fila('Instalación habitual', esc(e.lugar_actividad)) : '') + fila('Riesgos registrados', rows.length + ' (alto ' + n('alto') + ' · medio ' + n('medio') + ' · bajo ' + n('bajo') + ')') +
+    fila('Medidas implantadas', rows.filter(r => r.estado === 'implantada').length + ' de ' + rows.length) + '</table>';
+  b += '<p>Registro de las situaciones de riesgo identificadas en las actividades de la entidad, su valoración (probabilidad × impacto) y las medidas preventivas adoptadas, conforme al análisis de riesgos del Protocolo Marco de protección de las personas menores frente a la violencia en el deporte (Orden de 18 de noviembre de 2024).</p>';
+  amb.forEach(a => {
+    const rs = rows.filter(r => r.ambito === a).sort((x, y) => orden[x.nivel] - orden[y.nivel]);
+    b += `<h2>${esc(a)}</h2><table><thead><tr><th>Situación de riesgo</th><th>P · I</th><th>Nivel</th><th>Medidas preventivas</th><th>Responsable</th><th>Estado</th><th>Revisión</th></tr></thead><tbody>` +
+      rs.map(r => `<tr><td>${esc(r.descripcion)}</td><td>${NV[r.probabilidad] || ''} · ${NI[r.impacto] || ''}</td><td class="${r.nivel === 'alto' ? 'bad' : r.nivel === 'medio' ? 'warn' : 'ok'} st">${esc(r.nivel)}</td><td>${esc(r.medidas || '')}</td><td>${esc(r.responsable || '')}</td><td>${esc(est(r.estado))}</td><td>${esc(r.fecha_revision || '')}</td></tr>`).join('') + '</tbody></table>';
+  });
+  b += '<h2>Aprobación</h2><p>El órgano de gobierno de la entidad aprueba el presente análisis de riesgos y las medidas preventivas en sesión de fecha …………………………… y encarga su seguimiento al Delegado/a de Protección.</p>' +
+    '<div class="firma"><div>Delegado/a de Protección<br>' + esc(e.delegado_nombre || '') + '</div><div>Vº Bº Presidencia<br>' + esc(e.presidencia_nombre || '') + '</div></div>';
+  b += '<div class="nota">Documento generado a partir del registro de riesgos de EntornoSeguro. Recoge situaciones de riesgo y medidas preventivas; no valora personas ni hechos concretos.</div>';
+  return plantillaInforme('Análisis de riesgos y medidas preventivas', e.nombre || '', b);
+}
+(function () {
+  const acc = $('#view-riesgos .ia-acciones'); if (!acc || $('#riesgos-reg-pdf')) return;
+  acc.insertAdjacentHTML('beforeend', '<button class="btn ghost" id="riesgos-reg-pdf" type="button">📄 Registro de riesgos (PDF)</button><button class="btn ghost" id="riesgos-reg-word" type="button">Word</button>');
+  const datos = () => {
+    const rows = state.riesgos || [];
+    if (!rows.length) { toast('Aún no hay riesgos guardados en la tabla', true); return null; }
+    const e = state.entidades.find(x => x.id === $('#riesgos-entidad').value) || state.entidades[0] || {};
+    return htmlRegistroRiesgos(e, rows);
+  };
+  $('#riesgos-reg-pdf').onclick = () => { const h = datos(); if (h) abrirInforme(h); };
+  $('#riesgos-reg-word').onclick = () => { const h = datos(); if (h) descargar('﻿' + h, 'application/msword', nombreInf('analisis-de-riesgos')); };
+})();
+GUIA.forEach(t => { if (t[1] === 'Análisis de riesgos') t[2].splice(1, 0, ['¿Qué subo como evidencia de C1 y C2?', '<p>El <b>registro de riesgos</b>, no la propuesta de la IA: solo recoge lo que has guardado en la tabla, con su nivel, medidas, responsable y estado. <b>Riesgos → 📄 Registro de riesgos (PDF)</b> o <b>Word</b>, apruébalo en la Junta, súbelo a Drive y regístralo en la Matriz en <b>C1</b> y <b>C2</b>. C2 queda en <b>Cumple</b> cuando todas las medidas están implantadas; si quedan en curso, <b>Parcial</b>.</p>', '', 'riesgos']); });
+
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
