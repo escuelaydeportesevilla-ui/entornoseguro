@@ -4932,7 +4932,7 @@ async function pintarRecMatriz() {
   if (!c) { c = document.createElement('div'); c.id = 'rec-matriz'; c.className = 'card rec-card'; const f = $('#matriz-filtro') || t.closest('.card'); f.parentNode.insertBefore(c, f); }
   if (!recs.length) { c.innerHTML = '<small class="st ok">💡 ✓ Sin recomendaciones pendientes en la Matriz</small>'; return; }
   c.innerHTML = `<details><summary style="cursor:pointer;min-height:40px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>💡 Recomendaciones sobre la Matriz (${recs.length})</b> <small>${recCuenta(recs)}</small></summary>
-    <ul class="rec-lista">${recs.map((r, i) => { const cods = [...new Set(r.t.match(/\b[A-K][12]\b/g) || [])].slice(0, 8);
+    <ul class="rec-lista">${recs.map((r, i) => { const cods = [...new Set(r.t.match(/\b[A-K][12]\b/g) || [])].slice(0, 21);
       return `<li><span aria-hidden="true">${REC_ICO[r.p]}</span><span class="t">${esc(r.t)}</span>${cods.map(cd => `<button type="button" class="btn ghost" data-recm="${cd}" style="min-height:36px;padding:4px 10px">${cd}</button>`).join(' ')}</li>`; }).join('')}</ul></details>`;
   $$('[data-recm]').forEach(b => b.onclick = () => resaltarFilaMatriz(b.dataset.recm));
 }
