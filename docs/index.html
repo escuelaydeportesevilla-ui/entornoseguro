@@ -4787,17 +4787,19 @@ GUIA.forEach(t => { if (t[1] === 'Análisis de riesgos') t[2].splice(1, 0, ['¿Q
 
 // v31: RECOMENDACIONES AUTOMÁTICAS (Ampliacion v1.9) · reglas fijas sobre los datos, sin IA
 const REC_ICO = { alta: '🔴', media: '🟠', baja: '⚪' };
+const recItems = r => r.items && r.items.length ? '<ul class="rec-items">' + r.items.map(i => `<li>${esc(i.t)}${i.id && $('#view-riesgos') && !$('#view-riesgos').classList.contains('hidden') ? ` <button type="button" class="link" data-rec-rie="${esc(i.id)}">Editar</button>` : ''}</li>`).join('') + '</ul>' : '';
+document.addEventListener('click', ev => { const b = ev.target.closest && ev.target.closest('[data-rec-rie]'); if (!b) return; const r = (state.riesgos || []).find(x => String(x.id) === b.dataset.recRie); if (r) formRiesgo(r); });
 function recEstilo() {
   if ($('#rec-estilo')) return;
   const st = document.createElement('style'); st.id = 'rec-estilo';
   st.textContent = '.rec-lista{list-style:none;margin:8px 0;padding:0}.rec-lista li{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid var(--line)}.rec-lista li:first-child{border-top:0}' +
     '.rec-lista .t{flex:1}.rec-fila td{background:var(--bg);padding:4px 12px 10px}.rec-fila summary{cursor:pointer;font-weight:600;min-height:40px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}' +
-    '.rec-cab small{font-weight:400;color:var(--muted)}.rec-card{border:2px solid var(--warn)}';
+    '.rec-cab small{font-weight:400;color:var(--muted)}.rec-card{border:2px solid var(--warn)}.rec-items{margin:4px 0 0;padding-left:18px;font-size:.92em;color:var(--muted)}.rec-lista .rec-items li{display:list-item;border:0;padding:2px 0;margin:0;list-style:disc}';
   document.head.appendChild(st);
 }
 function recTexto(nombre, recs) {
   return 'Recomendaciones para ' + nombre + ' (EntornoSeguro, ' + new Date().toLocaleDateString('es-ES') + '):\n\n' +
-    recs.map((r, i) => (i + 1) + '. [' + ({ alta: 'Prioridad alta', media: 'Prioridad media', baja: 'Mejora' })[r.p] + '] ' + r.t).join('\n') +
+    recs.map((r, i) => (i + 1) + '. [' + ({ alta: 'Prioridad alta', media: 'Prioridad media', baja: 'Mejora' })[r.p] + '] ' + r.t + (r.items ? r.items.map(x => '\n   - ' + x.t).join('') : '')).join('\n') +
     '\n\nPuedes resolverlas desde la aplicación: el tutorial del Panel te guía paso a paso.';
 }
 function recCuenta(recs) { const n = k => recs.filter(r => r.p === k).length; return (n('alta') ? REC_ICO.alta + ' ' + n('alta') + ' alta(s) ' : '') + (n('media') ? REC_ICO.media + ' ' + n('media') + ' media(s) ' : '') + (n('baja') ? REC_ICO.baja + ' ' + n('baja') + ' de mejora' : ''); }
@@ -4814,7 +4816,7 @@ function recCuenta(recs) { const n = k => recs.filter(r => r.p === k).length; re
       const recs = c.recomendaciones;
       const fila = document.createElement('tr'); fila.className = 'rec-fila';
       fila.innerHTML = `<td colspan="${tr.cells.length}">${recs.length ? `<details><summary>💡 Recomendaciones para el club (${recs.length}) <span class="rec-cab"><small>${recCuenta(recs)}</small></span></summary>
-        <ul class="rec-lista">${recs.map(r => `<li><span aria-hidden="true">${REC_ICO[r.p]}</span><span class="t">${esc(r.t)}</span></li>`).join('')}</ul>
+        <ul class="rec-lista">${recs.map(r => `<li><span aria-hidden="true">${REC_ICO[r.p]}</span><span class="t">${esc(r.t)}${recItems(r)}</span></li>`).join('')}</ul>
         <div class="ia-acciones"><button type="button" class="btn ghost" data-rec-copiar="${esc(c.id)}">Copiar para enviar al club</button>${c.email ? `<a class="btn ghost" href="mailto:${esc(c.email)}?subject=${encodeURIComponent('EntornoSeguro · Recomendaciones para ' + c.nombre)}&body=${encodeURIComponent(recTexto(c.nombre, recs))}">Enviar por correo</a>` : ''}</div>
         <p class="nota" style="margin:4px 0 0">Se calculan solas con los datos del club (ficha, Matriz, agentes, formación, riesgos, autorizaciones y encuestas). No usan IA ni muestran datos personales.</p></details>`
         : '<small class="st ok">✓ Sin recomendaciones pendientes</small>'}</td>`;
@@ -4835,7 +4837,7 @@ async function pintarRecomendacionesClub() {
     agentes: ['Ir a Agentes', () => show('agentes')], formacion: ['Ir a Formación', () => show('formacion')], riesgos: ['Ir a Riesgos', () => show('riesgos')],
     autorizaciones: ['Ir a Autorizaciones', () => show('autorizaciones')], encuestas: ['Ir a Encuestas', () => show('encuestas')] };
   card.innerHTML = `<details${recs.some(r => r.p === 'alta') ? ' open' : ''}><summary><b>💡 Recomendaciones (${recs.length})</b> <small>${recCuenta(recs)}</small></summary>
-    <ul class="rec-lista">${recs.map((r, i) => `<li><span aria-hidden="true">${REC_ICO[r.p]}</span><span class="t">${esc(r.t)}</span>${DEST[r.ir] && hayVista(r.ir === 'ficha' ? 'panel' : r.ir) ? `<button class="btn ghost" type="button" data-rec-ir="${i}">${DEST[r.ir][0]}</button>` : ''}</li>`).join('')}</ul>
+    <ul class="rec-lista">${recs.map((r, i) => `<li><span aria-hidden="true">${REC_ICO[r.p]}</span><span class="t">${esc(r.t)}${recItems(r)}</span>${DEST[r.ir] && hayVista(r.ir === 'ficha' ? 'panel' : r.ir) ? `<button class="btn ghost" type="button" data-rec-ir="${i}">${DEST[r.ir][0]}</button>` : ''}</li>`).join('')}</ul>
     <p class="nota" style="margin:0">Se calculan solas con los datos del club. Tu ${esc(state.inst ? 'ayuntamiento' : 'gestor')} ve las mismas recomendaciones.</p></details>`;
   card.querySelector('summary').style.cssText = 'cursor:pointer;min-height:40px;display:flex;gap:8px;align-items:center;flex-wrap:wrap';
   $$('[data-rec-ir]').forEach(b => b.onclick = () => DEST[recs[+b.dataset.recIr].ir][1](recs[+b.dataset.recIr]));
@@ -4865,7 +4867,7 @@ GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Qué son las «
       if (!recs || (tr.nextElementSibling && tr.nextElementSibling.classList.contains('rec-fila'))) return;
       const fila = document.createElement('tr'); fila.className = 'rec-fila'; if (tr.hidden || tr.classList.contains('inactiva')) fila.hidden = true;
       fila.innerHTML = `<td colspan="${tr.cells.length}">${recs.length ? `<details><summary>💡 Recomendaciones (${recs.length}) <span class="rec-cab"><small>${recCuenta(recs)}</small></span></summary>
-        <ul class="rec-lista">${recs.map(x => `<li><span aria-hidden="true">${REC_ICO[x.p]}</span><span class="t">${esc(x.t)}</span></li>`).join('')}</ul>
+        <ul class="rec-lista">${recs.map(x => `<li><span aria-hidden="true">${REC_ICO[x.p]}</span><span class="t">${esc(x.t)}${recItems(x)}</span></li>`).join('')}</ul>
         <div class="ia-acciones"><button type="button" class="btn ghost" data-rec-ent="${esc(e.id)}">Copiar para enviar a la entidad</button><button type="button" class="btn ghost" data-rec-mat="${esc(e.id)}">Ver su Matriz</button></div></details>`
         : '<small class="st ok">✓ Sin recomendaciones pendientes</small>'}</td>`;
       tr.after(fila);
@@ -4933,7 +4935,7 @@ async function pintarRecMatriz() {
   if (!recs.length) { c.innerHTML = '<small class="st ok">💡 ✓ Sin recomendaciones pendientes en la Matriz</small>'; return; }
   c.innerHTML = `<details><summary style="cursor:pointer;min-height:40px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>💡 Recomendaciones sobre la Matriz (${recs.length})</b> <small>${recCuenta(recs)}</small></summary>
     <ul class="rec-lista">${recs.map((r, i) => { const cods = [...new Set(r.t.match(/\b[A-K][12]\b/g) || [])].slice(0, 21);
-      return `<li><span aria-hidden="true">${REC_ICO[r.p]}</span><span class="t">${esc(r.t)}</span>${cods.map(cd => `<button type="button" class="btn ghost" data-recm="${cd}" style="min-height:36px;padding:4px 10px">${cd}</button>`).join(' ')}</li>`; }).join('')}</ul></details>`;
+      return `<li><span aria-hidden="true">${REC_ICO[r.p]}</span><span class="t">${esc(r.t)}${recItems(r)}</span>${cods.map(cd => `<button type="button" class="btn ghost" data-recm="${cd}" style="min-height:36px;padding:4px 10px">${cd}</button>`).join(' ')}</li>`; }).join('')}</ul></details>`;
   $$('[data-recm]').forEach(b => b.onclick = () => resaltarFilaMatriz(b.dataset.recm));
 }
 (function () {
@@ -4977,7 +4979,7 @@ async function pintarRecVista(vista) {
   if (!recs.length) { c.innerHTML = '<small class="st ok">💡 ✓ Sin recomendaciones pendientes en esta pantalla</small>'; return; }
   c.innerHTML = `<details${recs.some(r => r.p === 'alta') ? ' open' : ''}><summary style="cursor:pointer;min-height:40px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>💡 Recomendaciones (${recs.length})</b> <small>${recCuenta(recs)}</small></summary>
     <ul class="rec-lista">${recs.map(r => { const cods = [...new Set(r.t.match(/\b[A-K][12]\b/g) || [])];
-      return `<li><span aria-hidden="true">${REC_ICO[r.p]}</span><span class="t">${esc(r.t)}</span>${cods.map(cd => `<button type="button" class="btn ghost" data-recv="${cd}" title="Ver ${cd} en la Matriz" style="min-height:36px;padding:4px 10px">${cd} en la Matriz</button>`).join(' ')}</li>`; }).join('')}</ul></details>`;
+      return `<li><span aria-hidden="true">${REC_ICO[r.p]}</span><span class="t">${esc(r.t)}${recItems(r)}</span>${cods.map(cd => `<button type="button" class="btn ghost" data-recv="${cd}" title="Ver ${cd} en la Matriz" style="min-height:36px;padding:4px 10px">${cd} en la Matriz</button>`).join(' ')}</li>`; }).join('')}</ul></details>`;
   c.querySelectorAll('[data-recv]').forEach(b => b.onclick = () => { state.filtroMatriz = ''; state.tutResaltar = b.dataset.recv; const rc = $('#revision-ia'); if (rc) rc.innerHTML = ''; show('matriz'); });
 }
 (function () {
