@@ -3641,7 +3641,14 @@ formEntidad = async function (e, despues, resaltar) {
     if (av.length && !confirm('Revisa estos datos antes de guardar:\n\n• ' + av.map(a => a[1]).join('\n• ') + '\n\n¿Guardar igualmente?')) {
       return formEntidad(Object.assign({}, e, d), despues, av.map(a => a[0]));
     }
-    await run(() => API.call('guardarEntidad', d));
+    try { await API.call('guardarEntidad', d); }
+    catch (er) {
+      const m = /^DUPLICADO_CLUB:(.*)\|(.*)$/.exec(er.message || '');
+      if (!m) { toast(er.message, true); return; }
+      if (!confirm(`«${m[1]}» ya tiene la aplicación como club alojado (usuario ${m[2]}), con su propia ficha y su propia Matriz.\n\nSi lo das de alta también aquí, tendrás DOS registros que no se sincronizan: cada dato habrá que mantenerlo dos veces y puede contarse doble en los informes.\n\nLo recomendable es seguirlo desde «Mis clubes». ¿Darlo de alta aquí igualmente?`)) return;
+      d.confirmar_duplicado = 'SI';
+      await run(() => API.call('guardarEntidad', d));
+    }
     toast('Ficha guardada');
     state.entidades = await run(() => API.call('listarEntidades'));
     if (!$('#view-entidades').classList.contains('hidden')) loadEntidades();
@@ -4776,6 +4783,97 @@ GUIA.forEach(t => { if (t[1] === 'Análisis de riesgos') t[2].splice(1, 0, ['¿Q
     return h.replace(/(>|· |\b)(\d{4})-(\d{2})-(\d{2})(?![\d-])/g, (x, p, y, mo, da) => p + da + '/' + mo + '/' + y);
   };
 })();
+
+// v31: RECOMENDACIONES AUTOMÁTICAS (Ampliacion v1.9) · reglas fijas sobre los datos, sin IA
+const REC_ICO = { alta: '🔴', media: '🟠', baja: '⚪' };
+function recEstilo() {
+  if ($('#rec-estilo')) return;
+  const st = document.createElement('style'); st.id = 'rec-estilo';
+  st.textContent = '.rec-lista{list-style:none;margin:8px 0;padding:0}.rec-lista li{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid var(--line)}.rec-lista li:first-child{border-top:0}' +
+    '.rec-lista .t{flex:1}.rec-fila td{background:var(--bg);padding:4px 12px 10px}.rec-fila summary{cursor:pointer;font-weight:600;min-height:40px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}' +
+    '.rec-cab small{font-weight:400;color:var(--muted)}.rec-card{border:2px solid var(--warn)}';
+  document.head.appendChild(st);
+}
+function recTexto(nombre, recs) {
+  return 'Recomendaciones para ' + nombre + ' (EntornoSeguro, ' + new Date().toLocaleDateString('es-ES') + '):\n\n' +
+    recs.map((r, i) => (i + 1) + '. [' + ({ alta: 'Prioridad alta', media: 'Prioridad media', baja: 'Mejora' })[r.p] + '] ' + r.t).join('\n') +
+    '\n\nPuedes resolverlas desde la aplicación: el tutorial del Panel te guía paso a paso.';
+}
+function recCuenta(recs) { const n = k => recs.filter(r => r.p === k).length; return (n('alta') ? REC_ICO.alta + ' ' + n('alta') + ' alta(s) ' : '') + (n('media') ? REC_ICO.media + ' ' + n('media') + ' media(s) ' : '') + (n('baja') ? REC_ICO.baja + ' ' + n('baja') + ' de mejora' : ''); }
+(function () {
+  if (typeof loadClubes !== 'function') return;
+  const base = loadClubes;
+  loadClubes = async function () {
+    await base(); recEstilo();
+    const hay = (state.clubes || []).some(c => Array.isArray(c.recomendaciones));
+    if (!hay) return;
+    $$('#tabla-clubes [data-club]').forEach(b => {
+      const c = (state.clubes || []).find(x => x.id === b.dataset.club), tr = b.closest('tr');
+      if (!c || !Array.isArray(c.recomendaciones) || tr.nextElementSibling && tr.nextElementSibling.classList.contains('rec-fila')) return;
+      const recs = c.recomendaciones;
+      const fila = document.createElement('tr'); fila.className = 'rec-fila';
+      fila.innerHTML = `<td colspan="${tr.cells.length}">${recs.length ? `<details><summary>💡 Recomendaciones para el club (${recs.length}) <span class="rec-cab"><small>${recCuenta(recs)}</small></span></summary>
+        <ul class="rec-lista">${recs.map(r => `<li><span aria-hidden="true">${REC_ICO[r.p]}</span><span class="t">${esc(r.t)}</span></li>`).join('')}</ul>
+        <div class="ia-acciones"><button type="button" class="btn ghost" data-rec-copiar="${esc(c.id)}">Copiar para enviar al club</button>${c.email ? `<a class="btn ghost" href="mailto:${esc(c.email)}?subject=${encodeURIComponent('EntornoSeguro · Recomendaciones para ' + c.nombre)}&body=${encodeURIComponent(recTexto(c.nombre, recs))}">Enviar por correo</a>` : ''}</div>
+        <p class="nota" style="margin:4px 0 0">Se calculan solas con los datos del club (ficha, Matriz, agentes, formación, riesgos, autorizaciones y encuestas). No usan IA ni muestran datos personales.</p></details>`
+        : '<small class="st ok">✓ Sin recomendaciones pendientes</small>'}</td>`;
+      tr.after(fila);
+    });
+    $$('[data-rec-copiar]').forEach(b => b.onclick = () => { const c = state.clubes.find(x => x.id === b.dataset.recCopiar); copiarTexto(recTexto(c.nombre, c.recomendaciones)); });
+  };
+})();
+// Panel del club: las mismas recomendaciones, con acceso directo a cada pantalla
+async function pintarRecomendacionesClub() {
+  const v = $('#view-panel'); if (!v || !state.club) return;
+  recEstilo();
+  let recs; try { recs = await API.call('misRecomendaciones', {}); } catch (e) { return; }
+  let card = $('#rec-card');
+  if (!card) { card = document.createElement('div'); card.id = 'rec-card'; card.className = 'card rec-card'; const ref = $('#pasos-card') || v.querySelector('header'); ref.after(card); }
+  if (!recs.length) { card.innerHTML = '<h3>💡 Recomendaciones</h3><p class="st ok">✓ No hay recomendaciones pendientes. ¡Buen trabajo!</p>'; return; }
+  const DEST = { matriz: ['Ir a la Matriz', () => show('matriz')], ficha: ['Abrir la ficha', () => state.entidades[0] && formEntidad(state.entidades[0], () => { state.entidades = []; loadPanel(); })],
+    agentes: ['Ir a Agentes', () => show('agentes')], formacion: ['Ir a Formación', () => show('formacion')], riesgos: ['Ir a Riesgos', () => show('riesgos')],
+    autorizaciones: ['Ir a Autorizaciones', () => show('autorizaciones')], encuestas: ['Ir a Encuestas', () => show('encuestas')] };
+  card.innerHTML = `<details${recs.some(r => r.p === 'alta') ? ' open' : ''}><summary><b>💡 Recomendaciones (${recs.length})</b> <small>${recCuenta(recs)}</small></summary>
+    <ul class="rec-lista">${recs.map((r, i) => `<li><span aria-hidden="true">${REC_ICO[r.p]}</span><span class="t">${esc(r.t)}</span>${DEST[r.ir] && hayVista(r.ir === 'ficha' ? 'panel' : r.ir) ? `<button class="btn ghost" type="button" data-rec-ir="${i}">${DEST[r.ir][0]}</button>` : ''}</li>`).join('')}</ul>
+    <p class="nota" style="margin:0">Se calculan solas con los datos del club. Tu ${esc(state.inst ? 'ayuntamiento' : 'gestor')} ve las mismas recomendaciones.</p></details>`;
+  card.querySelector('summary').style.cssText = 'cursor:pointer;min-height:40px;display:flex;gap:8px;align-items:center;flex-wrap:wrap';
+  $$('[data-rec-ir]').forEach(b => b.onclick = () => DEST[recs[+b.dataset.recIr].ir][1]());
+}
+(function () {
+  const base = loadPanel;
+  loadPanel = async function () { await base(); if (state.club) pintarRecomendacionesClub(); };
+})();
+GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Qué son las «Recomendaciones» del Panel?', '<p>Una lista que la app calcula sola, <b>sin IA</b>, con los datos del club: ficha incompleta, requisitos sin evidencia o sin fecha, revisiones vencidas, agentes sin certificado o sin formación registrada, requisitos que ya podrías marcar (K1, K2, D2), riesgos altos sin implantar, autorizaciones o encuestas pendientes…</p><ul><li>🔴 prioridad alta · 🟠 media · ⚪ mejora.</li><li>Cada una tiene un botón que te lleva a la pantalla donde se resuelve.</li><li>Tu gestor (ayuntamiento o Escuela&amp;Deporte) ve las mismas recomendaciones en <b>Mis clubes</b> y puede enviártelas por correo.</li></ul>', '', 'panel']); if (t[1] === '💼 Modelo comercial y versiones (solo versión maestra)' || t[1] === 'Entidades y coordinación con clubes') t[2].push(['¿Qué son las recomendaciones de «Mis clubes»?', '<p>Debajo de cada club aparece <b>💡 Recomendaciones para el club</b>: reglas fijas sobre sus datos (sin IA y sin datos personales) que indican qué le falta y en qué orden. Con <b>Copiar para enviar al club</b> o <b>Enviar por correo</b> se las haces llegar. El club ve la misma lista en su Panel.</p>', 'admin', 'clubes']); });
+
+// v32: recomendaciones automáticas también en Entidades (modo municipal) y aviso de clubes duplicados
+(function () {
+  const base = loadEntidades;
+  loadEntidades = async function () {
+    await base();
+    if (state.club || !can('leer')) return;
+    let r; try { r = await API.call('recomendacionesEntidades', {}); } catch (e) { return; }
+    recEstilo();
+    const n = t => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
+    const aloj = new Set((r.alojados || []).map(n));
+    $$('#tabla-entidades tbody tr').forEach(tr => {
+      if (tr.classList.contains('rec-fila')) return;
+      const b = tr.querySelector('[data-edit]'); if (!b) return;
+      const e = state.entidades.find(x => x.id === b.dataset.edit); if (!e) return;
+      if (aloj.has(n(e.nombre)) && !tr.querySelector('.chip-aloj')) tr.cells[0].querySelector('b').insertAdjacentHTML('afterend', ' <span class="chip chip-aloj" title="Este club también usa la app como club alojado: sus datos reales están en Mis clubes">También en Mis clubes</span>');
+      const recs = (r.recs || {})[e.id];
+      if (!recs || (tr.nextElementSibling && tr.nextElementSibling.classList.contains('rec-fila'))) return;
+      const fila = document.createElement('tr'); fila.className = 'rec-fila'; if (tr.hidden || tr.classList.contains('inactiva')) fila.hidden = true;
+      fila.innerHTML = `<td colspan="${tr.cells.length}">${recs.length ? `<details><summary>💡 Recomendaciones (${recs.length}) <span class="rec-cab"><small>${recCuenta(recs)}</small></span></summary>
+        <ul class="rec-lista">${recs.map(x => `<li><span aria-hidden="true">${REC_ICO[x.p]}</span><span class="t">${esc(x.t)}</span></li>`).join('')}</ul>
+        <div class="ia-acciones"><button type="button" class="btn ghost" data-rec-ent="${esc(e.id)}">Copiar para enviar a la entidad</button><button type="button" class="btn ghost" data-rec-mat="${esc(e.id)}">Ver su Matriz</button></div></details>`
+        : '<small class="st ok">✓ Sin recomendaciones pendientes</small>'}</td>`;
+      tr.after(fila);
+    });
+    $$('[data-rec-ent]').forEach(b => b.onclick = () => { const e = state.entidades.find(x => x.id === b.dataset.recEnt); copiarTexto(recTexto(e.nombre, r.recs[e.id]).replace('el tutorial del Panel te guía paso a paso.', 'o presentando la documentación al Delegado/a de Protección municipal.')); });
+    $$('[data-rec-mat]').forEach(b => b.onclick = () => { show('matriz'); setTimeout(() => { const s = $('#matriz-entidad'); if (s) { s.value = b.dataset.recMat; loadMatriz(); } }, 60); });
+  };
+})();
+GUIA.forEach(t => { if (t[1] === 'Entidades y coordinación con clubes') t[2].push(['¿Qué pasa si doy de alta en Entidades un club que ya tiene la app?', '<p>Son <b>dos registros distintos que no se sincronizan</b>: el club alojado (su hoja, su ficha y su Matriz, en <b>Mis clubes</b>) y la entidad del ayuntamiento (en <b>Entidades</b>). Habría que mantener cada dato dos veces y podría contarse doble en los informes.</p><ul><li>Si el club usa la app: síguelo desde <b>Mis clubes</b> (indicadores, recomendaciones e informe).</li><li><b>Entidades</b> es para las que no usan la app: el ayuntamiento registra lo que presentan (declaración responsable, verificación, requerimientos).</li><li>La app avisa al dar de alta un nombre que ya existe como club alojado, y marca la fila con <b>«También en Mis clubes»</b>.</li></ul>', 'mun', 'entidades']); });
 
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
