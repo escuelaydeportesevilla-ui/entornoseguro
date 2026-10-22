@@ -5036,11 +5036,28 @@ function panelAlertasPlegadas() {
     d.append(pie); pie.querySelector('button').onclick = () => show('alertas');
   }
   const vacio = !n;
-  d.querySelector('summary').innerHTML = vacio ? '<b>🔔 Alertas prioritarias</b> <small class="st ok">✓ ninguna</small>' : `<b>🔔 Alertas prioritarias (${n})</b> <small>${altas ? '🔴 ' + altas + ' alta(s) · ' : ''}toca para verlas</small>`;
+  const kpiTot = [...$$('#kpis .kpi')].find(k => /Alertas abiertas/i.test(k.textContent)), tot = kpiTot ? parseInt((kpiTot.querySelector('strong,b') || {}).textContent, 10) : NaN;
+  const cuenta = !isNaN(tot) && tot > n ? n + ' de ' + tot : String(n);
+  d.querySelector('summary').innerHTML = vacio ? '<b>🔔 Alertas prioritarias</b> <small class="st ok">✓ ninguna</small>' : `<b>🔔 Alertas prioritarias (${cuenta})</b> <small>${altas ? '🔴 ' + altas + ' alta(s) · ' : ''}toca para verlas</small>`;
 }
 (function () {
   const base = loadPanel;
   loadPanel = async function () { await base.apply(this, arguments); try { panelAlertasPlegadas(); } catch (e) {} };
+})();
+
+// v42: móvil · recomendaciones y tutorial a todo el ancho
+(function () {
+  if ($('#movil-rec-est')) return;
+  const st = document.createElement('style'); st.id = 'movil-rec-est';
+  st.textContent = '@media (max-width:640px){' +
+    '.rec-lista>li{flex-wrap:wrap}.rec-lista>li>.t{flex:1 1 calc(100% - 30px);min-width:0}' +
+    '.rec-lista>li>.btn{flex:1 1 100%;margin-left:28px;min-height:44px}' +
+    '.rec-lista .rec-items{padding-left:16px}' +
+    'body #tut-barra{padding:10px 12px}body #tut-barra .tut-acc{display:grid;grid-template-columns:1fr 1fr;gap:8px}body #tut-barra .tut-acc .btn{width:100%;min-height:44px;padding:6px 8px;font-size:.95rem;margin:0}' +
+    'body #tut-barra .tut-acc .btn:not(.ghost){grid-column:1/-1}' +
+    'body #tut-barra .tut-cab{font-size:.95rem}' +
+    '}';
+  document.head.appendChild(st);
 })();
 
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
