@@ -4649,19 +4649,24 @@ function pintarImportarRiesgos() {
   const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.id = 'rie-imp-btn'; b.textContent = '📥 Pasar los riesgos a la tabla'; b.style.marginLeft = '8px';
   const zona = out.querySelector('.guardar-res'); zona.append(b);
   const prev = document.createElement('div'); prev.id = 'rie-imp'; zona.after(prev);
-  b.onclick = () => {
-    const filas = parsearRiesgos(ta.value);
+  b.onclick = () => abrirVistaRiesgos(ta.value, prev);
+}
+function abrirVistaRiesgos(texto, prev) {
+  {
+    const filas = parsearRiesgos(texto);
+    const yaTxt = new Set((state.riesgos || []).map(r => norm(r.descripcion).replace(/\W+/g, ' ').trim()));
+    filas.forEach(r => { r.ya = yaTxt.has(norm(r.descripcion).replace(/\W+/g, ' ').trim()); });
     if (!filas.length) { toast('No encuentro la tabla. Pega la respuesta completa de Claude.', true); return; }
     const amb = Object.keys(CATALOGO_RIESGOS), NV = { 1: 'Baja', 2: 'Media', 3: 'Alta' }, NI = { 1: 'Bajo', 2: 'Medio', 3: 'Alto' };
     const lvl = r => { const v = r.probabilidad * r.impacto; return v >= 6 ? 'alto' : v >= 3 ? 'medio' : 'bajo'; };
-    prev.innerHTML = `<div class="card"><h3>Revisa antes de guardar · ${filas.length} riesgos</h3>
+    prev.innerHTML = `<div class="card"><h3>Revisa antes de guardar · ${filas.length} riesgos${filas.some(r => r.ya) ? ' · ' + filas.filter(r => r.ya).length + ' ya están en la tabla (desmarcados)' : ''}</h3>
       <p class="nota">Desmarca los que no quieras, corrige el ámbito si hace falta y elige el estado de las medidas. Si tu protocolo ya las recoge y se aplican, marca «Implantada»: así no generan alertas.</p>
       <div class="fields form" style="margin-bottom:10px"><label>Estado de las medidas<select id="rie-est">${ESTADOS_R.map(([k, l]) => `<option value="${k}"${k === 'en_curso' ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
       <label>Próxima revisión<input type="date" id="rie-rev" value="${sumarMeses(12)}"></label></div>
       <div class="md-scroll"><table class="md-tabla"><thead><tr><th></th><th>Ámbito</th><th>Situación</th><th>P · I</th><th>Nivel</th></tr></thead><tbody>
-      ${filas.map((r, i) => `<tr><td><input type="checkbox" data-ri="${i}" checked aria-label="Incluir riesgo ${i + 1}"></td>
+      ${filas.map((r, i) => `<tr><td><input type="checkbox" data-ri="${i}"${r.ya ? '' : ' checked'} aria-label="Incluir riesgo ${i + 1}"></td>
         <td><select data-ra="${i}" aria-label="Ámbito del riesgo ${i + 1}">${(r.ambito ? [] : ['<option value="">— elige —</option>']).concat(amb.map(a => `<option${a === r.ambito ? ' selected' : ''}>${esc(a)}</option>`)).join('')}</select>${r.ambito ? '' : `<br><small>Propuesto: ${esc(r.ambito_txt)}</small>`}</td>
-        <td>${esc(r.descripcion)}<br><small>${esc(r.medidas)}</small></td><td>${NV[r.probabilidad]} · ${NI[r.impacto]}</td><td><span class="nivel ${lvl(r)}">${lvl(r)}</span></td></tr>`).join('')}
+        <td>${r.ya ? '<span class="st muted">Ya está en la tabla</span><br>' : ''}${esc(r.descripcion)}<br><small>${esc(r.medidas)}</small></td><td>${NV[r.probabilidad]} · ${NI[r.impacto]}</td><td><span class="nivel ${lvl(r)}">${lvl(r)}</span></td></tr>`).join('')}
       </tbody></table></div><div class="ia-acciones" style="margin-top:12px"><button class="btn" type="button" id="rie-guardar">Guardar los riesgos marcados</button></div><p class="nota" id="rie-prog"></p></div>`;
     $('#rie-guardar').onclick = async () => {
       const entidad_id = $('#riesgos-entidad').value, estado = $('#rie-est').value, rev = $('#rie-rev').value;
@@ -4677,7 +4682,9 @@ function pintarImportarRiesgos() {
           if (!/desconocida/i.test(er.message)) throw er;
           for (let i = 0; i < datos.length; i++) { $('#rie-prog').textContent = 'Guardando ' + (i + 1) + ' de ' + datos.length + '…'; await API.call('guardarRiesgo', Object.assign({ entidad_id }, datos[i])); }
         }
-        toast(datos.length + ' riesgos guardados'); prev.innerHTML = ''; loadRiesgos();
+        toast(datos.length + ' riesgos guardados'); prev.innerHTML = '';
+        if (!prev.dataset.docId) { try { const ta = $('#riesgos-ia-out .guardar-res textarea'); if (ta && ta.value.trim() && !prev.dataset.guardado && !(await API.call('listarDocumentos')).some(x => x.tipo === 'riesgos' && String(x.resultado).trim() === ta.value.trim())) { await API.call('guardarDocumento', { asunto: 'Análisis de riesgos · propuesta IA · ' + hoyISO(), tipo: 'riesgos', resultado: ta.value.trim() }); prev.dataset.guardado = '1'; state.docs = null; } } catch (e2) {} }
+        loadRiesgos();
         $('#view-riesgos').scrollIntoView({ behavior: 'smooth' });
       } catch (er) { toast('No se pudieron guardar: ' + er.message, true); btn.disabled = false; $('#rie-prog').textContent = ''; }
     };
@@ -4693,6 +4700,20 @@ $('#riesgos-ia') && ($('#riesgos-ia').onclick = () => {
 });
 GUIA.forEach(t => { if (t[1] === 'Análisis de riesgos') t[2].unshift(['¿Cómo hago el análisis de riesgos con IA y lo paso a la tabla?', '<ol><li><b>Riesgos → Proponer con IA</b>. El prompt lleva los datos de la ficha (actividades, edades, instalación, desplazamientos, pernocta, ratio) y nunca datos personales.</li><li><b>Abrir en Claude</b> → copia la respuesta (una tabla) → pégala en la app.</li><li><b>📥 Pasar los riesgos a la tabla</b>: revisa la lista, desmarca lo que no aplique y elige el estado de las medidas. Si el protocolo ya las recoge y se aplican, marca <b>Implantada</b> para que no generen alertas.</li><li><b>Guardar los riesgos marcados</b>. Después marca <b>C1 y C2</b> en la Matriz (puedes guardar también el análisis en Documentos como evidencia).</li></ol>', '', 'riesgos']); });
 
+// v28b: añadir riesgos desde un análisis guardado en Documentos, sin volver a Claude
+(function () {
+  const acc = $('#view-riesgos .ia-acciones'); if (!acc || $('#riesgos-recuperar')) return;
+  acc.insertAdjacentHTML('beforeend', '<button class="btn ghost" id="riesgos-recuperar" type="button" data-perm="escribir">➕ Añadir desde un análisis guardado</button>');
+  $('#riesgos-recuperar').onclick = async () => {
+    const docs = (await run(() => API.call('listarDocumentos'))).filter(d => d.tipo === 'riesgos' && parsearRiesgos(d.resultado).length);
+    const out = $('#riesgos-ia-out');
+    if (!docs.length) { out.innerHTML = '<div class="card"><p>No hay análisis de riesgos guardados en Documentos. Usa <b>Proponer con IA</b>.</p></div>'; return; }
+    out.innerHTML = `<div class="card"><h3>Análisis guardados</h3><p class="nota">Elige uno: verás sus riesgos, con los que ya están en tu tabla desmarcados.</p>
+      ${docs.map(d => `<p><button type="button" class="btn ghost" data-recdoc="${esc(d.id)}">${esc(d.asunto)} · ${esc(String(d.actualizado || d.creado).slice(0, 10))} · ${parsearRiesgos(d.resultado).length} riesgos</button></p>`).join('')}</div><div id="rie-imp"></div>`;
+    $$('[data-recdoc]').forEach(b => b.onclick = () => { const d = docs.find(x => x.id === b.dataset.recdoc); const prev = $('#rie-imp'); prev.dataset.docId = d.id; abrirVistaRiesgos(d.resultado, prev); });
+    out.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+})();
 // v28: registro de riesgos aprobado (lo guardado en la tabla) como evidencia de C1 y C2
 function htmlRegistroRiesgos(e, rows) {
   const NV = { 1: 'Baja', 2: 'Media', 3: 'Alta' }, NI = { 1: 'Bajo', 2: 'Medio', 3: 'Alto' };
@@ -4707,7 +4728,7 @@ function htmlRegistroRiesgos(e, rows) {
   amb.forEach(a => {
     const rs = rows.filter(r => r.ambito === a).sort((x, y) => orden[x.nivel] - orden[y.nivel]);
     b += `<h2>${esc(a)}</h2><table><thead><tr><th>Situación de riesgo</th><th>P · I</th><th>Nivel</th><th>Medidas preventivas</th><th>Responsable</th><th>Estado</th><th>Revisión</th></tr></thead><tbody>` +
-      rs.map(r => `<tr><td>${esc(r.descripcion)}</td><td>${NV[r.probabilidad] || ''} · ${NI[r.impacto] || ''}</td><td class="${r.nivel === 'alto' ? 'bad' : r.nivel === 'medio' ? 'warn' : 'ok'} st">${esc(r.nivel)}</td><td>${esc(r.medidas || '')}</td><td>${esc(r.responsable || '')}</td><td>${esc(est(r.estado))}</td><td>${esc(r.fecha_revision || '')}</td></tr>`).join('') + '</tbody></table>';
+      rs.map(r => `<tr><td>${esc(r.descripcion)}</td><td>${NV[r.probabilidad] || ''} · ${NI[r.impacto] || ''}</td><td class="${r.nivel === 'alto' ? 'bad' : r.nivel === 'medio' ? 'warn' : 'ok'} st">${esc(r.nivel)}</td><td>${esc(r.medidas || '')}</td><td>${esc(r.responsable || '')}</td><td>${esc(est(r.estado))}</td><td style="white-space:nowrap">${esc(String(r.fecha_revision || '').slice(0, 10).split('-').reverse().join('/'))}</td></tr>`).join('') + '</tbody></table>';
   });
   b += '<h2>Aprobación</h2><p>El órgano de gobierno de la entidad aprueba el presente análisis de riesgos y las medidas preventivas en sesión de fecha …………………………… y encarga su seguimiento al Delegado/a de Protección.</p>' +
     '<div class="firma"><div>Delegado/a de Protección<br>' + esc(e.delegado_nombre || '') + '</div><div>Vº Bº Presidencia<br>' + esc(e.presidencia_nombre || '') + '</div></div>';
