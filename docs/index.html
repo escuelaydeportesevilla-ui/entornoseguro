@@ -1732,7 +1732,7 @@ function construirInformeEntidad(d) {
     d.alertas.sort((a, c) => orden[a.prioridad] - orden[c.prioridad]).map(a => `<tr><td class="st ${a.prioridad === 'alta' ? 'bad' : a.prioridad === 'media' ? 'warn' : 'muted'}">${esc(a.prioridad)}</td><td>${esc(String(a.mensaje).replace(e.nombre + ': ', ''))}</td><td>${esc(a.fecha_limite) || '—'}</td></tr>`).join('') + '</tbody></table>'
     : '<p class="ok st">Sin actuaciones pendientes.</p>');
   b += `<div style="page-break-inside:avoid"><div class="nota">Referencias: LO 8/2021 (LOPIVI), Ley 4/2021 de Infancia y Adolescencia de Andalucía y Protocolo Marco aprobado por Orden de 18 de noviembre de 2024. Periodicidades de revisión orientativas.</div>`;
-  b += `<div class="firma"><div>Delegado/a de Protección de la entidad<br>${esc(e.delegado_nombre || '')}</div>${state.club ? '<div>Presidencia u órgano de gobierno<br></div>' : '<div>Delegado/a de Protección municipal<br>' + esc(d.config.delegado_municipal || '') + '</div>'}</div></div>`;
+  b += `<div class="firma"><div>Delegado/a de Protección de la entidad<br>${esc(e.delegado_nombre || '')}</div>${state.club ? '<div>Vº Bº Presidencia u órgano de gobierno<br>' + esc(e.presidencia_nombre || '') + '</div>' : '<div>Delegado/a de Protección municipal<br>' + esc(d.config.delegado_municipal || '') + '</div>'}</div></div>`;
   return plantillaInforme('Informe de implantación del sistema de protección', e.nombre, b);
 }
 
@@ -4761,6 +4761,21 @@ function htmlRegistroRiesgos(e, rows) {
   $('#riesgos-reg-word').onclick = () => { const h = datos(); if (h) descargar('﻿' + h, 'application/msword', nombreInf('analisis-de-riesgos')); };
 })();
 GUIA.forEach(t => { if (t[1] === 'Análisis de riesgos') t[2].splice(1, 0, ['¿Qué subo como evidencia de C1 y C2?', '<p>El <b>registro de riesgos</b>, no la propuesta de la IA: solo recoge lo que has guardado en la tabla, con su nivel, medidas, responsable y estado. <b>Riesgos → 📄 Registro de riesgos (PDF)</b> o <b>Word</b>, apruébalo en la Junta, súbelo a Drive y regístralo en la Matriz en <b>C1</b> y <b>C2</b>. C2 queda en <b>Cumple</b> cuando todas las medidas están implantadas; si quedan en curso, <b>Parcial</b>.</p>', '', 'riesgos']); });
+
+// v30: informe de implantación · fechas dd/mm/aaaa, indicador «En marcha» y cabecera/firma correctas para clubes SOLO CLUBES vistos desde la maestra
+(function () {
+  const base = construirInformeEntidad;
+  construirInformeEntidad = function (d) {
+    const solo = !state.club && typeof esMaestra === 'function' && esMaestra() && /CLUB/i.test(String((d.config || {}).tipo_instancia || ''));
+    const prevClub = state.club, prevOrg = state.cfg && state.cfg.organismo;
+    if (solo) { state.club = true; if (state.cfg) state.cfg.organismo = (d.entidad && d.entidad.nombre) || prevOrg; }
+    let h;
+    try { h = base(d); } finally { if (solo) { state.club = prevClub; if (state.cfg) state.cfg.organismo = prevOrg; } }
+    const m = d.matriz || [], marcha = m.filter(r => ['cumple', 'parcial', 'no_aplica'].includes(r.estado)).length;
+    h = h.replace('<div class="kpi"><span>Cumple</span>', `<div class="kpi"><span>En marcha (cumple + parcial)</span><b>${marcha} de ${m.length}</b></div><div class="kpi"><span>Cumple</span>`);
+    return h.replace(/(>|· |\b)(\d{4})-(\d{2})-(\d{2})(?![\d-])/g, (x, p, y, mo, da) => p + da + '/' + mo + '/' + y);
+  };
+})();
 
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
