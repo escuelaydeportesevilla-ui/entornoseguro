@@ -4988,6 +4988,33 @@ async function pintarRecVista(vista) {
     .forEach(([vista, get, set]) => { const base = get(); if (typeof base !== 'function') return; set(async function () { await base.apply(this, arguments); pintarRecVista(vista); }); });
 })();
 
+// v39: Panel del club con una sola guía a la vez.
+// · Tutorial activo → él marca el camino: se ocultan «Primeros pasos» y «Siguiente paso recomendado».
+// · Sin tutorial → «Primeros pasos» mientras falten; después, el «siguiente paso» es la primera recomendación (sin tarjeta aparte).
+function panelUnaGuia() {
+  const card = $('#pasos-card'); if (!card || !state.club) return;
+  const tutActivo = tutLeer().estado === 'activo';
+  const esSiguiente = /Siguiente paso recomendado/.test(card.textContent);
+  card.classList.toggle('hidden', tutActivo || esSiguiente);
+  const rc = $('#rec-card'); if (!rc) return;
+  const prim = rc.querySelector('.rec-lista > li');
+  rc.querySelectorAll('.rec-empieza').forEach(x => x.remove());
+  if (prim && !tutActivo) {
+    prim.querySelector('.t').insertAdjacentHTML('afterbegin', '<span class="rec-empieza">👉 Empieza por aquí</span> ');
+    const d = rc.querySelector('details'); if (d) d.open = true;
+  }
+}
+(function () {
+  if (!$('#rec-empieza-est')) { const st = document.createElement('style'); st.id = 'rec-empieza-est'; st.textContent = '.rec-empieza{display:inline-block;margin-right:6px;padding:1px 8px;border-radius:999px;background:var(--brand-2);color:#fff;font-size:.75rem;font-weight:700}'; document.head.appendChild(st); }
+  const basePP = pintarPrimerosPasos;
+  pintarPrimerosPasos = async function () { await basePP.apply(this, arguments); panelUnaGuia(); };
+  const baseRC = pintarRecomendacionesClub;
+  pintarRecomendacionesClub = async function () { await baseRC.apply(this, arguments); panelUnaGuia(); };
+  const baseTP = tutPintar;
+  tutPintar = function () { baseTP.apply(this, arguments); panelUnaGuia(); };
+})();
+GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['En el Panel veo el tutorial y las recomendaciones: ¿cuál sigo?', '<ul><li><b>🧭 Tutorial</b>: un <b>recorrido de aprendizaje</b> por todo el sistema, en orden. Úsalo la primera vez. Mientras está activo, el Panel no muestra otras guías para no mezclar caminos.</li><li><b>💡 Recomendaciones</b>: la <b>lista viva</b> de lo que le falta hoy al club, calculada con sus datos y ordenada por prioridad. La primera lleva <b>«👉 Empieza por aquí»</b>. Es lo que también ve tu gestor.</li><li><b>👋 Primeros pasos</b>: los 5 básicos para arrancar; desaparecen al completarlos.</li></ul><p>Regla sencilla: <b>con el tutorial activo, sigue el tutorial; sin él, sigue las recomendaciones</b> de arriba abajo.</p>', 'club', 'panel']); });
+
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
