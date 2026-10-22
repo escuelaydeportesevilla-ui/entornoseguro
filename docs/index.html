@@ -4876,6 +4876,42 @@ GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Qué son las «
 })();
 GUIA.forEach(t => { if (t[1] === 'Entidades y coordinación con clubes') t[2].push(['¿Qué pasa si doy de alta en Entidades un club que ya tiene la app?', '<p>Son <b>dos registros distintos que no se sincronizan</b>: el club alojado (su hoja, su ficha y su Matriz, en <b>Mis clubes</b>) y la entidad del ayuntamiento (en <b>Entidades</b>). Habría que mantener cada dato dos veces y podría contarse doble en los informes.</p><ul><li>Si el club usa la app: síguelo desde <b>Mis clubes</b> (indicadores, recomendaciones e informe).</li><li><b>Entidades</b> es para las que no usan la app: el ayuntamiento registra lo que presentan (declaración responsable, verificación, requerimientos).</li><li>La app avisa al dar de alta un nombre que ya existe como club alojado, y marca la fila con <b>«También en Mis clubes»</b>.</li></ul>', 'mun', 'entidades']); });
 
+// v34: hojas de aceptación del código de conducta, una por agente, generadas en el navegador (sin IA)
+function htmlHojasAceptacion(e, agentes) {
+  const lista = agentes.length ? agentes : [{}];
+  const temp = typeof coordTemporada === 'function' ? coordTemporada() : '';
+  const ver = e.protocolo_version ? ', versión ' + esc(e.protocolo_version) : '';
+  const hoja = (a, i) => `<div style="${i ? 'page-break-before:always;' : ''}">
+    <h2>Hoja de aceptación del código de conducta</h2>
+    <p><b>${esc(e.nombre || '')}</b>${temp ? ' · Temporada ' + esc(temp) : ''}</p>
+    <table>${fila('Nombre y apellidos', esc(a.nombre || '') || '……………………………………………')}${fila('DNI o NIE', '……………………………………………')}
+      ${fila('Rol en el club', esc(a.rol || '') || '……………………………………………')}${fila('Equipo, grupo o actividad', esc(a.grupo || '') || '……………………………………………')}</table>
+    <p><b>Declaro que:</b></p><ul>
+      <li>He recibido, leído y comprendido el Código de Conducta y el Protocolo de protección de ${esc(e.nombre || 'la entidad')}${ver}.</li>
+      <li>Me comprometo a cumplirlos en todas las actividades de la entidad, presenciales y digitales.</li>
+      <li>He aportado el certificado negativo del Registro Central de Delincuentes Sexuales y de Trata de Seres Humanos, y comunicaré de inmediato cualquier cambio en mi situación.</li>
+      <li>Conozco al Delegado/a de Protección${e.delegado_nombre ? ' (' + esc(e.delegado_nombre) + ')' : ''} y los canales de comunicación, y mi deber de comunicar cualquier sospecha o situación de violencia en un plazo máximo de ${esc(e.plazo_comunicacion_h || 24)} horas.</li>
+      <li>Acepto que el incumplimiento se tramite conforme a ${esc(e.regimen_disciplinario || 'los Estatutos de la entidad')}, sin perjuicio de las responsabilidades legales.</li></ul>
+    <p>En ${esc(e.municipio || '……………………')}, a …… de ……………………… de ………</p>
+    <div class="firma"><div>Firma de la persona interesada</div><div>Recibido: Delegado/a de Protección o Secretaría<br>Fecha: ……………………</div></div></div>`;
+  return plantillaInforme('Hojas de aceptación del código de conducta', e.nombre || '', lista.map(hoja).join('') +
+    '<div class="nota">Documento con datos personales: una vez firmado, se custodia en la entidad (Secretaría o Delegado/a). No lo subas a enlaces compartidos; en la Matriz (D2) registra solo cuántas hojas hay y dónde se guardan.</div>');
+}
+(function () {
+  const acc = $('#view-agentes .ia-acciones'); if (!acc || $('#ag-hojas')) return;
+  acc.insertAdjacentHTML('beforeend', '<button class="btn ghost" id="ag-hojas" type="button">📄 Hojas de aceptación del código</button><button class="btn ghost" id="ag-hoja-blanco" type="button">Hoja en blanco</button>');
+  const ent = () => state.entidades.find(x => x.id === $('#agentes-entidad').value) || state.entidades[0] || {};
+  $('#ag-hojas').onclick = () => {
+    const ag = (state.agentes || []).filter(a => a.activo !== 'NO');
+    if (!ag.length) { toast('No hay agentes activos: usa «Hoja en blanco»', true); return; }
+    const pend = ag.filter(a => a.codigo_aceptado !== 'SI');
+    const usar = pend.length && pend.length < ag.length && confirm(`${pend.length} de ${ag.length} agentes aún no han aceptado el código.\n\n¿Generar solo sus hojas? (Cancelar = todas)`) ? pend : ag;
+    abrirInforme(htmlHojasAceptacion(ent(), usar));
+  };
+  $('#ag-hoja-blanco').onclick = () => abrirInforme(htmlHojasAceptacion(ent(), []));
+})();
+GUIA.forEach(t => { if (t[1] === 'Agentes, formación y autorizaciones') t[2].push(['¿Cómo saco las hojas de aceptación del código de conducta?', '<p><b>Agentes deportivos → 📄 Hojas de aceptación del código</b>: una página por agente con su nombre, rol y grupo ya puestos; solo falta el DNI, la fecha y la firma. Si hay agentes que aún no lo han aceptado, la app ofrece generar solo las suyas. Con <b>Hoja en blanco</b> sacas una para rellenar a mano (nuevas altas, voluntariado puntual).</p><p>Se generan en tu navegador, sin IA. Una vez firmadas, se guardan en el club; en el agente marca <b>Código aceptado: SI</b> y en la Matriz registra <b>D2</b> sin enlace («n de n hojas, custodiadas en Secretaría»).</p>', '', 'agentes']); });
+
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
