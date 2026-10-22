@@ -4464,7 +4464,13 @@ const tutLeer = () => { try { return JSON.parse(localStorage.getItem(tutKey()) |
 const tutGuardar = o => { try { localStorage.setItem(tutKey(), JSON.stringify(o)); } catch (e) {} };
 state.tut = state.tut || { hechos: {} };
 const TUT_OK = ['cumple', 'parcial', 'no_aplica'];
+const tutCuenta = () => Object.values(state.tut.hechos || {}).filter(Boolean).length;
 function tutEvaluarMatriz(rows) {
+  const antes = tutCuenta();
+  tutEvaluarMatrizBase(rows);
+  if (tutCuenta() > antes) state.tut.ver = null;
+}
+function tutEvaluarMatrizBase(rows) {
   const est = {}; (rows || []).forEach(r => { est[r.codigo] = r.estado; });
   const ok = c => TUT_OK.includes(est[c]);
   const h = state.tut.hechos;
@@ -4478,6 +4484,7 @@ async function tutEvaluar() {
   const e = ents[0] || {};
   const [mat, ag, rie, aut, enc] = await Promise.all([e.id ? ok(API.call('matriz', { entidad_id: e.id })) : null, ok(API.call('listarAgentes', {})),
     ok(API.call('listarRiesgos', {})), ok(API.call('listarAutorizaciones', {})), ok(API.call('listarEncuestas', {}))]);
+  const antes = tutCuenta();
   const h = state.tut.hechos = {};
   const lleno = k => String(e[k] ?? '').trim();
   h.ficha = ['nombre', 'cif', 'municipio', 'actividades', 'organo_gobierno', 'presidencia_nombre', 'delegado_nombre', 'delegado_telefono'].every(lleno) &&
@@ -4488,6 +4495,7 @@ async function tutEvaluar() {
   h.E = h.E || !!(aut && aut.length);
   h.enc = !!(enc && enc.length);
   h.inf = !!tutLeer().inf;
+  if (tutCuenta() > antes) state.tut.ver = null;
 }
 const tutVisibles = () => TUT_PASOS.filter(p => !p.ir.some(([, d]) => d.indexOf('v:') === 0 && !hayVista(d.slice(2))) || p.id === 'inf');
 function tutIr(dest) {
@@ -4567,7 +4575,12 @@ function tutPintar() {
   $$('[data-tut-ver]').forEach(b => b.onclick = () => { state.tut.ver = +b.dataset.tutVer; tutPintar(); });
   $$('[data-tut-ir]').forEach(b => b.onclick = () => tutIr(b.dataset.tutIr));
   $('#tut-ver').onclick = () => { state.tut.lista = !state.tut.lista; $('#tut-todos').classList.toggle('hidden', !state.tut.lista); };
-  $('#tut-act').onclick = () => tutRefrescar(true);
+  $('#tut-act').onclick = async () => {
+    const bt = $('#tut-act'); bt.disabled = true; bt.textContent = 'Comprobando…';
+    const antes = tutCuenta(); await tutRefrescar(true);
+    const d = tutCuenta() - antes;
+    toast(d > 0 ? '✓ ' + d + ' paso(s) nuevo(s) completado(s)' : 'Comprobado: sin cambios. Recuerda guardar en la Matriz o en la pantalla del paso.');
+  };
   $('#tut-saltar') && ($('#tut-saltar').onclick = () => { const c = tutLeer(); c.saltados = [...new Set([...(c.saltados || []), p.id])]; tutGuardar(c); state.tut.ver = null; tutPintar(); });
   $('#tut-pausa').onclick = () => { tutGuardar(Object.assign(tutLeer(), { estado: 'pausado' })); toast('Tutorial en pausa. Puedes retomarlo desde el Panel o la Guía de uso.'); tutPintar(); };
   $('#tut-hecho') && ($('#tut-hecho').onclick = () => { tutGuardar(Object.assign(tutLeer(), { [p.id]: true })); state.tut.hechos[p.id] = true; tutPintar(); });
