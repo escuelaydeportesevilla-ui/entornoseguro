@@ -4605,6 +4605,94 @@ async function tutRefrescar(forzar) {
 })();
 GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Cómo funciona el tutorial guiado?', '<p>En el <b>Panel</b> del club aparece <b>«¿Quieres que te guíe paso a paso?»</b>. Con <b>Empezar el tutorial</b> se fija arriba una barra con el paso en el que estás, su explicación y botones que te llevan a la pantalla exacta (ficha, plantilla, Matriz…).</p><ul><li>Cada paso <b>se marca solo</b> cuando la app comprueba que está hecho; pulsa <b>↻ Comprobar</b> si acabas de guardar algo.</li><li><b>Saltar este paso</b> lo deja para después; <b>Pausar</b> oculta la barra.</li><li>Para retomarlo: <b>Panel → Retomar el tutorial</b>.</li><li>Los pasos hechos salen de los datos del club; los saltados y la pausa se recuerdan en este navegador.</li></ul>', 'club', 'panel']); });
 
+// v27: RIESGOS · prompt con los datos de la ficha y paso directo de la propuesta a la tabla de riesgos
+function promptRiesgos(e, ya) {
+  const si = v => String(v || '').toUpperCase() === 'SI';
+  const d = (k, v) => v ? '- ' + k + ': ' + v : '';
+  const sinViajes = !si(e.desplazamientos), sinPernocta = !si(e.pernocta);
+  const ambitos = Object.keys(CATALOGO_RIESGOS).filter(a => !(sinViajes && ['Desplazamientos', 'Viajes'].includes(a)) && !(sinPernocta && a === 'Actividades con pernocta'));
+  return ['Actúas como técnico/a experto/a en protección de la infancia y la adolescencia en el deporte en Andalucía. Marco: LO 8/2021 (LOPIVI), Ley 4/2021 de Infancia y Adolescencia de Andalucía, Ley 5/2016 del Deporte de Andalucía y Protocolo Marco aprobado por Orden de 18 de noviembre de 2024.', '',
+    'TAREA: elabora el ANÁLISIS DE RIESGOS de protección de menores de esta entidad (requisitos C1 y C2 del Protocolo Marco): situaciones de riesgo reales de SUS actividades, su valoración y las medidas preventivas. La entidad lo cargará directamente en su registro de riesgos.', '',
+    'DATOS DE LA ENTIDAD:',
+    ...[d('Tipo', e.tipo), d('Modalidad', e.modalidad), d('Actividades', e.actividades), d('Edades', e.edades), d('Nº aproximado de menores', e.n_menores),
+      d('Instalación o lugar habitual', e.lugar_actividad), '- Competición: ' + (si(e.competicion) ? 'sí' : 'no') + ' · Desplazamientos: ' + (si(e.desplazamientos) ? 'sí' : 'no') + ' · Pernocta: ' + (si(e.pernocta) ? 'sí' : 'no'),
+      d('Ratio de personas adultas', e.ratio), d('Órgano de gobierno', e.organo_gobierno), d('Plazo para comunicar al Delegado/a', e.plazo_comunicacion_h ? e.plazo_comunicacion_h + ' horas' : '')].filter(Boolean),
+    '', 'RIESGOS YA REGISTRADOS (no los repitas):', ya, '',
+    'FORMATO OBLIGATORIO: una sola tabla Markdown con EXACTAMENTE estas columnas y en este orden:',
+    '| Ámbito | Situación de riesgo | Probabilidad | Impacto | Medidas preventivas | Responsable |',
+    '- Ámbito: EXACTAMENTE uno de estos: ' + ambitos.join(' · ') + '.',
+    '- Probabilidad: Baja, Media o Alta. Impacto: Bajo, Medio o Alto. Valora con realismo para esta entidad: reserva «Alta» para lo que ocurre con frecuencia en la práctica.',
+    '- Medidas preventivas: concretas y verificables, en una sola celda, separadas por punto y seguido.',
+    '- Responsable: por cargo (Delegado/a de Protección, coordinación deportiva, entrenador/a responsable, Junta Directiva…), nunca por nombre.',
+    '- Entre 12 y 20 filas, sin repetir situaciones.',
+    '', 'REGLAS:',
+    '1. Entrega SOLO la tabla. Sin introducción, sin conclusiones, sin «aspectos a validar» ni notas para quien lo revisa.',
+    '2. No cites apartados ni letras de artículos salvo que estés seguro; si citas, hazlo de forma general (LOPIVI, Protocolo Marco).',
+    '3. No atribuyas a una norma lo que es decisión de la entidad (p. ej., la renovación anual del certificado negativo la decide el club; el art. 57 LOPIVI exige aportarlo).',
+    '4. Si tratas los mensajes privados, usa: «Prohibidos los mensajes privados de una persona adulta a un menor, salvo los estrictamente organizativos y con copia a la familia».',
+    '5. No inventes datos de la entidad ni la titularidad de las instalaciones.',
+    '6. Español de España, lenguaje claro.'].join('\n');
+}
+function parsearRiesgos(txt) {
+  const nivel = (v, tipo) => { const t = norm(v); return /alt/.test(t) ? 3 : /baj/.test(t) ? 1 : /medi/.test(t) ? 2 : 2; };
+  const amb = Object.keys(CATALOGO_RIESGOS);
+  const ambito = v => { const t = norm(v); return amb.find(a => norm(a) === t) || amb.find(a => t && (norm(a).includes(t) || t.includes(norm(a)))) || ''; };
+  return String(txt || '').split('\n').filter(l => /^\s*\|/.test(l) && !/^\s*\|?\s*:?-{2,}/.test(l))
+    .map(l => l.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim().replace(/\*\*/g, '')))
+    .filter(c => c.length >= 6 && !/^ámbito$/i.test(c[0]) && c[1])
+    .map(c => ({ ambito_txt: c[0], ambito: ambito(c[0]), descripcion: c[1], probabilidad: nivel(c[2]), impacto: nivel(c[3]), medidas: c[4], responsable: c[5] }));
+}
+function sumarMeses(m) { const f = new Date(); f.setMonth(f.getMonth() + m); return f.toISOString().slice(0, 10); }
+function pintarImportarRiesgos() {
+  const out = $('#riesgos-ia-out'), ta = out && out.querySelector('.guardar-res textarea');
+  if (!ta || $('#rie-imp-btn')) return;
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.id = 'rie-imp-btn'; b.textContent = '📥 Pasar los riesgos a la tabla'; b.style.marginLeft = '8px';
+  const zona = out.querySelector('.guardar-res'); zona.append(b);
+  const prev = document.createElement('div'); prev.id = 'rie-imp'; zona.after(prev);
+  b.onclick = () => {
+    const filas = parsearRiesgos(ta.value);
+    if (!filas.length) { toast('No encuentro la tabla. Pega la respuesta completa de Claude.', true); return; }
+    const amb = Object.keys(CATALOGO_RIESGOS), NV = { 1: 'Baja', 2: 'Media', 3: 'Alta' }, NI = { 1: 'Bajo', 2: 'Medio', 3: 'Alto' };
+    const lvl = r => { const v = r.probabilidad * r.impacto; return v >= 6 ? 'alto' : v >= 3 ? 'medio' : 'bajo'; };
+    prev.innerHTML = `<div class="card"><h3>Revisa antes de guardar · ${filas.length} riesgos</h3>
+      <p class="nota">Desmarca los que no quieras, corrige el ámbito si hace falta y elige el estado de las medidas. Si tu protocolo ya las recoge y se aplican, marca «Implantada»: así no generan alertas.</p>
+      <div class="fields form" style="margin-bottom:10px"><label>Estado de las medidas<select id="rie-est">${ESTADOS_R.map(([k, l]) => `<option value="${k}"${k === 'en_curso' ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
+      <label>Próxima revisión<input type="date" id="rie-rev" value="${sumarMeses(12)}"></label></div>
+      <div class="md-scroll"><table class="md-tabla"><thead><tr><th></th><th>Ámbito</th><th>Situación</th><th>P · I</th><th>Nivel</th></tr></thead><tbody>
+      ${filas.map((r, i) => `<tr><td><input type="checkbox" data-ri="${i}" checked aria-label="Incluir riesgo ${i + 1}"></td>
+        <td><select data-ra="${i}" aria-label="Ámbito del riesgo ${i + 1}">${(r.ambito ? [] : ['<option value="">— elige —</option>']).concat(amb.map(a => `<option${a === r.ambito ? ' selected' : ''}>${esc(a)}</option>`)).join('')}</select>${r.ambito ? '' : `<br><small>Propuesto: ${esc(r.ambito_txt)}</small>`}</td>
+        <td>${esc(r.descripcion)}<br><small>${esc(r.medidas)}</small></td><td>${NV[r.probabilidad]} · ${NI[r.impacto]}</td><td><span class="nivel ${lvl(r)}">${lvl(r)}</span></td></tr>`).join('')}
+      </tbody></table></div><div class="ia-acciones" style="margin-top:12px"><button class="btn" type="button" id="rie-guardar">Guardar los riesgos marcados</button></div><p class="nota" id="rie-prog"></p></div>`;
+    $('#rie-guardar').onclick = async () => {
+      const entidad_id = $('#riesgos-entidad').value, estado = $('#rie-est').value, rev = $('#rie-rev').value;
+      const sel = filas.map((r, i) => Object.assign({}, r, { ambito: (prev.querySelector(`[data-ra="${i}"]`) || {}).value })).filter((r, i) => prev.querySelector(`[data-ri="${i}"]`).checked);
+      if (!sel.length) { toast('No hay ningún riesgo marcado', true); return; }
+      if (sel.some(r => !r.ambito)) { toast('Elige el ámbito de todos los riesgos marcados', true); return; }
+      const datos = sel.map(r => ({ ambito: r.ambito, descripcion: r.descripcion, probabilidad: r.probabilidad, impacto: r.impacto, medidas: r.medidas, responsable: r.responsable,
+        estado, fecha_revision: rev, fecha_implantacion: estado === 'implantada' ? hoyISO() : '' }));
+      const btn = $('#rie-guardar'); btn.disabled = true; $('#rie-prog').textContent = 'Guardando ' + datos.length + ' riesgos…';
+      try {
+        try { await API.call('guardarRiesgosLote', { entidad_id, riesgos: datos }); }
+        catch (er) {
+          if (!/desconocida/i.test(er.message)) throw er;
+          for (let i = 0; i < datos.length; i++) { $('#rie-prog').textContent = 'Guardando ' + (i + 1) + ' de ' + datos.length + '…'; await API.call('guardarRiesgo', Object.assign({ entidad_id }, datos[i])); }
+        }
+        toast(datos.length + ' riesgos guardados'); prev.innerHTML = ''; loadRiesgos();
+        $('#view-riesgos').scrollIntoView({ behavior: 'smooth' });
+      } catch (er) { toast('No se pudieron guardar: ' + er.message, true); btn.disabled = false; $('#rie-prog').textContent = ''; }
+    };
+    prev.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+}
+$('#riesgos-ia') && ($('#riesgos-ia').onclick = () => {
+  const sel = $('#riesgos-entidad'); if (!sel.value) return;
+  const e = state.entidades.find(x => x.id === sel.value) || {};
+  const ya = (state.riesgos || []).map(r => '- ' + r.ambito + ': ' + r.descripcion).join('\n') || '- Ninguno todavía';
+  mostrarPrompt($('#riesgos-ia-out'), promptRiesgos(e, ya), { asunto: 'Análisis de riesgos · ' + (e.nombre || ''), tipo: 'riesgos' });
+  pintarImportarRiesgos();
+});
+GUIA.forEach(t => { if (t[1] === 'Análisis de riesgos') t[2].unshift(['¿Cómo hago el análisis de riesgos con IA y lo paso a la tabla?', '<ol><li><b>Riesgos → Proponer con IA</b>. El prompt lleva los datos de la ficha (actividades, edades, instalación, desplazamientos, pernocta, ratio) y nunca datos personales.</li><li><b>Abrir en Claude</b> → copia la respuesta (una tabla) → pégala en la app.</li><li><b>📥 Pasar los riesgos a la tabla</b>: revisa la lista, desmarca lo que no aplique y elige el estado de las medidas. Si el protocolo ya las recoge y se aplican, marca <b>Implantada</b> para que no generen alertas.</li><li><b>Guardar los riesgos marcados</b>. Después marca <b>C1 y C2</b> en la Matriz (puedes guardar también el análisis en Documentos como evidencia).</li></ol>', '', 'riesgos']); });
+
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
