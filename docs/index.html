@@ -3441,7 +3441,7 @@ const GUIA = [
     ['¿Cómo controlo las autorizaciones familiares?', '<p><b>Autorizaciones</b>: un registro por grupo y tipo (imagen, desplazamiento, pernocta…) con el total de menores y las recibidas. <b>Nunca se anotan nombres de menores</b>; los originales los guarda la entidad.</p>', '', 'autorizaciones']
   ]],
   ['⚠️', 'Análisis de riesgos', [
-    ['¿Cómo hago el análisis de riesgos?', '<p><b>Riesgos → + Nuevo riesgo</b>. Elige el ámbito (vestuarios, viajes, comunicación digital…) y pulsa una <b>sugerencia</b> para rellenar situación y medidas. El nivel se calcula con probabilidad × impacto.</p><p>Con <b>Proponer con IA</b> obtienes una propuesta completa según la modalidad.</p>', '', 'riesgos'],
+    ['¿Cómo hago el análisis de riesgos?', '<p>Lo más rápido: <b>Riesgos → Proponer con IA</b> (usa los datos de la ficha) → pega la respuesta → <b>📥 Pasar los riesgos a la tabla</b>.</p><p>Para añadir uno suelto: <b>+ Nuevo riesgo</b>, elige el ámbito y escribe la situación y las medidas. Si necesitas ideas, despliega <b>💡 Ver riesgos típicos de este ámbito</b>: rellena solo los campos vacíos. Al <b>editar</b> un riesgo ya escrito no aparecen, para no sustituir el texto por error.</p><p>El nivel se calcula con probabilidad × impacto.</p>', '', 'riesgos'],
     ['¿Qué pasa con un riesgo alto?', '<p>Genera una alerta prioritaria mientras sus medidas no estén <b>implantadas</b>. Pon fecha de revisión para que te avise a tiempo.</p>', '', 'riesgos']
   ]],
   ['🛡️', 'Incidencias y comunicaciones', [
@@ -5129,6 +5129,24 @@ function htmlMedidasPreventivas(e, rows, matriz) {
     const lab = fe.closest('label'), txtNodo = lab && [...lab.childNodes].find(n => n.nodeType === 3 && n.textContent.trim());
     const pinta = () => { if (txtNodo) txtNodo.textContent = est.value === 'implantada' ? 'Fecha de implantación (desde cuándo se aplica)' : 'Fecha prevista de implantación'; };
     est.addEventListener('change', pinta); pinta();
+    // v45: sugerencias del catálogo · fuera al editar; al crear, plegadas y sin sobrescribir lo escrito
+    const sug = f.querySelector('.sugerencias');
+    if (sug && r && r.id) { sug.remove(); return; }
+    if (!sug) return;
+    const det = document.createElement('details'); det.className = 'sug-plegadas'; det.style.cssText = 'grid-column:1/-1;margin:0';
+    det.innerHTML = '<summary style="cursor:pointer;min-height:40px;display:flex;align-items:center;font-weight:600;color:var(--brand)">💡 ¿Necesitas ideas? Ver riesgos típicos de este ámbito</summary>';
+    sug.before(det); det.append(sug);
+    const arreglar = () => {
+      const t = sug.querySelector('b'); if (t) t.parentNode.innerHTML = '<small>Pulsa uno para rellenar la situación y las medidas. Solo rellena los campos que estén vacíos.</small>' + [...sug.querySelectorAll('button')].map(x => x.outerHTML).join('');
+      const lista = CATALOGO_RIESGOS[f.ambito.value] || [];
+      sug.querySelectorAll('button').forEach(x => x.onclick = () => {
+        const it = lista.find(l => l[0] === x.textContent) || [x.textContent, ''];
+        if (f.descripcion.value.trim() && f.descripcion.value.trim() !== it[0] && !confirm('La situación ya tiene texto. ¿Sustituirlo por «' + it[0] + '»?')) return;
+        f.descripcion.value = it[0]; if (!f.medidas.value.trim() && it[1]) f.medidas.value = it[1];
+      });
+    };
+    arreglar();
+    const prev = f.ambito.onchange; f.ambito.onchange = function () { if (prev) prev.apply(this, arguments); arreglar(); };
   };
 })();
 
