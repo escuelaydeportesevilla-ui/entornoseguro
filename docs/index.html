@@ -4446,7 +4446,24 @@ function matrizMejoras() {
     const tr = [...t.querySelectorAll('tbody tr')].find(x => !x.classList.contains('group') && (x.querySelector('td b') || {}).textContent === r.codigo), td = tr && tr.children[2];
     if (!td) return;
     td.innerHTML = r.evidencias.map(v => (v.url_drive ? `<a href="${esc(v.url_drive)}" target="_blank" rel="noopener">${esc(v.titulo)}</a>` : esc(v.titulo)) +
+      `<button type="button" class="ev-x ev-ed" data-eved="${esc(v.id)}" title="Cambiar el título" aria-label="Cambiar el título de ${esc(v.titulo)}">✏️</button>` +
       `<button type="button" class="ev-x" data-evx="${esc(v.id)}" title="Quitar esta evidencia" aria-label="Quitar la evidencia ${esc(v.titulo)}">✕</button>`).join('<br>');
+  });
+  // v64: renombrar una evidencia sin quitarla (mismo enlace, solo cambia el título)
+  $$('[data-eved]').forEach(x => x.onclick = () => {
+    const r = rows.find(y => y.evidencias.some(v => v.id === x.dataset.eved)), v = r && r.evidencias.find(y => y.id === x.dataset.eved); if (!v) return;
+    modal(`${r.codigo} · Cambiar el título de la evidencia`, [['titulo', 'Título de la evidencia', 'text', true]], { titulo: v.titulo }, async d => {
+      const t = String(d.titulo || '').trim(); if (!t || t === v.titulo) return;
+      try { await run(() => API.call('guardarEvidencia', { id: v.id, entidad_id: r.entidad_id || $('#matriz-entidad').value, requisito_codigo: r.codigo, titulo: t })); } catch (e) { return; }
+      toast('Título actualizado'); loadMatriz();
+    });
+    const f = $('#modal-form'), inp = f.titulo, modelo = (REQ_COMO[r.codigo] || [])[1];
+    const mayus = v.titulo === v.titulo.toUpperCase() && /[A-ZÁÉÍÓÚÑ]{3}/.test(v.titulo);
+    f.querySelector('h3').insertAdjacentHTML('afterend', `<p class="nota" style="margin:0 0 10px">El enlace no cambia. Usa un título descriptivo, sin mayúsculas sostenidas ni nombres de personas.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px">${mayus ? '<button type="button" class="btn ghost" id="ev-minus">Pasar a minúsculas</button>' : ''}${modelo ? `<button type="button" class="btn ghost" id="ev-modelo">Usar el título recomendado</button>` : ''}</div>
+      ${modelo ? `<p class="nota" style="margin:0 0 10px">Recomendado: «${esc(modelo)}». Cambia «dd/mm/aaaa», «vX» o «n de n» por tus datos.</p>` : ''}`);
+    const minus = $('#ev-minus'); if (minus) minus.onclick = () => { const l = v.titulo.toLocaleLowerCase('es'); inp.value = l.charAt(0).toLocaleUpperCase('es') + l.slice(1); inp.focus(); };
+    const mod = $('#ev-modelo'); if (mod) mod.onclick = () => { inp.value = modelo; inp.focus(); const i = modelo.search(/dd\/mm\/aaaa|vX|n de n/); if (i >= 0) inp.setSelectionRange(i, i + (modelo.match(/dd\/mm\/aaaa|vX|n de n/)[0].length)); };
   });
   $$('[data-evx]').forEach(x => x.onclick = async () => {
     const r = rows.find(y => y.evidencias.some(v => v.id === x.dataset.evx)), v = r && r.evidencias.find(y => y.id === x.dataset.evx);
