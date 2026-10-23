@@ -4997,20 +4997,39 @@ const REQ_SENSIBLES = { K2: 'certificados negativos de delitos sexuales', D2: 'h
   formCumplimiento = function (entidad_id, r) {
     base(entidad_id, r);
     const f = $('#modal-form'), url = f && f.querySelector('[name="ev_url"]'); if (!url) return;
+    delete f.dataset.ev2; delete f.dataset.url2; // el formulario se reutiliza entre requisitos
     const sg = (state.recSug || {})[r.codigo];
     if (sg) {
       const ETQ = { cumple: 'Cumple', parcial: 'Parcial' };
       f.querySelector('h3').insertAdjacentHTML('afterend', `<div class="plant-ok" id="sug-req" style="grid-column:1/-1;margin:0 0 10px;padding:10px 12px;border-radius:10px">💡 <b>La app sugiere: ${ETQ[sg.e] || sg.e}</b> · ${esc(String(sg.t).replace(/^[A-K][12] → [^:]+: /, ''))}
-        ${sg.ev ? `<br><small>Evidencia: «${esc(sg.ev)}»${REQ_SENSIBLES[r.codigo] ? ' (añade el enlace a la carpeta restringida)' : ' (añade el enlace al documento)'}</small>` : ''}${sg.acc ? `<br><small>Acción pendiente: ${esc(sg.acc)}</small>` : ''}
+        ${sg.ev ? `<br><small>Evidencia: «${esc(sg.ev)}»${sg.url ? ' · <b>con el enlace que ya consta en la Matriz</b>' : REQ_SENSIBLES[r.codigo] ? ' (añade el enlace a la carpeta restringida)' : ' (añade el enlace al documento)'}</small>` : ''}${sg.ev2 ? `<br><small>Segunda evidencia: «${esc(sg.ev2)}»${sg.url2 ? ' · con su enlace' : ''}</small>` : ''}${sg.acc ? `<br><small>Acción pendiente: ${esc(sg.acc)}</small>` : ''}
         <div style="margin-top:6px"><button type="button" class="btn" id="sug-aplicar">Aplicar sugerencia</button> <small class="muted">Revisa antes de guardar: la decisión es tuya.</small></div></div>`);
       $('#sug-aplicar').onclick = () => {
         const set = (n, v) => { const el = f.querySelector('[name="' + n + '"]'); if (el && v != null) { el.value = v; el.dispatchEvent(new Event('change', { bubbles: true })); } };
-        set('estado', sg.e); if (sg.ev && !f.ev_titulo.value) set('ev_titulo', sg.ev); set('accion_pendiente', sg.acc || '');
+        set('estado', sg.e); if (sg.ev && !f.ev_titulo.value) set('ev_titulo', sg.ev); if (sg.url && !url.value) set('ev_url', sg.url); set('accion_pendiente', sg.acc || '');
+        f.dataset.ev2 = sg.ev2 || ''; f.dataset.url2 = sg.url2 || '';
         if (!f.fecha_revision.value) set('fecha_revision', new Date().toISOString().slice(0, 10));
-        toast('Sugerencia aplicada: revisa y pulsa Guardar'); (sg.ev ? url : f.querySelector('[name="estado"]')).focus();
+        toast(sg.url ? 'Sugerencia aplicada con el enlace: revisa y pulsa Guardar' : 'Sugerencia aplicada: añade el enlace, revisa y pulsa Guardar'); (sg.ev && !sg.url ? url : f.querySelector('[name="estado"]')).focus();
       };
+
     }
     pintarComoCumplir(f, r);
+    // v58: al guardar, añade las evidencias reutilizadas (casillas 🔗) y la segunda evidencia sugerida, sin duplicar enlaces
+    const dlg = $('#modal'), cierreBase = dlg.onclose;
+    dlg.onclose = async () => {
+      const ok = dlg.returnValue === 'ok';
+      const extra = ok ? [...f.querySelectorAll('[data-reus]:checked')].map(i => ({ t: i.dataset.t, u: i.dataset.u })) : [];
+      if (ok && f.dataset.ev2) extra.push({ t: f.dataset.ev2, u: f.dataset.url2 || '' });
+      await cierreBase();
+      if (!extra.length) return;
+      const fila = (state.matriz || []).find(x => x.codigo === r.codigo) || {};
+      const vistos = new Set((fila.evidencias || []).map(v => v.url_drive || v.titulo).filter(Boolean));
+      if (f.ev_titulo.value) vistos.add(f.ev_url.value || f.ev_titulo.value);
+      let n = 0;
+      for (const x of extra) { const k = x.u || x.t; if (!k || vistos.has(k)) continue; vistos.add(k);
+        try { await API.call('guardarEvidencia', { entidad_id, requisito_codigo: r.codigo, titulo: x.t, url_drive: x.u, fecha_documento: f.fecha_revision.value }); n++; } catch (er) {} }
+      if (n) { toast(n + ' evidencia(s) reutilizada(s) añadida(s)'); loadMatriz(); }
+    };
     const lab = url.closest('label');
     const sens = REQ_SENSIBLES[r.codigo];
     lab.insertAdjacentHTML('afterend', sens
@@ -5024,7 +5043,7 @@ GUIA.forEach(t => { if (t[1] === 'Matriz de cumplimiento · la pieza clave') t[2
   '<tr><td><b>Documentos con datos personales</b></td><td>Certificados negativos (K2), hojas de aceptación (D2), autorizaciones firmadas por las familias (E1, F1), certificados de formación</td><td>Enlace a la <b>carpeta</b> del requisito (no a cada archivo), con acceso <b>Restringido</b>. Título <b>sin nombres de personas</b>: «Certificados negativos 2026/2027 (2 de 2) · carpeta restringida».</td></tr></tbody></table>' +
   '<ul><li>En Drive: clic derecho → <b>Compartir</b> → Acceso general → <b>Restringido</b>, y añade solo a las personas autorizadas. Nunca «Cualquier persona con el enlace».</li><li>Recuerda que la app del club entra con una sola contraseña: quien la tenga ve los enlaces, pero sin permiso en la nube no podrá abrirlos.</li><li>Los informes y el documento de Medidas preventivas muestran solo títulos, nunca enlaces; en K2, D2, E1 y F1 ni siquiera el título.</li><li>Las <b>recomendaciones</b> avisan si una evidencia lleva en el título el nombre de un agente o del Delegado/a.</li></ul>', '', 'matriz']); });
 
-GUIA.forEach(t => { if (t[1] === 'Matriz de cumplimiento · la pieza clave') t[2].push(['¿Qué es «Aplicar sugerencia»?', '<p>La app detecta requisitos que ya puedes marcar con lo que tienes, sin IA: <b>E1/F1</b> con el recuento de Autorizaciones, <b>E2</b>, <b>H1</b> y <b>H2</b> con el protocolo aprobado (G1), <b>F2</b> con el protocolo y las medidas de desplazamientos, y <b>J1</b> con la formación de los agentes.</p><p>Aparecen en <b>💡 Recomendaciones sobre la Matriz</b>. Al abrir el requisito verás <b>💡 La app sugiere</b>: pulsa <b>Aplicar sugerencia</b> y se rellenan estado, título de evidencia, acción pendiente y fecha. Añade el enlace (carpeta restringida si hay datos personales), revisa y guarda: la decisión es siempre tuya.</p>', '', 'matriz']); });
+GUIA.forEach(t => { if (t[1] === 'Matriz de cumplimiento · la pieza clave') t[2].push(['¿Qué es «Aplicar sugerencia»?', '<p>La app detecta requisitos que ya puedes marcar con lo que tienes, sin IA: <b>E1/F1</b> con el recuento de Autorizaciones, <b>E2</b>, <b>H1</b> y <b>H2</b> con el protocolo aprobado (G1), <b>F2</b> con el protocolo y las medidas de desplazamientos, y <b>J1</b> con la formación de los agentes.</p><p>Aparecen en <b>💡 Recomendaciones sobre la Matriz</b>. Al abrir el requisito verás <b>💡 La app sugiere</b>: pulsa <b>Aplicar sugerencia</b> y se rellenan estado, título de evidencia, acción pendiente y fecha. Si el documento ya está en otro requisito (por ejemplo, el protocolo de G1), el enlace se copia solo. En <b>📋 Cómo cumplir</b> verás también <b>🔗 Documentos que ya están en la Matriz y sirven aquí</b>: los marcados se añaden como evidencia al guardar, sin duplicar. Revisa y guarda: la decisión es siempre tuya.</p>', '', 'matriz']); });
 
 // v56: «Cómo cumplir este requisito» dentro del formulario de la Matriz, para que el club sea autónomo sin ayuda externa.
 // [cómo se cumple, título de evidencia modelo, cuándo es Cumple, plantillas, pantalla]
@@ -5051,6 +5070,8 @@ const REQ_COMO = {
   K1: ['Da de alta en Agentes deportivos a cada entrenador, monitor, directivo o voluntario en contacto con menores.', 'Registro de agentes en EntornoSeguro, n agentes', 'Todos los agentes registrados.', null, 'agentes'],
   K2: ['Anota en Agentes la fecha del certificado negativo de cada persona y guarda los certificados en la carpeta restringida.', 'Certificados negativos ' + coordTemporada() + ' (n de n) · carpeta restringida', 'Todos los agentes con certificado.', null, 'agentes']
 };
+// Requisitos cuya evidencia puede ser un documento ya registrado en otro requisito
+const REQ_FUENTE = { E2: ['G1'], F2: ['G1', 'C2'], H1: ['G1'], H2: ['G1', 'H1'], I2: ['I1', 'G2'] };
 const NOM_PLANT = { declaracion: 'Declaración institucional', designacion: 'Designación', codigo: 'Código de conducta', protocolo: 'Protocolo', familias: 'Carta a familias', actuacion: 'Guía rápida de actuación', canal: 'Cartel del canal', aut_imagen: 'Autorización de imagen', aut_desplaz: 'Autorización de desplazamiento' };
 const NOM_VISTA = { formacion: 'Formación', riesgos: 'Riesgos', agentes: 'Agentes deportivos', autorizaciones: 'Autorizaciones' };
 function pintarComoCumplir(f, r) {
@@ -5058,12 +5079,21 @@ function pintarComoCumplir(f, r) {
   const abierto = !r.estado || r.estado === 'pendiente';
   const bots = (c[3] || []).map(id => `<button type="button" class="btn ghost" data-como-plant="${id}">📄 ${esc(NOM_PLANT[id] || id)}</button>`).join(' ')
     + (c[4] ? ` <button type="button" class="btn ghost" data-como-vista="${c[4]}">Ir a ${esc(NOM_VISTA[c[4]] || c[4])}</button>` : '');
+  // Documentos que ya constan en otros requisitos y sirven para este (se añaden al guardar si están marcados)
+  const filas = state.matriz || [], propia = filas.find(x => x.codigo === r.codigo) || {};
+  const yaUrls = new Set((propia.evidencias || []).map(v => v.url_drive).filter(Boolean));
+  const reus = []; (REQ_FUENTE[r.codigo] || []).forEach(cf => { const fl = filas.find(x => x.codigo === cf); ((fl && fl.evidencias) || []).forEach(v => {
+    if (v.url_drive && !yaUrls.has(v.url_drive) && !reus.some(z => z.u === v.url_drive)) reus.push({ c: cf, t: v.titulo, u: v.url_drive }); }); });
+  const reusHtml = reus.length ? `<div style="margin-top:6px;padding:6px 8px;background:color-mix(in srgb,var(--accent) 8%,transparent);border-radius:8px"><small><b>🔗 Documentos que ya están en la Matriz y sirven aquí</b> (se añaden como evidencia al guardar; desmarca los que no correspondan):</small>
+    ${reus.map(z => `<label style="display:flex;gap:6px;align-items:flex-start;font-weight:400;margin:4px 0"><input type="checkbox" checked data-reus data-t="${esc(z.t)}" data-u="${esc(z.u)}" style="width:auto;min-height:0;margin-top:3px"> <small>${esc(z.t)} <span class="muted">(de ${esc(z.c)})</span></small></label>`).join('')}</div>` : '';
+  if (reus.length && !abierto) setTimeout(() => { const d = $('#como-req'); if (d) d.open = true; }, 0);
   const ref = f.querySelector('#sug-req') || f.querySelector('h3');
   ref.insertAdjacentHTML('afterend', `<details id="como-req" ${abierto ? 'open' : ''} style="grid-column:1/-1;margin:0 0 10px;border:1px solid var(--line);border-radius:10px;padding:8px 12px">
     <summary style="cursor:pointer;font-weight:600">📋 Cómo cumplir ${esc(r.codigo)}</summary>
     <p style="margin:6px 0">${esc(c[0])}</p>
     <p style="margin:4px 0"><small><b>Evidencia:</b> «${esc(c[1])}» <button type="button" class="btn ghost" id="como-titulo" style="min-height:30px;padding:2px 8px">Usar este título</button></small></p>
     <p style="margin:4px 0"><small><b>Cumple cuando:</b> ${esc(c[2])}</small></p>
+    ${reusHtml}
     ${bots ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${bots}</div>` : ''}</details>`);
   const cerrar = () => { const d = $('#modal'); d.returnValue = 'cancel'; d.close(); };
   $('#como-titulo').onclick = () => { f.ev_titulo.value = c[1]; f.ev_titulo.focus(); toast('Cambia «dd/mm/aaaa», «vX» o «n de n» por tus datos'); };
