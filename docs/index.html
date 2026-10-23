@@ -3996,7 +3996,12 @@ function avisosDirectorio(d) {
 (function () {
   const pa = document.querySelector('.perfil[data-perfil="admin"]'), pc = document.querySelector('.perfil[data-perfil="club"]');
   if (pa) { pa.querySelector('b').textContent = 'AYUNTAMIENTO / EQUIPO'; pa.querySelector('small').textContent = 'Ayuntamiento, delegado/a, técnicos y entidades con usuario del ayuntamiento'; }
-  if (pc) { pc.querySelector('small').textContent = 'Clubes y asociaciones con espacio propio'; const ic = pc.querySelector('.perfil-ico'); if (ic) ic.textContent = '🏅'; }
+  if (pc) pc.querySelector('small').textContent = 'Clubes y asociaciones con espacio propio';
+  // Iconos de línea a juego (mismo trazo y color de marca) en lugar de emojis de estilos distintos.
+  const svgI = d => '<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
+  const icA = pa && pa.querySelector('.perfil-ico'), icC = pc && pc.querySelector('.perfil-ico');
+  if (icA) { icA.innerHTML = svgI('<path d="M3 9.5 12 4l9 5.5"/><path d="M4 21h16"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8"/><path d="M4 18h16"/>'); icA.style.color = 'var(--brand)'; }
+  if (icC) { icC.innerHTML = svgI('<path d="M8 3h8l-2.5 6h-3z"/><path d="M8 3l2.5 6M16 3l-2.5 6"/><circle cx="12" cy="15" r="5.5"/><path d="m12 12.3.9 1.8 2 .3-1.45 1.4.35 2-1.8-.95-1.8.95.35-2-1.45-1.4 2-.3z"/>'); icC.style.color = 'var(--accent)'; }
   const lema = document.querySelector('#login .login-card > p'); if (lema) lema.textContent = 'Protección de menores en el deporte';
   const base = elegirPerfil;
   elegirPerfil = function (p) {
