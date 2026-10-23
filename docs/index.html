@@ -5504,6 +5504,172 @@ const iaTexto = t => IA_TXT.reduce((x, [re, r]) => x.replace(re, r), String(t).r
 })();
 GUIA.forEach(t => t[2].forEach(q => { if (/¿Cómo funciona la IA en la app\?/.test(q[0])) q[1] = '<p>La app prepara el texto de la petición (el <b>prompt</b>) con los datos necesarios y <b>sin datos personales</b>: nombres, teléfonos y correos van como marcadores que la app rellena después en tu equipo. Pulsa <b>📋 Copiar prompt</b>, pégalo en el asistente de IA que uses (ChatGPT, Gemini, Copilot, Claude…) y copia aquí su respuesta. La app no envía nada por su cuenta ni exige ningún asistente concreto.</p><p>Antes de guardar, revisa siempre el resultado: la IA propone y la entidad decide.</p>'; }));
 
+// v67: «TU ENTORNOSEGURO» · con todo al día, el Panel ofrece fichas de repaso de una página (sin IA, con los datos del club)
+// y una publicación del mes para redes (prompt de texto y prompt de imagen, para cualquier asistente).
+const ME_TEMAS = [
+  ['Enero', 'Ciberacoso y grupos de chat del equipo', 'En el grupo también se juega limpio', 'adolescentes de espaldas mirando sus móviles en un vestuario luminoso, ambiente positivo', 'contar cualquier problema a un adulto de confianza'],
+  ['Febrero', 'La afición que suma: comportamiento en la grada', 'Desde la grada, solo ánimos', 'familias aplaudiendo en una grada de un campo deportivo', 'animar sin presionar ni insultar'],
+  ['Marzo', 'Igualdad y respeto en el deporte (8 de marzo)', 'El mismo campo, las mismas oportunidades', 'niñas y niños entrenando juntos, vistos de lejos', 'respetar a todas las personas'],
+  ['Abril', 'Viajes y torneos: cómo protegemos a los menores fuera de casa', 'Viajamos seguros', 'equipo infantil subiendo a un autobús acompañado por dos adultos, de espaldas', 'revisar y firmar la autorización de desplazamiento'],
+  ['Mayo', 'Tu opinión cuenta: la encuesta de seguridad para deportistas', '¿Te sientes bien en tu equipo? Cuéntanoslo', 'cartel con un código QR en el tablón de un pabellón deportivo', 'responder la encuesta anónima'],
+  ['Junio', 'Cierre de temporada: gracias por un año de buen trato', 'Gracias por una temporada segura', 'equipo celebrando de espaldas con los brazos en alto', 'compartir sugerencias para la próxima temporada'],
+  ['Julio', 'Campus y actividades de verano: normas de convivencia y pernocta', 'Verano seguro, verano feliz', 'campamento deportivo al aire libre con tiendas y balones', 'conocer las normas del campus'],
+  ['Agosto', 'Antes de volver: hablar en familia de cómo se sienten en su deporte', '¿Cómo te sientes en tu equipo?', 'madre o padre conversando tranquilamente con su hijo en un banco, de espaldas', 'escuchar a vuestros hijos e hijas'],
+  ['Septiembre', 'Bienvenida a la temporada: así cuidamos de vuestros hijos e hijas', 'Empezamos la temporada en un entorno seguro', 'niños y niñas entrenando en un campo con su entrenador, vistos de lejos', 'conocer al Delegado/a de Protección'],
+  ['Octubre', 'El código de conducta: el compromiso de entrenadores y monitores', 'Nuestro compromiso: buen trato siempre', 'entrenador agachado hablando con respeto a un grupo de deportistas de espaldas', 'conocer el código de conducta'],
+  ['Noviembre', 'Derechos de la infancia (20 de noviembre, Día Universal del Niño)', 'Jugar es un derecho', 'niños y niñas diversos jugando juntos, ilustración amable', 'hablar en familia de sus derechos'],
+  ['Diciembre', 'Fotos y redes en fiestas y torneos: compartir con respeto', 'Antes de publicar, piensa', 'familia mirando un móvil en la grada de un torneo navideño', 'no publicar fotos de otros menores sin permiso']
+];
+const ME_FICHAS = [
+  ['medidas', 'Medidas clave', 'Riesgos altos y sus medidas, para el cuerpo técnico', '<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3z"/><path d="m9 12 2 2 4-4"/>'],
+  ['sospecha', 'Qué hacer ante una sospecha', 'Pasos en orden y a quién comunicar', '<path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17h.01"/>'],
+  ['contactos', 'Contactos de emergencia', 'Delegado/a, recursos locales y teléfonos de ayuda', '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/>'],
+  ['salida', 'Antes de una salida', 'Comprobaciones para viajes y partidos fuera', '<rect x="3" y="6" width="18" height="11" rx="2"/><path d="M3 11h18M7 17v2M17 17v2"/>'],
+  ['imagenes', 'Uso de imágenes', 'Compromisos de publicación y autorizaciones', '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 15-5-5L5 19"/>'],
+  ['calendario', 'Calendario de la temporada', 'Revisiones, renovaciones y caducidades', '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'],
+  ['mes', 'Publicación del mes', 'Texto e imagen para redes sociales', '<path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l2-5.2A8.4 8.4 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/>']
+];
+async function meDatos(entId) {
+  const ok = p => p.then(x => x, () => null);
+  const ents = !entId && state.entidades && state.entidades.length ? state.entidades : (await ok(API.call('listarEntidades'))) || [];
+  const e = (entId ? ents.find(x => x.id === entId) : ents[0]) || {};
+  const q = entId ? { entidad_id: entId } : {}, mia = r => !entId || r.entidad_id === entId;
+  const [rie, dir, aut, mat, ag, form, enc] = await Promise.all([ok(API.call('listarRiesgos', q)), state.dir ? Promise.resolve(state.dir) : ok(API.call('directorio')),
+    ok(API.call('listarAutorizaciones', q)), ok(API.call('matriz', { entidad_id: e.id })), ok(API.call('listarAgentes', q)), ok(API.call('listarFormacion')), ok(API.call('listarEncuestas', q))]);
+  return { e, rie: (rie || []).filter(mia), dir: dir || {}, aut: (aut || []).filter(mia), mat: mat || [], ag: (ag || []).filter(a => a.activo !== 'NO' && mia(a)), form: (form || []).filter(mia), enc: (enc || []).filter(mia) };
+}
+const meF = v => { const s = String(v || '').slice(0, 10); return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s.split('-').reverse().join('/') : s; };
+const meLista = t => String(t || '').split(/(?<=[.;])\s+(?=[A-ZÁÉÍÓÚÑ])/).map(x => x.trim().replace(/[.;]$/, '')).filter(Boolean);
+const ME_RE = { salida: /despla|viaj|pernoc|concentr|campa|transport|torneo/i, imagenes: /imagen|redes|foto|digital|publica/i };
+function meHtml(tipo, d) {
+  const e = d.e, nom = e.nombre || '', del = e.delegado_nombre || 'Delegado/a de Protección', plazo = e.plazo_comunicacion_h || 24;
+  const tel = (n, t, m) => `<tr><td class="k">${esc(n)}</td><td>${esc(t || '—')}${m ? '<br><small>' + esc(m) + '</small>' : ''}</td></tr>`;
+  const pie = `EntornoSeguro · ${esc(nom)} · Ficha de repaso generada con los datos del sistema de protección de la entidad.`;
+  if (tipo === 'medidas') {
+    const r = d.rie.filter(x => x.estado === 'implantada').sort((a, b) => ({ alto: 0, medio: 1, bajo: 2 })[a.nivel] - ({ alto: 0, medio: 1, bajo: 2 })[b.nivel]);
+    const b = r.length ? '<table><thead><tr><th style="width:18%">Ámbito</th><th style="width:30%">Riesgo</th><th>Lo que hacemos</th></tr></thead><tbody>' +
+      r.map(x => `<tr><td><b>${esc(x.ambito)}</b><br><small class="${x.nivel === 'alto' ? 'bad' : 'warn'}">${esc(x.nivel)}</small></td><td>${esc(x.descripcion)}</td><td><ul>${meLista(x.medidas).map(m => '<li>' + esc(m) + '</li>').join('')}</ul></td></tr>`).join('') + '</tbody></table>'
+      : '<p class="muted">Aún no hay medidas implantadas en Riesgos.</p>';
+    return plantillaInforme('Medidas preventivas clave', nom, '<div class="nota">Para entrenadores, monitores y voluntariado: lo que el club hace en cada situación de riesgo. Repasadlo al empezar la temporada y antes de cada salida.</div>' + b, false, pie);
+  }
+  if (tipo === 'sospecha') {
+    const pasos = ['<b>¿Hay riesgo inmediato?</b> Protege al menor y llama al <b>112</b>.', '<b>Escucha con calma</b>, sin interrogar ni pedir detalles. No prometas guardar el secreto; sí discreción.',
+      '<b>No confrontes</b> a la persona señalada ni investigues por tu cuenta.', '<b>Anota</b> las palabras literales del menor, con fecha y hora, sin interpretaciones.',
+      `<b>Comunica</b> al Delegado/a de Protección en un máximo de <b>${esc(plazo)} horas</b>: ${esc(del)}${e.delegado_telefono ? ' · ' + esc(e.delegado_telefono) : ''}${e.delegado_email ? ' · ' + esc(e.delegado_email) : ''}.`,
+      '<b>Conserva</b> mensajes o pruebas sin reenviarlos ni difundirlos.', 'El Delegado/a valora y decide la comunicación a la familia, Servicios Sociales, Fuerzas de Seguridad o Fiscalía (LOPIVI, arts. 15 y 16).'];
+    return plantillaInforme('Qué hacer ante una sospecha o una revelación', nom, '<ol style="font-size:11.5pt;line-height:1.7">' + pasos.map(p => '<li>' + p + '</li>').join('') + '</ol>' +
+      '<div class="nota">Toda persona que conozca una posible situación de violencia contra un menor tiene el deber de comunicarlo (LOPIVI, art. 15). Ante la duda, comunica: valorar no es tu tarea, es la del Delegado/a.</div>' +
+      `<table>${tel('Delegado/a de Protección', del, [e.delegado_telefono, e.delegado_email].filter(Boolean).join(' · '))}${e.suplente_nombre ? tel('Suplente', e.suplente_nombre, [e.suplente_telefono, e.suplente_email].filter(Boolean).join(' · ')) : ''}${tel('Emergencias', '112')}${tel('Línea de ayuda a la infancia', '116 111')}</table>`, false, pie);
+  }
+  if (tipo === 'contactos') {
+    const di = d.dir, otros = String(di.otros || '').split(/\n+/).filter(Boolean);
+    return plantillaInforme('Contactos de emergencia y ayuda', nom, '<h2>Del club</h2><table>' + tel('Delegado/a de Protección', del, [e.delegado_telefono, e.delegado_email].filter(Boolean).join(' · ')) +
+      (e.suplente_nombre ? tel('Suplente', e.suplente_nombre, [e.suplente_telefono, e.suplente_email].filter(Boolean).join(' · ')) : '') +
+      tel('Canal de comunicación', [e.canal_email, e.canal_telefono].filter(Boolean).join(' · ') || '—', [e.canal_buzon, e.canal_presencial].filter(Boolean).join(' · ')) + '</table>' +
+      '<h2>Recursos locales</h2><table>' + tel('Servicios Sociales Comunitarios', di.servicios_sociales) + tel('Policía Local', di.policia_local) + tel('Fiscalía · Sección de Menores', di.fiscalia_menores) +
+      tel('Centro de salud', di.centro_salud) + tel('Delegado/a municipal de Protección', di.delegado_municipal) + otros.map(o => tel('Otros', o)).join('') + '</table>' +
+      '<h2>Teléfonos de ayuda</h2><table>' + tel('Emergencias', '112') + tel('Policía Nacional · Guardia Civil', '091 · 062') + tel('Fundación ANAR (menores y familias)', '900 20 20 10') +
+      tel('Línea de ayuda a la infancia', '116 111') + tel('Junta de Andalucía · notificación de maltrato infantil', '900 851 818') + '</table>', false, pie);
+  }
+  if (tipo === 'salida' || tipo === 'imagenes') {
+    const re = ME_RE[tipo], med = [].concat(...d.rie.filter(x => re.test(x.ambito + ' ' + x.descripcion)).map(x => meLista(x.medidas)));
+    const aut = d.aut.filter(a => tipo === 'salida' ? /despla|viaje|pernoc|campa/i.test(a.tipo) : /imagen/i.test(a.tipo));
+    const tabAut = aut.length ? '<table><thead><tr><th>Grupo</th><th>Temporada</th><th>Recibidas</th><th>Denegadas</th></tr></thead><tbody>' + aut.map(a => `<tr><td>${esc(a.grupo)}</td><td>${esc(a.temporada || '')}</td><td class="${+a.recibidas >= +a.total ? 'ok' : 'warn'}">${esc(a.recibidas)} de ${esc(a.total)}</td><td>${esc(a.denegadas || 0)}</td></tr>`).join('') + '</tbody></table>' : '<p class="muted">Sin recuento en Autorizaciones.</p>';
+    const chk = l => '<ul style="list-style:none;padding-left:0;font-size:11pt;line-height:1.7">' + l.map(x => '<li>☐ ' + x + '</li>').join('') + '</ul>';
+    if (tipo === 'salida') return plantillaInforme('Antes de una salida', nom + ' · viajes, torneos y partidos fuera', chk(['Autorización de desplazamiento firmada de cada menor', 'Al menos dos personas adultas acompañantes', 'Listado del grupo y teléfonos de las familias a mano', 'Recuento al subir y al bajar del vehículo y en cada parada', 'Ningún adulto a solas con un menor en vehículos ni espacios cerrados', 'Teléfono del Delegado/a de Protección: ' + esc(e.delegado_telefono || '—')].concat(med.map(esc))) + '<h2>Autorizaciones de desplazamiento</h2>' + tabAut, false, pie);
+    return plantillaInforme('Uso de imágenes de menores', nom, '<h2>Nuestros compromisos al publicar</h2>' + chk(['Nunca nombre y apellidos junto a la imagen de un menor', 'Sin geolocalización ni horarios o lugares habituales', 'Nunca en vestuarios, duchas ni situaciones que afecten a su dignidad', 'Solo imágenes tomadas en actividades del club y en los canales autorizados', 'Si una familia lo pide, se retira la publicación'].concat(med.map(esc))) +
+      '<h2>Autorizaciones de imagen por grupo</h2>' + tabAut + (aut.some(a => +a.denegadas > 0) ? '<div class="nota">Hay familias que no autorizan algún canal: el cuerpo técnico debe consultar el listado del club antes de publicar.</div>' : ''), false, pie);
+  }
+  if (tipo === 'calendario') {
+    const ev = [], hoy = new Date().toISOString().slice(0, 10), meses = Number((state.cfg || {}).meses_certificado) || 12;
+    const porFecha = {}; d.mat.forEach(r => { if (r.proxima_revision) (porFecha[String(r.proxima_revision).slice(0, 10)] = porFecha[String(r.proxima_revision).slice(0, 10)] || []).push(r); });
+    Object.keys(porFecha).forEach(f => { const l = porFecha[f]; ev.push([f, l.length === 1 ? 'Revisión de ' + l[0].codigo + ' · ' + l[0].requisito : 'Revisión anual de ' + l.length + ' requisitos (' + l.map(r => r.codigo).join(', ') + ')', 'Matriz']); });
+    d.ag.forEach(a => { if (a.cert_fecha) { const f = new Date(String(a.cert_fecha).slice(0, 10)); f.setMonth(f.getMonth() + meses); ev.push([f.toISOString().slice(0, 10), 'Renovar certificado negativo · ' + a.nombre, 'Agentes']); } });
+    d.form.forEach(f => { if (f.fecha_caducidad) ev.push([String(f.fecha_caducidad).slice(0, 10), 'Caduca la formación · ' + (f.persona_nombre || '') + ' (' + (f.curso || '') + ')', 'Formación']); });
+    d.rie.forEach(r => { if (r.fecha_revision) ev.push([String(r.fecha_revision).slice(0, 10), 'Revisión del riesgo · ' + r.ambito, 'Riesgos']); });
+    const ult = d.enc.map(x => String(x.fecha_fin || x.fecha_inicio || x.creado || '').slice(0, 10)).filter(Boolean).sort().pop();
+    if (ult) { const f = new Date(ult); f.setFullYear(f.getFullYear() + 1); ev.push([f.toISOString().slice(0, 10), 'Nueva encuesta anónima a menores (una al año)', 'Encuestas']); }
+    const vistos = {}; const lista = ev.sort((a, b) => a[0].localeCompare(b[0])).filter(x => { const k = x[0] + x[1]; if (vistos[k]) return false; vistos[k] = 1; return true; });
+    return plantillaInforme('Calendario de la temporada', nom, lista.length ? '<table><thead><tr><th style="width:16%">Fecha</th><th>Qué hay que hacer</th><th style="width:16%">Dónde</th></tr></thead><tbody>' +
+      lista.map(x => `<tr><td class="${x[0] < hoy ? 'bad' : ''}"><b>${meF(x[0])}</b></td><td>${esc(x[1])}</td><td>${esc(x[2])}</td></tr>`).join('') + '</tbody></table>' : '<p class="muted">No hay fechas registradas.</p>', false, pie);
+  }
+  return '';
+}
+function mePublicacion(cont, e) {
+  const m = new Date().getMonth();
+  cont.innerHTML = `<div class="card form" id="me-mes"><h3>💬 Publicación del mes</h3><p class="nota" style="margin:0 0 10px">Elige el tema (sale propuesto el del mes) y copia los dos prompts: uno para el texto y otro para la imagen. No llevan datos personales.</p>
+    <label>Tema<select id="me-tema">${ME_TEMAS.map((t, i) => `<option value="${i}"${i === m ? ' selected' : ''}>${esc(t[0])} · ${esc(t[1])}</option>`).join('')}</select></label>
+    <div class="grid2"><div><h3 style="margin-top:6px">✍️ Texto para Instagram</h3><div id="me-p1"></div></div><div><h3 style="margin-top:6px">🖼️ Imagen</h3><div id="me-p2"></div></div></div></div>`;
+  const pinta = () => {
+    const t = ME_TEMAS[+$('#me-tema').value], muni = e.propia === 'SI' || /ayuntamiento/i.test(String(e.tipo || '')), club = e.nombre || (muni ? 'el Ayuntamiento' : 'el club'), mod = e.modalidad ? ' (' + e.modalidad + (e.municipio ? ', ' + e.municipio : '') + ')' : '';
+    const quien = muni ? 'las actividades deportivas municipales' : 'el club', delg = muni ? 'el Delegado/a de Protección municipal' : 'el Delegado/a del club';
+    const p1 = ['Redacta una publicación para Instagram de ' + club + mod + ', dirigida a familias y deportistas, sobre: ' + t[1] + '.',
+      'Contexto: ' + quien + (muni ? ' cuentan con' : ' tiene') + ' Delegado/a de Protección, protocolo de protección frente a la violencia (LOPIVI y Protocolo Marco andaluz) y un canal de comunicación confidencial.',
+      'Incluye: un titular breve; un texto de 80 a 120 palabras, cercano y positivo, sin alarmismo; una llamada a la acción: ' + t[4] + '; y de 5 a 8 hashtags (incluye #DeporteSeguro y #BuenTrato).',
+      'Si el tema lo pide, recuerda que pueden hablar con ' + delg + ' y que existe la línea de ayuda a la infancia 116 111.',
+      'Reglas: no inventes datos, nombres, cifras ni normas; no menciones a ningún menor; español de España; entrega solo la publicación, sin comentarios.'].join('\n');
+    const p2 = ['Crea una imagen cuadrada (1080 × 1080 px) para una publicación de Instagram ' + (muni ? 'de un ayuntamiento (actividades deportivas municipales con menores)' : 'de un club deportivo') + '. Tema: ' + t[1] + '.',
+      'Escena: ' + t[3] + '.', 'Estilo: ilustración plana moderna y amable, con azul marino (#0B3057), azul petróleo (#0D818F) y verde (#2FA37F) sobre fondo claro.',
+      'Personas estilizadas, de espaldas o sin rasgos: ningún rostro reconocible ni ningún menor identificable.', 'Sin logotipos, escudos, marcas ni equipaciones reales.',
+      'Texto en la imagen: solo el titular «' + t[2] + '», grande, legible y bien escrito en español. Deja espacio limpio alrededor del texto.'].join('\n');
+    mostrarPrompt($('#me-p1'), p1, { asunto: 'Publicación del mes · ' + t[0] + ' · ' + t[2], tipo: 'contenido' });
+    mostrarPrompt($('#me-p2'), p2);
+    const c2 = $('#me-p2'); const a = c2.querySelector('a[href^="https://claude.ai"]'); if (a) a.remove();
+    c2.querySelectorAll('button').forEach(b => { if (/Copiar prompt/i.test(b.textContent)) { b.classList.remove('ghost'); b.textContent = '📋 Copiar prompt de imagen'; } });
+    const n = c2.querySelector('.nota'); if (n) n.textContent = 'Pégalo en un generador de imágenes (ChatGPT, Gemini, Copilot Designer…). Revisa que no aparezca ningún menor identificable antes de publicar.';
+  };
+  $('#me-tema').onchange = pinta; pinta();
+  $('#me-mes').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function pintarMiEntorno() {
+  const v = $('#view-panel'), hero = $('#panel-hero');
+  let c = $('#mi-entorno');
+  const todo = state.club && hero && state.panelTodoAlDia && state.recsClub === 0 && /Todo al día/.test(hero.textContent);
+  if (!$('#me-est')) { const st = document.createElement('style'); st.id = 'me-est';
+    st.textContent = '#mi-entorno h3{margin:0 0 4px}#mi-entorno>p{margin:0 0 14px;color:var(--muted)}.me-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}' +
+      '.me-tile{display:flex;gap:12px;align-items:flex-start;text-align:left;padding:14px 16px;border-radius:14px;border:1px solid color-mix(in srgb,var(--line) 60%,transparent);background:var(--panel);color:var(--ink);font:inherit;cursor:pointer;box-shadow:var(--shadow);transition:transform .12s,border-color .12s}' +
+      '.me-tile:hover{transform:translateY(-2px);border-color:var(--brand-2)}.me-tile i{flex:0 0 auto;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:#fff;background:var(--grad)}' +
+      '.me-tile b{display:block;color:var(--brand)}.me-tile small{color:var(--muted);line-height:1.35}';
+    document.head.appendChild(st); }
+  if (!todo) { if (c) c.remove(); return; }
+  if (!c) { c = document.createElement('div'); c.id = 'mi-entorno'; c.className = 'card'; hero.after(c); }
+  c.innerHTML = '<h3>Tu EntornoSeguro</h3><p>Todo está al día. Repasa con un clic lo esencial de tu sistema de protección: cada ficha se abre en una página lista para imprimir o enseñar.</p><div class="me-grid">' +
+    ME_FICHAS.map(f => `<button type="button" class="me-tile" data-me="${f[0]}"><i>${ICO(f[3], 22)}</i><span><b>${esc(f[1])}</b><small>${esc(f[2])}</small></span></button>`).join('') + '</div><div id="me-extra"></div>';
+  meBotones(c);
+}
+function meBotones(c, entId) {
+  c.querySelectorAll('[data-me]').forEach(b => b.onclick = async () => {
+    const d = await run(() => meDatos(entId));
+    if (b.dataset.me === 'mes') { mePublicacion(c.querySelector('#me-extra'), d.e); return; }
+    abrirInforme(meHtml(b.dataset.me, d));
+  });
+}
+(function () {
+  const base = pintarHeroClub;
+  pintarHeroClub = function () { base.apply(this, arguments); try { pintarMiEntorno(); } catch (e) {} };
+})();
+// Ayuntamiento: las actividades municipales propias (entidad «propia») tienen su propio EntornoSeguro cuando están al 100 %
+async function pintarMiEntornoMunicipal() {
+  const v = $('#view-panel'); let c = $('#mi-entorno-muni');
+  const kp = [...$$('#kpis .kpi')].find(k => /Actividades municipales/i.test(k.textContent));
+  const pct = kp ? parseInt((kp.querySelector('strong') || {}).textContent, 10) : NaN;
+  if (state.club || !v || pct !== 100) { if (c) c.remove(); return; }
+  let ents = state.entidades && state.entidades.length ? state.entidades : null;
+  if (!ents) { try { ents = await API.call('listarEntidades'); } catch (e) { return; } }
+  const pr = (ents || []).find(x => x.propia === 'SI'); if (!pr) return;
+  pintarMiEntorno.call(null); // asegura los estilos
+  if (!$('#me-est')) return;
+  if (!c) { c = document.createElement('div'); c.id = 'mi-entorno-muni'; c.className = 'card'; $('#kpis').after(c); }
+  c.innerHTML = `<h3>EntornoSeguro de las actividades municipales</h3><p style="margin:0 0 14px;color:var(--muted)">${esc(pr.nombre)} está al día. Repasa con un clic lo esencial: cada ficha se abre en una página lista para imprimir o entregar a monitores y monitoras.</p><div class="me-grid">` +
+    ME_FICHAS.map(f => `<button type="button" class="me-tile" data-me="${f[0]}"><i>${ICO(f[3], 22)}</i><span><b>${esc(f[1])}</b><small>${esc(f[2])}</small></span></button>`).join('') + '</div><div id="me-extra"></div>';
+  meBotones(c, pr.id);
+}
+(function () {
+  const base = loadPanel;
+  loadPanel = async function () { await base.apply(this, arguments); try { await pintarMiEntornoMunicipal(); } catch (e) {} };
+})();
+GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Qué es «Tu EntornoSeguro» del Panel?', '<p>Cuando todo está al día, el Panel muestra siete accesos de repaso: <b>Medidas clave</b>, <b>Qué hacer ante una sospecha</b>, <b>Contactos de emergencia</b>, <b>Antes de una salida</b>, <b>Uso de imágenes</b>, <b>Calendario de la temporada</b> y <b>Publicación del mes</b>.</p><p>Las seis primeras se generan con los datos del club (riesgos, ficha, directorio, autorizaciones y fechas), sin IA, en una página lista para imprimir o enseñar al cuerpo técnico. La publicación del mes propone un tema según el mes y prepara dos prompts sin datos personales: uno para el texto de Instagram y otro para la imagen, que puedes pegar en el asistente o generador que uses.</p>', '', 'panel']); });
+
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
