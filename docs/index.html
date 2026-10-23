@@ -3567,7 +3567,7 @@ const FICHA_SECCIONES = [
     ['tipo', 'Naturaleza', ['Club', 'Asociación', 'Escuela deportiva', 'Empresa de servicios', 'Ayuntamiento', 'Otro']],
     ['n_registro', 'Nº de inscripción registral'], ['domicilio', 'Domicilio social'], ['municipio', 'Municipio'], ['provincia', 'Provincia'],
     ['web', 'Web o página de la entidad']]],
-  ['⚽ Actividad', [['modalidad', 'Modalidad deportiva'], ['actividades', 'Actividades (escuela, competición, campamento…)', 'textarea'],
+  ['🏅 Actividad', [['modalidad', 'Modalidad deportiva'], ['actividades', 'Actividades (escuela, competición, campamento…)', 'textarea'],
     ['trabaja_menores', '¿Trabaja con menores?', ['SI', 'NO']], ['n_menores', 'Nº aproximado de menores', 'number'],
     ['edades', 'Edades de los participantes (ej. de 6 a 16 años)'], ['lugar_actividad', 'Instalaciones o lugar habitual'],
     ['competicion', 'Competición', ['NO', 'SI']], ['desplazamientos', 'Desplazamientos', ['NO', 'SI']], ['pernocta', 'Actividades con pernocta', ['NO', 'SI']],
@@ -3996,7 +3996,7 @@ function avisosDirectorio(d) {
 (function () {
   const pa = document.querySelector('.perfil[data-perfil="admin"]'), pc = document.querySelector('.perfil[data-perfil="club"]');
   if (pa) { pa.querySelector('b').textContent = 'AYUNTAMIENTO / EQUIPO'; pa.querySelector('small').textContent = 'Ayuntamiento, delegado/a, técnicos y entidades con usuario del ayuntamiento'; }
-  if (pc) pc.querySelector('small').textContent = 'Clubes y asociaciones con espacio propio';
+  if (pc) { pc.querySelector('small').textContent = 'Clubes y asociaciones con espacio propio'; const ic = pc.querySelector('.perfil-ico'); if (ic) ic.textContent = '🏅'; }
   const lema = document.querySelector('#login .login-card > p'); if (lema) lema.textContent = 'Protección de menores en el deporte';
   const base = elegirPerfil;
   elegirPerfil = function (p) {
