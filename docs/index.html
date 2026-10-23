@@ -4118,10 +4118,12 @@ async function pintarPrimerosPasos() {
         `<button class="btn ghost" type="button" id="sig-matriz">Ver en la Matriz</button></div>`;
     } else {
       const prox = PASO_ORDEN.map(c => est[c] && est[c].proxima_revision).filter(Boolean).sort()[0];
+      state.proxRevision = prox || ''; state.panelTodoAlDia = true;
       html = `<h3>✓ Todo al día</h3><p style="margin:0">Todos los requisitos están acreditados.${prox ? ' Próxima revisión: <b>' + esc(String(prox).slice(0, 10)) + '</b>.' : ''}</p>`;
     }
   }
   card.innerHTML = html;
+  if (actual >= 0 || /Siguiente paso/.test(html)) state.panelTodoAlDia = false;
   card.querySelectorAll('[data-paso]').forEach(b => b.onclick = () => pasos[+b.dataset.paso][4]());
   const pend = actual < 0 && card.querySelector('#sig-matriz');
   if (pend) {
@@ -4831,6 +4833,28 @@ GUIA.forEach(t => { if (t[1] === 'Análisis de riesgos') t[2].splice(1, 0,
   };
 })();
 
+// v60: informe de implantación · evidencias con datos personales en genérico y versión sin nombres de personas
+(function () {
+  const caja = $('#inf-entidad');
+  if (caja && !$('#inf-sin-nombres')) caja.closest('label').insertAdjacentHTML('afterend', '<label style="display:flex;gap:8px;align-items:flex-start;font-weight:400;margin:6px 0"><input type="checkbox" id="inf-sin-nombres" style="width:auto;min-height:0;margin-top:4px"> <span>Versión para entregar fuera del club: <b>sin nombres</b> de agentes ni de personas formadas</span></label>');
+  const base = construirInformeEntidad;
+  construirInformeEntidad = function (d) {
+    const x = JSON.parse(JSON.stringify(d || {}));
+    (x.matriz || []).forEach(r => { if (REQ_GENERICO[r.codigo] && (r.evidencias || []).length) r.evidencias = [{ titulo: 'documentación con datos personales custodiada en la entidad' }]; });
+    const anon = !state.club || ($('#inf-sin-nombres') || {}).checked;
+    if (anon) {
+      const n = t => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+      const etq = {}; (x.agentes || []).forEach((a, i) => { etq[n(a.nombre)] = 'Agente ' + (i + 1); a.nombre = 'Agente ' + (i + 1); });
+      let k = 0; (x.formacion || []).forEach(f => { f.persona_nombre = f.colectivo === 'delegado' ? 'Delegado/a de Protección' : (etq[n(f.persona_nombre)] || 'Persona ' + (++k)); });
+    }
+    let h = base(x);
+    if (anon) h = h.replace('</h1>', '</h1><p style="margin:0 0 8px;color:#4f5d65;font-size:9pt">Versión sin nombres de personas, apta para entregar fuera de la entidad.</p>');
+    return h;
+  };
+})();
+
+GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿A quién puedo entregar el Informe de entidad?', '<p>El informe de <b>Informes → Informe de entidad</b> es la foto del sistema de protección del club. Para la Junta Directiva sirve la versión completa. Para entregarlo <b>fuera del club</b> (ayuntamiento, federación, subvenciones, familias) marca <b>Versión para entregar fuera del club</b>: los agentes y las personas formadas salen como «Agente 1», «Agente 2»… El ayuntamiento, cuando lo consulta desde su perfil, siempre ve esta versión.</p><p>En las dos versiones, los requisitos con datos personales (K2, D2, E1 y F1) muestran «documentación con datos personales custodiada en la entidad», nunca el título ni el enlace. Antes de sacarlo, revisa que el Panel no tenga recomendaciones sobre la Matriz (acciones pendientes en requisitos que ya cumplen, títulos en mayúsculas o sin completar).</p>', '', 'informes']); });
+
 // v31: RECOMENDACIONES AUTOMÁTICAS (Ampliacion v1.9) · reglas fijas sobre los datos, sin IA
 const REC_ICO = { alta: '🔴', media: '🟠', baja: '⚪' };
 const recItems = r => r.items && r.items.length ? '<ul class="rec-items">' + r.items.map(i => `<li>${esc(i.t)}${i.id && $('#view-riesgos') && !$('#view-riesgos').classList.contains('hidden') ? ` <button type="button" class="link" data-rec-rie="${esc(i.id)}">Editar</button>` : ''}</li>`).join('') + '</ul>' : '';
@@ -4878,6 +4902,7 @@ async function pintarRecomendacionesClub() {
   let recs; try { recs = await API.call('misRecomendaciones', {}); } catch (e) { return; }
   let card = $('#rec-card');
   if (!card) { card = document.createElement('div'); card.id = 'rec-card'; card.className = 'card rec-card'; const ref = $('#pasos-card') || v.querySelector('header'); ref.after(card); }
+  state.recsClub = recs.length;
   if (!recs.length) { card.innerHTML = '<h3>💡 Recomendaciones</h3><p class="st ok">✓ No hay recomendaciones pendientes. ¡Buen trabajo!</p>'; return; }
   const DEST = { matriz: ['Ir a la Matriz', r => { const m = /\b([A-K][12])\b/.exec(r.t); state.filtroMatriz = ''; if (m) state.tutResaltar = m[1]; const c = $('#revision-ia'); if (c) c.innerHTML = ''; show('matriz'); }], ficha: ['Abrir la ficha', () => state.entidades[0] && formEntidad(state.entidades[0], () => { state.entidades = []; loadPanel(); })],
     agentes: ['Ir a Agentes', () => show('agentes')], formacion: ['Ir a Formación', () => show('formacion')], riesgos: ['Ir a Riesgos', () => show('riesgos')],
@@ -4992,6 +5017,7 @@ async function pintarRecMatriz() {
 
 // v36: criterio de enlaces en las evidencias (guía + aviso en el formulario de la Matriz)
 const REQ_SENSIBLES = { K2: 'certificados negativos de delitos sexuales', D2: 'hojas de aceptación firmadas con DNI', E1: 'autorizaciones de imagen firmadas por las familias', F1: 'autorizaciones de desplazamiento firmadas por las familias', B2: 'certificado de formación del Delegado/a', J1: 'certificados de formación de los agentes' };
+const REQ_GENERICO = { K2: 1, D2: 1, E1: 1, F1: 1 }; // en informes: texto genérico en lugar del título
 const EJ_SENSIBLE = { K2: 'Certificados negativos 2026/2027 (2 de 2) · carpeta restringida', B2: 'Certificado de formación del Delegado/a · carpeta restringida', J1: 'Certificados de formación 2026/2027 · carpeta restringida' };
 (function () {
   const base = formCumplimiento;
@@ -5002,11 +5028,11 @@ const EJ_SENSIBLE = { K2: 'Certificados negativos 2026/2027 (2 de 2) · carpeta 
     const sg = (state.recSug || {})[r.codigo];
     if (sg) {
       // v59: con sugerencia, el formulario se reduce a una decisión: aplicar (y guardar) o hacerlo a mano.
-      const ETQ = { cumple: 'Cumple', parcial: 'Parcial' };
-      const faltaEnlace = !!(sg.ev && !sg.url && REQ_SENSIBLES[sg.c]); // E1/F1: el enlace a la carpeta solo lo tiene el club
+      const ETQ = { cumple: 'Cumple', parcial: 'Parcial', no_aplica: 'No aplica' };
+      const faltaEnlace = !!(sg.ev && !sg.url && (sg.enlace || REQ_SENSIBLES[sg.c])); // documentos y carpetas que solo tiene el club
       f.classList.add('modo-sug');
       f.querySelector('h3').insertAdjacentHTML('afterend', `<div class="plant-ok" id="sug-req" style="grid-column:1/-1;margin:0 0 10px;padding:12px 14px;border-radius:10px">💡 <b>La app sugiere: ${ETQ[sg.e] || sg.e}</b><br>${esc(String(sg.t).replace(/^[A-K][12] → [^:]+: /, ''))}
-        <ul style="margin:8px 0 0;padding-left:18px">${sg.ev ? `<li><small>Evidencia: «${esc(sg.ev)}»${sg.url ? ' (con el enlace que ya consta en la Matriz)' : faltaEnlace ? ' (pegarás el enlace de la carpeta restringida)' : ''}</small></li>` : ''}${sg.ev2 ? `<li><small>Evidencia: «${esc(sg.ev2)}»${sg.url2 ? ' (con su enlace)' : ''}</small></li>` : ''}${sg.acc ? `<li><small>Acción pendiente: ${esc(sg.acc)}</small></li>` : ''}</ul>
+        <ul style="margin:8px 0 0;padding-left:18px">${sg.ev ? `<li><small>Evidencia: «${esc(sg.ev)}»${sg.url ? ' (con el enlace que ya consta en la Matriz)' : faltaEnlace ? ' (pegarás el enlace' + (REQ_SENSIBLES[sg.c] ? ' de la carpeta restringida' : ' al documento') + ')' : ''}</small></li>` : ''}${sg.ev2 ? `<li><small>Evidencia: «${esc(sg.ev2)}»${sg.url2 ? ' (con su enlace)' : ''}</small></li>` : ''}${sg.acc ? `<li><small>Acción pendiente: ${esc(sg.acc)}</small></li>` : ''}</ul>
         <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button type="button" class="btn" id="sug-aplicar">${faltaEnlace ? 'Aplicar y pegar el enlace' : '✓ Aplicar y guardar'}</button><button type="button" class="btn ghost" id="sug-cancelar">Cancelar</button>
         <button type="button" class="link" id="sug-mano">Prefiero hacerlo a mano</button></div></div>`);
       const set = (n, v) => { const el = f.querySelector('[name="' + n + '"]'); if (el && v != null) { el.value = v; el.dispatchEvent(new Event('change', { bubbles: true })); } };
@@ -5018,7 +5044,7 @@ const EJ_SENSIBLE = { K2: 'Certificados negativos 2026/2027 (2 de 2) · carpeta 
         f.dataset.ev2 = sg.ev2 || ''; f.dataset.url2 = sg.url2 || '';
         if (!f.fecha_revision.value) set('fecha_revision', new Date().toISOString().slice(0, 10));
         f.querySelectorAll('[data-reus]').forEach(i => { i.checked = false; }); // la sugerencia ya decide qué evidencias van
-        if (faltaEnlace) { verForm(); f.classList.add('modo-sug2'); $('#sug-req').remove(); url.required = true; url.focus(); toast('Pega el enlace de la carpeta restringida y pulsa Guardar'); return; }
+        if (faltaEnlace) { verForm(); f.classList.add('modo-sug2'); $('#sug-req').remove(); url.required = true; url.focus(); toast('Pega el enlace y pulsa Guardar'); return; }
         const d = $('#modal'); d.returnValue = 'ok'; d.close('ok');
       };
     }
@@ -5052,7 +5078,7 @@ GUIA.forEach(t => { if (t[1] === 'Matriz de cumplimiento · la pieza clave') t[2
   '<tr><td><b>Documentos con datos personales</b></td><td>Certificados negativos (K2), hojas de aceptación (D2), autorizaciones firmadas por las familias (E1, F1), certificados de formación</td><td>Enlace a la <b>carpeta</b> del requisito (no a cada archivo), con acceso <b>Restringido</b>. Título <b>sin nombres de personas</b>: «Certificados negativos 2026/2027 (2 de 2) · carpeta restringida».</td></tr></tbody></table>' +
   '<ul><li>En Drive: clic derecho → <b>Compartir</b> → Acceso general → <b>Restringido</b>, y añade solo a las personas autorizadas. Nunca «Cualquier persona con el enlace».</li><li>Recuerda que la app del club entra con una sola contraseña: quien la tenga ve los enlaces, pero sin permiso en la nube no podrá abrirlos.</li><li>Los informes y el documento de Medidas preventivas muestran solo títulos, nunca enlaces; en K2, D2, E1 y F1 ni siquiera el título.</li><li>Las <b>recomendaciones</b> avisan si una evidencia lleva en el título el nombre de un agente o del Delegado/a.</li></ul>', '', 'matriz']); });
 
-GUIA.forEach(t => { if (t[1] === 'Matriz de cumplimiento · la pieza clave') t[2].push(['¿Qué es «Aplicar sugerencia»?', '<p>La app detecta requisitos que ya puedes marcar con lo que tienes, sin IA: <b>E1/F1</b> con el recuento de Autorizaciones, <b>E2</b>, <b>H1</b> y <b>H2</b> con el protocolo aprobado (G1), <b>F2</b> con el protocolo y las medidas de desplazamientos, y <b>J1</b> con la formación de los agentes.</p><p>Aparecen en <b>💡 Recomendaciones sobre la Matriz</b>. Al abrir el requisito verás solo <b>💡 La app sugiere</b>, con lo que se va a registrar. Pulsa <b>✓ Aplicar y guardar</b> y queda hecho: estado, evidencia (con el enlace si el documento ya está en otro requisito, como el protocolo de G1), acción pendiente y fecha. En E1 y F1 el botón es <b>Aplicar y pegar el enlace</b>: pega la carpeta restringida y guarda. Si prefieres decidir tú, pulsa <b>Prefiero hacerlo a mano</b> y verás el formulario completo con <b>📋 Cómo cumplir</b>.</p>', '', 'matriz']); });
+GUIA.forEach(t => { if (t[1] === 'Matriz de cumplimiento · la pieza clave') t[2].push(['¿Qué es «Aplicar sugerencia»?', '<p>La app detecta, sin IA, los requisitos que ya puedes marcar con tus datos: <b>A1, A2, B1, D1 y G1</b> con las fechas de aprobación de la ficha; <b>B2</b> y <b>J1</b> con Formación; <b>C1 y C2</b> con Riesgos; <b>D2, K1 y K2</b> con Agentes; <b>E1 y F1</b> con Autorizaciones; <b>E2, F2, H1 y H2</b> con el protocolo aprobado; <b>I1</b> con el canal de la ficha; <b>I2</b> con el cartel y la carta a familias; y <b>F1/F2 No aplica</b> si el club no viaja. Solo G2 (difusión) depende de algo que la app no puede saber: que hayas enviado la carta.</p><p>Aparecen en <b>💡 Recomendaciones sobre la Matriz</b>. Al abrir el requisito verás solo <b>💡 La app sugiere</b>, con lo que se va a registrar. Pulsa <b>✓ Aplicar y guardar</b> y queda hecho: estado, evidencia (con el enlace si el documento ya está en otro requisito, como el protocolo de G1), acción pendiente y fecha. En E1 y F1 el botón es <b>Aplicar y pegar el enlace</b>: pega la carpeta restringida y guarda. Si prefieres decidir tú, pulsa <b>Prefiero hacerlo a mano</b> y verás el formulario completo con <b>📋 Cómo cumplir</b>.</p>', '', 'matriz']); });
 
 (function () { if ($('#css-modo-sug')) return; const st = document.createElement('style'); st.id = 'css-modo-sug';
   st.textContent = '#modal-form.modo-sug .fields,#modal-form.modo-sug .actions,#modal-form.modo-sug #como-req,#modal-form.modo-sug2 #como-req{display:none}';
@@ -5229,7 +5255,7 @@ function htmlMedidasPreventivas(e, rows, matriz) {
   });
   const soporte = (matriz || []).filter(m => ['cumple', 'parcial'].includes(m.estado) && (m.evidencias || []).length && !/^C[12]$/.test(m.codigo));
   b += '<h2>2. Documentos de soporte</h2>' + (soporte.length
-    ? '<p>Las medidas se apoyan en los siguientes documentos de la entidad, registrados en su matriz de cumplimiento:</p><ul>' + soporte.map(m => `<li><b>${esc(m.codigo)}</b> ${esc(m.requisito)}: ${typeof REQ_SENSIBLES !== 'undefined' && REQ_SENSIBLES[m.codigo] ? 'documentación con datos personales custodiada en la entidad' : m.evidencias.map(v => esc(v.titulo)).join('; ')}${m.estado === 'parcial' ? ' <small>(en tramitación)</small>' : ''}</li>`).join('') + '</ul>'
+    ? '<p>Las medidas se apoyan en los siguientes documentos de la entidad, registrados en su matriz de cumplimiento:</p><ul>' + soporte.map(m => `<li><b>${esc(m.codigo)}</b> ${esc(m.requisito)}: ${typeof REQ_GENERICO !== 'undefined' && REQ_GENERICO[m.codigo] ? 'documentación con datos personales custodiada en la entidad' : m.evidencias.map(v => esc(v.titulo)).join('; ')}${m.estado === 'parcial' ? ' <small>(en tramitación)</small>' : ''}</li>`).join('') + '</ul>'
     : '<p class="muted">Aún no hay documentos registrados en la matriz.</p>');
   const org = String(e.organo_gobierno || 'órgano de gobierno').trim(), orgTxt = /^(el|la|los|las)\s/i.test(org) ? org.charAt(0).toUpperCase() + org.slice(1) : (/^junta|^asamblea|^comisi/i.test(org) ? 'La ' : 'El ') + org;
   b += '<h2>3. Aprobación</h2><p>' + esc(orgTxt) + ' de ' + esc(e.nombre || 'la entidad') + ', en sesión de fecha ……………………………, aprueba las medidas preventivas recogidas en el apartado 1' + (pend.length ? ' y se compromete a implantar las del anexo en los plazos indicados' : '') + ', encomendando su seguimiento al Delegado/a de Protección.</p>' +
@@ -5287,6 +5313,160 @@ function htmlMedidasPreventivas(e, rows, matriz) {
     const prev = f.ambito.onchange; f.ambito.onchange = function () { if (prev) prev.apply(this, arguments); arreglar(); };
   };
 })();
+
+// v62: ACABADO VISUAL · capa de presentación (no cambia datos ni lógica)
+// Tarjetas con sombra suave, indicadores con icono de línea, tarjeta principal de estado en el Panel del club,
+// iconos de línea en el menú y fechas dd/mm/aaaa en pantalla (los campos de formulario siguen en ISO).
+const ICO = (d, w) => `<svg viewBox="0 0 24 24" width="${w || 20}" height="${w || 20}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const ICOS = {
+  formadas: '<path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/>',
+  alertas: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>',
+  riesgos: '<path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17h.01"/>',
+  agentes: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-4-6"/>',
+  cert: '<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3z"/><path d="m9 12 2 2 4-4"/>',
+  entidades: '<path d="M3 21h18M5 21V8l7-4 7 4v13"/><path d="M9 21v-6h6v6"/>',
+  pct: '<path d="M4 20 20 4"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/>',
+  casos: '<path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/>',
+  cal: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  idea: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>',
+  seg: '<path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/>', cum: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="m8 12 3 3 5-6"/>',
+  prot: '<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3z"/>', ia: '<path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><path d="M9 13h6M9 17h4"/>',
+  inf: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>', adm: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  ayuda: '<circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/>'
+};
+(function () {
+  if ($('#es-skin')) return;
+  const st = document.createElement('style'); st.id = 'es-skin';
+  st.textContent = [
+    ':root{--radius:14px;--shadow:0 1px 2px rgba(16,24,40,.04),0 4px 14px rgba(16,24,40,.06);--bg:#f5f8f8}',
+    '@media (prefers-color-scheme:dark){:root{--bg:#11181c;--shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25)}}',
+    '.card{border:1px solid color-mix(in srgb,var(--line) 55%,transparent);box-shadow:var(--shadow);padding:18px 20px}',
+    '.btn{border-radius:10px;transition:filter .15s,transform .05s}.btn:hover{filter:brightness(1.08)}.btn:active{transform:translateY(1px)}',
+    'main header h2{font-size:1.5rem;letter-spacing:-.01em}',
+    /* indicadores */
+    '.kpis{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px}',
+    '.kpi{border:1px solid color-mix(in srgb,var(--line) 55%,transparent);border-top:1px solid color-mix(in srgb,var(--line) 55%,transparent);box-shadow:var(--shadow);padding:16px 18px;display:grid;grid-template-columns:1fr auto;align-items:start;gap:6px 10px}',
+    '.kpi span{grid-column:1;font-size:.78rem;line-height:1.3}.kpi strong{grid-column:1;font-size:2rem;line-height:1.1;letter-spacing:-.02em}',
+    '.kpi .kpi-ico{grid-column:2;grid-row:1/3;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:var(--brand-2);background:color-mix(in srgb,var(--brand-2) 10%,transparent)}',
+    '.kpi.kpi-alerta strong{color:var(--bad)}.kpi.kpi-alerta .kpi-ico{color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,transparent)}',
+    '.kpi.kpi-ok .kpi-ico{color:var(--ok);background:color-mix(in srgb,var(--ok) 10%,transparent)}',
+    /* tarjeta principal */
+    '#panel-hero{display:flex;gap:22px;align-items:center;padding:22px 24px;background:linear-gradient(135deg,color-mix(in srgb,var(--brand-2) 7%,var(--panel)),var(--panel) 60%)}',
+    '#panel-hero .anillo{flex:0 0 auto;position:relative;width:104px;height:104px}#panel-hero .anillo b{position:absolute;inset:0;display:grid;place-items:center;font-size:1.5rem;color:var(--brand);letter-spacing:-.02em}',
+    '#panel-hero h3{font-size:1.25rem;margin:0 0 4px;color:var(--brand)}#panel-hero p{margin:0 0 12px;color:var(--muted)}',
+    '.hero-chips{display:flex;gap:8px;flex-wrap:wrap}.hero-chips button{display:inline-flex;gap:6px;align-items:center;min-height:36px;padding:6px 12px;border-radius:999px;border:1px solid color-mix(in srgb,var(--line) 70%,transparent);background:var(--panel);color:var(--ink);font:inherit;font-size:.82rem;cursor:pointer}',
+    '.hero-chips button:hover{border-color:var(--brand-2)}.hero-chips .ok{color:var(--ok)}.hero-chips .warn{color:var(--warn)}.hero-chips .bad{color:var(--bad)}',
+    '@media (max-width:600px){#panel-hero{flex-direction:column;align-items:flex-start;gap:12px}}',
+    /* recomendaciones y pasos: acento lateral en lugar de borde completo */
+    'main .rec-card{border:1px solid color-mix(in srgb,var(--line) 55%,transparent)!important;border-left:4px solid var(--warn)!important}main #pasos-card,main .tut-oferta{border:1px solid color-mix(in srgb,var(--line) 55%,transparent)!important;border-left:4px solid var(--brand-2)!important}',
+    /* menú */
+    '.nav-grupo{background:none;border-left:0;padding:14px 12px 4px;color:var(--muted);font-size:.7rem;font-weight:700;letter-spacing:.09em}.nav-grupo svg{color:var(--brand-2)}',
+    'nav button{border-radius:10px;transition:background .15s}nav button.active{box-shadow:0 2px 8px color-mix(in srgb,var(--brand-2) 35%,transparent)}',
+    '@media (max-width:860px){.nav-grupo{padding:10px 0 2px}}'
+  ].join('');
+  document.head.appendChild(st);
+  // Menú: iconos de línea en lugar de emojis
+  const GRP = [[/Seguimiento/i, 'seg'], [/Cumplimiento/i, 'cum'], [/Protecci/i, 'prot'], [/IA y doc/i, 'ia'], [/Informes/i, 'inf'], [/Administraci/i, 'adm'], [/Ayuda/i, 'ayuda']];
+  const iconosMenu = () => $$('.nav-grupo').forEach(g => { if (g.dataset.ico) return; const t = g.textContent.replace(/^[^\p{L}]+/u, '').trim(); const m = GRP.find(x => x[0].test(t)); g.innerHTML = (m ? ICO(ICOS[m[1]], 15) : '') + '<span>' + esc(t) + '</span>'; g.dataset.ico = '1'; });
+  iconosMenu(); setTimeout(iconosMenu, 1500);
+})();
+
+// Indicadores con icono y color solo cuando piden atención
+const KPI_ICO = [[/Personas formadas/i, 'formadas'], [/Alertas/i, 'alertas', 1], [/Riesgos altos/i, 'riesgos', 1], [/sin certificado/i, 'cert', 1], [/Agentes deportivos/i, 'agentes'],
+  [/Casos abiertos/i, 'casos', 1], [/Entidades|Con menores|Con Delegado|Aceptan|Actividades municipales/i, 'entidades'], [/Cumplimiento/i, 'pct']];
+function decorarKpis() {
+  $$('#kpis .kpi').forEach(k => {
+    const lab = (k.querySelector('span') || {}).textContent || '', v = parseInt((k.querySelector('strong') || {}).textContent, 10);
+    const m = KPI_ICO.find(x => x[0].test(lab)); if (!m) return;
+    if (!k.querySelector('.kpi-ico')) k.insertAdjacentHTML('beforeend', '<i class="kpi-ico">' + ICO(ICOS[m[1]], 20) + '</i>');
+    k.classList.toggle('kpi-alerta', !!m[2] && v > 0); k.classList.toggle('kpi-ok', !!m[2] && v === 0);
+  });
+}
+// Tarjeta principal del club: una sola lectura del estado (sustituye a «Todo al día», «Sin recomendaciones» y «Alertas: ninguna»)
+function pintarHeroClub() {
+  const v = $('#view-panel'); if (!v || !state.club) { const h = $('#panel-hero'); if (h) h.remove(); return; }
+  const tile = re => [...$$('#kpis .kpi')].find(k => re.test(k.textContent));
+  const tPct = tile(/Cumplimiento/i), tAl = tile(/Alertas abiertas/i);
+  const pct = tPct ? parseInt(tPct.querySelector('strong').textContent, 10) || 0 : 0, al = tAl ? parseInt(tAl.querySelector('strong').textContent, 10) || 0 : 0;
+  [tPct, tAl].forEach(t => t && t.classList.add('hidden'));
+  const recs = state.recsClub, todo = pct === 100 && !recs && state.panelTodoAlDia;
+  let h = $('#panel-hero');
+  if (!h) { h = document.createElement('div'); h.id = 'panel-hero'; h.className = 'card'; v.querySelector('header').after(h); }
+  const R = 44, C = 2 * Math.PI * R, col = pct >= 100 ? 'var(--ok)' : pct >= 60 ? 'var(--brand-2)' : 'var(--warn)';
+  const prox = state.proxRevision ? String(state.proxRevision).slice(0, 10).split('-').reverse().join('/') : '';
+  h.innerHTML = `<div class="anillo" role="img" aria-label="Cumplimiento ${pct}%"><svg viewBox="0 0 104 104" width="104" height="104"><circle cx="52" cy="52" r="${R}" fill="none" stroke="color-mix(in srgb,var(--line) 60%,transparent)" stroke-width="10"/>
+      <circle cx="52" cy="52" r="${R}" fill="none" stroke="${col}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C * pct / 100} ${C}" transform="rotate(-90 52 52)"/></svg><b>${pct}%</b></div>
+    <div><h3>${todo ? 'Todo al día' : pct === 100 ? 'Requisitos acreditados' : 'Sistema de protección en implantación'}</h3>
+      <p>${todo ? 'Todos los requisitos del Protocolo Marco están acreditados y no hay nada pendiente.' : recs ? (recs > 1 ? 'Quedan ' + recs + ' recomendaciones' : 'Queda 1 recomendación') + ' para dejarlo todo al día.' : 'Cumplimiento del Protocolo Marco. Sigue los primeros pasos y la Matriz para completarlo.'}</p>
+      <div class="hero-chips">
+        <button type="button" data-hero="rec" class="${recs ? 'warn' : 'ok'}">${ICO(ICOS.idea, 16)} ${recs == null ? 'Recomendaciones…' : recs ? recs + (recs > 1 ? ' recomendaciones' : ' recomendación') : 'Sin recomendaciones'}</button>
+        <button type="button" data-hero="al" class="${al ? 'bad' : 'ok'}">${ICO(ICOS.alertas, 16)} ${al ? al + ' alerta' + (al > 1 ? 's' : '') : 'Sin alertas'}</button>
+        ${prox ? `<button type="button" data-hero="mat">${ICO(ICOS.cal, 16)} Próxima revisión ${esc(prox)}</button>` : ''}
+      </div></div>`;
+  h.querySelector('[data-hero="rec"]').onclick = () => { const c = $('#rec-card'); if (c && !c.classList.contains('hidden')) { const d = c.querySelector('details'); if (d) d.open = true; c.scrollIntoView({ behavior: 'smooth', block: 'start' }); } else show('matriz'); };
+  h.querySelector('[data-hero="al"]').onclick = () => show('alertas');
+  const bm = h.querySelector('[data-hero="mat"]'); if (bm) bm.onclick = () => show('matriz');
+  // Sin redundancias: lo que ya dice la tarjeta principal no se repite debajo
+  const rc = $('#rec-card'); if (rc) rc.classList.toggle('hidden', recs === 0);
+  const pc = $('#pasos-card'); if (pc && state.panelTodoAlDia) pc.classList.add('hidden');
+  const ac = ($('#panel-alertas') || {}).closest && $('#panel-alertas').closest('.card'); if (ac) ac.classList.toggle('hidden', !al);
+}
+(function () {
+  const base = loadPanel;
+  loadPanel = async function () { await base.apply(this, arguments); try { decorarKpis(); pintarHeroClub(); } catch (e) {} };
+  const bPP = pintarPrimerosPasos; pintarPrimerosPasos = async function () { await bPP.apply(this, arguments); try { pintarHeroClub(); } catch (e) {} };
+  const bRC = pintarRecomendacionesClub; pintarRecomendacionesClub = async function () { await bRC.apply(this, arguments); try { pintarHeroClub(); } catch (e) {} };
+})();
+
+// Fechas dd/mm/aaaa en pantalla (solo texto visible; los valores de formulario y lo que se guarda siguen en ISO)
+(function () {
+  const RE = /\b(\d{4})-(\d{2})-(\d{2})\b/g, NO = /^(TEXTAREA|SCRIPT|STYLE|PRE|CODE|INPUT|SELECT|OPTION)$/;
+  const fmt = root => {
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: n => {
+      for (let p = n.parentNode; p && p !== root.parentNode; p = p.parentNode) { if (p.nodeType === 1 && (NO.test(p.tagName) || p.isContentEditable || p.classList.contains('out'))) return NodeFilter.FILTER_REJECT; }
+      return RE.test(n.nodeValue) ? (RE.lastIndex = 0, NodeFilter.FILTER_ACCEPT) : NodeFilter.FILTER_SKIP; } });
+    const ns = []; while (w.nextNode()) ns.push(w.currentNode);
+    ns.forEach(n => { n.nodeValue = n.nodeValue.replace(RE, (x, y, m, d) => d + '/' + m + '/' + y); });
+  };
+  const main = document.querySelector('main'); if (!main) return;
+  let t = null; const run = () => { t = null; try { fmt(main); } catch (e) {} };
+  new MutationObserver(() => { if (!t) t = setTimeout(run, 60); }).observe(main, { childList: true, subtree: true });
+})();
+
+// v63: IA NEUTRAL · solo la versión maestra conserva «Abrir en Claude». Clubes y ayuntamientos copian el prompt
+// y lo pegan en el asistente de IA que usen (ChatGPT, Gemini, Copilot, Claude…). Las instrucciones no son específicas de ningún asistente.
+const iaNeutral = () => !(typeof esMaestra === 'function' && esMaestra());
+const IA_TXT = [
+  [/Se abrirá Claude con tu cuenta y el prompt preparado\. Si aparece vacío, pulsa "Copiar prompt" y pégalo\./g, 'Pulsa «Copiar prompt», pégalo en el asistente de IA que uses (ChatGPT, Gemini, Copilot, \u0001…) y copia aquí su respuesta.'],
+  [/Al abrirse Claude, ADJUNTA el documento del club \(PDF o Word\) antes de enviar\. Si el prompt no aparece, pulsa "Copiar prompt" y pégalo\./g, 'Pulsa «Copiar prompt», pégalo en tu asistente de IA y ADJUNTA el documento del club (PDF o Word) antes de enviar.'],
+  [/Se abrirá Claude con tu cuenta\. Si aparece vacío, pulsa "Copiar prompt" y pégalo\./g, 'Cópialo con «Copiar prompt» y pégalo en tu asistente de IA.'],
+  [/Abrir en Claude/g, 'Copiar prompt'], [/Enviar a Claude/g, 'Enviar a la IA'], [/Claude con tu cuenta/g, 'tu asistente de IA'],
+  [/informe de Claude/g, 'informe de la IA'], [/sin volver a Claude/g, 'sin volver a la IA'], [/Pide a Claude/g, 'Pide a la IA'],
+  [/(^|[.:]\s+|>\s*)Claude (compara|lo lee|solo recibe)/g, (m, a, v) => a + 'La IA ' + v],
+  [/\bde Claude\b/g, 'de tu asistente de IA'], [/\ben Claude\b/g, 'en tu asistente de IA'], [/\bEn Claude\b/g, 'En tu asistente de IA'], [/\ba Claude\b/g, 'a tu asistente de IA'],
+  [/\bClaude\b/g, 'la IA']
+];
+const iaTexto = t => IA_TXT.reduce((x, [re, r]) => x.replace(re, r), String(t).replace(/Copilot, Claude/g, 'Copilot, \u0001')).replace(/\u0001/g, 'Claude'); // la lista de asistentes se respeta
+(function () {
+  const NO = /^(TEXTAREA|SCRIPT|STYLE|PRE|CODE)$/;
+  const aplicar = root => {
+    if (!iaNeutral()) return;
+    root.querySelectorAll('a[href^="https://claude.ai"]').forEach(a => {
+      const acc = a.parentNode; a.remove();
+      if (acc) acc.querySelectorAll('button').forEach(b => { if (/Copiar prompt/i.test(b.textContent)) { b.classList.remove('ghost'); b.textContent = '📋 Copiar prompt'; } });
+    });
+    root.querySelectorAll('textarea[placeholder*="Claude"],input[placeholder*="Claude"]').forEach(t => { t.placeholder = iaTexto(t.placeholder); });
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: n => {
+      for (let p = n.parentNode; p && p !== root.parentNode; p = p.parentNode) if (p.nodeType === 1 && NO.test(p.tagName)) return NodeFilter.FILTER_REJECT;
+      return /Claude/.test(n.nodeValue.replace(/Copilot, Claude/g, '')) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP; } });
+    const ns = []; while (w.nextNode()) ns.push(w.currentNode);
+    ns.forEach(n => { n.nodeValue = iaTexto(n.nodeValue); });
+  };
+  let t = null; const run = () => { t = null; try { aplicar(document.body); } catch (e) {} };
+  new MutationObserver(() => { if (!t) t = setTimeout(run, 40); }).observe(document.body, { childList: true, subtree: true, characterData: true });
+  const bt = toast; toast = function (msg) { const a = [].slice.call(arguments); if (iaNeutral() && typeof msg === 'string') a[0] = iaTexto(msg); return bt.apply(this, a); };
+})();
+GUIA.forEach(t => t[2].forEach(q => { if (/¿Cómo funciona la IA en la app\?/.test(q[0])) q[1] = '<p>La app prepara el texto de la petición (el <b>prompt</b>) con los datos necesarios y <b>sin datos personales</b>: nombres, teléfonos y correos van como marcadores que la app rellena después en tu equipo. Pulsa <b>📋 Copiar prompt</b>, pégalo en el asistente de IA que uses (ChatGPT, Gemini, Copilot, Claude…) y copia aquí su respuesta. La app no envía nada por su cuenta ni exige ningún asistente concreto.</p><p>Antes de guardar, revisa siempre el resultado: la IA propone y la entidad decide.</p>'; }));
 
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
