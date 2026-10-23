@@ -4991,27 +4991,36 @@ async function pintarRecMatriz() {
 })();
 
 // v36: criterio de enlaces en las evidencias (guía + aviso en el formulario de la Matriz)
-const REQ_SENSIBLES = { K2: 'certificados negativos de delitos sexuales', D2: 'hojas de aceptación firmadas con DNI', E1: 'autorizaciones de imagen firmadas por las familias', F1: 'autorizaciones de desplazamiento firmadas por las familias' };
+const REQ_SENSIBLES = { K2: 'certificados negativos de delitos sexuales', D2: 'hojas de aceptación firmadas con DNI', E1: 'autorizaciones de imagen firmadas por las familias', F1: 'autorizaciones de desplazamiento firmadas por las familias', B2: 'certificado de formación del Delegado/a', J1: 'certificados de formación de los agentes' };
+const EJ_SENSIBLE = { K2: 'Certificados negativos 2026/2027 (2 de 2) · carpeta restringida', B2: 'Certificado de formación del Delegado/a · carpeta restringida', J1: 'Certificados de formación 2026/2027 · carpeta restringida' };
 (function () {
   const base = formCumplimiento;
   formCumplimiento = function (entidad_id, r) {
     base(entidad_id, r);
     const f = $('#modal-form'), url = f && f.querySelector('[name="ev_url"]'); if (!url) return;
-    delete f.dataset.ev2; delete f.dataset.url2; // el formulario se reutiliza entre requisitos
+    delete f.dataset.ev2; delete f.dataset.url2; f.classList.remove('modo-sug', 'modo-sug2'); // el formulario se reutiliza entre requisitos
     const sg = (state.recSug || {})[r.codigo];
     if (sg) {
+      // v59: con sugerencia, el formulario se reduce a una decisión: aplicar (y guardar) o hacerlo a mano.
       const ETQ = { cumple: 'Cumple', parcial: 'Parcial' };
-      f.querySelector('h3').insertAdjacentHTML('afterend', `<div class="plant-ok" id="sug-req" style="grid-column:1/-1;margin:0 0 10px;padding:10px 12px;border-radius:10px">💡 <b>La app sugiere: ${ETQ[sg.e] || sg.e}</b> · ${esc(String(sg.t).replace(/^[A-K][12] → [^:]+: /, ''))}
-        ${sg.ev ? `<br><small>Evidencia: «${esc(sg.ev)}»${sg.url ? ' · <b>con el enlace que ya consta en la Matriz</b>' : REQ_SENSIBLES[r.codigo] ? ' (añade el enlace a la carpeta restringida)' : ' (añade el enlace al documento)'}</small>` : ''}${sg.ev2 ? `<br><small>Segunda evidencia: «${esc(sg.ev2)}»${sg.url2 ? ' · con su enlace' : ''}</small>` : ''}${sg.acc ? `<br><small>Acción pendiente: ${esc(sg.acc)}</small>` : ''}
-        <div style="margin-top:6px"><button type="button" class="btn" id="sug-aplicar">Aplicar sugerencia</button> <small class="muted">Revisa antes de guardar: la decisión es tuya.</small></div></div>`);
+      const faltaEnlace = !!(sg.ev && !sg.url && REQ_SENSIBLES[sg.c]); // E1/F1: el enlace a la carpeta solo lo tiene el club
+      f.classList.add('modo-sug');
+      f.querySelector('h3').insertAdjacentHTML('afterend', `<div class="plant-ok" id="sug-req" style="grid-column:1/-1;margin:0 0 10px;padding:12px 14px;border-radius:10px">💡 <b>La app sugiere: ${ETQ[sg.e] || sg.e}</b><br>${esc(String(sg.t).replace(/^[A-K][12] → [^:]+: /, ''))}
+        <ul style="margin:8px 0 0;padding-left:18px">${sg.ev ? `<li><small>Evidencia: «${esc(sg.ev)}»${sg.url ? ' (con el enlace que ya consta en la Matriz)' : faltaEnlace ? ' (pegarás el enlace de la carpeta restringida)' : ''}</small></li>` : ''}${sg.ev2 ? `<li><small>Evidencia: «${esc(sg.ev2)}»${sg.url2 ? ' (con su enlace)' : ''}</small></li>` : ''}${sg.acc ? `<li><small>Acción pendiente: ${esc(sg.acc)}</small></li>` : ''}</ul>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button type="button" class="btn" id="sug-aplicar">${faltaEnlace ? 'Aplicar y pegar el enlace' : '✓ Aplicar y guardar'}</button><button type="button" class="btn ghost" id="sug-cancelar">Cancelar</button>
+        <button type="button" class="link" id="sug-mano">Prefiero hacerlo a mano</button></div></div>`);
+      const set = (n, v) => { const el = f.querySelector('[name="' + n + '"]'); if (el && v != null) { el.value = v; el.dispatchEvent(new Event('change', { bubbles: true })); } };
+      const verForm = () => { f.classList.remove('modo-sug'); };
+      $('#sug-mano').onclick = () => { verForm(); $('#sug-req').remove(); };
+      $('#sug-cancelar').onclick = () => { const d = $('#modal'); d.returnValue = 'cancel'; d.close(); };
       $('#sug-aplicar').onclick = () => {
-        const set = (n, v) => { const el = f.querySelector('[name="' + n + '"]'); if (el && v != null) { el.value = v; el.dispatchEvent(new Event('change', { bubbles: true })); } };
-        set('estado', sg.e); if (sg.ev && !f.ev_titulo.value) set('ev_titulo', sg.ev); if (sg.url && !url.value) set('ev_url', sg.url); set('accion_pendiente', sg.acc || '');
+        set('estado', sg.e); if (sg.ev) set('ev_titulo', sg.ev); if (sg.url) set('ev_url', sg.url); set('accion_pendiente', sg.acc || '');
         f.dataset.ev2 = sg.ev2 || ''; f.dataset.url2 = sg.url2 || '';
         if (!f.fecha_revision.value) set('fecha_revision', new Date().toISOString().slice(0, 10));
-        toast(sg.url ? 'Sugerencia aplicada con el enlace: revisa y pulsa Guardar' : 'Sugerencia aplicada: añade el enlace, revisa y pulsa Guardar'); (sg.ev && !sg.url ? url : f.querySelector('[name="estado"]')).focus();
+        f.querySelectorAll('[data-reus]').forEach(i => { i.checked = false; }); // la sugerencia ya decide qué evidencias van
+        if (faltaEnlace) { verForm(); f.classList.add('modo-sug2'); $('#sug-req').remove(); url.required = true; url.focus(); toast('Pega el enlace de la carpeta restringida y pulsa Guardar'); return; }
+        const d = $('#modal'); d.returnValue = 'ok'; d.close('ok');
       };
-
     }
     pintarComoCumplir(f, r);
     // v58: al guardar, añade las evidencias reutilizadas (casillas 🔗) y la segunda evidencia sugerida, sin duplicar enlaces
@@ -5033,7 +5042,7 @@ const REQ_SENSIBLES = { K2: 'certificados negativos de delitos sexuales', D2: 'h
     const lab = url.closest('label');
     const sens = REQ_SENSIBLES[r.codigo];
     lab.insertAdjacentHTML('afterend', sens
-      ? `<p class="aviso-inc" style="grid-column:1/-1;margin:0">🔒 <b>${esc(r.codigo)}: ${esc(sens)}.</b> Enlaza la <b>carpeta</b> (no cada archivo) con acceso <b>Restringido</b> solo a las personas autorizadas por la Junta, y escribe un título <b>sin nombres de personas</b>, p. ej. «${r.codigo === 'K2' ? 'Certificados negativos 2026/2027 (2 de 2) · carpeta restringida' : 'Documentación ' + esc(r.codigo) + ' 2026/2027 · carpeta restringida'}».</p>`
+      ? `<p class="aviso-inc" style="grid-column:1/-1;margin:0">🔒 <b>${esc(r.codigo)}: ${esc(sens)}.</b> Enlaza la <b>carpeta</b> (no cada archivo) con acceso <b>Restringido</b> solo a las personas autorizadas por la Junta, y escribe un título <b>sin nombres de personas</b>, p. ej. «${esc(EJ_SENSIBLE[r.codigo] || 'Documentación ' + r.codigo + ' 2026/2027 · carpeta restringida')}».</p>`
       : `<p class="nota" style="grid-column:1/-1;margin:0">🔒 Ningún documento del club debe ser público: en Drive (u otra nube), acceso <b>Restringido</b> solo para las personas que autorice la Junta. Título descriptivo y sin nombres de personas.</p>`);
   };
 })();
@@ -5043,8 +5052,11 @@ GUIA.forEach(t => { if (t[1] === 'Matriz de cumplimiento · la pieza clave') t[2
   '<tr><td><b>Documentos con datos personales</b></td><td>Certificados negativos (K2), hojas de aceptación (D2), autorizaciones firmadas por las familias (E1, F1), certificados de formación</td><td>Enlace a la <b>carpeta</b> del requisito (no a cada archivo), con acceso <b>Restringido</b>. Título <b>sin nombres de personas</b>: «Certificados negativos 2026/2027 (2 de 2) · carpeta restringida».</td></tr></tbody></table>' +
   '<ul><li>En Drive: clic derecho → <b>Compartir</b> → Acceso general → <b>Restringido</b>, y añade solo a las personas autorizadas. Nunca «Cualquier persona con el enlace».</li><li>Recuerda que la app del club entra con una sola contraseña: quien la tenga ve los enlaces, pero sin permiso en la nube no podrá abrirlos.</li><li>Los informes y el documento de Medidas preventivas muestran solo títulos, nunca enlaces; en K2, D2, E1 y F1 ni siquiera el título.</li><li>Las <b>recomendaciones</b> avisan si una evidencia lleva en el título el nombre de un agente o del Delegado/a.</li></ul>', '', 'matriz']); });
 
-GUIA.forEach(t => { if (t[1] === 'Matriz de cumplimiento · la pieza clave') t[2].push(['¿Qué es «Aplicar sugerencia»?', '<p>La app detecta requisitos que ya puedes marcar con lo que tienes, sin IA: <b>E1/F1</b> con el recuento de Autorizaciones, <b>E2</b>, <b>H1</b> y <b>H2</b> con el protocolo aprobado (G1), <b>F2</b> con el protocolo y las medidas de desplazamientos, y <b>J1</b> con la formación de los agentes.</p><p>Aparecen en <b>💡 Recomendaciones sobre la Matriz</b>. Al abrir el requisito verás <b>💡 La app sugiere</b>: pulsa <b>Aplicar sugerencia</b> y se rellenan estado, título de evidencia, acción pendiente y fecha. Si el documento ya está en otro requisito (por ejemplo, el protocolo de G1), el enlace se copia solo. En <b>📋 Cómo cumplir</b> verás también <b>🔗 Documentos que ya están en la Matriz y sirven aquí</b>: los marcados se añaden como evidencia al guardar, sin duplicar. Revisa y guarda: la decisión es siempre tuya.</p>', '', 'matriz']); });
+GUIA.forEach(t => { if (t[1] === 'Matriz de cumplimiento · la pieza clave') t[2].push(['¿Qué es «Aplicar sugerencia»?', '<p>La app detecta requisitos que ya puedes marcar con lo que tienes, sin IA: <b>E1/F1</b> con el recuento de Autorizaciones, <b>E2</b>, <b>H1</b> y <b>H2</b> con el protocolo aprobado (G1), <b>F2</b> con el protocolo y las medidas de desplazamientos, y <b>J1</b> con la formación de los agentes.</p><p>Aparecen en <b>💡 Recomendaciones sobre la Matriz</b>. Al abrir el requisito verás solo <b>💡 La app sugiere</b>, con lo que se va a registrar. Pulsa <b>✓ Aplicar y guardar</b> y queda hecho: estado, evidencia (con el enlace si el documento ya está en otro requisito, como el protocolo de G1), acción pendiente y fecha. En E1 y F1 el botón es <b>Aplicar y pegar el enlace</b>: pega la carpeta restringida y guarda. Si prefieres decidir tú, pulsa <b>Prefiero hacerlo a mano</b> y verás el formulario completo con <b>📋 Cómo cumplir</b>.</p>', '', 'matriz']); });
 
+(function () { if ($('#css-modo-sug')) return; const st = document.createElement('style'); st.id = 'css-modo-sug';
+  st.textContent = '#modal-form.modo-sug .fields,#modal-form.modo-sug .actions,#modal-form.modo-sug #como-req,#modal-form.modo-sug2 #como-req{display:none}';
+  document.head.appendChild(st); })();
 // v56: «Cómo cumplir este requisito» dentro del formulario de la Matriz, para que el club sea autónomo sin ayuda externa.
 // [cómo se cumple, título de evidencia modelo, cuándo es Cumple, plantillas, pantalla]
 const REQ_COMO = {
@@ -5077,7 +5089,7 @@ const NOM_VISTA = { formacion: 'Formación', riesgos: 'Riesgos', agentes: 'Agent
 function pintarComoCumplir(f, r) {
   const c = REQ_COMO[r.codigo]; if (!c) return;
   const abierto = !r.estado || r.estado === 'pendiente';
-  const bots = (c[3] || []).map(id => `<button type="button" class="btn ghost" data-como-plant="${id}">📄 ${esc(NOM_PLANT[id] || id)}</button>`).join(' ')
+  const bots = (c[3] || []).map(id => `<button type="button" class="btn ghost" data-como-plant="${id}">📄 Generar: ${esc(NOM_PLANT[id] || id)}</button>`).join(' ')
     + (c[4] ? ` <button type="button" class="btn ghost" data-como-vista="${c[4]}">Ir a ${esc(NOM_VISTA[c[4]] || c[4])}</button>` : '');
   // Documentos que ya constan en otros requisitos y sirven para este (se añaden al guardar si están marcados)
   const filas = state.matriz || [], propia = filas.find(x => x.codigo === r.codigo) || {};
@@ -5094,7 +5106,7 @@ function pintarComoCumplir(f, r) {
     <p style="margin:4px 0"><small><b>Evidencia:</b> «${esc(c[1])}» <button type="button" class="btn ghost" id="como-titulo" style="min-height:30px;padding:2px 8px">Usar este título</button></small></p>
     <p style="margin:4px 0"><small><b>Cumple cuando:</b> ${esc(c[2])}</small></p>
     ${reusHtml}
-    ${bots ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${bots}</div>` : ''}</details>`);
+    ${bots ? `<p style="margin:8px 0 4px"><small><b>¿Aún no tienes el documento?</b> Estos botones cierran el formulario y te llevan donde se hace; después vuelve a la Matriz y pulsa Actualizar.</small></p><div style="display:flex;gap:6px;flex-wrap:wrap">${bots}</div>` : ''}</details>`);
   const cerrar = () => { const d = $('#modal'); d.returnValue = 'cancel'; d.close(); };
   $('#como-titulo').onclick = () => { f.ev_titulo.value = c[1]; f.ev_titulo.focus(); toast('Cambia «dd/mm/aaaa», «vX» o «n de n» por tus datos'); };
   f.querySelectorAll('[data-como-plant]').forEach(b => b.onclick = () => { cerrar(); irPlantilla(b.dataset.comoPlant); });
