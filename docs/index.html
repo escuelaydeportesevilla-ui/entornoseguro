@@ -5091,7 +5091,7 @@ function htmlMedidasPreventivas(e, rows, matriz) {
   });
   const soporte = (matriz || []).filter(m => ['cumple', 'parcial'].includes(m.estado) && (m.evidencias || []).length && !/^C[12]$/.test(m.codigo));
   b += '<h2>2. Documentos de soporte</h2>' + (soporte.length
-    ? '<p>Las medidas se apoyan en los siguientes documentos de la entidad, registrados en su matriz de cumplimiento:</p><ul>' + soporte.map(m => `<li><b>${esc(m.codigo)}</b> ${esc(m.requisito)}: ${m.evidencias.map(v => esc(v.titulo)).join('; ')}${m.estado === 'parcial' ? ' <small>(en tramitación)</small>' : ''}</li>`).join('') + '</ul>'
+    ? '<p>Las medidas se apoyan en los siguientes documentos de la entidad, registrados en su matriz de cumplimiento:</p><ul>' + soporte.map(m => `<li><b>${esc(m.codigo)}</b> ${esc(m.requisito)}: ${typeof REQ_SENSIBLES !== 'undefined' && REQ_SENSIBLES[m.codigo] ? 'documentación con datos personales custodiada en la entidad' : m.evidencias.map(v => esc(v.titulo)).join('; ')}${m.estado === 'parcial' ? ' <small>(en tramitación)</small>' : ''}</li>`).join('') + '</ul>'
     : '<p class="muted">Aún no hay documentos registrados en la matriz.</p>');
   const org = String(e.organo_gobierno || 'órgano de gobierno').trim(), orgTxt = /^(el|la|los|las)\s/i.test(org) ? org.charAt(0).toUpperCase() + org.slice(1) : (/^junta|^asamblea|^comisi/i.test(org) ? 'La ' : 'El ') + org;
   b += '<h2>3. Aprobación</h2><p>' + esc(orgTxt) + ' de ' + esc(e.nombre || 'la entidad') + ', en sesión de fecha ……………………………, aprueba las medidas preventivas recogidas en el apartado 1 y se compromete a implantar las del anexo en los plazos indicados, encomendando su seguimiento al Delegado/a de Protección.</p>' +
