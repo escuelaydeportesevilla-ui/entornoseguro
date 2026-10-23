@@ -4976,6 +4976,7 @@ async function pintarRecMatriz() {
   recEstilo();
   if (!$('#tut-estilo') && typeof tutPintar === 'function') tutPintar();
   recs = recs.filter(r => r.ir === 'matriz');
+  state.recSug = {}; recs.forEach(r => (r.items || []).forEach(it => { if (it.c && it.e) state.recSug[it.c] = it; }));
   let c = $('#rec-matriz');
   if (!c) { c = document.createElement('div'); c.id = 'rec-matriz'; c.className = 'card rec-card'; const f = $('#matriz-filtro') || t.closest('.card'); f.parentNode.insertBefore(c, f); }
   if (!recs.length) { c.innerHTML = '<small class="st ok">💡 ✓ Sin recomendaciones pendientes en la Matriz</small>'; return; }
@@ -4996,6 +4997,20 @@ const REQ_SENSIBLES = { K2: 'certificados negativos de delitos sexuales', D2: 'h
   formCumplimiento = function (entidad_id, r) {
     base(entidad_id, r);
     const f = $('#modal-form'), url = f && f.querySelector('[name="ev_url"]'); if (!url) return;
+    const sg = (state.recSug || {})[r.codigo];
+    if (sg) {
+      const ETQ = { cumple: 'Cumple', parcial: 'Parcial' };
+      f.querySelector('h3').insertAdjacentHTML('afterend', `<div class="plant-ok" id="sug-req" style="grid-column:1/-1;margin:0 0 10px;padding:10px 12px;border-radius:10px">💡 <b>La app sugiere: ${ETQ[sg.e] || sg.e}</b> · ${esc(String(sg.t).replace(/^[A-K][12] → [^:]+: /, ''))}
+        ${sg.ev ? `<br><small>Evidencia: «${esc(sg.ev)}»${REQ_SENSIBLES[r.codigo] ? ' (añade el enlace a la carpeta restringida)' : ' (añade el enlace al documento)'}</small>` : ''}${sg.acc ? `<br><small>Acción pendiente: ${esc(sg.acc)}</small>` : ''}
+        <div style="margin-top:6px"><button type="button" class="btn" id="sug-aplicar">Aplicar sugerencia</button> <small class="muted">Revisa antes de guardar: la decisión es tuya.</small></div></div>`);
+      $('#sug-aplicar').onclick = () => {
+        const set = (n, v) => { const el = f.querySelector('[name="' + n + '"]'); if (el && v != null) { el.value = v; el.dispatchEvent(new Event('change', { bubbles: true })); } };
+        set('estado', sg.e); if (sg.ev && !f.ev_titulo.value) set('ev_titulo', sg.ev); set('accion_pendiente', sg.acc || '');
+        if (!f.fecha_revision.value) set('fecha_revision', new Date().toISOString().slice(0, 10));
+        toast('Sugerencia aplicada: revisa y pulsa Guardar'); (sg.ev ? url : f.querySelector('[name="estado"]')).focus();
+      };
+    }
+    pintarComoCumplir(f, r);
     const lab = url.closest('label');
     const sens = REQ_SENSIBLES[r.codigo];
     lab.insertAdjacentHTML('afterend', sens
@@ -5008,6 +5023,54 @@ GUIA.forEach(t => { if (t[1] === 'Matriz de cumplimiento · la pieza clave') t[2
   '<tr><td><b>Documentos del club</b></td><td>Protocolo, código, declaración, designación, cartel, registro de riesgos, medidas preventivas</td><td>Enlace al archivo, con acceso <b>Restringido</b> a las personas autorizadas.</td></tr>' +
   '<tr><td><b>Documentos con datos personales</b></td><td>Certificados negativos (K2), hojas de aceptación (D2), autorizaciones firmadas por las familias (E1, F1), certificados de formación</td><td>Enlace a la <b>carpeta</b> del requisito (no a cada archivo), con acceso <b>Restringido</b>. Título <b>sin nombres de personas</b>: «Certificados negativos 2026/2027 (2 de 2) · carpeta restringida».</td></tr></tbody></table>' +
   '<ul><li>En Drive: clic derecho → <b>Compartir</b> → Acceso general → <b>Restringido</b>, y añade solo a las personas autorizadas. Nunca «Cualquier persona con el enlace».</li><li>Recuerda que la app del club entra con una sola contraseña: quien la tenga ve los enlaces, pero sin permiso en la nube no podrá abrirlos.</li><li>Los informes y el documento de Medidas preventivas muestran solo títulos, nunca enlaces; en K2, D2, E1 y F1 ni siquiera el título.</li><li>Las <b>recomendaciones</b> avisan si una evidencia lleva en el título el nombre de un agente o del Delegado/a.</li></ul>', '', 'matriz']); });
+
+GUIA.forEach(t => { if (t[1] === 'Matriz de cumplimiento · la pieza clave') t[2].push(['¿Qué es «Aplicar sugerencia»?', '<p>La app detecta requisitos que ya puedes marcar con lo que tienes, sin IA: <b>E1/F1</b> con el recuento de Autorizaciones, <b>E2</b>, <b>H1</b> y <b>H2</b> con el protocolo aprobado (G1), <b>F2</b> con el protocolo y las medidas de desplazamientos, y <b>J1</b> con la formación de los agentes.</p><p>Aparecen en <b>💡 Recomendaciones sobre la Matriz</b>. Al abrir el requisito verás <b>💡 La app sugiere</b>: pulsa <b>Aplicar sugerencia</b> y se rellenan estado, título de evidencia, acción pendiente y fecha. Añade el enlace (carpeta restringida si hay datos personales), revisa y guarda: la decisión es siempre tuya.</p>', '', 'matriz']); });
+
+// v56: «Cómo cumplir este requisito» dentro del formulario de la Matriz, para que el club sea autónomo sin ayuda externa.
+// [cómo se cumple, título de evidencia modelo, cuándo es Cumple, plantillas, pantalla]
+const REQ_COMO = {
+  A1: ['Genera la Declaración institucional, apruébala en la Junta y fírmala.', 'Declaración institucional (Junta dd/mm/aaaa)', 'Aprobada y firmada.', ['declaracion']],
+  A2: ['Presenta el Anexo I oficial de la Orden de 18/11/2024 en el Registro Electrónico Único de la Junta de Andalucía. La app no lo genera: la evidencia es el justificante.', 'Justificante de registro del Anexo I (aceptación del Protocolo Marco)', 'Con justificante de registro.'],
+  B1: ['Genera la Designación del Delegado/a, apruébala en la Junta y regístrala con el Anexo II oficial.', 'Acuerdo de designación del Delegado/a (Junta dd/mm/aaaa) + justificante Anexo II', 'Acuerdo firmado y Anexo II registrado.', ['designacion']],
+  B2: ['Registra en Formación el curso del Delegado/a (colectivo Delegado/a) y guarda el certificado.', 'Certificado de formación del Delegado/a · carpeta restringida', 'Curso específico realizado.', null, 'formacion'],
+  C1: ['En Riesgos: Proponer con IA → importar los riesgos → 📄 Registro de riesgos. Apruébalo en la Junta.', 'Registro de riesgos ' + coordTemporada(), 'Registro aprobado por la Junta.', null, 'riesgos'],
+  C2: ['En Riesgos: 📄 Medidas preventivas. Las medidas no implantadas van al anexo.', 'Medidas preventivas ' + coordTemporada(), 'Parcial mientras el anexo tenga medidas; Cumple con el anexo vacío y el documento aprobado.', null, 'riesgos'],
+  D1: ['Genera el Código de conducta y apruébalo en la Junta.', 'Código de conducta (Junta dd/mm/aaaa)', 'Aprobado por la Junta.', ['codigo']],
+  D2: ['En Agentes deportivos: 📄 Hojas de aceptación; que las firme cada agente y marca «Código aceptado: SI».', 'Hojas de aceptación del código ' + coordTemporada() + ' (n de n) · carpeta restringida', 'Todos los agentes lo han aceptado.', null, 'agentes'],
+  E1: ['Genera la Autorización de imagen, repártela a las familias y anota en Autorizaciones cuántas has recibido por grupo (sin nombres).', 'Documentación E1 ' + coordTemporada() + ' · carpeta restringida', 'Todas las autorizaciones recibidas; Parcial mientras falten.', ['aut_imagen'], 'autorizaciones'],
+  E2: ['Lo cubre el apartado de datos e imágenes del protocolo (G1), o un documento propio sobre redes sociales.', 'Protocolo de protección, apartado de datos e imágenes', 'Protocolo aprobado con ese apartado.'],
+  F1: ['Genera una Autorización de desplazamiento por cada salida y anota el recuento en Autorizaciones. Si el club no viaja: No aplica.', 'Documentación F1 ' + coordTemporada() + ' · carpeta restringida', 'Autorizaciones de cada salida recibidas.', ['aut_desplaz'], 'autorizaciones'],
+  F2: ['Lo cubre el apartado de desplazamientos del protocolo más las medidas de desplazamientos de Riesgos. Si el club no viaja ni pernocta: No aplica.', 'Protocolo de protección, desplazamientos + Medidas preventivas ' + coordTemporada(), 'Protocolo aprobado y medidas implantadas.', null, 'riesgos'],
+  G1: ['Genera el Protocolo de protección y apruébalo en la Junta.', 'Protocolo de protección vX (Junta dd/mm/aaaa)', 'Aprobado por la Junta y con fecha.', ['protocolo']],
+  G2: ['Genera la Carta a familias y envíala (correo, grupo de familias, web o tablón). Guarda la prueba del envío.', 'Carta a familias ' + coordTemporada() + ' + prueba de envío', 'Carta enviada; Parcial hasta enviarla.', ['familias']],
+  H1: ['Lo cubre el procedimiento del protocolo (G1). Genera además la Guía rápida de actuación y entrégala a entrenadores y monitores.', 'Protocolo, procedimiento de comunicación + Guía rápida de actuación', 'Procedimiento aprobado y guía entregada.', ['actuacion']],
+  H2: ['Lo cubre el flujograma del protocolo o de la Guía rápida. Difúndelo entre los agentes.', 'Flujograma de actuación (protocolo / guía rápida)', 'Flujograma aprobado y difundido.', ['actuacion']],
+  I1: ['Completa el canal en la ficha (correo, teléfono o buzón), genera el Cartel del canal (con QR) y colócalo en las instalaciones.', 'Cartel del canal de comunicación (PDF) + foto del tablón', 'Canal operativo y cartel publicado.', ['canal']],
+  I2: ['El cartel (versión infantil) y la Carta a familias informan del canal y del 116 111.', 'Cartel del canal y Carta a familias (116 111)', 'Cartel publicado y carta enviada.', ['canal', 'familias']],
+  J1: ['Registra en Formación la formación de cada agente (por persona o por lote).', 'Registro de formación en EntornoSeguro, n de n agentes', 'Todos los agentes formados; Parcial mientras falten.', null, 'formacion'],
+  K1: ['Da de alta en Agentes deportivos a cada entrenador, monitor, directivo o voluntario en contacto con menores.', 'Registro de agentes en EntornoSeguro, n agentes', 'Todos los agentes registrados.', null, 'agentes'],
+  K2: ['Anota en Agentes la fecha del certificado negativo de cada persona y guarda los certificados en la carpeta restringida.', 'Certificados negativos ' + coordTemporada() + ' (n de n) · carpeta restringida', 'Todos los agentes con certificado.', null, 'agentes']
+};
+const NOM_PLANT = { declaracion: 'Declaración institucional', designacion: 'Designación', codigo: 'Código de conducta', protocolo: 'Protocolo', familias: 'Carta a familias', actuacion: 'Guía rápida de actuación', canal: 'Cartel del canal', aut_imagen: 'Autorización de imagen', aut_desplaz: 'Autorización de desplazamiento' };
+const NOM_VISTA = { formacion: 'Formación', riesgos: 'Riesgos', agentes: 'Agentes deportivos', autorizaciones: 'Autorizaciones' };
+function pintarComoCumplir(f, r) {
+  const c = REQ_COMO[r.codigo]; if (!c) return;
+  const abierto = !r.estado || r.estado === 'pendiente';
+  const bots = (c[3] || []).map(id => `<button type="button" class="btn ghost" data-como-plant="${id}">📄 ${esc(NOM_PLANT[id] || id)}</button>`).join(' ')
+    + (c[4] ? ` <button type="button" class="btn ghost" data-como-vista="${c[4]}">Ir a ${esc(NOM_VISTA[c[4]] || c[4])}</button>` : '');
+  const ref = f.querySelector('#sug-req') || f.querySelector('h3');
+  ref.insertAdjacentHTML('afterend', `<details id="como-req" ${abierto ? 'open' : ''} style="grid-column:1/-1;margin:0 0 10px;border:1px solid var(--line);border-radius:10px;padding:8px 12px">
+    <summary style="cursor:pointer;font-weight:600">📋 Cómo cumplir ${esc(r.codigo)}</summary>
+    <p style="margin:6px 0">${esc(c[0])}</p>
+    <p style="margin:4px 0"><small><b>Evidencia:</b> «${esc(c[1])}» <button type="button" class="btn ghost" id="como-titulo" style="min-height:30px;padding:2px 8px">Usar este título</button></small></p>
+    <p style="margin:4px 0"><small><b>Cumple cuando:</b> ${esc(c[2])}</small></p>
+    ${bots ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${bots}</div>` : ''}</details>`);
+  const cerrar = () => { const d = $('#modal'); d.returnValue = 'cancel'; d.close(); };
+  $('#como-titulo').onclick = () => { f.ev_titulo.value = c[1]; f.ev_titulo.focus(); toast('Cambia «dd/mm/aaaa», «vX» o «n de n» por tus datos'); };
+  f.querySelectorAll('[data-como-plant]').forEach(b => b.onclick = () => { cerrar(); irPlantilla(b.dataset.comoPlant); });
+  f.querySelectorAll('[data-como-vista]').forEach(b => b.onclick = () => { cerrar(); show(b.dataset.comoVista); });
+}
+GUIA.forEach(t => { if (t[1] === 'Matriz de cumplimiento · la pieza clave') t[2].push(['¿Cómo sé qué tengo que hacer en cada requisito?', '<p>Al abrir un requisito con <b>Actualizar</b> verás <b>📋 Cómo cumplir</b>: qué hay que hacer, el título recomendado para la evidencia (botón <b>Usar este título</b>), cuándo se considera Cumple y botones que te llevan a la plantilla o a la pantalla donde se hace. No necesitas ayuda externa: sigue esos pasos y vuelve a la Matriz para registrar el resultado.</p>', '', 'matriz']); });
 
 // v37: recomendaciones en cada pantalla (solo las que se resuelven en ella)
 const REC_VISTAS = { riesgos: ['riesgos', '#riesgos-entidad'], agentes: ['agentes', '#agentes-entidad'], formacion: ['formacion', null],
