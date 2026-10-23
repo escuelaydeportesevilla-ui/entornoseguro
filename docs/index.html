@@ -4462,7 +4462,10 @@ function matrizMejoras() {
     f.querySelector('h3').insertAdjacentHTML('afterend', `<p class="nota" style="margin:0 0 10px">El enlace no cambia. Usa un título descriptivo, sin mayúsculas sostenidas ni nombres de personas.</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px">${mayus ? '<button type="button" class="btn ghost" id="ev-minus">Pasar a minúsculas</button>' : ''}${modelo ? `<button type="button" class="btn ghost" id="ev-modelo">Usar el título recomendado</button>` : ''}</div>
       ${modelo ? `<p class="nota" style="margin:0 0 10px">Recomendado: «${esc(modelo)}». Cambia «dd/mm/aaaa», «vX» o «n de n» por tus datos.</p>` : ''}`);
-    const minus = $('#ev-minus'); if (minus) minus.onclick = () => { const l = v.titulo.toLocaleLowerCase('es'); inp.value = l.charAt(0).toLocaleUpperCase('es') + l.slice(1); inp.focus(); };
+    const SIGLAS = /^(I{1,3}|IV|VI{0,3}|IX|X|PDF|CIF|DNI|NIE|QR|IA|RGPD|LOPIVI|LOPDGDD|BOJA|BOE|CD|UD|CF|AD|CDS|UPO|\d+[A-Z]?)$/;
+    const minus = $('#ev-minus'); if (minus) minus.onclick = () => {
+      const l = v.titulo.split(/(\s+)/).map(w => SIGLAS.test(w.replace(/[^\wÁÉÍÓÚÑ]/g, '')) ? w : w.toLocaleLowerCase('es')).join('');
+      inp.value = l.charAt(0).toLocaleUpperCase('es') + l.slice(1); inp.focus(); };
     const mod = $('#ev-modelo'); if (mod) mod.onclick = () => { inp.value = modelo; inp.focus(); const i = modelo.search(/dd\/mm\/aaaa|vX|n de n/); if (i >= 0) inp.setSelectionRange(i, i + (modelo.match(/dd\/mm\/aaaa|vX|n de n/)[0].length)); };
   });
   $$('[data-evx]').forEach(x => x.onclick = async () => {
@@ -4861,7 +4864,8 @@ GUIA.forEach(t => { if (t[1] === 'Análisis de riesgos') t[2].splice(1, 0,
     const anon = !state.club || ($('#inf-sin-nombres') || {}).checked;
     if (anon) {
       const n = t => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
-      const etq = {}; (x.agentes || []).forEach((a, i) => { etq[n(a.nombre)] = 'Agente ' + (i + 1); a.nombre = 'Agente ' + (i + 1); });
+      const del = n((x.entidad || {}).delegado_nombre); let ia = 0;
+      const etq = {}; (x.agentes || []).forEach(a => { const l = del && n(a.nombre) === del ? 'Delegado/a de Protección' : 'Agente ' + (++ia); etq[n(a.nombre)] = l; a.nombre = l; });
       let k = 0; (x.formacion || []).forEach(f => { f.persona_nombre = f.colectivo === 'delegado' ? 'Delegado/a de Protección' : (etq[n(f.persona_nombre)] || 'Persona ' + (++k)); });
     }
     let h = base(x);
@@ -4871,6 +4875,8 @@ GUIA.forEach(t => { if (t[1] === 'Análisis de riesgos') t[2].splice(1, 0,
 })();
 
 GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿A quién puedo entregar el Informe de entidad?', '<p>El informe de <b>Informes → Informe de entidad</b> es la foto del sistema de protección del club. Para la Junta Directiva sirve la versión completa. Para entregarlo <b>fuera del club</b> (ayuntamiento, federación, subvenciones, familias) marca <b>Versión para entregar fuera del club</b>: los agentes y las personas formadas salen como «Agente 1», «Agente 2»… El ayuntamiento, cuando lo consulta desde su perfil, siempre ve esta versión.</p><p>En las dos versiones, los requisitos con datos personales (K2, D2, E1 y F1) muestran «documentación con datos personales custodiada en la entidad», nunca el título ni el enlace. Antes de sacarlo, revisa que el Panel no tenga recomendaciones sobre la Matriz (acciones pendientes en requisitos que ya cumplen, títulos en mayúsculas o sin completar).</p>', '', 'informes']); });
+
+GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Importa si escribo en mayúsculas?', '<p>No. Al guardar, la app ajusta sola las mayúsculas: los <b>nombres de personas, lugares y cargos</b> escritos todo en mayúsculas o todo en minúsculas pasan a mayúscula inicial («MIGUEL ÁNGEL» → «Miguel Ángel», «JUNTA DIRECTIVA» → «Junta Directiva»), y los <b>títulos y textos</b> escritos enteros en mayúsculas también («CÓDIGO» → «Código»), respetando siglas como PDF o RGPD. Lo que escribes con mayúsculas y minúsculas normales se respeta tal cual. El nombre del club no se toca.</p><p>Lo único que la app no puede adivinar son las <b>tildes</b> que falten: si escribes «ANGEL», quedará «Angel». Añádela una vez y se conserva.</p>', '', 'entidades']); });
 
 // v31: RECOMENDACIONES AUTOMÁTICAS (Ampliacion v1.9) · reglas fijas sobre los datos, sin IA
 const REC_ICO = { alta: '🔴', media: '🟠', baja: '⚪' };
@@ -5379,7 +5385,20 @@ const ICOS = {
     /* menú */
     '.nav-grupo{background:none;border-left:0;padding:14px 12px 4px;color:var(--muted);font-size:.7rem;font-weight:700;letter-spacing:.09em}.nav-grupo svg{color:var(--brand-2)}',
     'nav button{border-radius:10px;transition:background .15s}nav button.active{box-shadow:0 2px 8px color-mix(in srgb,var(--brand-2) 35%,transparent)}',
-    '@media (max-width:860px){.nav-grupo{padding:10px 0 2px}}'
+    '@media (max-width:860px){.nav-grupo{padding:10px 0 2px}}',
+    /* v66: resto de pantallas · tablas, formularios, diálogos y avisos con el mismo acabado */
+    'main h3{color:var(--brand);font-weight:700}.card>h3:first-child{margin-bottom:14px}',
+    'th{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);background:color-mix(in srgb,var(--bg) 70%,var(--panel));border-bottom:1px solid var(--line);padding:10px 8px}',
+    'tbody tr:not(.group):hover td{background:color-mix(in srgb,var(--brand-2) 4%,transparent)}td{border-bottom:1px solid color-mix(in srgb,var(--line) 60%,transparent)}',
+    'tr.group td{background:color-mix(in srgb,var(--brand-2) 7%,var(--panel));color:var(--brand);letter-spacing:.06em;padding:8px}',
+    'input,select,textarea{border-radius:10px;border-color:color-mix(in srgb,var(--line) 85%,transparent);transition:border-color .15s,box-shadow .15s}',
+    'input:focus,select:focus,textarea:focus{outline:none;border-color:var(--brand-2);box-shadow:0 0 0 3px color-mix(in srgb,var(--brand-2) 18%,transparent)}',
+    'dialog{border-radius:18px;box-shadow:0 24px 60px rgba(16,24,40,.25)}dialog::backdrop{background:rgba(11,48,87,.35);backdrop-filter:blur(2px)}',
+    'dialog h3{font-size:1.1rem;color:var(--brand)}.actions{border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent);padding-top:14px;margin-top:14px}',
+    '.btn.ghost{border-color:color-mix(in srgb,var(--brand) 55%,transparent)}.btn.ghost:hover{background:color-mix(in srgb,var(--brand) 6%,transparent);filter:none}',
+    '.chip{border-radius:999px}.st{border-radius:999px;padding:3px 10px}',
+    '.aviso-inc{border-radius:12px}.toast{border-radius:12px;box-shadow:0 10px 30px rgba(16,24,40,.25)}',
+    '.empty{font-style:normal;color:var(--muted);padding:6px 0}'
   ].join('');
   document.head.appendChild(st);
   // Menú: iconos de línea en lugar de emojis
