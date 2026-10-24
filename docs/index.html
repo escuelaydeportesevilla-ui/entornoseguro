@@ -5845,6 +5845,7 @@ async function espEntidad() {
     '.cal .ev{font-size:.68rem;line-height:1.25;padding:1px 5px;border-radius:5px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cal .ev.auto{background:color-mix(in srgb,var(--muted) 18%,transparent);color:var(--ink)}.cal .ev.hecho{opacity:.5;text-decoration:line-through}.cal .mas{font-size:.66rem;color:var(--muted)}' +
     '.ag-lista{list-style:none;margin:0;padding:0}.ag-lista li{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent)}.ag-lista li:first-child{border-top:0}' +
     '.ag-f{min-width:74px;font-weight:700;color:var(--brand);font-size:.85rem}.ag-t{flex:1}.ag-t small{color:var(--muted)}.ag-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}.ag-acc{display:flex;gap:4px;align-items:center}' +
+    '.ag-clic{cursor:pointer;border-radius:10px;transition:background .12s}.ag-clic:hover,.ag-clic:focus-visible{background:color-mix(in srgb,var(--brand-2) 6%,transparent);outline:none}.ag-chev{font-size:1.4rem;color:var(--muted);align-self:center}.ag-det p{margin:0 0 10px;font-size:1rem}.ag-bots{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}.ag-bots .btn{min-height:44px;flex:1 1 auto}.cal .ev[data-ag-ver]{cursor:pointer}' +
     '.ag-lista li.hecho .ag-t b{text-decoration:line-through;opacity:.6}.ag-ley{display:flex;gap:10px;flex-wrap:wrap;font-size:.75rem;color:var(--muted);margin:8px 0 0}' +
     '.camp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}.camp-card{border:1px solid color-mix(in srgb,var(--line) 60%,transparent);border-radius:14px;padding:12px;background:var(--panel);box-shadow:var(--shadow)}' +
     '.camp-card .mini-img{width:100%;height:auto;aspect-ratio:1/1}.camp-card details{margin-top:6px;font-size:.85rem}.doc-col h4{margin:0 0 6px;color:var(--brand)}.doc-l{list-style:none;margin:0;padding:0}.doc-l li{padding:7px 0;border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent)}' +
@@ -5879,7 +5880,7 @@ async function pintarAgenda(c) {
   let propias = [], auto = [];
   try { propias = await API.call('listarAgenda', {}); } catch (er) { c.innerHTML = '<div class="card"><p class="aviso-inc">Actualiza Ampliacion.gs a la v1.23 para usar la agenda.</p></div>'; return; }
   if (e.id) { try { auto = meEventos(await meDatos(e.id)); } catch (er) { auto = []; } }
-  state.agPropias = propias; state.agAutoEv = auto;
+  state.agPropias = propias; state.agAutoEv = auto; state.agVista = [];
   const m = state.agMes, y = m.getFullYear(), mo = m.getMonth(), hoy = hoyISOx();
   const primero = new Date(y, mo, 1), ini = new Date(primero); ini.setDate(1 - ((primero.getDay() + 6) % 7));
   const delDia = f => propias.filter(x => String(x.fecha).slice(0, 10) === f).concat(state.agAuto ? auto.filter(x => x.fecha === f).map(x => Object.assign({ auto: true }, x)) : []);
@@ -5887,7 +5888,7 @@ async function pintarAgenda(c) {
   for (let i = 0; i < 42; i++) {
     const dt = new Date(ini); dt.setDate(ini.getDate() + i); const f = isoDe(dt), l = delDia(f);
     cel += `<button type="button" class="dia${dt.getMonth() !== mo ? ' fuera' : ''}${f === hoy ? ' hoy' : ''}${f === state.agSel ? ' sel' : ''}" data-dia="${f}"><span class="num">${dt.getDate()}</span>` +
-      l.slice(0, 3).map(x => x.auto ? `<span class="ev auto" title="${esc(x.titulo)}">${esc(x.titulo)}</span>` : `<span class="ev${x.hecho === 'SI' ? ' hecho' : ''}" style="background:${AG_COL[x.tipo] || '#6b7a82'}" title="${esc(x.titulo)}">${x.hora ? esc(x.hora) + ' ' : ''}${esc(x.titulo)}</span>`).join('') +
+      l.slice(0, 3).map(x => { const i = state.agVista.push(x) - 1; return x.auto ? `<span class="ev auto" data-ag-ver="${i}" title="${esc(x.titulo)}">${esc(x.titulo)}</span>` : `<span class="ev${x.hecho === 'SI' ? ' hecho' : ''}" data-ag-ver="${i}" style="background:${AG_COL[x.tipo] || '#6b7a82'}" title="${esc(x.titulo)}">${x.hora ? esc(x.hora) + ' ' : ''}${esc(x.titulo)}</span>`; }).join('') +
       (l.length > 3 ? `<span class="mas">+${l.length - 3} más</span>` : '') + '</button>';
     if (i === 34 && new Date(ini.getTime() + 35 * 864e5).getMonth() !== mo) break;
   }
@@ -5917,17 +5918,33 @@ async function pintarAgenda(c) {
   agEventosFila(c, e);
 }
 function agFila(x) {
-  if (x.auto) return `<li><span class="ag-f">${esc(meF(x.fecha))}</span><span class="ag-t"><b>${esc(x.titulo)}</b><br><small>Automático · ${esc(x.origen)}</small></span><span class="ag-acc"><button type="button" class="link" data-ag-ir="${esc(x.ir)}">Ir</button></span></li>`;
-  return `<li class="${x.hecho === 'SI' ? 'hecho' : ''}"><span class="ag-f">${esc(meF(x.fecha))}${x.hora ? '<br><small>' + esc(x.hora) + '</small>' : ''}</span><span class="ag-t"><i class="ag-dot" style="background:${AG_COL[x.tipo] || '#6b7a82'}"></i><b>${esc(x.titulo)}</b><br><small>${esc(AG_NOM[x.tipo] || '')}${x.lugar ? ' · ' + esc(x.lugar) : ''}${x.notas ? ' · ' + esc(String(x.notas).length > 90 ? String(x.notas).slice(0, 88) + '…' : String(x.notas)) : ''}</small></span>
-    <span class="ag-acc"><button type="button" class="ev-x" style="color:var(--ok)" data-ag-ok="${esc(x.id)}" title="${x.hecho === 'SI' ? 'Marcar como pendiente' : 'Marcar como hecho'}">${x.hecho === 'SI' ? '↺' : '✓'}</button><button type="button" class="ev-x" style="color:var(--brand)" data-ag-ics="${esc(x.id)}" title="Añadir a mi calendario (.ics)">📆</button><button type="button" class="ev-x ev-ed" data-ag-ed="${esc(x.id)}" title="Editar">✏️</button><button type="button" class="ev-x" data-ag-del="${esc(x.id)}" title="Borrar">✕</button></span></li>`;
+  state.agVista = state.agVista || []; const i = state.agVista.push(x) - 1;
+  if (x.auto) return `<li class="ag-clic" data-ag-ver="${i}" tabindex="0" role="button"><span class="ag-f">${esc(meF(x.fecha))}</span><span class="ag-t"><b>${esc(x.titulo)}</b><br><small>Automático · ${esc(x.origen)}</small></span><span class="ag-acc ag-chev" aria-hidden="true">›</span></li>`;
+  return `<li class="ag-clic${x.hecho === 'SI' ? ' hecho' : ''}" data-ag-ver="${i}" tabindex="0" role="button"><span class="ag-f">${esc(meF(x.fecha))}${x.hora ? '<br><small>' + esc(x.hora) + '</small>' : ''}</span><span class="ag-t"><i class="ag-dot" style="background:${AG_COL[x.tipo] || '#6b7a82'}"></i><b>${esc(x.titulo)}</b>${x.hecho === 'SI' ? ' <span class="st ok">hecho</span>' : ''}<br><small>${esc(AG_NOM[x.tipo] || '')}${x.lugar ? ' · ' + esc(x.lugar) : ''}${x.notas ? ' · ' + esc(String(x.notas).length > 90 ? String(x.notas).slice(0, 88) + '…' : String(x.notas)) : ''}</small></span><span class="ag-acc ag-chev" aria-hidden="true">›</span></li>`;
+}
+function agVer(x, e) {
+  let dlg = $('#me-dlg'); if (!dlg) { dlg = document.createElement('dialog'); dlg.id = 'me-dlg'; document.body.append(dlg); }
+  const col = x.auto ? '#6b7a82' : (AG_COL[x.tipo] || '#6b7a82');
+  const fl = new Date(String(x.fecha).slice(0, 10) + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  dlg.innerHTML = `<div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px"><i class="me-ico" style="background:${col}">${ICO(ICOS.cal, 22)}</i><div style="flex:1;min-width:0"><h3 style="margin:0;font-size:1.25rem;${x.hecho === 'SI' ? 'text-decoration:line-through;opacity:.7' : ''}">${esc(x.titulo)}</h3>
+      <small class="muted">${x.auto ? 'Fecha automática · ' + esc(x.origen) : esc(AG_NOM[x.tipo] || '')}${x.hecho === 'SI' ? ' · <b class="ok" style="color:var(--ok)">Hecho</b>' : ''}</small></div><button type="button" class="btn ghost" id="agv-x" aria-label="Cerrar">✕</button></div>
+    <div class="ag-det"><p>📅 <b>${esc(fl.charAt(0).toUpperCase() + fl.slice(1))}</b>${x.hora ? ' · 🕒 <b>' + esc(x.hora) + '</b>' : ''}</p>${x.lugar ? `<p>📍 ${esc(x.lugar)}</p>` : ''}${x.notas ? `<p style="white-space:pre-wrap;background:var(--bg);border-radius:10px;padding:10px 12px">${esc(x.notas)}</p>` : ''}${x.autor ? `<p><small class="muted">Anotado por ${esc(x.autor)}</small></p>` : ''}</div>
+    <div class="ag-bots">${x.auto ? `<button type="button" class="btn" id="agv-ir">Ir a ${esc(x.origen)}</button>` :
+      `<button type="button" class="btn" id="agv-ed">✏️ Editar</button><button type="button" class="btn ghost" id="agv-ok">${x.hecho === 'SI' ? '↺ Marcar pendiente' : '✓ Marcar hecho'}</button><button type="button" class="btn ghost" id="agv-ics">📆 A mi calendario</button><button type="button" class="btn ghost" id="agv-del" style="color:var(--bad);border-color:color-mix(in srgb,var(--bad) 50%,transparent)">✕ Borrar</button>`}</div>`;
+  const cerrar = () => dlg.close(), rep = () => { pintarAgenda($('#esp-cuerpo')); agBadge(); };
+  dlg.querySelector('#agv-x').onclick = cerrar; dlg.onclick = ev => { if (ev.target === dlg) cerrar(); };
+  if (x.auto) dlg.querySelector('#agv-ir').onclick = () => { cerrar(); show(x.ir); };
+  else {
+    dlg.querySelector('#agv-ed').onclick = () => { cerrar(); agForm(Object.assign({}, x, { fecha: String(x.fecha).slice(0, 10) }), e); };
+    dlg.querySelector('#agv-ok').onclick = async () => { try { await run(() => API.call('guardarAgenda', Object.assign({}, x, { fecha: String(x.fecha).slice(0, 10), hecho: x.hecho === 'SI' ? 'NO' : 'SI' }))); } catch (er) { return; } cerrar(); toast(x.hecho === 'SI' ? 'Marcada como pendiente' : '¡Hecho!'); rep(); };
+    dlg.querySelector('#agv-ics').onclick = () => agIcs(x, e);
+    dlg.querySelector('#agv-del').onclick = async () => { if (!confirm('¿Borrar «' + x.titulo + '» de la agenda?')) return; try { await run(() => API.call('eliminarAgenda', { id: x.id })); } catch (er) { return; } cerrar(); toast('Entrada borrada'); rep(); };
+  }
+  dlg.showModal();
 }
 function agEventosFila(c, e) {
-  const busca = id => (state.agPropias || []).find(x => x.id === id);
-  $$('#esp-cuerpo [data-ag-ir]').forEach(b => b.onclick = () => show(b.dataset.agIr));
-  $$('#esp-cuerpo [data-ag-ok]').forEach(b => b.onclick = async () => { const x = busca(b.dataset.agOk); if (!x) return; try { await run(() => API.call('guardarAgenda', Object.assign({}, x, { fecha: String(x.fecha).slice(0, 10), hecho: x.hecho === 'SI' ? 'NO' : 'SI' }))); } catch (er) { return; } pintarAgenda(c); agBadge(); });
-  $$('#esp-cuerpo [data-ag-ed]').forEach(b => b.onclick = () => { const x = busca(b.dataset.agEd); if (x) agForm(Object.assign({}, x, { fecha: String(x.fecha).slice(0, 10) }), e); });
-  $$('#esp-cuerpo [data-ag-del]').forEach(b => b.onclick = async () => { const x = busca(b.dataset.agDel); if (!x || !confirm('¿Borrar «' + x.titulo + '» de la agenda?')) return; try { await run(() => API.call('eliminarAgenda', { id: x.id })); } catch (er) { return; } pintarAgenda(c); agBadge(); });
-  $$('#esp-cuerpo [data-ag-ics]').forEach(b => b.onclick = () => { const x = busca(b.dataset.agIcs); if (x) agIcs(x, e); });
+  $$('#esp-cuerpo [data-ag-ver]').forEach(li => { const abrir = () => agVer(state.agVista[+li.dataset.agVer], e); li.onclick = abrir; li.onkeydown = ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); abrir(); } }; });
+  $$('#esp-cuerpo .cal .ev[data-ag-ver]').forEach(ch => ch.onclick = ev => { ev.stopPropagation(); agVer(state.agVista[+ch.dataset.agVer], e); });
 }
 function agForm(x, e) {
   modal(x.id ? 'Editar entrada de la agenda' : 'Nueva entrada de la agenda', [
@@ -6029,8 +6046,22 @@ async function meGuardarTema(t) {
   return ME_TEMAS.length - 1;
 }
 function meParsearTemas(txt) {
-  return String(txt || '').split(/\n+/).map(l => l.replace(/^\s*(\d+[.)-]|[-*•])\s*/, '').replace(/\*\*/g, '').trim()).filter(l => l.split('|').length >= 3)
-    .map(l => { const p = l.split('|').map(x => x.trim()); return [p[0], p[1] || p[0], p[2] || '', p[3] || 'hablar con el Delegado/a de Protección']; }).filter(p => p[0]).slice(0, 10);
+  const lineas = String(txt || '').replace(/\*\*|__|#+\s*/g, '').split(/\n/).map(l => l.trim());
+  // Formato estructurado: «1. Tema: … / Titular: … / Escena: … / Llamada a la acción: …»
+  const out = []; let cur = null;
+  const campo = (l, re) => { const m = l.match(re); return m ? m[1].trim() : null; };
+  lineas.forEach(l => {
+    const sin = l.replace(/^\s*(\d+\s*[.)-]|[-*•])\s*/, '');
+    const t = campo(sin, /^tema\s*[:.-]\s*(.+)$/i);
+    if (t !== null) { cur = [t, '', '', '']; out.push(cur); return; }
+    if (!cur) return;
+    const ti = campo(sin, /^titular\s*[:.-]\s*(.+)$/i), es = campo(sin, /^escena\s*[:.-]\s*(.+)$/i), ll = campo(sin, /^llamada\s+a\s+la\s+acci[oó]n\s*[:.-]\s*(.+)$/i);
+    if (ti !== null) cur[1] = ti; else if (es !== null) cur[2] = es; else if (ll !== null) cur[3] = ll;
+  });
+  let res = out.filter(p => p[0]);
+  // Formato antiguo con barras: TEMA | TITULAR | ESCENA | LLAMADA
+  if (!res.length) res = lineas.map(l => l.replace(/^\s*(\d+[.)-]|[-*•])\s*/, '')).filter(l => l.split('|').length >= 3).map(l => { const p = l.split('|').map(x => x.trim()); return [p[0], p[1], p[2], p[3] || '']; });
+  return res.map(p => [p[0], p[1] || p[0], p[2] || 'escena deportiva amable relacionada con el tema, personas sin rostros reconocibles', p[3] || 'hablar con el Delegado/a de Protección']).slice(0, 10);
 }
 (function () {
   const base = mePublicacion;
@@ -6057,15 +6088,16 @@ function meParsearTemas(txt) {
       const quien = e.propia === 'SI' ? 'las actividades deportivas municipales de un ayuntamiento' : 'un club deportivo' + (e.modalidad ? ' de ' + e.modalidad : '');
       const p = ['Propón 6 temas para publicaciones de Instagram de ' + quien + ', dirigidas a familias y deportistas, sobre protección de la infancia, buen trato y valores en el deporte.',
         'Ten en cuenta el mes de ' + mes + ' (fechas señaladas, momento de la temporada) y evita repetir estos temas ya usados: ' + usados + '.',
-        'Formato EXACTO, una línea por tema, sin numeración ni texto adicional:', 'TEMA | TITULAR para la imagen (máximo 7 palabras) | ESCENA para la imagen (personas sin rostros reconocibles, sin menores identificables) | LLAMADA A LA ACCIÓN (en infinitivo)',
+        'Formato EXACTO para cada tema, numerados del 1 al 6, con estas cuatro líneas y una línea en blanco entre temas, sin introducción ni comentarios:',
+        '1. Tema: (de qué trata, una frase)', 'Titular: (para la imagen, máximo 7 palabras)', 'Escena: (para la imagen; personas de espaldas o estilizadas, sin rostros reconocibles ni menores identificables)', 'Llamada a la acción: (en infinitivo, una frase corta)',
         'Tono positivo y preventivo, sin alarmismo. Español de España.'].join('\n');
-      zona.innerHTML = '<div class="card form" style="background:var(--bg)"><h3>💡 Ideas de temas con IA</h3><div id="ts-prompt"></div><label>Pega aquí la respuesta<textarea id="ts-res" rows="6" placeholder="Una línea por tema: TEMA | TITULAR | ESCENA | LLAMADA A LA ACCIÓN"></textarea></label><div id="ts-lista"></div><div class="ia-acciones"><button type="button" class="btn ghost" id="ts-x">Cerrar</button></div></div>';
+      zona.innerHTML = '<div class="card form" style="background:var(--bg)"><h3>💡 Ideas de temas con IA</h3><div id="ts-prompt"></div><label>Pega aquí la respuesta<textarea id="ts-res" rows="8" placeholder="Pega aquí la respuesta completa: 1. Tema… Titular… Escena… Llamada a la acción…"></textarea></label><div id="ts-lista"></div><div class="ia-acciones"><button type="button" class="btn ghost" id="ts-x">Cerrar</button></div></div>';
       mostrarPrompt($('#ts-prompt'), p);
       $('#ts-x').onclick = () => { zona.innerHTML = ''; };
       $('#ts-res').oninput = () => {
         const l = meParsearTemas($('#ts-res').value);
-        $('#ts-lista').innerHTML = l.length ? '<p class="nota" style="margin:6px 0">Elige uno (se guarda en «Mis temas»):</p><ul class="ag-lista">' + l.map((t, i) => `<li><span class="ag-t"><b>${esc(t[0])}</b><br><small>«${esc(t[1])}» · ${esc(t[3])}</small></span><span class="ag-acc"><button type="button" class="btn" data-ts="${i}">Usar</button></span></li>`).join('') + '</ul>'
-          : ($('#ts-res').value.trim() ? '<p class="aviso-inc">No reconozco el formato. Cada línea debe ser: TEMA | TITULAR | ESCENA | LLAMADA A LA ACCIÓN.</p>' : '');
+        $('#ts-lista').innerHTML = l.length ? '<p class="nota" style="margin:6px 0">Elige uno (se guarda en «Mis temas»):</p><ul class="ag-lista">' + l.map((t, i) => `<li><span class="ag-f" style="min-width:28px">${i + 1}.</span><span class="ag-t"><b>${esc(t[0])}</b><br><small>🖼️ «${esc(t[1])}»<br>🎬 ${esc(t[2])}<br>👉 ${esc(t[3])}</small></span><span class="ag-acc"><button type="button" class="btn" data-ts="${i}">Usar</button></span></li>`).join('') + '</ul>'
+          : ($('#ts-res').value.trim() ? '<p class="aviso-inc">No reconozco el formato. Cada tema debe empezar por «Tema:» y seguir con «Titular:», «Escena:» y «Llamada a la acción:».</p>' : '');
         $$('[data-ts]').forEach(b => b.onclick = async () => usar(await meGuardarTema(l[+b.dataset.ts])));
       };
     };
