@@ -5641,7 +5641,8 @@ function meBotones(c, entId) {
   c.querySelectorAll('[data-me]').forEach(b => b.onclick = async () => {
     const d = await run(() => meDatos(entId));
     if (b.dataset.me === 'mes') { mePublicacion(c.querySelector('#me-extra'), d.e); return; }
-    abrirInforme(meHtml(b.dataset.me, d));
+    if (b.dataset.me === 'wa') { waGenerador(c.querySelector('#me-extra'), d.e); return; }
+    meVentana(b.dataset.me, d);
   });
 }
 (function () {
@@ -5669,6 +5670,345 @@ async function pintarMiEntornoMunicipal() {
   loadPanel = async function () { await base.apply(this, arguments); try { await pintarMiEntornoMunicipal(); } catch (e) {} };
 })();
 GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Qué es «Tu EntornoSeguro» del Panel?', '<p>Cuando todo está al día, el Panel muestra siete accesos de repaso: <b>Medidas clave</b>, <b>Qué hacer ante una sospecha</b>, <b>Contactos de emergencia</b>, <b>Antes de una salida</b>, <b>Uso de imágenes</b>, <b>Calendario de la temporada</b> y <b>Publicación del mes</b>.</p><p>Las seis primeras se generan con los datos del club (riesgos, ficha, directorio, autorizaciones y fechas), sin IA, en una página lista para imprimir o enseñar al cuerpo técnico. La publicación del mes propone un tema según el mes y prepara dos prompts sin datos personales: uno para el texto de Instagram y otro para la imagen, que puedes pegar en el asistente o generador que uses.</p>', '', 'panel']); });
+
+// v68 (tanda A): fichas en ventana superpuesta · imagen de Drive con miniatura · generador de mensajes de WhatsApp · historial en la hoja (Campanas)
+function meResumen(tipo, d) {
+  const e = d.e, del = e.delegado_nombre || 'Delegado/a de Protección', plazo = e.plazo_comunicacion_h || 24;
+  const li = l => (l.every(x => /^☐/.test(x)) ? '<ul class="me-ul" style="list-style:none;padding-left:0">' : '<ul class="me-ul">') + l.map(x => '<li>' + x + '</li>').join('') + '</ul>';
+  if (tipo === 'medidas') {
+    const r = d.rie.filter(x => x.estado === 'implantada').sort((a, b) => ({ alto: 0, medio: 1, bajo: 2 })[a.nivel] - ({ alto: 0, medio: 1, bajo: 2 })[b.nivel]).slice(0, 8);
+    return r.length ? li(r.map(x => `<b>${esc(x.ambito)}</b>${x.nivel === 'alto' ? ' <span class="st bad">alto</span>' : ''}<br><small>${esc(meLista(x.medidas)[0] || x.medidas)}</small>`)) : '<p class="empty">Aún no hay medidas implantadas en Riesgos.</p>';
+  }
+  if (tipo === 'sospecha') return '<ol class="me-ul">' + ['Si hay riesgo inmediato: protege y llama al <b>112</b>.', 'Escucha con calma, <b>sin interrogar</b>. No prometas secreto.', '<b>No confrontes</b> ni investigues por tu cuenta.',
+    '<b>Anota</b> sus palabras literales, fecha y hora.', `<b>Comunica</b> al Delegado/a en <b>${esc(plazo)} h</b>: ${esc(del)}${e.delegado_telefono ? ' · ' + esc(e.delegado_telefono) : ''}.`, '<b>Conserva</b> las pruebas sin reenviarlas.'].map(x => '<li>' + x + '</li>').join('') + '</ol>';
+  if (tipo === 'contactos') { const di = d.dir;
+    return li([`<b>Delegado/a</b>: ${esc(del)}${e.delegado_telefono ? ' · ' + esc(e.delegado_telefono) : ''}`].concat(e.suplente_nombre ? [`<b>Suplente</b>: ${esc(e.suplente_nombre)}${e.suplente_telefono ? ' · ' + esc(e.suplente_telefono) : ''}`] : [])
+      .concat(di.servicios_sociales ? ['<b>Servicios Sociales</b>: ' + esc(di.servicios_sociales)] : []).concat(di.policia_local ? ['<b>Policía Local</b>: ' + esc(di.policia_local)] : [])
+      .concat(['<b>Emergencias</b>: 112', '<b>Ayuda a la infancia</b>: 116 111', '<b>Fundación ANAR</b>: 900 20 20 10', '<b>Maltrato infantil (Junta)</b>: 900 851 818'])); }
+  if (tipo === 'salida') { const med = [].concat(...d.rie.filter(x => ME_RE.salida.test(x.ambito + ' ' + x.descripcion)).map(x => meLista(x.medidas))).slice(0, 3);
+    const au = d.aut.filter(a => /despla|viaje|pernoc|campa/i.test(a.tipo));
+    return li(['☐ Autorización firmada de cada menor', '☐ Al menos dos personas adultas', '☐ Recuento al subir, bajar y en cada parada', '☐ Ningún adulto a solas con un menor'].concat(med.map(m => '☐ ' + esc(m))))
+      + (au.length ? '<p class="me-pie">Autorizaciones: ' + au.map(a => `${esc(a.grupo)} ${esc(a.recibidas)}/${esc(a.total)}`).join(' · ') + '</p>' : ''); }
+  if (tipo === 'imagenes') { const au = d.aut.filter(a => /imagen/i.test(a.tipo)), den = au.filter(a => +a.denegadas > 0);
+    return li(['Nunca nombre y apellidos junto a la imagen', 'Sin geolocalización ni horarios habituales', 'Nunca en vestuarios ni duchas', 'Solo en los canales autorizados', 'Se retira si la familia lo pide'])
+      + (au.length ? '<p class="me-pie">Autorizaciones: ' + au.map(a => `${esc(a.grupo)} ${esc(a.recibidas)}/${esc(a.total)}${+a.denegadas ? ' · <b class="bad-t">' + esc(a.denegadas) + ' no autorizan</b>' : ''}`).join(' · ') + '</p>' : '')
+      + (den.length ? '<p class="aviso-inc" style="margin:8px 0 0">Antes de publicar, consulta el listado de menores sin autorización.</p>' : ''); }
+  if (tipo === 'calendario') {
+    const h = meHtml('calendario', d), filas = [...h.matchAll(/<tr><td class="([^"]*)"><b>([^<]+)<\/b><\/td><td>([^<]+)<\/td>/g)].slice(0, 7);
+    return filas.length ? li(filas.map(f => `<b class="${f[1]}">${f[2]}</b> · ${f[3]}`)) : '<p class="empty">No hay fechas registradas.</p>';
+  }
+  return '';
+}
+function meVentana(tipo, d) {
+  const f = ME_FICHAS.find(x => x[0] === tipo); if (!f) return;
+  let dlg = $('#me-dlg');
+  if (!dlg) { dlg = document.createElement('dialog'); dlg.id = 'me-dlg'; document.body.append(dlg); }
+  dlg.innerHTML = `<div style="display:flex;gap:12px;align-items:center;margin-bottom:10px"><i class="me-ico">${ICO(f[3], 22)}</i><div style="flex:1"><h3 style="margin:0">${esc(f[1])}</h3><small class="muted">${esc(d.e.nombre || '')}</small></div>
+    <button type="button" class="btn ghost" id="me-pdf" title="Abrir la ficha completa para imprimir o guardar en PDF">📄 PDF</button><button type="button" class="btn ghost" id="me-cerrar" aria-label="Cerrar">✕</button></div>
+    <div class="me-cuerpo">${meResumen(tipo, d)}</div>`;
+  dlg.querySelector('#me-cerrar').onclick = () => dlg.close();
+  dlg.querySelector('#me-pdf').onclick = () => abrirInforme(meHtml(tipo, d));
+  dlg.onclick = ev => { if (ev.target === dlg) dlg.close(); };
+  dlg.showModal();
+}
+(function () { if ($('#me-dlg-est')) return; const st = document.createElement('style'); st.id = 'me-dlg-est';
+  st.textContent = '#me-dlg{max-width:560px}.me-ico{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:#fff;background:var(--grad);flex:0 0 auto}' +
+    '.me-ul{margin:0;padding-left:20px;line-height:1.55}.me-ul li{margin:6px 0}.me-pie{margin:10px 0 0;color:var(--muted);font-size:.85rem}' +
+    '.wa-bur{background:#dcf8c6;color:#111b21;border-radius:12px 12px 4px 12px;padding:10px 12px;white-space:pre-wrap;line-height:1.45;max-width:460px;box-shadow:0 1px 1px rgba(0,0,0,.12);font-size:.92rem}' +
+    '@media (prefers-color-scheme:dark){.wa-bur{background:#005c4b;color:#e9edef}}.wa-hist li{display:flex;gap:10px;align-items:flex-start;justify-content:space-between;padding:8px 0;border-top:1px solid var(--line)}' +
+    '.mini-img{width:120px;height:120px;object-fit:cover;border-radius:10px;border:1px solid var(--line);background:var(--bg)}.pub-hist{display:flex;gap:10px;flex-wrap:wrap}.pub-hist figure{margin:0;width:120px}.pub-hist figcaption{font-size:.72rem;color:var(--muted);line-height:1.3}';
+  document.head.appendChild(st); })();
+// La publicación del mes y WhatsApp también están disponibles siempre, aunque el sistema no esté al 100 %
+ME_FICHAS.push(['wa', 'Mensaje de WhatsApp', 'Borrador → mensaje claro, con emojis, listo para enviar', '<path d="M3 21l1.7-5A8.5 8.5 0 1 1 8 19.3L3 21z"/><path d="M9 10c.5 2 2 3.5 4 4l1.2-1.2 2 .8c-.3 1.2-1.3 2-2.5 1.9C10.6 15.2 8 12.6 7.7 9.5 7.6 8.3 8.4 7.3 9.6 7l.8 2L9 10z"/>']);
+
+// ---- Imagen de Drive: miniatura ----
+function driveId(u) { const m = String(u || '').match(/\/d\/([\w-]{20,})|[?&]id=([\w-]{20,})/); return m ? (m[1] || m[2]) : ''; }
+function driveMini(u, w) { const id = driveId(u); return id ? 'https://drive.google.com/thumbnail?id=' + id + '&sz=w' + (w || 400) : (/^https:\/\/\S+\.(png|jpe?g|webp|gif)(\?|$)/i.test(u) ? u : ''); }
+function imgMini(u, alt) { const src = driveMini(u); return src ? `<a href="${esc(u)}" target="_blank" rel="noopener"><img class="mini-img" src="${esc(src)}" alt="${esc(alt || 'Imagen de la campaña')}" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('small'),{className:'aviso-inc',textContent:'No se puede mostrar la miniatura: en Drive, comparte la imagen con «Cualquier persona con el enlace».'}))"></a>` : ''; }
+
+// ---- Publicación del mes: guardar texto + imagen en la hoja ----
+(function () {
+  const base = mePublicacion;
+  mePublicacion = function (cont, e) {
+    base(cont, e);
+    const zona = document.createElement('div'); zona.className = 'form'; zona.id = 'pub-guardar';
+    zona.innerHTML = `<h3 style="margin-top:14px">💾 Guardar la publicación</h3><div class="grid2"><label>Texto de la publicación (respuesta de la IA)<textarea id="pub-texto" rows="7" placeholder="Pega aquí el texto final"></textarea></label>
+      <div><label>Enlace de Drive de la imagen<input id="pub-img" type="url" placeholder="https://drive.google.com/file/d/…"></label><div id="pub-prev"></div>
+      <p class="nota" style="margin:6px 0 0">Sube a Drive la imagen generada y compártela con «Cualquier persona con el enlace»: es una imagen para publicar y no debe mostrar a ningún menor identificable.</p></div></div>
+      <div class="ia-acciones"><button type="button" class="btn" id="pub-ok">Guardar publicación</button></div><h3 style="margin-top:14px">Publicaciones guardadas</h3><div id="pub-hist" class="pub-hist"><small class="muted">Cargando…</small></div>`;
+    cont.querySelector('#me-mes').append(zona);
+    const prev = () => { $('#pub-prev').innerHTML = imgMini($('#pub-img').value.trim()); };
+    $('#pub-img').oninput = prev;
+    const hist = async () => { let l = []; try { l = await API.call('listarCampanas', { tipo: 'publicacion', max: 12 }); } catch (er) { $('#pub-hist').innerHTML = '<small class="muted">Actualiza Ampliacion.gs a la v1.22 para guardar publicaciones.</small>'; return; }
+      $('#pub-hist').innerHTML = l.length ? l.map(x => `<figure>${imgMini(x.imagen_url, x.tema) || '<div class="mini-img" style="display:grid;place-items:center">💬</div>'}<figcaption>${esc(meF(x.fecha))} · ${esc(x.tema)}</figcaption></figure>`).join('') : '<small class="muted">Aún no hay publicaciones guardadas.</small>'; };
+    $('#pub-ok').onclick = async () => {
+      const texto = $('#pub-texto').value.trim(); if (!texto) { toast('Pega primero el texto de la publicación', true); return; }
+      const t = ME_TEMAS[+$('#me-tema').value];
+      try { await run(() => API.call('guardarCampana', { tipo: 'publicacion', tema: t[0] + ' · ' + t[2], texto, imagen_url: $('#pub-img').value.trim(), entidad_id: e.id || '' })); } catch (er) { return; }
+      toast('Publicación guardada'); $('#pub-texto').value = ''; $('#pub-img').value = ''; prev(); hist();
+    };
+    hist();
+  };
+})();
+
+// ---- Generador de mensajes de WhatsApp ----
+const WA_DEST = ['Familias', 'Cuerpo técnico (entrenadores y monitores)', 'Deportistas adolescentes', 'Junta Directiva', 'Voluntariado'];
+const WA_TONO = ['Informativo', 'Recordatorio', 'Urgente', 'Convocatoria', 'Felicitación o agradecimiento'];
+function waOcultar(t) { const m = []; const sust = (re, k) => { t = t.replace(re, x => { m.push(x); return '[' + k + m.length + ']'; }); };
+  sust(/\b\d{8}[A-Za-z]\b|\b[XYZxyz]\d{7}[A-Za-z]\b/g, 'DNI'); sust(/[\w.+-]+@[\w-]+\.[\w.]+/g, 'CORREO'); sust(/(\+34\s?)?\b[6789]\d{2}[\s.-]?\d{3}[\s.-]?\d{3}\b/g, 'TEL'); return { t, m }; }
+function waRestaurar(t, m) { return String(t).replace(/\[(DNI|CORREO|TEL)(\d+)\]/g, (x, k, n) => m[+n - 1] || x); }
+function waFormato(t) { return esc(t).replace(/\*([^*\n]+)\*/g, '<b>$1</b>').replace(/(^|\s)_([^_\n]+)_/g, '$1<i>$2</i>').replace(/~([^~\n]+)~/g, '<s>$1</s>'); }
+function waGenerador(cont, e) {
+  const quien = e.propia === 'SI' ? 'del Delegado/a de Protección municipal' : 'del Delegado/a de Protección de ' + (e.nombre || 'la entidad');
+  cont.innerHTML = `<div class="card form" id="wa-card"><h3>📲 Mensaje de WhatsApp</h3><p class="nota" style="margin:0 0 10px">Escribe lo que quieres decir, tal cual. La app prepara el prompt para tu asistente de IA y después abre WhatsApp con el mensaje listo. Los teléfonos, correos y DNI se ocultan antes de pasar por la IA y se vuelven a poner solos al final.</p>
+    <label>Borrador<textarea id="wa-borr" rows="4" placeholder="Ej.: el sábado salimos a las 9 desde el estadio al torneo de Dos Hermanas, traer autorización firmada, volvemos a las 14"></textarea></label>
+    <div class="grid2"><label>Para<select id="wa-dest">${WA_DEST.map(x => `<option>${esc(x)}</option>`).join('')}</select></label><label>Tono<select id="wa-tono">${WA_TONO.map(x => `<option>${esc(x)}</option>`).join('')}</select></label></div>
+    <div class="ia-acciones"><button type="button" class="btn" id="wa-prep">Preparar prompt</button></div><div id="wa-prompt"></div>
+    <div id="wa-res" class="hidden"><label>Mensaje generado (pégalo aquí)<textarea id="wa-txt" rows="7"></textarea></label><div id="wa-prev"></div>
+      <div class="ia-acciones"><a class="btn" id="wa-abrir" target="_blank" rel="noopener" href="#">📲 Abrir en WhatsApp</a><button type="button" class="btn ghost" id="wa-copiar">Copiar</button><button type="button" class="btn ghost" id="wa-guardar">💾 Guardar</button></div></div>
+    <h3 style="margin-top:14px">Mensajes guardados</h3><ul id="wa-hist" class="wa-hist" style="list-style:none;padding:0;margin:0"><li><small class="muted">Cargando…</small></li></ul></div>`;
+  let ocultos = [];
+  const final = () => waRestaurar($('#wa-txt').value.trim(), ocultos);
+  const pinta = () => { const t = final(); $('#wa-prev').innerHTML = t ? '<div class="wa-bur">' + waFormato(t) + '</div>' : ''; $('#wa-abrir').href = 'https://wa.me/?text=' + encodeURIComponent(t); };
+  $('#wa-prep').onclick = () => {
+    const b = $('#wa-borr').value.trim(); if (!b) { toast('Escribe primero el borrador', true); return; }
+    const o = waOcultar(b); ocultos = o.m;
+    const p = ['Redacta un mensaje de WhatsApp ' + quien + ' para: ' + $('#wa-dest').value + '. Tono: ' + $('#wa-tono').value + '.',
+      'Parte de este borrador y conserva exactamente fechas, horas, lugares y los marcadores entre corchetes como [TEL1] o [CORREO1]:', '«' + o.t + '»',
+      'Requisitos: mensaje claro y breve (máximo 120 palabras); formato de WhatsApp con *negrita* para lo importante, saltos de línea y, si ayuda, una lista con emojis; entre 3 y 6 emojis adecuados al tono, sin exagerar; un saludo inicial y una despedida cordial.',
+      'No añadas datos que no estén en el borrador; no incluyas nombres de menores; si el borrador menciona a una persona menor, sustitúyelo por una referencia genérica (el grupo, el equipo).',
+      'Firma al final: «' + (e.propia === 'SI' ? 'Delegado/a de Protección · ' + (e.nombre || 'Ayuntamiento') : 'Delegado/a de Protección · ' + (e.nombre || 'el club')) + '». Entrega solo el mensaje, sin comentarios.'].join('\n');
+    mostrarPrompt($('#wa-prompt'), p);
+    $('#wa-res').classList.remove('hidden');
+  };
+  $('#wa-txt').oninput = pinta;
+  $('#wa-copiar').onclick = () => copiarTexto(final());
+  $('#wa-abrir').onclick = ev => { if (!final()) { ev.preventDefault(); toast('Pega primero el mensaje generado', true); } };
+  const hist = async () => { let l = []; try { l = await API.call('listarCampanas', { tipo: 'whatsapp', max: 10 }); } catch (er) { $('#wa-hist').innerHTML = '<li><small class="muted">Actualiza Ampliacion.gs a la v1.22 para guardar los mensajes.</small></li>'; return; }
+    $('#wa-hist').innerHTML = l.length ? l.map((x, i) => `<li><div style="flex:1"><small class="muted">${esc(meF(x.fecha))} · ${esc(x.destinatario)} · ${esc(x.tono)}</small><div class="wa-bur" style="margin-top:4px;max-height:7.5em;overflow:hidden">${waFormato(x.texto)}</div></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><a class="btn ghost" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(x.texto)}">📲</a><button type="button" class="btn ghost" data-wa-re="${i}" title="Usar como base">↺</button><button type="button" class="ev-x" data-wa-del="${esc(x.id)}" title="Borrar">✕</button></div></li>`).join('') : '<li><small class="muted">Aún no hay mensajes guardados.</small></li>';
+    $$('[data-wa-re]').forEach(bb => bb.onclick = () => { $('#wa-res').classList.remove('hidden'); $('#wa-txt').value = l[+bb.dataset.waRe].texto; ocultos = []; pinta(); $('#wa-txt').focus(); });
+    $$('[data-wa-del]').forEach(bb => bb.onclick = async () => { if (!confirm('¿Borrar este mensaje guardado?')) return; try { await run(() => API.call('eliminarCampana', { id: bb.dataset.waDel })); } catch (er) { return; } hist(); });
+  };
+  $('#wa-guardar').onclick = async () => {
+    const t = final(); if (!t) { toast('Pega primero el mensaje generado', true); return; }
+    try { await run(() => API.call('guardarCampana', { tipo: 'whatsapp', tema: $('#wa-borr').value.trim().slice(0, 120), destinatario: $('#wa-dest').value, tono: $('#wa-tono').value, texto: t, entidad_id: e.id || '' })); } catch (er) { return; }
+    toast('Mensaje guardado'); hist();
+  };
+  hist();
+  $('#wa-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+// WhatsApp y publicaciones también en «Contenidos RRSS», sin esperar al 100 %
+(function () {
+  const v = $('#view-contenidos'); if (!v) return;
+  const caja = document.createElement('div'); caja.id = 'cont-campanas'; caja.className = 'card';
+  caja.innerHTML = '<h3>Campañas rápidas</h3><p class="nota" style="margin:0 0 10px">Mensajes de WhatsApp y publicación del mes con imagen. Se guardan en la hoja.</p><div class="ia-acciones"><button type="button" class="btn" id="cc-wa">📲 Mensaje de WhatsApp</button><button type="button" class="btn ghost" id="cc-pub">💬 Publicación del mes</button></div><div id="cc-extra"></div>';
+  v.querySelector('header').after(caja);
+  const ent = async () => { let ents = state.entidades && state.entidades.length ? state.entidades : null; if (!ents) { try { ents = await API.call('listarEntidades'); } catch (er) { ents = []; } }
+    return (state.club ? ents[0] : ents.find(x => x.propia === 'SI')) || ents[0] || {}; };
+  $('#cc-wa').onclick = async () => waGenerador($('#cc-extra'), await ent());
+  $('#cc-pub').onclick = async () => mePublicacion($('#cc-extra'), await ent());
+})();
+GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Cómo preparo un mensaje de WhatsApp o una publicación con imagen?', '<p>En <b>Contenidos RRSS → Campañas rápidas</b> (y en «Tu EntornoSeguro» del Panel):</p><ul><li><b>📲 Mensaje de WhatsApp</b>: escribe el borrador, elige destinatario y tono, copia el prompt en tu asistente de IA, pega la respuesta y pulsa <b>Abrir en WhatsApp</b>: se abre con el texto listo para elegir grupo o contacto. Los teléfonos, correos y DNI se ocultan a la IA y se reponen solos. Con <b>Guardar</b> queda en el historial.</li><li><b>💬 Publicación del mes</b>: tema según el mes, prompt de texto y prompt de imagen. Sube la imagen a Drive, pega el enlace y verás la miniatura. Con <b>Guardar publicación</b> queda en la hoja con su imagen.</li></ul>', '', 'contenidos']); });
+
+// v69 (tanda B): «MI ESPACIO» del Delegado/a · Agenda (calendario, recordatorios, .ics), Campañas (publicaciones con miniatura y WhatsApp) y Documentos
+const AG_TIPOS = [['cita', 'Cita', '#0d818f'], ['reunion', 'Reunión', '#12406e'], ['recordatorio', 'Recordatorio', '#b7791f'], ['tarea', 'Tarea', '#2fa37f'], ['formacion', 'Formación', '#7a4fb3'], ['campana', 'Campaña', '#c2185b'], ['otro', 'Otro', '#6b7a82']];
+const AG_COL = Object.fromEntries(AG_TIPOS.map(t => [t[0], t[2]])), AG_NOM = Object.fromEntries(AG_TIPOS.map(t => [t[0], t[1]]));
+const hoyISOx = () => { const d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); };
+const isoDe = d => d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+function meEventos(d) {
+  const ev = [], meses = Number((state.cfg || {}).meses_certificado) || 12, porFecha = {};
+  d.mat.forEach(r => { if (r.proxima_revision) (porFecha[String(r.proxima_revision).slice(0, 10)] = porFecha[String(r.proxima_revision).slice(0, 10)] || []).push(r.codigo); });
+  Object.keys(porFecha).forEach(f => ev.push({ fecha: f, titulo: 'Revisión de ' + (porFecha[f].length > 3 ? porFecha[f].length + ' requisitos de la Matriz' : porFecha[f].join(', ')), origen: 'Matriz', ir: 'matriz' }));
+  d.ag.forEach(a => { if (a.cert_fecha) { const f = new Date(String(a.cert_fecha).slice(0, 10)); f.setMonth(f.getMonth() + meses); ev.push({ fecha: isoDe(f), titulo: 'Renovar certificado negativo · ' + a.nombre, origen: 'Agentes', ir: 'agentes' }); } });
+  d.form.forEach(f => { if (f.fecha_caducidad) ev.push({ fecha: String(f.fecha_caducidad).slice(0, 10), titulo: 'Caduca la formación · ' + (f.persona_nombre || ''), origen: 'Formación', ir: 'formacion' }); });
+  d.rie.forEach(r => { if (r.fecha_revision) ev.push({ fecha: String(r.fecha_revision).slice(0, 10), titulo: 'Revisión del riesgo · ' + r.ambito, origen: 'Riesgos', ir: 'riesgos' }); });
+  const ult = d.enc.map(x => String(x.fecha_fin || x.fecha_inicio || x.creado || '').slice(0, 10)).filter(Boolean).sort().pop();
+  if (ult) { const f = new Date(ult); f.setFullYear(f.getFullYear() + 1); ev.push({ fecha: isoDe(f), titulo: 'Nueva encuesta anónima a menores', origen: 'Encuestas', ir: 'encuestas' }); }
+  return ev;
+}
+async function espEntidad() {
+  let ents = state.entidades && state.entidades.length ? state.entidades : null;
+  if (!ents) { try { ents = await API.call('listarEntidades'); state.entidades = ents; } catch (e) { ents = []; } }
+  return (state.club ? ents[0] : ents.find(x => x.propia === 'SI')) || (state.club ? ents[0] : null) || {};
+}
+(function () {
+  const main = document.querySelector('main'), nav = document.querySelector('#menu-principal') || document.querySelector('nav');
+  if (!main || !nav || $('#view-espacio')) return;
+  const st = document.createElement('style'); st.id = 'esp-est';
+  st.textContent = '.esp-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}.esp-tabs button{min-height:40px;padding:6px 16px;border-radius:999px;border:1px solid color-mix(in srgb,var(--line) 70%,transparent);background:var(--panel);color:var(--ink);font:inherit;font-weight:600;cursor:pointer}' +
+    '.esp-tabs button[aria-selected="true"]{background:var(--grad);color:#fff;border-color:transparent}' +
+    '.cal-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}.cal-head h3{margin:0 8px;min-width:170px;text-align:center}' +
+    '.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.cal .dow{font-size:.72rem;font-weight:700;color:var(--muted);text-align:center;padding:4px 0;text-transform:uppercase}' +
+    '.cal .dia{min-height:86px;border:1px solid color-mix(in srgb,var(--line) 55%,transparent);border-radius:10px;padding:4px 5px;background:var(--panel);cursor:pointer;text-align:left;font:inherit;color:var(--ink);display:flex;flex-direction:column;gap:2px;overflow:hidden}' +
+    '.cal .dia:hover{border-color:var(--brand-2)}.cal .dia.fuera{opacity:.45}.cal .dia.hoy{box-shadow:inset 0 0 0 2px var(--brand-2)}.cal .dia.sel{background:color-mix(in srgb,var(--brand-2) 9%,var(--panel))}.cal .num{font-size:.78rem;font-weight:700}' +
+    '.cal .ev{font-size:.68rem;line-height:1.25;padding:1px 5px;border-radius:5px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cal .ev.auto{background:color-mix(in srgb,var(--muted) 18%,transparent);color:var(--ink)}.cal .ev.hecho{opacity:.5;text-decoration:line-through}.cal .mas{font-size:.66rem;color:var(--muted)}' +
+    '.ag-lista{list-style:none;margin:0;padding:0}.ag-lista li{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent)}.ag-lista li:first-child{border-top:0}' +
+    '.ag-f{min-width:74px;font-weight:700;color:var(--brand);font-size:.85rem}.ag-t{flex:1}.ag-t small{color:var(--muted)}.ag-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}.ag-acc{display:flex;gap:4px;align-items:center}' +
+    '.ag-lista li.hecho .ag-t b{text-decoration:line-through;opacity:.6}.ag-ley{display:flex;gap:10px;flex-wrap:wrap;font-size:.75rem;color:var(--muted);margin:8px 0 0}' +
+    '.camp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}.camp-card{border:1px solid color-mix(in srgb,var(--line) 60%,transparent);border-radius:14px;padding:12px;background:var(--panel);box-shadow:var(--shadow)}' +
+    '.camp-card .mini-img{width:100%;height:auto;aspect-ratio:1/1}.camp-card details{margin-top:6px;font-size:.85rem}.doc-col h4{margin:0 0 6px;color:var(--brand)}.doc-l{list-style:none;margin:0;padding:0}.doc-l li{padding:7px 0;border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent)}' +
+    '.esp-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px}@media (max-width:980px){.esp-grid{grid-template-columns:minmax(0,1fr)}}' +
+    '@media (max-width:700px){.cal-head h3{order:-1;flex-basis:100%;margin:0 0 4px}.cal .dia{min-height:54px}.cal .ev{font-size:0;height:6px;padding:0}.cal .mas{display:none}}';
+  document.head.appendChild(st);
+  const sec = document.createElement('section'); sec.id = 'view-espacio'; sec.className = 'view hidden';
+  sec.innerHTML = `<header><h2>Mi espacio</h2></header><p class="nota">Tu agenda de trabajo, las campañas y los documentos del sistema de protección, en un solo lugar.</p>
+    <div class="esp-tabs" role="tablist"><button type="button" role="tab" data-esp="agenda" aria-selected="true">📅 Agenda</button><button type="button" role="tab" data-esp="campanas" aria-selected="false">📣 Campañas</button><button type="button" role="tab" data-esp="docs" aria-selected="false">📄 Documentos</button></div>
+    <div id="esp-cuerpo"></div>`;
+  main.appendChild(sec);
+  const b = document.createElement('button'); b.dataset.view = 'espacio'; b.innerHTML = '<span class="l-long">Mi espacio</span><span class="l-short">Mi espacio</span> <span id="badge-agenda" class="badge"></span>';
+  b.onclick = () => { show('espacio'); pintarEspacio(); };
+  const al = nav.querySelector('button[data-view="alertas"]'); if (al) al.after(b); else nav.prepend(b);
+  sec.querySelectorAll('[data-esp]').forEach(t => t.onclick = () => { state.espTab = t.dataset.esp; pintarEspacio(); });
+})();
+state.espTab = state.espTab || 'agenda';
+async function pintarEspacio() {
+  $$('#view-espacio [data-esp]').forEach(t => t.setAttribute('aria-selected', String(t.dataset.esp === state.espTab)));
+  const c = $('#esp-cuerpo'); if (!c) return;
+  if (state.espTab === 'agenda') return pintarAgenda(c);
+  if (state.espTab === 'campanas') return pintarCampanas(c);
+  return pintarDocsEsp(c);
+}
+// ---- Agenda ----
+async function pintarAgenda(c) {
+  const e = await espEntidad();
+  if (!state.agMes) { const h = new Date(); state.agMes = new Date(h.getFullYear(), h.getMonth(), 1); }
+  if (state.agAuto === undefined) state.agAuto = true;
+  c.innerHTML = '<div class="card"><p class="empty">Cargando la agenda…</p></div>';
+  let propias = [], auto = [];
+  try { propias = await API.call('listarAgenda', {}); } catch (er) { c.innerHTML = '<div class="card"><p class="aviso-inc">Actualiza Ampliacion.gs a la v1.23 para usar la agenda.</p></div>'; return; }
+  if (e.id) { try { auto = meEventos(await meDatos(e.id)); } catch (er) { auto = []; } }
+  state.agPropias = propias; state.agAutoEv = auto;
+  const m = state.agMes, y = m.getFullYear(), mo = m.getMonth(), hoy = hoyISOx();
+  const primero = new Date(y, mo, 1), ini = new Date(primero); ini.setDate(1 - ((primero.getDay() + 6) % 7));
+  const delDia = f => propias.filter(x => String(x.fecha).slice(0, 10) === f).concat(state.agAuto ? auto.filter(x => x.fecha === f).map(x => Object.assign({ auto: true }, x)) : []);
+  let cel = ['L', 'M', 'X', 'J', 'V', 'S', 'D'].map(d => `<div class="dow">${d}</div>`).join('');
+  for (let i = 0; i < 42; i++) {
+    const dt = new Date(ini); dt.setDate(ini.getDate() + i); const f = isoDe(dt), l = delDia(f);
+    cel += `<button type="button" class="dia${dt.getMonth() !== mo ? ' fuera' : ''}${f === hoy ? ' hoy' : ''}${f === state.agSel ? ' sel' : ''}" data-dia="${f}"><span class="num">${dt.getDate()}</span>` +
+      l.slice(0, 3).map(x => x.auto ? `<span class="ev auto" title="${esc(x.titulo)}">${esc(x.titulo)}</span>` : `<span class="ev${x.hecho === 'SI' ? ' hecho' : ''}" style="background:${AG_COL[x.tipo] || '#6b7a82'}" title="${esc(x.titulo)}">${x.hora ? esc(x.hora) + ' ' : ''}${esc(x.titulo)}</span>`).join('') +
+      (l.length > 3 ? `<span class="mas">+${l.length - 3} más</span>` : '') + '</button>';
+    if (i === 34 && new Date(ini.getTime() + 35 * 864e5).getMonth() !== mo) break;
+  }
+  const lim = new Date(); lim.setDate(lim.getDate() + 30); const limS = isoDe(lim);
+  const sel = state.agSel;
+  const lista = sel ? delDia(sel) : propias.filter(x => String(x.fecha).slice(0, 10) >= hoy && String(x.fecha).slice(0, 10) <= limS).concat(state.agAuto ? auto.filter(x => x.fecha >= hoy && x.fecha <= limS).map(x => Object.assign({ auto: true }, x)) : [])
+    .sort((a, b) => (String(a.fecha) + (a.hora || '')).localeCompare(String(b.fecha) + (b.hora || '')));
+  const pend = propias.filter(x => x.hecho !== 'SI' && String(x.fecha).slice(0, 10) < hoy);
+  c.innerHTML = `<div class="esp-grid">
+    <div class="card"><div class="cal-head"><button type="button" class="btn ghost" id="ag-prev" aria-label="Mes anterior">‹</button><h3>${esc((t => t.charAt(0).toUpperCase() + t.slice(1))(m.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })))}</h3><button type="button" class="btn ghost" id="ag-next" aria-label="Mes siguiente">›</button>
+      <button type="button" class="btn ghost" id="ag-hoy">Hoy</button><span style="flex:1"></span><button type="button" class="btn" id="ag-nueva">+ Nueva entrada</button></div>
+      <div class="cal">${cel}</div>
+      <div class="ag-ley">${AG_TIPOS.map(t => `<span><i class="ag-dot" style="background:${t[2]}"></i>${t[1]}</span>`).join('')}<label style="display:inline-flex;gap:6px;align-items:center;font-weight:400;margin:0"><input type="checkbox" id="ag-auto" ${state.agAuto ? 'checked' : ''} style="width:auto;min-height:0"> Fechas automáticas del sistema (en gris)</label></div></div>
+    <div class="card"><h3>${sel ? 'Día ' + esc(meF(sel)) : 'Próximos 30 días'}${sel ? ' <button type="button" class="link" id="ag-quitar">ver próximos 30 días</button>' : ''}</h3>
+      ${pend.length && !sel ? `<p class="aviso-inc" style="margin:0 0 8px">⏰ ${pend.length} pendiente(s) de días anteriores sin marcar como hecho.</p>` : ''}
+      <ul class="ag-lista">${(sel ? lista : pend.concat(lista)).map(x => agFila(x)).join('') || '<li><small class="muted">Nada previsto.</small></li>'}</ul>
+      ${sel ? `<div class="ia-acciones"><button type="button" class="btn ghost" id="ag-en-dia">+ Añadir el ${esc(meF(sel))}</button></div>` : ''}
+      <p class="nota" style="margin:10px 0 0">No anotes aquí datos de menores ni detalles de casos: para eso está <b>Incidencias</b>, con su protección.</p></div></div>`;
+  const mover = n => { state.agMes = new Date(y, mo + n, 1); state.agSel = ''; pintarAgenda(c); };
+  $('#ag-prev').onclick = () => mover(-1); $('#ag-next').onclick = () => mover(1);
+  $('#ag-hoy').onclick = () => { const h = new Date(); state.agMes = new Date(h.getFullYear(), h.getMonth(), 1); state.agSel = hoy; pintarAgenda(c); };
+  $('#ag-nueva').onclick = () => agForm({ fecha: state.agSel || hoy, tipo: 'cita' }, e);
+  $('#ag-auto').onchange = ev => { state.agAuto = ev.target.checked; pintarAgenda(c); };
+  $$('#esp-cuerpo [data-dia]').forEach(d => d.onclick = () => { state.agSel = d.dataset.dia === state.agSel ? '' : d.dataset.dia; pintarAgenda(c); });
+  if ($('#ag-quitar')) $('#ag-quitar').onclick = () => { state.agSel = ''; pintarAgenda(c); };
+  if ($('#ag-en-dia')) $('#ag-en-dia').onclick = () => agForm({ fecha: sel, tipo: 'cita' }, e);
+  agEventosFila(c, e);
+}
+function agFila(x) {
+  if (x.auto) return `<li><span class="ag-f">${esc(meF(x.fecha))}</span><span class="ag-t"><b>${esc(x.titulo)}</b><br><small>Automático · ${esc(x.origen)}</small></span><span class="ag-acc"><button type="button" class="link" data-ag-ir="${esc(x.ir)}">Ir</button></span></li>`;
+  return `<li class="${x.hecho === 'SI' ? 'hecho' : ''}"><span class="ag-f">${esc(meF(x.fecha))}${x.hora ? '<br><small>' + esc(x.hora) + '</small>' : ''}</span><span class="ag-t"><i class="ag-dot" style="background:${AG_COL[x.tipo] || '#6b7a82'}"></i><b>${esc(x.titulo)}</b><br><small>${esc(AG_NOM[x.tipo] || '')}${x.lugar ? ' · ' + esc(x.lugar) : ''}${x.notas ? ' · ' + esc(String(x.notas).slice(0, 80)) : ''}</small></span>
+    <span class="ag-acc"><button type="button" class="ev-x" style="color:var(--ok)" data-ag-ok="${esc(x.id)}" title="${x.hecho === 'SI' ? 'Marcar como pendiente' : 'Marcar como hecho'}">${x.hecho === 'SI' ? '↺' : '✓'}</button><button type="button" class="ev-x" style="color:var(--brand)" data-ag-ics="${esc(x.id)}" title="Añadir a mi calendario (.ics)">📆</button><button type="button" class="ev-x ev-ed" data-ag-ed="${esc(x.id)}" title="Editar">✏️</button><button type="button" class="ev-x" data-ag-del="${esc(x.id)}" title="Borrar">✕</button></span></li>`;
+}
+function agEventosFila(c, e) {
+  const busca = id => (state.agPropias || []).find(x => x.id === id);
+  $$('#esp-cuerpo [data-ag-ir]').forEach(b => b.onclick = () => show(b.dataset.agIr));
+  $$('#esp-cuerpo [data-ag-ok]').forEach(b => b.onclick = async () => { const x = busca(b.dataset.agOk); if (!x) return; try { await run(() => API.call('guardarAgenda', Object.assign({}, x, { fecha: String(x.fecha).slice(0, 10), hecho: x.hecho === 'SI' ? 'NO' : 'SI' }))); } catch (er) { return; } pintarAgenda(c); agBadge(); });
+  $$('#esp-cuerpo [data-ag-ed]').forEach(b => b.onclick = () => { const x = busca(b.dataset.agEd); if (x) agForm(Object.assign({}, x, { fecha: String(x.fecha).slice(0, 10) }), e); });
+  $$('#esp-cuerpo [data-ag-del]').forEach(b => b.onclick = async () => { const x = busca(b.dataset.agDel); if (!x || !confirm('¿Borrar «' + x.titulo + '» de la agenda?')) return; try { await run(() => API.call('eliminarAgenda', { id: x.id })); } catch (er) { return; } pintarAgenda(c); agBadge(); });
+  $$('#esp-cuerpo [data-ag-ics]').forEach(b => b.onclick = () => { const x = busca(b.dataset.agIcs); if (x) agIcs(x, e); });
+}
+function agForm(x, e) {
+  modal(x.id ? 'Editar entrada de la agenda' : 'Nueva entrada de la agenda', [
+    ['fecha', 'Fecha', 'date', true], ['hora', 'Hora (opcional)', 'time'], ['titulo', 'Título', 'text', true], ['tipo', 'Tipo', AG_TIPOS.map(t => [t[0], t[1]])],
+    ['lugar', 'Lugar (opcional)'], ['notas', 'Notas (sin datos de menores ni de casos)', 'textarea'], ['hecho', 'Estado', [['NO', 'Pendiente'], ['SI', 'Hecho']]]
+  ], Object.assign({ hecho: 'NO' }, x), async d => {
+    try { await run(() => API.call('guardarAgenda', Object.assign(d, { id: x.id, entidad_id: x.entidad_id || e.id || '' }))); } catch (er) { return; }
+    toast('Agenda actualizada'); state.agSel = d.fecha; const f = new Date(d.fecha); state.agMes = new Date(f.getFullYear(), f.getMonth(), 1); pintarAgenda($('#esp-cuerpo')); agBadge();
+  });
+}
+function agIcs(x, e) {
+  const f = String(x.fecha).slice(0, 10).replace(/-/g, ''), h = x.hora ? x.hora.replace(':', '') + '00' : '';
+  const esc2 = t => String(t || '').replace(/[\;,]/g, m => '\\' + m).replace(/\n/g, '\\n');
+  let fin = '';
+  if (h) { const d = new Date(String(x.fecha).slice(0, 10) + 'T' + x.hora + ':00'); d.setHours(d.getHours() + 1); fin = 'DTEND;TZID=Europe/Madrid:' + isoDe(d).replace(/-/g, '') + 'T' + ('0' + d.getHours()).slice(-2) + ('0' + d.getMinutes()).slice(-2) + '00'; }
+  else { const d = new Date(String(x.fecha).slice(0, 10)); d.setDate(d.getDate() + 1); fin = 'DTEND;VALUE=DATE:' + isoDe(d).replace(/-/g, ''); }
+  const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//EntornoSeguro//Agenda//ES', 'BEGIN:VEVENT', 'UID:' + x.id + '@entornoseguro', 'DTSTAMP:' + new Date().toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z',
+    h ? 'DTSTART;TZID=Europe/Madrid:' + f + 'T' + h : 'DTSTART;VALUE=DATE:' + f, fin, 'SUMMARY:' + esc2(x.titulo), x.lugar ? 'LOCATION:' + esc2(x.lugar) : '', x.notas ? 'DESCRIPTION:' + esc2(x.notas) : '',
+    'BEGIN:VALARM', 'TRIGGER:-PT' + (h ? '1H' : '9H') , 'ACTION:DISPLAY', 'DESCRIPTION:' + esc2(x.titulo), 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR'].filter(Boolean).join('\r\n');
+  descargar(ics, 'text/calendar', 'agenda-' + f + '.ics');
+  toast('Abre el archivo para añadirlo a tu calendario (Google, Outlook o el móvil)');
+}
+async function agBadge() {
+  const bd = $('#badge-agenda'); let l = [];
+  try { l = await API.call('listarAgenda', {}); } catch (e) { if (bd) bd.textContent = ''; return; }
+  const hoy = hoyISOx(), l7 = new Date(); l7.setDate(l7.getDate() + 7); const s7 = isoDe(l7);
+  const sem = l.filter(x => x.hecho !== 'SI' && String(x.fecha).slice(0, 10) <= s7);
+  if (bd) bd.textContent = sem.length || '';
+  state.agSemana = sem;
+  const h = $('#panel-hero .hero-chips');
+  if (h) { let ch = h.querySelector('[data-hero="ag"]'); if (!ch) { ch = document.createElement('button'); ch.type = 'button'; ch.dataset.hero = 'ag'; h.append(ch); ch.onclick = () => { state.espTab = 'agenda'; state.agSel = ''; show('espacio'); pintarEspacio(); }; }
+    ch.className = sem.length ? 'warn' : 'ok'; ch.innerHTML = ICO(ICOS.cal, 16) + ' ' + (sem.length ? sem.length + ' en tu agenda esta semana' : 'Agenda despejada esta semana'); }
+  if (!state.club) { const v = $('#view-panel'); let card = $('#agenda-semana');
+    if (!sem.length) { if (card) card.remove(); return; }
+    if (!card) { card = document.createElement('div'); card.id = 'agenda-semana'; card.className = 'card'; $('#kpis').after(card); }
+    card.innerHTML = '<h3>📅 Esta semana en tu agenda</h3><ul class="ag-lista">' + sem.slice(0, 6).map(x => `<li><span class="ag-f">${esc(meF(x.fecha))}${x.hora ? '<br><small>' + esc(x.hora) + '</small>' : ''}</span><span class="ag-t"><i class="ag-dot" style="background:${AG_COL[x.tipo] || '#6b7a82'}"></i><b>${esc(x.titulo)}</b>${String(x.fecha).slice(0, 10) < hoy ? ' <small class="bad-t">atrasado</small>' : ''}</span></li>`).join('') + '</ul><div class="ia-acciones"><button type="button" class="btn ghost" id="ag-ver">Abrir Mi espacio</button></div>';
+    $('#ag-ver').onclick = () => { state.espTab = 'agenda'; show('espacio'); pintarEspacio(); }; }
+}
+(function () {
+  const base = loadPanel;
+  loadPanel = async function () { await base.apply(this, arguments); try { await agBadge(); } catch (e) {} };
+})();
+// ---- Campañas ----
+async function pintarCampanas(c) {
+  const e = await espEntidad();
+  c.innerHTML = '<div class="card"><p class="empty">Cargando…</p></div>';
+  let l = [];
+  try { l = await API.call('listarCampanas', {}); } catch (er) { c.innerHTML = '<div class="card"><p class="aviso-inc">Actualiza Ampliacion.gs a la v1.22 o posterior.</p></div>'; return; }
+  const pubs = l.filter(x => x.tipo === 'publicacion'), was = l.filter(x => x.tipo === 'whatsapp');
+  c.innerHTML = `<div class="card"><div class="ia-acciones" style="margin:0"><button type="button" class="btn" id="cp-pub">💬 Nueva publicación del mes</button><button type="button" class="btn ghost" id="cp-wa">📲 Nuevo mensaje de WhatsApp</button></div><div id="cp-extra"></div></div>
+    <div class="card"><h3>Publicaciones (${pubs.length})</h3>${pubs.length ? '<div class="camp-grid">' + pubs.map((x, i) => `<div class="camp-card">${imgMini(x.imagen_url, x.tema) || '<div class="mini-img" style="width:100%;aspect-ratio:1/1;display:grid;place-items:center;font-size:2rem">💬</div>'}
+      <b style="display:block;margin-top:8px;color:var(--brand)">${esc(x.tema)}</b><small class="muted">${esc(meF(x.fecha))}</small><details><summary>Ver texto</summary><p style="white-space:pre-wrap;margin:6px 0">${esc(x.texto)}</p></details>
+      <div class="ia-acciones"><button type="button" class="btn ghost" data-cp-copy="${i}">Copiar texto</button><button type="button" class="ev-x" data-cp-del="${esc(x.id)}" title="Borrar">✕</button></div></div>`).join('') + '</div>' : '<p class="empty">Aún no hay publicaciones guardadas.</p>'}</div>
+    <div class="card"><h3>Mensajes de WhatsApp (${was.length})</h3>${was.length ? '<ul class="wa-hist" style="list-style:none;padding:0;margin:0">' + was.map(x => `<li><div style="flex:1"><small class="muted">${esc(meF(x.fecha))} · ${esc(x.destinatario)} · ${esc(x.tono)}</small><div class="wa-bur" style="margin-top:4px">${waFormato(x.texto)}</div></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><a class="btn ghost" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(x.texto)}" title="Abrir en WhatsApp">📲</a><button type="button" class="ev-x" data-cp-del="${esc(x.id)}" title="Borrar">✕</button></div></li>`).join('') + '</ul>' : '<p class="empty">Aún no hay mensajes guardados.</p>'}</div>`;
+  $('#cp-pub').onclick = () => mePublicacion($('#cp-extra'), e);
+  $('#cp-wa').onclick = () => waGenerador($('#cp-extra'), e);
+  $$('[data-cp-copy]').forEach(b => b.onclick = () => copiarTexto(pubs[+b.dataset.cpCopy].texto));
+  $$('[data-cp-del]').forEach(b => b.onclick = async () => { if (!confirm('¿Borrar este elemento de Campañas?')) return; try { await run(() => API.call('eliminarCampana', { id: b.dataset.cpDel })); } catch (er) { return; } pintarCampanas(c); });
+}
+// ---- Documentos: los generados en la app y las evidencias de la Matriz (enlaces a Drive) ----
+async function pintarDocsEsp(c) {
+  const e = await espEntidad();
+  c.innerHTML = '<div class="card"><p class="empty">Cargando…</p></div>';
+  const ok = p => p.then(x => x, () => []);
+  const [docs, mat] = await Promise.all([can('ia') || can('leer') ? ok(API.call('listarDocumentos')) : Promise.resolve([]), e.id ? ok(API.call('matriz', { entidad_id: e.id })) : Promise.resolve([])]);
+  const ev = [].concat(...(mat || []).map(r => (r.evidencias || []).map(v => Object.assign({ codigo: r.codigo, requisito: r.requisito }, v))));
+  state.espDocs = docs || [];
+  c.innerHTML = `<div class="card form"><label>Buscar<input id="dc-q" type="search" placeholder="Protocolo, autorización, cartel, carta…"></label></div>
+    <div class="grid2"><div class="card doc-col"><h4>📝 Generados en la app</h4><p class="nota" style="margin:0 0 6px">Plantillas, publicaciones e informes guardados en Documentos.</p><ul class="doc-l" id="dc-app"></ul></div>
+    <div class="card doc-col"><h4>🔗 Evidencias en tu nube</h4><p class="nota" style="margin:0 0 6px">Los documentos enlazados en la Matriz (acceso restringido).</p><ul class="doc-l" id="dc-ev"></ul></div></div>`;
+  const pinta = () => {
+    const q = norm($('#dc-q').value || '');
+    const d1 = state.espDocs.filter(x => !q || norm(x.asunto + ' ' + x.tipo).includes(q)).slice(0, 60);
+    $('#dc-app').innerHTML = d1.map(x => `<li><button type="button" class="link" data-dc="${esc(x.id)}">${esc(x.asunto)}</button><br><small class="muted">${esc((typeof TIPOS_DOC !== 'undefined' && TIPOS_DOC[x.tipo]) || x.tipo)} · ${esc(meF(x.actualizado || x.creado))}</small></li>`).join('') || '<li><small class="muted">Sin resultados.</small></li>';
+    const d2 = ev.filter(x => !q || norm(x.titulo + ' ' + x.codigo + ' ' + x.requisito).includes(q));
+    $('#dc-ev').innerHTML = d2.map(x => `<li>${x.url_drive ? `<a href="${esc(x.url_drive)}" target="_blank" rel="noopener">${esc(x.titulo)}</a>` : esc(x.titulo)}<br><small class="muted">${esc(x.codigo)} · ${esc(x.requisito)}</small></li>`).join('') || '<li><small class="muted">Sin resultados.</small></li>';
+    $$('[data-dc]').forEach(b => b.onclick = () => { show('documentos'); setTimeout(() => { try { state.docs = state.docs && state.docs.length ? state.docs : state.espDocs; abrirDoc(b.dataset.dc); } catch (er) {} }, 400); });
+  };
+  $('#dc-q').oninput = pinta; pinta();
+}
+GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Qué hay en «Mi espacio»?', '<p>Es tu mesa de trabajo como Delegado/a. Tiene tres pestañas:</p><ul><li><b>📅 Agenda</b>: calendario mensual con tus citas, reuniones, recordatorios y tareas (con hora, lugar y notas). Puedes marcarlas como hechas, editarlas y añadirlas a tu calendario del móvil, Google u Outlook con <b>📆</b> (archivo .ics). En gris aparecen las <b>fechas automáticas</b> del sistema: revisiones de la Matriz, certificados por renovar, formación que caduca y la próxima encuesta. Lo de los próximos 7 días se avisa en el menú y en el Panel.</li><li><b>📣 Campañas</b>: tus publicaciones del mes (con miniatura de la imagen) y tus mensajes de WhatsApp guardados.</li><li><b>📄 Documentos</b>: buscador de lo generado en la app y de las evidencias enlazadas en la Matriz.</li></ul><p>No anotes en la agenda datos de menores ni detalles de casos: para eso está Incidencias.</p>', '', 'espacio']); });
 
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
