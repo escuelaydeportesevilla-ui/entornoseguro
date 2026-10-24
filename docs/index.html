@@ -5809,7 +5809,7 @@ function waGenerador(cont, e) {
   $('#cc-wa').onclick = async () => waGenerador($('#cc-extra'), await ent());
   $('#cc-pub').onclick = async () => mePublicacion($('#cc-extra'), await ent());
 })();
-GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Cómo preparo un mensaje de WhatsApp o una publicación con imagen?', '<p>En <b>Contenidos RRSS → Campañas rápidas</b> (y en «Tu EntornoSeguro» del Panel):</p><ul><li><b>📲 Mensaje de WhatsApp</b>: escribe el borrador, elige destinatario y tono, copia el prompt en tu asistente de IA, pega la respuesta y pulsa <b>Abrir en WhatsApp</b>: se abre con el texto listo para elegir grupo o contacto. Los teléfonos, correos y DNI se ocultan a la IA y se reponen solos. Con <b>Guardar</b> queda en el historial.</li><li><b>💬 Publicación del mes</b>: tema según el mes, prompt de texto y prompt de imagen. Sube la imagen a Drive, pega el enlace y verás la miniatura. Con <b>Guardar publicación</b> queda en la hoja con su imagen.</li></ul>', '', 'contenidos']); });
+GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Cómo preparo un mensaje de WhatsApp o una publicación con imagen?', '<p>En <b>Contenidos RRSS → Campañas rápidas</b> (y en «Tu EntornoSeguro» del Panel):</p><ul><li><b>📲 Mensaje de WhatsApp</b>: escribe el borrador, elige destinatario y tono, copia el prompt en tu asistente de IA, pega la respuesta y pulsa <b>Abrir en WhatsApp</b>: se abre con el texto listo para elegir grupo o contacto. Los teléfonos, correos y DNI se ocultan a la IA y se reponen solos. Con <b>Guardar</b> queda en el historial.</li><li><b>💬 Publicación del mes</b>: tema según el mes, o uno tuyo con <b>✏️ Escribir un tema propio</b>, o ideas nuevas con <b>💡 Pedir ideas a la IA</b> (pegas la respuesta y eliges). Tus temas quedan guardados en «Mis temas». Después, prompt de texto y prompt de imagen. Sube la imagen a Drive, pega el enlace y verás la miniatura. Con <b>Guardar publicación</b> queda en la hoja con su imagen.</li></ul>', '', 'contenidos']); });
 
 // v69 (tanda B): «MI ESPACIO» del Delegado/a · Agenda (calendario, recordatorios, .ics), Campañas (publicaciones con miniatura y WhatsApp) y Documentos
 const AG_TIPOS = [['cita', 'Cita', '#0d818f'], ['reunion', 'Reunión', '#12406e'], ['recordatorio', 'Recordatorio', '#b7791f'], ['tarea', 'Tarea', '#2fa37f'], ['formacion', 'Formación', '#7a4fb3'], ['campana', 'Campaña', '#c2185b'], ['otro', 'Otro', '#6b7a82']];
@@ -5849,6 +5849,7 @@ async function espEntidad() {
     '.camp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}.camp-card{border:1px solid color-mix(in srgb,var(--line) 60%,transparent);border-radius:14px;padding:12px;background:var(--panel);box-shadow:var(--shadow)}' +
     '.camp-card .mini-img{width:100%;height:auto;aspect-ratio:1/1}.camp-card details{margin-top:6px;font-size:.85rem}.doc-col h4{margin:0 0 6px;color:var(--brand)}.doc-l{list-style:none;margin:0;padding:0}.doc-l li{padding:7px 0;border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent)}' +
     '.esp-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px}@media (max-width:980px){.esp-grid{grid-template-columns:minmax(0,1fr)}}' +
+    '@media (max-width:700px){.ag-lista li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;align-items:center}.ag-lista .ag-f{grid-column:1;grid-row:1;min-width:0}.ag-lista .ag-f br{display:none}.ag-lista .ag-f small{margin-left:8px}.ag-lista .ag-acc{grid-column:2;grid-row:1}.ag-lista .ag-t{grid-column:1/-1;grid-row:2}.ag-lista .ag-acc .ev-x{min-width:36px;min-height:36px}}' +
     '@media (max-width:700px){.cal-head h3{order:-1;flex-basis:100%;margin:0 0 4px}.cal .dia{min-height:54px}.cal .ev{font-size:0;height:6px;padding:0}.cal .mas{display:none}}';
   document.head.appendChild(st);
   const sec = document.createElement('section'); sec.id = 'view-espacio'; sec.className = 'view hidden';
@@ -5917,7 +5918,7 @@ async function pintarAgenda(c) {
 }
 function agFila(x) {
   if (x.auto) return `<li><span class="ag-f">${esc(meF(x.fecha))}</span><span class="ag-t"><b>${esc(x.titulo)}</b><br><small>Automático · ${esc(x.origen)}</small></span><span class="ag-acc"><button type="button" class="link" data-ag-ir="${esc(x.ir)}">Ir</button></span></li>`;
-  return `<li class="${x.hecho === 'SI' ? 'hecho' : ''}"><span class="ag-f">${esc(meF(x.fecha))}${x.hora ? '<br><small>' + esc(x.hora) + '</small>' : ''}</span><span class="ag-t"><i class="ag-dot" style="background:${AG_COL[x.tipo] || '#6b7a82'}"></i><b>${esc(x.titulo)}</b><br><small>${esc(AG_NOM[x.tipo] || '')}${x.lugar ? ' · ' + esc(x.lugar) : ''}${x.notas ? ' · ' + esc(String(x.notas).slice(0, 80)) : ''}</small></span>
+  return `<li class="${x.hecho === 'SI' ? 'hecho' : ''}"><span class="ag-f">${esc(meF(x.fecha))}${x.hora ? '<br><small>' + esc(x.hora) + '</small>' : ''}</span><span class="ag-t"><i class="ag-dot" style="background:${AG_COL[x.tipo] || '#6b7a82'}"></i><b>${esc(x.titulo)}</b><br><small>${esc(AG_NOM[x.tipo] || '')}${x.lugar ? ' · ' + esc(x.lugar) : ''}${x.notas ? ' · ' + esc(String(x.notas).length > 90 ? String(x.notas).slice(0, 88) + '…' : String(x.notas)) : ''}</small></span>
     <span class="ag-acc"><button type="button" class="ev-x" style="color:var(--ok)" data-ag-ok="${esc(x.id)}" title="${x.hecho === 'SI' ? 'Marcar como pendiente' : 'Marcar como hecho'}">${x.hecho === 'SI' ? '↺' : '✓'}</button><button type="button" class="ev-x" style="color:var(--brand)" data-ag-ics="${esc(x.id)}" title="Añadir a mi calendario (.ics)">📆</button><button type="button" class="ev-x ev-ed" data-ag-ed="${esc(x.id)}" title="Editar">✏️</button><button type="button" class="ev-x" data-ag-del="${esc(x.id)}" title="Borrar">✕</button></span></li>`;
 }
 function agEventosFila(c, e) {
@@ -6009,6 +6010,73 @@ async function pintarDocsEsp(c) {
   $('#dc-q').oninput = pinta; pinta();
 }
 GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Qué hay en «Mi espacio»?', '<p>Es tu mesa de trabajo como Delegado/a. Tiene tres pestañas:</p><ul><li><b>📅 Agenda</b>: calendario mensual con tus citas, reuniones, recordatorios y tareas (con hora, lugar y notas). Puedes marcarlas como hechas, editarlas y añadirlas a tu calendario del móvil, Google u Outlook con <b>📆</b> (archivo .ics). En gris aparecen las <b>fechas automáticas</b> del sistema: revisiones de la Matriz, certificados por renovar, formación que caduca y la próxima encuesta. Lo de los próximos 7 días se avisa en el menú y en el Panel.</li><li><b>📣 Campañas</b>: tus publicaciones del mes (con miniatura de la imagen) y tus mensajes de WhatsApp guardados.</li><li><b>📄 Documentos</b>: buscador de lo generado en la app y de las evidencias enlazadas en la Matriz.</li></ul><p>No anotes en la agenda datos de menores ni detalles de casos: para eso está Incidencias.</p>', '', 'espacio']); });
+
+// v70: Publicación del mes · temas propios (escritos a mano o sugeridos por la IA) que se guardan en la hoja y aparecen en el selector
+const ME_BASE = ME_TEMAS.length;
+async function meCargarTemas() {
+  let l = []; try { l = await API.call('listarCampanas', { tipo: 'tema' }); } catch (e) { return; }
+  l.slice().reverse().forEach(x => { let a = []; try { a = JSON.parse(x.texto || '[]'); } catch (e) {}
+    if (!ME_TEMAS.some((t, i) => i >= ME_BASE && t[1] === x.tema)) ME_TEMAS.push([x.tema_mes || 'Mi tema', x.tema, a[0] || x.tema, a[1] || 'escena deportiva amable relacionada con el tema', a[2] || 'hablar con el Delegado/a de Protección', x.id]); });
+}
+function meOpciones(sel, valor) {
+  sel.innerHTML = '<optgroup label="Temas del mes">' + ME_TEMAS.slice(0, ME_BASE).map((t, i) => `<option value="${i}">${esc(t[0])} · ${esc(t[1])}</option>`).join('') + '</optgroup>' +
+    (ME_TEMAS.length > ME_BASE ? '<optgroup label="Mis temas">' + ME_TEMAS.slice(ME_BASE).map((t, i) => `<option value="${ME_BASE + i}">${esc(t[1])}</option>`).join('') + '</optgroup>' : '');
+  if (valor != null) sel.value = String(valor);
+}
+async function meGuardarTema(t) {
+  ME_TEMAS.push(['Mi tema', t[0], t[1], t[2], t[3]]);
+  try { const r = await API.call('guardarCampana', { tipo: 'tema', tema: t[0], texto: JSON.stringify([t[1], t[2], t[3]]) }); ME_TEMAS[ME_TEMAS.length - 1][5] = r.id; } catch (e) { toast('El tema se usa ahora; para guardarlo actualiza Ampliacion.gs a la v1.24', true); }
+  return ME_TEMAS.length - 1;
+}
+function meParsearTemas(txt) {
+  return String(txt || '').split(/\n+/).map(l => l.replace(/^\s*(\d+[.)-]|[-*•])\s*/, '').replace(/\*\*/g, '').trim()).filter(l => l.split('|').length >= 3)
+    .map(l => { const p = l.split('|').map(x => x.trim()); return [p[0], p[1] || p[0], p[2] || '', p[3] || 'hablar con el Delegado/a de Protección']; }).filter(p => p[0]).slice(0, 10);
+}
+(function () {
+  const base = mePublicacion;
+  mePublicacion = async function (cont, e) {
+    await meCargarTemas();
+    base(cont, e);
+    const sel = $('#me-tema'); if (!sel) return;
+    const actual = sel.value; meOpciones(sel, actual);
+    const lab = sel.closest('label');
+    lab.insertAdjacentHTML('afterend', `<div class="ia-acciones" style="margin:-4px 0 10px"><button type="button" class="btn ghost" id="me-propio">✏️ Escribir un tema propio</button><button type="button" class="btn ghost" id="me-sug">💡 Pedir ideas a la IA</button>${ME_TEMAS.length > ME_BASE ? '<button type="button" class="link" id="me-mis">Gestionar mis temas</button>' : ''}</div><div id="me-temas-extra"></div>`);
+    const zona = $('#me-temas-extra');
+    const usar = i => { meOpciones(sel, i); sel.dispatchEvent(new Event('change')); zona.innerHTML = ''; toast('Tema listo: copia los prompts'); };
+    $('#me-propio').onclick = () => {
+      zona.innerHTML = `<div class="card form" style="background:var(--bg)"><h3>✏️ Tema propio</h3><div class="fields"><label class="full">Tema (de qué trata)<input id="tp-tema" placeholder="Ej.: El valor del compañerismo en el vestuario"></label>
+        <label>Titular para la imagen (máx. 7 palabras)<input id="tp-tit" placeholder="Ej.: Juntos ganamos todos"></label><label>Llamada a la acción<input id="tp-cta" placeholder="Ej.: felicitar a un compañero esta semana"></label>
+        <label class="full">Escena para la imagen (opcional)<input id="tp-esc" placeholder="Ej.: equipo de espaldas abrazado en el centro del campo"></label></div>
+        <div class="ia-acciones"><button type="button" class="btn" id="tp-ok">Usar y guardar en mis temas</button><button type="button" class="btn ghost" id="tp-x">Cancelar</button></div></div>`;
+      $('#tp-x').onclick = () => { zona.innerHTML = ''; };
+      $('#tp-ok').onclick = async () => { const t = $('#tp-tema').value.trim(); if (!t) { toast('Escribe el tema', true); return; }
+        usar(await meGuardarTema([t, $('#tp-tit').value.trim() || t, $('#tp-esc').value.trim() || 'escena deportiva amable relacionada con el tema, personas sin rostros reconocibles', $('#tp-cta').value.trim() || 'hablar con el Delegado/a de Protección'])); };
+    };
+    $('#me-sug').onclick = () => {
+      const mes = new Date().toLocaleDateString('es-ES', { month: 'long' }), usados = ME_TEMAS.map(t => t[1]).slice(0, 30).join('; ');
+      const quien = e.propia === 'SI' ? 'las actividades deportivas municipales de un ayuntamiento' : 'un club deportivo' + (e.modalidad ? ' de ' + e.modalidad : '');
+      const p = ['Propón 6 temas para publicaciones de Instagram de ' + quien + ', dirigidas a familias y deportistas, sobre protección de la infancia, buen trato y valores en el deporte.',
+        'Ten en cuenta el mes de ' + mes + ' (fechas señaladas, momento de la temporada) y evita repetir estos temas ya usados: ' + usados + '.',
+        'Formato EXACTO, una línea por tema, sin numeración ni texto adicional:', 'TEMA | TITULAR para la imagen (máximo 7 palabras) | ESCENA para la imagen (personas sin rostros reconocibles, sin menores identificables) | LLAMADA A LA ACCIÓN (en infinitivo)',
+        'Tono positivo y preventivo, sin alarmismo. Español de España.'].join('\n');
+      zona.innerHTML = '<div class="card form" style="background:var(--bg)"><h3>💡 Ideas de temas con IA</h3><div id="ts-prompt"></div><label>Pega aquí la respuesta<textarea id="ts-res" rows="6" placeholder="Una línea por tema: TEMA | TITULAR | ESCENA | LLAMADA A LA ACCIÓN"></textarea></label><div id="ts-lista"></div><div class="ia-acciones"><button type="button" class="btn ghost" id="ts-x">Cerrar</button></div></div>';
+      mostrarPrompt($('#ts-prompt'), p);
+      $('#ts-x').onclick = () => { zona.innerHTML = ''; };
+      $('#ts-res').oninput = () => {
+        const l = meParsearTemas($('#ts-res').value);
+        $('#ts-lista').innerHTML = l.length ? '<p class="nota" style="margin:6px 0">Elige uno (se guarda en «Mis temas»):</p><ul class="ag-lista">' + l.map((t, i) => `<li><span class="ag-t"><b>${esc(t[0])}</b><br><small>«${esc(t[1])}» · ${esc(t[3])}</small></span><span class="ag-acc"><button type="button" class="btn" data-ts="${i}">Usar</button></span></li>`).join('') + '</ul>'
+          : ($('#ts-res').value.trim() ? '<p class="aviso-inc">No reconozco el formato. Cada línea debe ser: TEMA | TITULAR | ESCENA | LLAMADA A LA ACCIÓN.</p>' : '');
+        $$('[data-ts]').forEach(b => b.onclick = async () => usar(await meGuardarTema(l[+b.dataset.ts])));
+      };
+    };
+    const mis = $('#me-mis'); if (mis) mis.onclick = () => {
+      zona.innerHTML = '<div class="card form" style="background:var(--bg)"><h3>Mis temas</h3><ul class="ag-lista">' + ME_TEMAS.slice(ME_BASE).map((t, i) => `<li><span class="ag-t"><b>${esc(t[1])}</b><br><small>«${esc(t[2])}»</small></span><span class="ag-acc">${t[5] ? `<button type="button" class="ev-x" data-tdel="${ME_BASE + i}" title="Borrar">✕</button>` : ''}</span></li>`).join('') + '</ul><div class="ia-acciones"><button type="button" class="btn ghost" id="tm-x">Cerrar</button></div></div>';
+      $('#tm-x').onclick = () => { zona.innerHTML = ''; };
+      $$('[data-tdel]').forEach(b => b.onclick = async () => { const i = +b.dataset.tdel, t = ME_TEMAS[i]; if (!confirm('¿Borrar el tema «' + t[1] + '»?')) return;
+        try { await run(() => API.call('eliminarCampana', { id: t[5] })); } catch (er) { return; } ME_TEMAS.splice(i, 1); meOpciones(sel, new Date().getMonth()); sel.dispatchEvent(new Event('change')); mis.click(); });
+    };
+  };
+})();
 
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
