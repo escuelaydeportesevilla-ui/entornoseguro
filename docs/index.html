@@ -3029,7 +3029,7 @@ function coordRequerimiento(e, temp, cfg, h, req) {
     tablaKV([['A', campo(String(e.nombre || '').trim(), 'ENTIDAD DEPORTIVA') + ', a la atención de su representante legal y de su Delegado/a de Protección'],
       ['Asunto', 'Requerimiento de documentación · Protección de menores · Temporada ' + esc(temp)]]) +
     intro + cuerpoLista +
-    `<p>Les requerimos para que la aporten en un plazo de <b>${esc(plazo)} días hábiles</b> desde la recepción de este escrito.</p>` +
+    `<p>Les requerimos para que la aporten en un plazo de <b>${esc(plazo)} días hábiles</b> desde la recepción de este escrito${req && req.venc ? ' (hasta el ' + esc(fmtCorta(req.venc)) + ')' : ''}.</p>` +
     pj('Si no se aporta en ese plazo, la declaración quedará como incompleta, con los efectos previstos en la autorización de uso de instalaciones o en las bases de la subvención correspondiente.') +
     pj('Quedamos a su disposición para orientarles sobre la documentación requerida.') +
     `<p>En ${coordMuni(cfg)}, a fecha de firma electrónica.</p>` +
@@ -3333,7 +3333,7 @@ async function abrirRequerimiento(entidadId) {
     guardarLocales(f.locales.value.trim());
     const cfg = state.cfg || {};
     const html = plantillaInforme('Requerimiento de subsanación', (e.nombre || '') + ' · Temporada ' + temp,
-      '<div class="just">' + coordRequerimiento(e, temp, cfg, false, { items, plazo, fecha }) + '</div>', false,
+      '<div class="just">' + coordRequerimiento(e, temp, cfg, false, { items, plazo, fecha, venc }) + '</div>', false,
       'EntornoSeguro · ' + esc(coordOrg(cfg)) + ' · Coordinación con entidades deportivas en protección de menores. La verificación municipal es formal y documental.');
     if (fmt === 'word') descargar('\uFEFF' + html, 'application/msword', nombreInf('requerimiento-' + (e.nombre || 'entidad')));
     else abrirInforme(html);
