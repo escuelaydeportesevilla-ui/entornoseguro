@@ -2976,17 +2976,18 @@ function coordDeclaracion(e, temp, cfg, h) {
   const contacto = [e.delegado_telefono, e.delegado_email].filter(Boolean).join(' · ');
   const repr = e.presidencia_nombre ? esc(String(e.presidencia_nombre).trim()) + ' · Presidente/a' : '';
   return coordH(h, 'Anexo I. Declaración responsable anual de la entidad deportiva') +
-    tablaKV([['Temporada', esc(temp)], ['Entidad', campo(String(e.nombre || '').trim(), 'DENOMINACIÓN DE LA ENTIDAD')], ['CIF', campo(e.cif, 'CIF')],
+    tablaKV([['Temporada', esc(temp)], ['Entidad', campo(String(e.nombre || '').trim(), 'DENOMINACIÓN DE LA ENTIDAD')], e.n_registro ? ['CIF · Nº de inscripción registral', campo(e.cif, 'CIF') + ' · ' + esc(e.n_registro)] : ['CIF', campo(e.cif, 'CIF')],
+      ['Domicilio social', campo([e.domicilio, e.municipio].filter(Boolean).join(', '), 'DOMICILIO')],
       ['Representante legal', campo(repr ? String(e.presidencia_nombre).trim() + ' · Presidente/a' : '', 'NOMBRE Y APELLIDOS · CARGO')],
       ['Delegado/a de Protección de la entidad', campo(e.delegado_nombre, 'NOMBRE Y APELLIDOS')],
       ['Teléfono y correo del Delegado/a', campo(contacto, 'TELÉFONO · CORREO')]]) +
     '<p>La persona abajo firmante, en representación de la entidad, <b>DECLARA BAJO SU RESPONSABILIDAD</b> que la entidad cumple lo siguiente y dispone de la documentación que lo acredita:</p>' +
-    COORD_DECLARA.map(t => `<p style="margin:3px 0 3px 10px">☐&nbsp; ${esc(t)}</p>`).join('') +
+    COORD_DECLARA.map(t => `<p style="margin:0 0 1px 10px;line-height:1.25;font-size:10pt">☐&nbsp; ${esc(t)}</p>`).join('') +
     pj('Se acompaña: designación del Delegado/a de Protección y su certificado de formación, flujograma de actuación ante incidentes y relación nominal del personal en contacto con menores con la fecha de su certificado negativo.') +
     pj('La entidad se compromete a mantener estos requisitos durante toda la temporada, a comunicar cualquier cambio en 15 días y a poner la documentación a disposición del Ayuntamiento cuando se le solicite.') +
     pj('La entidad conoce que la comprobación municipal es formal y documental, y que la veracidad de lo declarado y el cumplimiento de estas obligaciones son responsabilidad exclusiva de la entidad.') +
-    `<p>En ${campo(e.municipio || cfg.municipio, 'MUNICIPIO')}, a ____ de ______________ de ______</p>` +
-    '<div class="firma"><div>Firma del representante legal' + (repr ? '<br>' + repr : '') + '</div><div>Sello de la entidad</div></div>';
+    `<div style="page-break-inside:avoid;break-inside:avoid"><p>En ${campo(e.municipio || cfg.municipio, 'MUNICIPIO')}, a ____ de ______________ de ______</p>` +
+    '<style>.pie{margin-top:8px}</style><div class="firma" style="margin-top:14px"><div>Firma del representante legal' + (repr ? '<br>' + repr : '') + '</div><div>Sello de la entidad</div></div></div>';
 }
 
 function coordFicha(e, temp, cfg, h) {
