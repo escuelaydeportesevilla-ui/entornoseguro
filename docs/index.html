@@ -4521,7 +4521,37 @@ const TUT_PASOS = [
   { id: 'enc', t: 'Primera encuesta a menores', d: 'Crea una encuesta anónima, comparte el enlace o el cartel QR y revisa los resultados a partir de 5 respuestas.', ir: [['Ir a Encuestas', 'v:encuestas']] },
   { id: 'inf', t: 'Informe del club', d: 'Descarga el informe de implantación: es la foto del sistema de protección del club para la Junta y las familias.', ir: [['Ir a Informes', 'v:informes']], manual: true }
 ];
-const tutKey = () => 'es_tut_' + ((state.me && (state.me.usuario || state.me.club_id)) || 'club');
+// v73: tres tutoriales · club (MI CLUB) · entidad (usuario «Entidad» de un ayuntamiento) · municipal (gestor del ayuntamiento)
+const tutModo = () => state.club ? 'club' : (state.me && state.me.rol === 'entidad') ? 'entidad' : (state.me && ['admin', 'delegado', 'tecnico'].includes(state.me.rol) && !(typeof esMaestra === 'function' && esMaestra())) ? 'municipal' : '';
+const TUT_PASOS_ENT = [
+  { id: 'ficha', t: 'Completa la ficha de tu entidad', d: 'Identificación, actividad, gobierno, Delegado/a y canal de comunicación. Es la base de todo lo demás.', ir: [['Abrir la ficha', 'ficha']] },
+  { id: 'B2', t: 'Formación del Delegado/a (B2)', d: 'Registra en Formación el curso del Delegado/a (colectivo Delegado/a). En la Matriz, B2: Cumple, con el enlace al certificado.', ir: [['Ir a Formación', 'v:formacion'], ['Ir a la Matriz', 'm:B2']] },
+  { id: 'B1', t: 'Designación del Delegado/a (B1)', d: 'Sube a tu Drive el acuerdo de designación firmado y el justificante del Anexo II, y regístralos en B1. Abre B1 y mira «Cómo cumplir».', ir: [['Ir a la Matriz', 'm:B1']] },
+  { id: 'A1', t: 'Declaración institucional (A1)', d: 'Registra en A1 la declaración aprobada por tu órgano de gobierno, con su enlace.', ir: [['Ir a la Matriz', 'm:A1']] },
+  { id: 'A2', t: 'Aceptación del Protocolo Marco (A2)', d: 'Anexo I oficial presentado en el Registro Electrónico de la Junta. La evidencia es el justificante.', ir: [['Ir a la Matriz', 'm:A2']] },
+  { id: 'G1', t: 'Protocolo de protección (G1)', d: 'Registra en G1 el protocolo aprobado de tu entidad, con su enlace.', ir: [['Ir a la Matriz', 'm:G1']] },
+  { id: 'D1', t: 'Código de conducta (D1)', d: 'Registra en D1 el código aprobado. Cada agente firmará su aceptación (D2).', ir: [['Ir a la Matriz', 'm:D1']] },
+  { id: 'I1', t: 'Canal de comunicación (I1)', d: 'Registra en I1 el cartel o la información del canal publicado en tu instalación.', ir: [['Ir a la Matriz', 'm:I1']] },
+  { id: 'K', t: 'Agentes deportivos (K1 · K2)', d: 'Da de alta a entrenadores, monitores y voluntariado con la fecha de su certificado negativo, y marca K1 y K2.', ir: [['Ir a Agentes', 'v:agentes'], ['Ir a la Matriz', 'm:K1']] },
+  { id: 'C', t: 'Análisis de riesgos (C1 · C2)', d: 'Registra los riesgos de tus actividades con su medida, responsable y estado, y regístralo en C1 y C2.', ir: [['Ir a Riesgos', 'v:riesgos'], ['Ir a la Matriz', 'm:C1']] },
+  { id: 'E', t: 'Imágenes y desplazamientos (E · F)', d: 'Anota en Autorizaciones las recibidas por grupo. Si no viajáis, marca F1 y F2 como No aplica.', ir: [['Ir a Autorizaciones', 'v:autorizaciones'], ['Ir a la Matriz', 'm:E1']] },
+  { id: 'enc', t: 'Primera encuesta a menores', d: 'Crea una encuesta anónima y comparte el enlace o el cartel QR.', ir: [['Ir a Encuestas', 'v:encuestas']] },
+  { id: 'inf', t: 'Informe de tu entidad', d: 'Descarga el informe de implantación: es lo que presentarás al ayuntamiento.', ir: [['Ir a Informes', 'v:informes']], manual: true }
+];
+const TUT_PASOS_MUN = [
+  { id: 'dir', t: 'Directorio de recursos del municipio', d: 'Servicios Sociales, Policía Local, Fiscalía de Menores, centro de salud y Delegado/a municipal. Se usan en protocolos, carteles y fichas de emergencia de todas las entidades.', ir: [['Abrir el directorio', 'dir']] },
+  { id: 'propia', t: 'Ficha de las Actividades municipales', d: 'La entidad propia del ayuntamiento (escuelas, campus, actividades con menores): identificación, Delegado/a municipal y canal de comunicación.', ir: [['Abrir la ficha', 'ficha:propia']] },
+  { id: 'pdocs', t: 'Documentos de las actividades municipales (G1 · D1 · I1)', d: 'Protocolo, código de conducta y cartel del canal de las actividades municipales: genéralos en Plantillas y regístralos en su Matriz.', ir: [['Ir a Plantillas', 'p:protocolo'], ['Ir a su Matriz', 'm:G1']] },
+  { id: 'pag', t: 'Monitores y personal municipal (K1 · K2)', d: 'Da de alta en Agentes deportivos a monitores, técnicos y personal de las actividades municipales con su certificado negativo.', ir: [['Ir a Agentes', 'v:agentes'], ['Ir a su Matriz', 'm:K1']] },
+  { id: 'prie', t: 'Riesgos de las actividades municipales (C1 · C2)', d: 'Analiza los riesgos de las escuelas y actividades municipales y registra sus medidas.', ir: [['Ir a Riesgos', 'v:riesgos']] },
+  { id: 'ents', t: 'Entidades del municipio', d: 'Da de alta los clubes y asociaciones que trabajan con menores. Si alguno ya usa la app con su propio espacio, no lo dupliques: está en Mis clubes.', ir: [['Ir a Entidades', 'v:entidades']] },
+  { id: 'usu', t: 'Usuarios del equipo y de las entidades', d: 'Crea los accesos del equipo (Delegado/a, técnicos, solo lectura) y, si quieres, un usuario «Entidad» para cada club registrado.', ir: [['Ir a Usuarios', 'v:usuarios']], adm: true },
+  { id: 'coord', t: 'Coordinación con las entidades', d: 'En Entidades → Coordinación, genera la declaración responsable de la temporada, envíala y registra en su Matriz lo que cada entidad acredite.', ir: [['Ir a Entidades', 'v:entidades']] },
+  { id: 'clubes', t: 'Clubes con espacio propio', d: 'Si tu contrato incluye clubes con MI CLUB, da de alta el primero y entrégale sus claves. Si no, salta este paso.', ir: [['Ir a Mis clubes', 'v:clubes']], adm: true },
+  { id: 'infm', t: 'Informe municipal', d: 'Descarga el informe municipal: la situación de todas las entidades del municipio en un documento.', ir: [['Ir a Informes', 'v:informes']], manual: true }
+];
+const tutLista = () => ({ club: TUT_PASOS, entidad: TUT_PASOS_ENT, municipal: TUT_PASOS_MUN })[tutModo()] || TUT_PASOS;
+const tutKey = () => 'es_tut_' + (tutModo() === 'municipal' ? 'mun_' : '') + ((state.me && (state.me.usuario || state.me.club_id)) || 'club');
 const tutLeer = () => { try { return JSON.parse(localStorage.getItem(tutKey()) || '{}'); } catch (e) { return {}; } };
 const tutGuardar = o => { try { localStorage.setItem(tutKey(), JSON.stringify(o)); } catch (e) {} };
 state.tut = state.tut || { hechos: {} };
@@ -4540,7 +4570,8 @@ function tutEvaluarMatrizBase(rows) {
   h.K = h.K || (ok('K1') && ok('K2')); h.C = h.C || ok('C1'); h.E = h.E || (ok('E1') && (ok('F1') || est.F1 === 'no_aplica'));
 }
 async function tutEvaluar() {
-  if (!state.club) return;
+  if (tutModo() === 'municipal') return tutEvaluarMun();
+  if (!tutModo()) return;
   const ok = p => p.then(x => x, () => null);
   const ents = state.entidades.length ? state.entidades : (await ok(API.call('listarEntidades'))) || [];
   const e = ents[0] || {};
@@ -4559,11 +4590,37 @@ async function tutEvaluar() {
   h.inf = !!tutLeer().inf;
   if (tutCuenta() > antes) state.tut.ver = null;
 }
-const tutVisibles = () => TUT_PASOS.filter(p => !p.ir.some(([, d]) => d.indexOf('v:') === 0 && !hayVista(d.slice(2))) || p.id === 'inf');
+async function tutEvaluarMun() {
+  const ok = p => p.then(x => x, () => null);
+  const ents = (await ok(API.call('listarEntidades'))) || [];
+  if (ents.length) state.entidades = ents;
+  const pr = ents.find(x => x.propia === 'SI') || {};
+  const [dir, mat, ag, rie, dash, usu, clu] = await Promise.all([ok(API.call('directorio')), pr.id ? ok(API.call('matriz', { entidad_id: pr.id })) : null,
+    pr.id ? ok(API.call('listarAgentes', { entidad_id: pr.id })) : null, pr.id ? ok(API.call('listarRiesgos', { entidad_id: pr.id })) : null, ok(API.call('dashboard')),
+    can('admin') ? ok(API.call('listarUsuarios')) : null, can('admin') && hayVista('clubes') ? ok(API.call('listarClubes')) : null]);
+  if (dir) state.dir = dir;
+  const antes = tutCuenta(), h = state.tut.hechos = {}, lleno = k => String(pr[k] ?? '').trim();
+  const est = {}; (mat || []).forEach(r => { est[r.codigo] = r.estado; }); const okc = c => TUT_OK.includes(est[c]);
+  h.dir = !!(dir && dir.servicios_sociales && dir.policia_local);
+  h.propia = !!pr.id && ['nombre', 'municipio', 'delegado_nombre', 'delegado_telefono'].every(lleno) && ['canal_email', 'canal_telefono', 'canal_buzon'].some(lleno);
+  h.pdocs = okc('G1') && okc('D1') && okc('I1');
+  h.pag = !!(ag && ag.filter(a => a.entidad_id === pr.id && a.activo !== 'NO').length && ag.filter(a => a.entidad_id === pr.id && a.activo !== 'NO').every(a => a.cert_fecha));
+  h.prie = !!(rie && rie.filter(r => r.entidad_id === pr.id).length);
+  h.ents = ents.some(x => x.propia !== 'SI' && x.trabaja_menores === 'SI' && x.activo !== 'NO');
+  h.usu = !!(usu && usu.filter(u => u.usuario !== 'admin' && u.activo !== 'NO').length);
+  h.coord = !!(dash && (dash.entidades || []).some(x => !x.propia && x.pct > 0));
+  h.clubes = !!(clu && clu.length) || !!tutLeer().clubes;
+  h.infm = !!tutLeer().infm;
+  if (tutCuenta() > antes) state.tut.ver = null;
+}
+const tutVisibles = () => tutLista().filter(p => (!p.adm || can('admin')) && (!p.ir.some(([, d]) => d.indexOf('v:') === 0 && !hayVista(d.slice(2))) || p.manual));
 function tutIr(dest) {
   const [tipo, val] = dest.includes(':') ? dest.split(':') : [dest, ''];
-  if (tipo === 'ficha') { const e = state.entidades[0]; if (e) formEntidad(e, () => { state.entidades = []; tutRefrescar(true); }); return; }
-  if (tipo === 'v') return show(val);
+  const propia = () => (state.entidades || []).find(x => x.propia === 'SI');
+  const fijar = (sel, cargar) => { const pr = propia(); if (!pr || tutModo() !== 'municipal') return; let n = 0; const t = setInterval(() => { const s = $(sel); if ((s && s.querySelector('option[value="' + pr.id + '"]')) || ++n > 25) { clearInterval(t); if (s && s.value !== pr.id && s.querySelector('option[value="' + pr.id + '"]')) { s.value = pr.id; cargar(); } } }, 150); };
+  if (tipo === 'ficha') { const e = val === 'propia' ? propia() : state.entidades[0]; if (e) formEntidad(e, () => { state.entidades = []; tutRefrescar(true); }); else toast('Abre Entidades para ver la ficha', true); return; }
+  if (tipo === 'dir') { if (!can('ia')) return; show('plantillas'); let n = 0; const t = setInterval(() => { const c = $('#dir-card'); if (c || ++n > 30) { clearInterval(t); if (c) { c.open = true; c.scrollIntoView({ behavior: 'smooth', block: 'start' }); } } }, 200); return; }
+  if (tipo === 'v') { show(val); if (val === 'agentes') fijar('#agentes-entidad', () => loadAgentes()); if (val === 'riesgos') fijar('#riesgos-entidad', () => loadRiesgos()); return; }
   if (tipo === 'p') {
     if (!can('ia')) return show('matriz');
     irPlantilla(val);
@@ -4576,7 +4633,7 @@ function tutIr(dest) {
   if (tipo === 'm') {
     state.filtroMatriz = ''; state.tutResaltar = val;
     const rc = $('#revision-ia'); if (rc) rc.innerHTML = '';
-    show('matriz');
+    show('matriz'); fijar('#matriz-entidad', () => loadMatriz());
   }
 }
 function tutPintar() {
@@ -4601,7 +4658,7 @@ function tutPintar() {
   }
   let barra = $('#tut-barra');
   const cfg = tutLeer();
-  if (!state.club || cfg.estado !== 'activo') { if (barra) barra.remove(); if ($('#tut-pill')) $('#tut-pill').remove(); tutOferta(); return; }
+  if (!tutModo() || cfg.estado !== 'activo') { if (barra) barra.remove(); if ($('#tut-pill')) $('#tut-pill').remove(); tutOferta(); return; }
   if ($('#tut-oferta')) $('#tut-oferta').remove();
   if (!barra) { barra = document.createElement('section'); barra.id = 'tut-barra'; barra.setAttribute('aria-label', 'Tutorial guiado'); main.prepend(barra); }
   const pasos = tutVisibles(), h = state.tut.hechos, salt = cfg.saltados || [];
@@ -4652,14 +4709,15 @@ function tutPintar() {
 function tutOferta() {
   const v = $('#view-panel'); let o = $('#tut-oferta');
   const cfg = tutLeer();
-  if (!state.club || !v || cfg.estado === 'activo') { if (o) o.remove(); return; }
+  if (!tutModo() || !v || cfg.estado === 'activo') { if (o) o.remove(); return; }
+  const QUE = { club: 'el sistema de protección del club, en el orden recomendado: ficha, Delegado/a, documentos, agentes, riesgos, autorizaciones, encuesta e informe', entidad: 'el sistema de protección de tu entidad: ficha, Delegado/a, documentos, agentes, riesgos, autorizaciones, encuesta e informe para el ayuntamiento', municipal: 'la puesta en marcha del sistema municipal: directorio, actividades municipales, entidades, usuarios, coordinación, clubes e informe municipal' }[tutModo()];
   if (!o) { o = document.createElement('div'); o.id = 'tut-oferta'; o.className = 'card tut-oferta'; v.querySelector('header').after(o); }
   if (!cfg.estado) {
-    o.innerHTML = '<h3>🧭 ¿Quieres que te guíe paso a paso?</h3><p>El tutorial te lleva por todo el sistema de protección del club, en el orden recomendado: ficha, Delegado/a, documentos, agentes, riesgos, autorizaciones, encuesta e informe. Cada paso se marca solo cuando la app comprueba que está hecho. Puedes saltar pasos, pausarlo y retomarlo cuando quieras.</p>' +
+    o.innerHTML = '<h3>🧭 ¿Quieres que te guíe paso a paso?</h3><p>El tutorial te lleva por ' + QUE + '. Cada paso se marca solo cuando la app comprueba que está hecho. Puedes saltar pasos, pausarlo y retomarlo cuando quieras.</p>' +
       '<div class="tut-acc"><button class="btn" type="button" id="tut-si">Empezar el tutorial</button><button class="btn ghost" type="button" id="tut-no">Prefiero ir por mi cuenta</button></div>';
     $('#tut-no').onclick = () => { tutGuardar({ estado: 'rechazado' }); toast('De acuerdo. Si cambias de idea, tienes el tutorial en el Panel y en la Guía de uso.'); tutOferta(); };
   } else {
-    o.innerHTML = `<div class="siguiente"><span class="t">🧭 <b>Tutorial guiado</b>${cfg.estado === 'completado' ? ' · completado' : cfg.estado === 'pausado' ? ' · en pausa' : ''}<br><small>Recorre paso a paso el sistema de protección del club.</small></span><button class="btn ghost" type="button" id="tut-si">${cfg.estado === 'pausado' ? 'Retomar el tutorial' : cfg.estado === 'completado' ? 'Repasar el tutorial' : 'Empezar el tutorial'}</button></div>`;
+    o.innerHTML = `<div class="siguiente"><span class="t">🧭 <b>Tutorial guiado</b>${cfg.estado === 'completado' ? ' · completado' : cfg.estado === 'pausado' ? ' · en pausa' : ''}<br><small>Recorre paso a paso ${esc(QUE.split(':')[0].replace(/,.*$/, ''))}.</small></span><button class="btn ghost" type="button" id="tut-si">${cfg.estado === 'pausado' ? 'Retomar el tutorial' : cfg.estado === 'completado' ? 'Repasar el tutorial' : 'Empezar el tutorial'}</button></div>`;
   }
   $('#tut-si').onclick = () => tutActivar();
 }
@@ -4670,16 +4728,17 @@ async function tutActivar() {
 }
 let tutUltima = 0;
 async function tutRefrescar(forzar) {
-  if (!state.club) return;
+  if (!tutModo()) return;
   if (forzar || Date.now() - tutUltima > 60000) { tutUltima = Date.now(); try { await tutEvaluar(); } catch (e) {} }
   tutPintar();
 }
 (function () {
   const basePanel = loadPanel;
-  loadPanel = async function () { await basePanel(); if (!state.club) return; if (tutLeer().estado === 'activo') tutRefrescar(true); else tutPintar(); };
+  loadPanel = async function () { await basePanel(); if (!tutModo()) return; if (tutLeer().estado === 'activo') tutRefrescar(true); else tutPintar(); };
   const baseMatriz = loadMatriz;
-  loadMatriz = async function () { await baseMatriz(); if (state.club && state.matriz) { tutEvaluarMatriz(state.matriz); tutPintar(); } };
+  loadMatriz = async function () { await baseMatriz(); if ((state.club || tutModo() === 'entidad') && state.matriz) { tutEvaluarMatriz(state.matriz); tutPintar(); } else if (tutModo() === 'municipal' && tutLeer().estado === 'activo') tutRefrescar(); };
 })();
+GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Hay tutorial para el ayuntamiento y para las entidades?', '<p>Sí. Cada perfil tiene el suyo y lo ve en su Panel:</p><ul><li><b>Ayuntamiento</b> (administración, Delegado/a municipal, técnicos): 10 pasos para poner en marcha el sistema municipal: directorio de recursos, ficha, documentos, personal y riesgos de las <b>Actividades municipales</b>, alta de entidades, usuarios, coordinación, clubes con espacio propio e informe municipal.</li><li><b>Usuario «Entidad»</b> (un club registrado por el ayuntamiento): 13 pasos para completar su sistema de protección y su informe para el ayuntamiento.</li><li><b>MI CLUB</b>: el tutorial completo del club.</li></ul><p>Todos funcionan igual: cada paso se marca solo al comprobarse, se pueden saltar, pausar y retomar.</p>', '', 'panel']); });
 GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Cómo funciona el tutorial guiado?', '<p>En el <b>Panel</b> del club aparece <b>«¿Quieres que te guíe paso a paso?»</b>. Con <b>Empezar el tutorial</b> se fija arriba una barra con el paso en el que estás, su explicación y botones que te llevan a la pantalla exacta (ficha, plantilla, Matriz…).</p><ul><li>Cada paso <b>se marca solo</b> cuando la app comprueba que está hecho; pulsa <b>↻ Comprobar</b> si acabas de guardar algo.</li><li><b>Saltar este paso</b> lo deja para después; <b>Pausar</b> oculta la barra.</li><li>Para retomarlo: <b>Panel → Retomar el tutorial</b>.</li><li>Los pasos hechos salen de los datos del club; los saltados y la pausa se recuerdan en este navegador.</li></ul>', 'club', 'panel']); });
 
 // v27: RIESGOS · prompt con los datos de la ficha y paso directo de la propuesta a la tabla de riesgos
@@ -6109,6 +6168,42 @@ function meParsearTemas(txt) {
     };
   };
 })();
+
+// v72: ENTIDADES · botones visibles para desactivar/reactivar y eliminar (como en Mis clubes)
+function entAcciones() {
+  if (state.club || !can('escribir')) return;
+  $$('#tabla-entidades tbody tr').forEach(tr => {
+    const b = tr.querySelector('[data-edit]'); if (!b || tr.querySelector('[data-ent-est]')) return;
+    const e = (state.entidades || []).find(x => x.id === b.dataset.edit); if (!e || e.propia === 'SI') return;
+    const inact = e.activo === 'NO';
+    b.insertAdjacentHTML('afterend', ` · <button type="button" class="link" data-ent-est="${esc(e.id)}">${inact ? 'Reactivar' : 'Desactivar'}</button>` +
+      (can('admin') ? ` · <button type="button" class="link" style="color:var(--bad)" data-ent-del="${esc(e.id)}">Eliminar</button>` : ''));
+  });
+  $$('[data-ent-est]').forEach(x => x.onclick = async () => {
+    const e = state.entidades.find(y => y.id === x.dataset.entEst); if (!e) return;
+    const off = e.activo !== 'NO';
+    if (off && !confirm(`¿Desactivar «${e.nombre}»?\n\nDeja de contar en el Panel, las alertas y los informes. Sus datos se conservan y puedes reactivarla cuando quieras.`)) return;
+    try { await run(() => API.call('estadoEntidad', { id: e.id, activo: off ? 'NO' : 'SI' })); } catch (er) { if (/desconocida/i.test(er.message)) toast('Actualiza Ampliacion.gs a la v1.25', true); return; }
+    toast(off ? 'Entidad desactivada' : 'Entidad reactivada'); state.entidades = []; loadEntidades();
+  });
+  $$('[data-ent-del]').forEach(x => x.onclick = () => {
+    const e = state.entidades.find(y => y.id === x.dataset.entDel); if (!e) return;
+    modal(`Eliminar «${e.nombre}»`, [['confirmar', 'Escribe el nombre de la entidad para confirmar', 'text', true]], {}, async d => {
+      let r; try { r = await run(() => API.call('eliminarEntidad', { id: e.id, confirmar: d.confirmar })); } catch (er) { if (/desconocida/i.test(er.message)) toast('Actualiza Ampliacion.gs a la v1.25', true); return; }
+      const n = Object.entries(r.borrados || {}).filter(([k, v]) => v && k !== 'usuarios_desactivados').reduce((s2, [, v]) => s2 + v, 0);
+      toast(`«${r.nombre}» eliminada${n ? ' con ' + n + ' registro(s)' : ''}${r.borrados && r.borrados.usuarios_desactivados ? ' · ' + r.borrados.usuarios_desactivados + ' usuario(s) desactivado(s)' : ''}`);
+      state.entidades = []; loadEntidades();
+    });
+    $('#modal-form h3').insertAdjacentHTML('afterend', `<p class="aviso-inc" style="margin:0 0 10px"><b>Es definitivo.</b> Se borran la entidad y todos sus registros: Matriz, evidencias, riesgos, agentes, formación, autorizaciones, encuestas y sus respuestas, alertas, campañas y agenda. Sus usuarios «Entidad» quedan desactivados.</p>
+      <p class="nota" style="margin:0 0 10px">Si solo deja de trabajar con menores o de colaborar, mejor <b>Desactivar</b>: conserva el historial. Las entidades con incidencias registradas no se pueden eliminar.</p>`);
+    const okb = $('#modal-form .actions button[value="ok"]'); if (okb) { okb.textContent = 'Eliminar definitivamente'; okb.style.background = 'var(--bad)'; }
+  });
+}
+(function () {
+  const base = loadEntidades;
+  loadEntidades = async function () { await base.apply(this, arguments); try { entAcciones(); } catch (e) {} };
+})();
+GUIA.forEach(t => { if (t[1] === 'Entidades y coordinación con clubes') t[2].push(['¿Cómo doy de baja o elimino una entidad?', '<ul><li><b>Desactivar</b> (en su fila): deja de contar en el Panel, las alertas y los informes, pasa al final de la lista en gris y conserva todo su historial. Se puede <b>Reactivar</b> en cualquier momento. Es lo recomendable cuando una entidad deja de colaborar o de trabajar con menores.</li><li><b>Eliminar</b> (solo administración): borra la entidad y todos sus registros. Hay que escribir su nombre para confirmar. No es posible si tiene incidencias registradas: en ese caso, desactívala.</li><li>Las <b>Actividades municipales</b> propias no se pueden desactivar ni eliminar.</li></ul>', '', 'entidades']); });
 
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
