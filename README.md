@@ -1,134 +1,6212 @@
-# EntornoSeguro
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="author" content="Escuela&amp;Deporte (by M.A. Ballesteros)">
+  <meta name="copyright" content="© 2026 Escuela&amp;Deporte (by M.A. Ballesteros). Todos los derechos reservados.">
+  <!-- EntornoSeguro · © 2026 Escuela&Deporte (by M.A. Ballesteros). Todos los derechos reservados. -->
+  <title>EntornoSeguro · Protección de Menores en el Deporte</title>
+  <link rel="icon" type="image/png" sizes="192x192" href="https://entornoseguro.escuelaydeporte.com/img/icon-192.png">
+  <link rel="apple-touch-icon" href="https://entornoseguro.escuelaydeporte.com/img/icon-192.png">
+  <link rel="manifest" href="https://entornoseguro.escuelaydeporte.com/img/manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="EntornoSeguro">
+  <meta name="theme-color" content="#0b3057">
+  <meta charset="UTF-8">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+:root {
+  --bg: #f4f6f7; --panel: #ffffff; --ink: #1d2a30; --muted: #4f5d65; --line: #cfd8dc;
+  --brand: #0b3057; --brand-2: #0d818f; --accent: #2fa37f; --navy: #00183f;
+  --grad: linear-gradient(90deg, #12406e 0%, #0d818f 55%, #38af88 100%); --ok: #2e7d4f; --warn: #b7791f; --bad: #b83232;
+  --radius: 10px; --shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #11181c; --panel: #1a2328; --ink: #e6ecef; --muted: #b3c1c8; --line: #3a4a52;
+          --brand: #5b9bd5; --brand-2: #3fb8b0; --accent: #4fc79c; --ok: #5cc28a; --warn: #e0a84a; --bad: #e46a6a; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; font: 0.875rem/1.5 Inter, system-ui, sans-serif; background: var(--bg); color: var(--ink); }
+.hidden { display: none !important; }
+.l-short { display: none; }
+body.busy { cursor: progress; }
+body.busy main { opacity: .7; pointer-events: none; }
+body.busy::after { content: 'Cargando…'; position: fixed; left: 50%; top: 45%; transform: translate(-50%, -50%); z-index: 50;
+  background: var(--brand); color: #fff; padding: 12px 22px; border-radius: 24px; font-weight: 700; box-shadow: 0 6px 20px rgba(0,0,0,.2); }
+body.busy::before { content: ''; position: fixed; top: 0; left: 0; height: 4px; width: 40%; z-index: 51; background: var(--grad); animation: cargando 1.1s ease-in-out infinite; }
+@keyframes cargando { 0% { left: -40%; } 100% { left: 100%; } }
+@media (prefers-reduced-motion: reduce) { body.busy::before { animation: none; width: 100%; } }
 
-Sistema municipal de protección de menores en el deporte. Apoyo al Delegado/a de Protección para la implantación y seguimiento de la LOPIVI y del Protocolo Marco andaluz (Orden 18/11/2024).
+/* Login */
+.login { min-height: 100vh; display: grid; place-items: center; padding: 16px; background: linear-gradient(135deg, #0b3057, #0d818f 60%, #38af88); }
+.login-card { background: var(--panel); padding: 40px 32px; border-radius: 16px; max-width: 380px; width: 100%; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,.2); }
+.login-card h1 { margin: 12px 0 4px; color: var(--brand); letter-spacing: .04em; }
+.logo { width: 150px; height: 150px; border-radius: 22%; object-fit: cover; image-rendering: auto; box-shadow: 0 4px 14px rgba(11,48,87,.18); background: #fff; }
+.logo.sm { width: 44px; height: 44px; border-radius: 22%; box-shadow: none; border: 1px solid var(--line); }
+.sidebar::before { content: ''; display: block; height: 3px; background: var(--grad); margin: -16px -16px 16px; }
+.login-card p { color: var(--muted); margin: 0 0 24px; }
+.login-card #gsi-btn { display: flex; justify-content: center; }
+.login-card small { display: block; margin-top: 24px; color: var(--muted); font-size: 0.75rem; }
+.copy { display: block; color: var(--muted); font-size: .72rem; margin-top: 8px; letter-spacing: .01em; }
+.login-card .copy { margin-top: 10px; }
+.enc-card .copy { text-align: center; margin-top: 14px; }
+.brand-mark { width: 56px; height: 56px; border-radius: 14px; background: var(--brand); color: #fff; display: inline-grid; place-items: center; font-weight: 700; font-size: 1.25rem; }
+.brand-mark.sm { width: 36px; height: 36px; font-size: 0.875rem; border-radius: 9px; }
+.error { color: var(--bad) !important; min-height: 1.5em; margin-top: 12px !important; }
 
-- **Web:** https://entornoseguro.escuelaydeporte.com
-- **Frontend:** GitHub Pages (`/docs`)
-- **Backend:** Google Apps Script Web App (`/apps-script`)
-- **Datos:** Google Sheets (Workspace escuelaydeporte.com)
+/* Layout */
+.app { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+.sidebar { background: var(--panel); border-right: 1px solid var(--line); display: flex; flex-direction: column; padding: 16px; position: sticky; top: 0; height: 100vh; }
+.brand { display: flex; gap: 10px; align-items: center; margin-bottom: 24px; }
+.brand small { display: block; color: var(--muted); font-size: 0.6875rem; line-height: 1.3; }
+nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+nav button { text-align: left; background: none; border: 0; padding: 9px 12px; border-radius: 8px; font: inherit; color: var(--ink); cursor: pointer; display: flex; justify-content: space-between; }
+nav button:hover { background: var(--bg); }
+nav button.active { background: var(--grad); color: #fff; }
+.badge:not(:empty) { background: var(--bad); color: #fff; border-radius: 10px; padding: 0 7px; font-size: 0.6875rem; }
+.user { border-top: 1px solid var(--line); padding-top: 12px; display: flex; flex-direction: column; }
+.user small { color: var(--muted); text-transform: capitalize; }
+main { padding: 24px 32px; min-width: 0; }
+main header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+main h2 { margin: 0; font-size: 1.375rem; color: var(--brand); }
+h3 { margin: 0 0 12px; font-size: 0.9375rem; }
+.nota { color: var(--muted); font-size: 0.8125rem; margin: -8px 0 16px; }
 
-> Repositorio público. Nunca subir datos personales, claves API ni `.clasprc.json`.
+/* Components */
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); overflow-x: auto; margin-bottom: 16px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.kpi { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
+.kpi span { color: var(--muted); font-size: 0.75rem; display: block; }
+.kpi { border-top: 3px solid var(--brand-2); }
+.kpi strong { font-size: 1.625rem; font-weight: 700; color: var(--brand); }
+.btn { background: var(--brand); color: #fff; border: 0; border-radius: 8px; padding: 9px 16px; font: inherit; font-weight: 600; cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--brand); border: 1px solid var(--brand); }
+.link { background: none; border: 0; color: var(--brand-2); cursor: pointer; font: inherit; padding: 0; text-align: left; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: 0.75rem; color: var(--muted); font-weight: 600; padding: 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+td small { color: var(--muted); }
+tr.group td { background: var(--bg); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: .03em; color: var(--brand); }
+.st { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+.st.ok { background: color-mix(in srgb, var(--ok) 15%, transparent); color: var(--ok); }
+.st.warn { background: color-mix(in srgb, var(--warn) 15%, transparent); color: var(--warn); }
+.st.bad { background: color-mix(in srgb, var(--bad) 15%, transparent); color: var(--bad); }
+.st.muted { background: var(--bg); color: var(--muted); }
+.bad-t { color: var(--bad); font-weight: 600; }
+.empty { color: var(--muted); font-style: italic; }
+.bar-row { display: grid; grid-template-columns: 1fr 120px 44px; gap: 10px; align-items: center; padding: 6px 0; cursor: pointer; }
+.bar { height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+.bar i { display: block; height: 100%; }
+.bar i.ok { background: var(--ok); } .bar i.warn { background: var(--warn); } .bar i.bad { background: var(--bad); }
+.alerts { list-style: none; margin: 0; padding: 0; }
+.alerts li { display: flex; justify-content: space-between; gap: 8px; padding: 8px 0 8px 10px; border-left: 3px solid var(--muted); margin-bottom: 6px; }
+.alerts li.p-alta { border-color: var(--bad); } .alerts li.p-media { border-color: var(--warn); }
+.alerts small { color: var(--muted); white-space: nowrap; }
 
-## Fase 1 (MVP) — incluido
+/* Forms */
+.form label { display: flex; flex-direction: column; gap: 4px; font-size: 0.75rem; font-weight: 600; color: var(--muted); margin-bottom: 12px; }
+input, select, textarea { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); width: 100%; }
+select#matriz-entidad { width: auto; min-width: 260px; }
+.out { white-space: pre-wrap; font: inherit; margin: 0; min-height: 120px; }
+.out-head { display: flex; justify-content: space-between; }
+dialog { border: 0; border-radius: 14px; padding: 24px; max-width: 640px; width: calc(100% - 32px); background: var(--panel); color: var(--ink); }
+dialog::backdrop { background: rgba(0,0,0,.45); }
+.fields { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+.fields .full { grid-column: 1 / -1; }
+.actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
+.toast { position: fixed; bottom: 20px; right: 20px; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 8px; opacity: 0; transition: .3s; pointer-events: none; max-width: 360px; }
+.toast.show { opacity: 1; } .toast.bad { background: var(--bad); color: #fff; }
 
-| Módulo | Función |
-|---|---|
-| Panel | KPIs, % de implantación por entidad, alertas prioritarias |
-| Entidades | Alta, delegado/a, aceptación Protocolo Marco |
-| Matriz | 21 requisitos A–K, estado, evidencias (enlace Drive), revisiones |
-| Formación | Registro por persona y colectivo, caducidades |
-| Alertas | Cálculo diario 07:00 + email resumen |
-| Contenidos RRSS | Carruseles, stories, reels, mensajes (Claude API) |
-| Asistente IA | Consultas normativas, sin datos identificativos |
+html, body { max-width: 100%; overflow-x: hidden; }
+dialog { max-height: calc(100dvh - 32px); overflow-y: auto; }
+@media (max-width: 860px) {
+  .app { grid-template-columns: minmax(0, 1fr); align-content: start; }
+  .sidebar { position: static; height: auto; padding: 10px 12px 0; border-right: 0; border-bottom: 1px solid var(--line); }
+  .sidebar::before { margin: -10px -12px 10px; }
+  .brand { margin-bottom: 8px; }
+  .brand .logo.sm { width: 40px; height: 40px; }
+  nav { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; flex: 0 0 auto; padding-bottom: 10px; }
+  nav button { justify-content: center; align-items: center; gap: 6px; min-height: 46px; padding: 8px; background: var(--bg); border: 1px solid var(--line); font-weight: 600; text-align: center; white-space: normal; }
+  nav button.active { border-color: transparent; }
+  .nav-grupo { grid-column: 1 / -1; margin: 10px 0 0; font-size: .8rem; }
+  .nav-grupo:first-child { margin-top: 0; }
+  .l-long { display: none; } .l-short { display: inline; }
+  .user { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 8px 0; font-size: 0.8125rem; }
+  .user small { margin-right: auto; }
+  main { padding: 16px 12px; }
+  main header { gap: 8px; }
+  main header h2 { font-size: 1.1875rem; flex: 1 1 100%; }
+  main header .btn, main header select { width: 100%; }
+  select#matriz-entidad { min-width: 0; width: 100%; }
+  .grid2, .fields { grid-template-columns: 1fr; }
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .kpi { padding: 10px 12px; }
+  .kpi strong { font-size: 1.375rem; }
+  .card { padding: 12px; overflow-x: visible; }
+  .card:has(> table) { background: none; border: 0; padding: 0; box-shadow: none; }
+  .bar-row { grid-template-columns: minmax(0, 1fr) 70px 40px; }
+  .bar-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .alerts li { flex-wrap: wrap; }
 
-**Fuera de fase 1:** registro de incidencias con datos de menores (requiere EIPD, encargo de tratamiento y visto bueno del DPD).
+  /* Tablas → fichas apiladas */
+  table, tbody, tr, td { display: block; width: 100%; }
+  thead { display: none; }
+  tr { border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; margin-bottom: 10px; background: var(--panel); }
+  td { border: 0; padding: 4px 0; display: flex; gap: 12px; text-align: left; overflow-wrap: anywhere; }
+  td::before { content: attr(data-label); font-size: 0.75rem; font-weight: 600; color: var(--muted); text-align: left; flex: 0 0 35%; padding-top: 2px; }
+  td:first-child { display: block; text-align: left; font-size: 0.9375rem; padding-bottom: 6px; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
+  td:first-child::before, td:not([data-label])::before, td[data-label=""]::before { display: none; }
+  td[data-label=""] { justify-content: flex-end; }
+  tr.group { border: 0; background: none; padding: 12px 0 4px; margin: 0; }
+  tr.group td { display: block; background: none; text-align: left; border: 0; padding: 0; }
+  td.empty { display: block; text-align: center; }
 
-## Roles (`Usuarios_Roles`)
+  dialog { padding: 18px 16px; width: calc(100% - 16px); }
+  .toast { left: 12px; right: 12px; bottom: 12px; max-width: none; }
+}
 
-| Rol | Permisos |
-|---|---|
-| `admin` | Todo |
-| `delegado` | Lectura, escritura, IA |
-| `tecnico` | Lectura, escritura |
-| `entidad` | Solo su entidad (`entidad_id`) |
-| `lectura` | Solo lectura |
 
----
+.login-card form { text-align: left; }
+.login-card .btn { width: 100%; margin-top: 4px; }
+.temp { font: 600 1.25rem/1.4 ui-monospace, monospace; background: var(--bg); padding: 10px; border-radius: 8px; text-align: center; letter-spacing: .08em; user-select: all; }
 
-## Despliegue paso a paso
+  
+.ia-acciones { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.ia-acciones .btn { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+.out.prompt { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 12px; max-height: 320px; overflow: auto; font-size: .85rem; min-height: 0; }
+@media (max-width: 860px) { .ia-acciones .btn, .form > .btn { flex: 1 1 100%; width: 100%; } }
+.buscador { display: grid; grid-template-columns: 2fr 1fr; gap: 0 12px; }
+.doc-item { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; cursor: pointer; }
+.doc-item:hover { border-color: var(--brand-2); }
+.doc-item h3 { margin: 0 0 4px; color: var(--brand); }
+.doc-item .meta { font-size: .8rem; color: var(--muted); margin-bottom: 6px; }
+.doc-item p { margin: 0; color: var(--ink); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.chip { display: inline-block; padding: 1px 8px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); font-size: .75rem; font-weight: 600; margin-right: 6px; }
+.doc-texto { min-height: 320px; line-height: 1.6; }
+.btn.peligro { color: var(--bad); border-color: var(--bad); }
+.doc-prompt summary { cursor: pointer; color: var(--muted); font-weight: 600; margin: 8px 0; }
+.guardar-res { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 12px; }
+mark { background: #fde68a; color: inherit; padding: 0 1px; border-radius: 2px; }
+@media (max-width: 860px) { .buscador { grid-template-columns: 1fr; } .ia-acciones .btn { flex: 1 1 calc(50% - 8px); } .ia-acciones .btn[type=submit] { flex-basis: 100%; } }
+.nivel { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: .8rem; font-weight: 700; }
+.nivel.alto { background: color-mix(in srgb, var(--bad) 15%, transparent); color: var(--bad); }
+.nivel.medio { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn); }
+.nivel.bajo { background: color-mix(in srgb, var(--ok) 15%, transparent); color: var(--ok); }
+.sugerencias { background: var(--bg); border: 1px dashed var(--brand-2); border-radius: 8px; padding: 10px; margin-bottom: 12px; grid-column: 1 / -1; }
+.sugerencias button { display: block; width: 100%; text-align: left; margin: 4px 0; padding: 8px 10px; border: 1px solid var(--line); background: var(--panel); border-radius: 8px; font: inherit; color: var(--ink); cursor: pointer; }
+.sugerencias button:hover { border-color: var(--brand-2); }
+.md { line-height: 1.6; overflow-wrap: anywhere; }
+.md h2, .md h3, .md h4, .md h5 { color: var(--brand); margin: 16px 0 6px; line-height: 1.3; }
+.md h2 { font-size: 1.25rem; } .md h3 { font-size: 1.1rem; } .md h4, .md h5 { font-size: 1rem; color: var(--brand-2); }
+.md p { margin: 0 0 10px; } .md ul, .md ol { margin: 4px 0 12px; padding-left: 22px; } .md li { margin: 3px 0; }
+.md blockquote { border-left: 3px solid var(--brand-2); margin: 8px 0; padding: 2px 12px; color: var(--muted); }
+.md hr { border: 0; border-top: 1px solid var(--line); margin: 16px 0; }
+.md code { background: var(--bg); padding: 1px 5px; border-radius: 4px; font-size: .9em; }
+.md table.md-tabla { display: table; width: 100%; border-collapse: collapse; margin: 10px 0 14px; font-size: .9rem; }
+.md table.md-tabla thead { display: table-header-group; } .md table.md-tabla tbody { display: table-row-group; }
+.md table.md-tabla tr { display: table-row; border: 0; padding: 0; margin: 0; background: none; }
+.md table.md-tabla th, .md table.md-tabla td { display: table-cell; border: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; font-size: inherit; }
+.md table.md-tabla th { background: var(--brand); color: #fff; }
+.md table.md-tabla td::before { display: none; }
+.md table.md-tabla td:first-child { font-size: inherit; border-bottom: 1px solid var(--line); margin: 0; padding: 6px 8px; }
+.md-scroll { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.md table.md-tabla th, .md table.md-tabla td { overflow-wrap: normal; word-break: normal; min-width: 7em; }
+.doc-vista { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; overflow-x: auto; }
+.vista-previa { border: 1px dashed var(--line); border-radius: 8px; padding: 12px; margin: 0 0 12px; overflow-x: auto; }
+.vp-tit { display: block; color: var(--muted); font-size: .85rem; margin-bottom: 6px; }
+.modo { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
+.modo-b { border: 0; background: var(--bg); padding: 8px 18px; font: inherit; font-weight: 600; cursor: pointer; color: var(--ink); min-height: 40px; }
+.modo-b.activo { background: var(--brand); color: #fff; }
+.form label.check { flex-direction: row; align-items: center; gap: 10px; font-size: .95rem; color: var(--ink); }
+.form label.check input { width: 22px; height: 22px; min-height: 0; }
+.menu-toggle { display: none; }
+.plantillas { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.plantilla { text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; cursor: pointer; font: inherit; color: var(--ink); }
+.plantilla:hover, .plantilla.activa { border-color: var(--brand-2); box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-2) 25%, transparent); }
+.plantilla b { display: block; color: var(--brand); margin-bottom: 4px; }
+.plantilla small { color: var(--muted); }
+.progreso { height: 10px; background: var(--bg); border-radius: 5px; overflow: hidden; min-width: 80px; }
+.progreso i { display: block; height: 100%; }
+@media (max-width: 860px) {
+  .menu-toggle { display: flex; justify-content: space-between; align-items: center; width: 100%; min-height: 52px; padding: 10px 14px; margin-bottom: 8px;
+    background: var(--brand); color: #fff; border: 0; border-radius: 10px; font: inherit; font-weight: 700; cursor: pointer; }
+  .menu-toggle b { font-weight: 600; opacity: .9; }
+  nav#menu-principal { display: none; }
+  nav#menu-principal.abierto { display: grid; }
+  .sidebar .user { display: none; }
+  nav#menu-principal.abierto + .user { display: flex; }
+  .plantillas { grid-template-columns: 1fr; }
+}
+.perfiles { display: grid; gap: 12px; margin: 8px 0 4px; }
+.perfil { display: grid; grid-template-columns: 52px 1fr; grid-template-rows: auto auto; align-items: center; text-align: left; gap: 0 12px;
+  padding: 16px; border: 2px solid var(--line); border-radius: 14px; background: var(--panel); cursor: pointer; font: inherit; color: var(--ink); min-height: 76px; }
+.perfil:hover, .perfil:focus-visible { border-color: var(--brand-2); background: color-mix(in srgb, var(--brand-2) 6%, var(--panel)); }
+.perfil-ico { grid-row: 1 / 3; font-size: 1.9rem; width: 52px; height: 52px; display: grid; place-items: center; border-radius: 12px; background: var(--bg); }
+.perfil b { color: var(--brand); font-size: 1.1rem; letter-spacing: .04em; }
+.perfil small { color: var(--muted); }
+.perfil[data-perfil="club"] .perfil-ico { background: color-mix(in srgb, var(--accent) 15%, transparent); }
+.perfil[data-perfil="admin"] .perfil-ico { background: color-mix(in srgb, var(--brand) 12%, transparent); }
+.login-titulo { margin: 0 0 12px; font-size: 1.15rem; color: var(--brand); text-align: center; }
+.volver { display: block; margin: 12px auto 0; }
+tr.inactivo td { opacity: .6; }
+.claves { width: 100%; margin: 10px 0; } .claves td { padding: 6px 4px; border: 0; } .claves td:first-child { color: var(--muted); width: 38%; }
+.acciones-club { display: grid; gap: 8px; margin: 10px 0; }
+@media (max-width: 860px) { table.claves tr { border: 0; padding: 0; margin: 0; background: none; } table.claves td, table.claves td:first-child { display: block; border: 0; padding: 2px 0; margin: 0; font-size: inherit; } table.claves td::before { display: none; } }
+.doc-legal { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.doc-legal .ia-acciones { margin: 0; }
+/* ---- Accesibilidad ---- */
+html { font-size: calc(var(--fs, 1) * 100%); -webkit-text-size-adjust: 100%; }
+body { line-height: 1.55; }
+:focus-visible { outline: 3px solid var(--brand-2); outline-offset: 2px; border-radius: 6px; }
+input, select, textarea { min-height: 44px; font-size: 1rem; }
+.btn { min-height: 44px; font-size: 1rem; }
+.link { text-decoration: underline; text-underline-offset: 3px; }
+.tamano { display: flex; gap: 6px; align-items: center; margin: 6px 0; }
+.tamano span { font-size: .8rem; color: var(--muted); margin-right: 4px; }
+.tamano button { min-width: 44px; min-height: 40px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 8px; font: inherit; font-weight: 700; cursor: pointer; }
+.tamano button[aria-pressed="true"] { background: var(--brand); color: #fff; border-color: var(--brand); }
+@media (min-width: 861px) { .sidebar nav { overflow-y: auto; min-height: 0; } }
+.nav-grupo { display: flex; align-items: center; gap: 6px; font-size: .74rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--brand); background: color-mix(in srgb, var(--brand-2) 12%, transparent); border-left: 4px solid var(--brand-2); border-radius: 0 8px 8px 0; padding: 6px 10px; margin: 14px 0 4px; }
+.nav-grupo:first-child { margin-top: 0; }
+.rec-item { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+.rec-item:hover b { color: var(--brand-2); } .rec-item small { color: var(--muted); white-space: nowrap; }
+.rev-reqs { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 4px 12px; margin: 6px 0 12px; }
+.rev-reqs label.check { font-size: .9rem; margin: 0; }
+.propuesta td select { min-width: 130px; }
+/* ---- v0.9: incidencias, encuestas, biblioteca, certificados ---- */
+.aviso-inc { background: color-mix(in srgb, var(--bad) 8%, var(--panel)); border: 1px solid color-mix(in srgb, var(--bad) 35%, transparent); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 14px; font-size: .9rem; }
+.urgente { background: color-mix(in srgb, var(--bad) 10%, var(--panel)); border: 2px solid var(--bad); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 16px; }
+.urgente h3 { color: var(--bad); margin-bottom: 6px; }
+.urgente ol { margin: 0; padding-left: 22px; } .urgente li { margin: 4px 0; }
+.fases { display: flex; gap: 4px; margin: 0 0 16px; flex-wrap: wrap; }
+.fases span { flex: 1 1 110px; text-align: center; padding: 8px 6px; border-radius: 8px; background: var(--bg); border: 1px solid var(--line); font-size: .8rem; font-weight: 600; color: var(--muted); }
+.fases span.hecha { background: color-mix(in srgb, var(--ok) 12%, var(--panel)); color: var(--ok); border-color: transparent; }
+.fases span.actual { background: var(--brand); color: #fff; border-color: transparent; }
+.guia h3 { color: var(--brand); } .guia ul { margin: 6px 0 10px; padding-left: 20px; } .guia li { margin: 4px 0; }
+.linea { list-style: none; margin: 0; padding: 0; border-left: 3px solid var(--line); }
+.linea li { position: relative; padding: 4px 0 12px 16px; }
+.linea li::before { content: ''; position: absolute; left: -8px; top: 9px; width: 13px; height: 13px; border-radius: 50%; background: var(--brand-2); border: 2px solid var(--panel); }
+.linea b { color: var(--brand); } .linea small { color: var(--muted); display: block; }
+.enc-pub { min-height: 100vh; background: linear-gradient(135deg, #0b3057, #0d818f 60%, #38af88); padding: 16px; }
+.enc-card { background: var(--panel); max-width: 620px; margin: 0 auto; border-radius: 18px; padding: 24px 20px; box-shadow: 0 20px 50px rgba(0,0,0,.2); }
+.enc-card .logo { width: 84px; height: 84px; display: block; margin: 0 auto 8px; }
+.enc-card h1 { text-align: center; color: var(--brand); font-size: 1.4rem; margin: 4px 0; }
+.enc-card .ent { text-align: center; color: var(--muted); margin: 0 0 14px; }
+.enc-intro { background: var(--bg); border-radius: 12px; padding: 12px 14px; font-size: 1rem; margin-bottom: 16px; }
+.preg { border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+.preg p { margin: 0 0 10px; font-size: 1.1rem; font-weight: 600; }
+.resp { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.resp button { border: 2px solid var(--line); background: var(--panel); border-radius: 12px; padding: 10px 4px; font: inherit; font-weight: 600; cursor: pointer; color: var(--ink); min-height: 64px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.resp button span { font-size: 1.7rem; line-height: 1; }
+.resp button[aria-pressed="true"] { border-color: var(--brand-2); background: color-mix(in srgb, var(--brand-2) 14%, var(--panel)); }
+.enc-card .btn { width: 100%; min-height: 56px; font-size: 1.1rem; }
+.ayuda { background: color-mix(in srgb, var(--accent) 12%, var(--panel)); border-radius: 12px; padding: 14px; margin-top: 14px; }
+.ayuda a { color: var(--brand); font-weight: 700; }
+.res-preg { margin-bottom: 12px; } .res-preg p { margin: 0 0 4px; font-weight: 600; }
+.tri { display: flex; height: 22px; border-radius: 6px; overflow: hidden; background: var(--bg); font-size: .75rem; font-weight: 700; color: #fff; }
+.tri i { display: flex; align-items: center; justify-content: center; font-style: normal; min-width: 0; overflow: hidden; }
+.tri .si { background: var(--ok); } .tri .av { background: var(--warn); } .tri .no { background: var(--bad); }
+.leyenda { font-size: .8rem; color: var(--muted); margin-bottom: 10px; }
+.bib-item { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+.bib-item h3 { margin: 0 0 4px; color: var(--brand); } .bib-item p { margin: 4px 0 0; color: var(--muted); font-size: .9rem; }
+.bib-item .ia-acciones { margin: 0; flex: 0 0 auto; }
+@media (max-width: 860px) { .bib-item { flex-direction: column; } .bib-item .ia-acciones { width: 100%; } .resp button { min-height: 72px; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+@media (max-width: 860px) {
+  html { font-size: calc(var(--fs, 1) * 112.5%); }
+  .form label { font-size: .9rem; }
+  input, select, textarea { min-height: 48px; }
+  .btn { min-height: 50px; }
+  nav button { min-height: 52px; font-size: 1rem; }
+  td .link, .user .link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 8px; text-decoration: none; background: var(--bg); }
+  td[data-label=""] { gap: 8px; flex-wrap: wrap; }
+  td .link { white-space: nowrap; }
+  td { flex-wrap: wrap; }
+  td::before { flex-basis: 35%; }
+  .kpi span { font-size: .85rem; }
+  .brand small { font-size: .8rem; }
+  .tamano { width: 100%; }
+}
+</style>
+</head>
+<body>
 
-### 1. Repositorio GitHub
-1. Crear repo público `entornoseguro` en la cuenta `escuelaydeportesevilla-ui`.
-2. Subir el contenido de esta carpeta:
-   ```bash
-   git remote add origin https://github.com/escuelaydeportesevilla-ui/entornoseguro.git
-   git push -u origin main
-   ```
+  <!-- ENCUESTA PÚBLICA (sin acceso) -->
+  <section id="encuesta" class="enc-pub hidden">
+    <div class="enc-card" id="enc-card"><img src="" data-logo alt="EntornoSeguro" class="logo"><p class="ent">Cargando encuesta…</p></div>
+  </section>
 
-### 2. Apps Script (backend)
-1. Con la cuenta Workspace: https://script.google.com → **Nuevo proyecto** → nombre `EntornoSeguro API`.
-2. Configuración del proyecto → marcar **Mostrar appsscript.json**.
-3. Copiar cada archivo de `/apps-script` (o usar `clasp`, paso 6).
-4. Ejecutar `setupSistema` → autorizar permisos. Crea la hoja `EntornoSeguro · Base de datos` y te da de alta como `admin`.
-5. Configuración → **Propiedades del script**:
-   - `GOOGLE_CLIENT_ID` → del paso 3
-   - `CLAUDE_API_KEY` → clave de console.anthropic.com
-   - `CLAUDE_MODEL` → opcional (por defecto `claude-sonnet-5`)
-6. **Implementar → Nueva implementación → Aplicación web**
-   - Ejecutar como: **Yo**
-   - Acceso: **Cualquier usuario**
-   - Copiar la URL `/exec` y el **ID de implementación**.
+  <!-- LOGIN -->
+  <section id="login" class="login">
+    <div class="login-card">
+      <img src="" data-logo alt="EntornoSeguro" class="logo">
+      <h1>EntornoSeguro</h1>
+      <p>Sistema municipal de protección de menores en el deporte</p>
+      <div id="perfiles" class="perfiles">
+        <button type="button" class="perfil" data-perfil="admin"><span class="perfil-ico" aria-hidden="true">🏛️</span><b>ADMINISTRADOR</b><small>Ayuntamiento · Delegado/a municipal</small></button>
+        <button type="button" class="perfil" data-perfil="club"><span class="perfil-ico" aria-hidden="true">⚽</span><b>MI CLUB</b><small>Acceso con las claves de tu club</small></button>
+      </div>
+      <form id="form-login" class="form hidden">
+        <h2 id="login-titulo" class="login-titulo">Acceso</h2>
+        <input type="hidden" name="perfil" value="admin">
+        <label>Usuario<input name="usuario" autocomplete="username" required></label>
+        <label>Contraseña<input name="password" type="password" autocomplete="current-password" required></label>
+        <button class="btn">Entrar</button>
+        <button type="button" class="link volver" id="login-volver">← Volver</button>
+      </form>
+      <p id="login-error" class="error"></p>
+      <div class="tamano" role="group" aria-label="Tamaño del texto" style="justify-content:center"><span>Texto</span><button type="button" data-fs="1" aria-label="Texto normal">A</button><button type="button" data-fs="1.15" aria-label="Texto grande">A+</button><button type="button" data-fs="1.3" aria-label="Texto muy grande">A++</button></div>
+      <small>Acceso restringido a personal autorizado. Toda actividad queda registrada.</small>
+      <span class="copy">© 2026 Escuela&amp;Deporte<br>(by M.A. Ballesteros)</span>
+    </div>
+  </section>
 
-> Si Workspace bloquea "Cualquier usuario": Admin console → Apps → Google Workspace → Drive y Docs → permitir compartir fuera del dominio para Apps Script.
+  <!-- APP -->
+  <div id="app" class="app hidden">
+    <aside class="sidebar">
+      <div class="brand"><img src="" data-logo alt="" class="logo sm"><div><strong>EntornoSeguro</strong><small id="org"></small></div></div>
+      <button type="button" id="menu-toggle" class="menu-toggle" aria-expanded="false" aria-controls="menu-principal"><span>☰ Menú</span><b id="menu-actual">Panel</b></button>
+      <nav id="menu-principal">
+        <div class="nav-grupo" aria-hidden="true">📊 Seguimiento</div>
+        <button data-view="panel" class="active">Panel</button>
+        <button data-view="alertas">Alertas <span id="badge-alertas" class="badge"></span></button>
+        <div class="nav-grupo" aria-hidden="true">✅ Cumplimiento</div>
+        <button data-view="entidades" id="nav-entidades">Entidades</button>
+        <button data-view="matriz"><span class="l-long">Matriz de cumplimiento</span><span class="l-short">Matriz</span></button>
+        <button data-view="riesgos">Riesgos</button>
+        <button data-view="agentes"><span class="l-long">Agentes deportivos</span><span class="l-short">Agentes</span></button>
+        <button data-view="formacion">Formación</button>
+        <button data-view="autorizaciones">Autorizaciones</button>
+        <div class="nav-grupo" aria-hidden="true">🛡️ Protección</div>
+        <button data-view="incidencias" data-perm="incidencias">Incidencias</button>
+        <button data-view="encuestas"><span class="l-long">Encuestas a menores</span><span class="l-short">Encuestas</span></button>
+        <div class="nav-grupo" aria-hidden="true">🤖 IA y documentos</div>
+        <button data-view="asistente" data-perm="ia">Asistente IA</button>
+        <button data-view="plantillas" data-perm="ia">Plantillas</button>
+        <button data-view="contenidos" data-perm="ia"><span class="l-long">Contenidos RRSS</span><span class="l-short">Redes sociales</span></button>
+        <button data-view="documentos" data-perm="leer">Documentos</button>
+        <button data-view="biblioteca">Biblioteca</button>
+        <div class="nav-grupo" aria-hidden="true">📄 Informes</div>
+        <button data-view="informes" data-perm="informes">Informes</button>
+        <div class="nav-grupo" aria-hidden="true">⚙️ Administración</div>
+        <button data-view="clubes" data-perm="admin" id="nav-clubes">Mis clubes</button>
+        <button data-view="instancias" data-perm="admin" id="nav-instancias">Ayuntamientos</button>
+        <button data-view="usuarios" data-perm="admin">Usuarios</button>
+        <button data-view="documentacion" data-perm="admin">Documentación</button>
+        <button data-view="misdatos" data-perm="club">Mis datos</button>
+      </nav>
+      <div class="user"><div class="tamano" role="group" aria-label="Tamaño del texto"><span>Texto</span><button type="button" data-fs="1" aria-label="Texto normal">A</button><button type="button" data-fs="1.15" aria-label="Texto grande">A+</button><button type="button" data-fs="1.3" aria-label="Texto muy grande">A++</button></div><span id="user-name"></span><small id="user-rol"></small><button id="cambiar-pass" class="link">Cambiar contraseña</button><button id="logout" class="link">Salir</button><span class="copy">© 2026 Escuela&amp;Deporte<br>(by M.A. Ballesteros)</span></div>
+    </aside>
 
-### 3. OAuth Client ID (login Google)
-1. https://console.cloud.google.com → proyecto nuevo `entornoseguro`.
-2. **APIs y servicios → Pantalla de consentimiento OAuth** → tipo *Interno* (solo cuentas Workspace) o *Externo* (si accederán clubes con Gmail).
-3. **Credenciales → Crear → ID de cliente OAuth → Aplicación web**
-   - Orígenes JavaScript autorizados:
-     - `https://entornoseguro.escuelaydeporte.com`
-     - `https://escuelaydeportesevilla-ui.github.io`
-4. Copiar el Client ID.
+    <main>
+      <!-- PANEL -->
+      <section id="view-panel" class="view">
+        <header><h2 id="panel-titulo">Panel del Delegado de Protección</h2></header>
+        <div id="kpis" class="kpis"></div>
+        <div class="grid2">
+          <div class="card"><h3>Implantación por entidad</h3><div id="panel-entidades"></div></div>
+          <div class="card"><h3>Alertas prioritarias</h3><div id="panel-alertas"></div></div>
+        </div>
+      </section>
 
-### 4. Frontend
-Editar `docs/js/config.js`:
-```js
-API_URL: 'https://script.google.com/macros/s/XXXX/exec',
-GOOGLE_CLIENT_ID: 'XXXX.apps.googleusercontent.com'
-```
-Commit y push.
+      <!-- ENTIDADES -->
+      <section id="view-entidades" class="view hidden">
+        <header><h2>Entidades deportivas</h2><button class="btn" id="nueva-entidad" data-perm="escribir">+ Nueva entidad</button></header>
+        <div class="card"><table id="tabla-entidades"></table></div>
+      </section>
 
-### 5. GitHub Pages + dominio
-1. Repo → **Settings → Pages** → Source: *Deploy from a branch* → `main` / `/docs`.
-2. Custom domain: `entornoseguro.escuelaydeporte.com` (ya incluido en `docs/CNAME`).
-3. **Squarespace Domains** → escuelaydeporte.com → DNS → Custom records:
+      <!-- MATRIZ -->
+      <section id="view-matriz" class="view hidden">
+        <header><h2>Matriz de cumplimiento · Protocolo Marco</h2>
+          <select id="matriz-entidad"></select></header>
+        <p class="nota">Estado de implantación documental. No constituye valoración de personas ni de entidades.</p>
+        <div class="ia-acciones" data-perm="ia"><button class="btn ghost" id="matriz-ia" type="button">🔎 Revisar documento con IA</button></div>
+        <div id="revision-ia"></div>
+        <div class="card"><table id="tabla-matriz"></table></div>
+      </section>
 
-   | Host | Tipo | Valor |
-   |---|---|---|
-   | `entornoseguro` | CNAME | `escuelaydeportesevilla-ui.github.io` |
+      <!-- RIESGOS -->
+      <section id="view-riesgos" class="view hidden">
+        <header><h2>Análisis de riesgos</h2><select id="riesgos-entidad" aria-label="Entidad"></select></header>
+        <p class="nota">Identificación de situaciones de riesgo y medidas preventivas. No constituye valoración de personas ni de entidades.</p>
+        <div id="riesgos-resumen" class="kpis"></div>
+        <div class="ia-acciones">
+          <button class="btn" id="nuevo-riesgo" type="button" data-perm="escribir">+ Nuevo riesgo</button>
+          <button class="btn ghost" id="riesgos-ia" type="button" data-perm="ia">Proponer con IA</button>
+        </div>
+        <div id="riesgos-ia-out"></div>
+        <div class="card"><table id="tabla-riesgos"></table></div>
+      </section>
 
-4. No modificar los registros MX (correo Workspace).
-5. Tras propagar (10 min–24 h): marcar **Enforce HTTPS**.
-6. Recomendado: GitHub → Settings (perfil) → Pages → **Verified domains** → verificar `escuelaydeporte.com` (registro TXT) para evitar secuestro de subdominio.
+      <!-- AGENTES -->
+      <section id="view-agentes" class="view hidden">
+        <header><h2>Agentes deportivos</h2><select id="agentes-entidad" aria-label="Entidad"></select></header>
+        <p class="nota">Personas adultas que intervienen con menores: entrenadores, monitores, voluntarios, directivos… (LOPIVI art. 57 y Protocolo Marco, bloque K).</p>
+        <div id="agentes-resumen" class="kpis"></div>
+        <div class="ia-acciones"><button class="btn" id="nuevo-agente" type="button">+ Nuevo agente</button></div>
+        <div class="card form buscador"><label>Buscar<input id="agentes-q" type="search" placeholder="Nombre, rol o grupo"></label>
+          <label>Mostrar<select id="agentes-filtro"><option value="">Todos</option><option value="sincert">Sin certificado</option><option value="renovar">Certificado a renovar</option><option value="sincodigo">Sin código aceptado</option><option value="sinform">Sin formación</option></select></label></div>
+        <div class="card"><table id="tabla-agentes"></table></div>
+      </section>
 
-### 6. Despliegue automático (opcional)
-Cada push en `apps-script/**` sube el código con `clasp`.
-1. En tu equipo: `npm i -g @google/clasp@2` → `clasp login` (cuenta Workspace).
-2. Activar Apps Script API: https://script.google.com/home/usersettings
-3. GitHub → Settings → Secrets and variables → Actions:
-   - `CLASPRC_JSON` → contenido de `~/.clasprc.json`
-   - `SCRIPT_ID` → Configuración del proyecto Apps Script
-   - `DEPLOYMENT_ID` → ID de implementación (mantiene la misma URL)
+      <!-- AUTORIZACIONES -->
+      <section id="view-autorizaciones" class="view hidden">
+        <header><h2>Autorizaciones por grupo</h2><select id="aut-entidad" aria-label="Entidad"></select></header>
+        <p class="nota">Control numérico por grupo o equipo. No se registran nombres ni datos de menores: los originales firmados los custodia la entidad.</p>
+        <div class="ia-acciones"><button class="btn" id="nueva-aut" type="button">+ Nuevo registro</button></div>
+        <div class="card"><table id="tabla-aut"></table></div>
+      </section>
 
-### 7. Puesta en marcha
-1. Hoja `Config_Municipio`: rellenar `delegado_municipal`, `email_alertas`.
-2. Hoja `Usuarios_Roles`: dar de alta usuarios (email, rol, `activo = SI`).
-3. Revisar `Requisitos_Protocolo`: periodicidades orientativas, validar con el texto oficial del Protocolo Marco.
-4. Evidencias: guardar documentos en Drive de Workspace (acceso restringido) y pegar el enlace.
+      <!-- PLANTILLAS -->
+      <section id="view-plantillas" class="view hidden">
+        <header><h2>Plantillas de documentos</h2><select id="plant-entidad" aria-label="Entidad"></select></header>
+        <p class="nota">Genera con IA los documentos del sistema de protección con los datos de la entidad. Revisa y adapta siempre el resultado antes de aprobarlo.</p>
+        <div id="plant-lista" class="plantillas"></div>
+        <div class="ia-acciones"><button class="btn ghost" type="button" data-nuevo="plantilla">+ Nuevo</button></div>
+        <div id="plant-out"></div>
+        <div class="card"><div class="out-head"><h3>Últimas plantillas generadas</h3><button class="link" type="button" data-vertodos="plantilla">Ver todas</button></div><div id="rec-plantilla"></div></div>
+      </section>
 
-## Protección de datos
-- La hoja solo contiene datos de entidades y adultos (delegados, formación).
-- No registrar nombres ni datos de menores en ninguna hoja.
-- La IA recibe solo texto saneado (DNI, NIE, teléfonos y emails se enmascaran).
-- Toda acción queda en `Log_Auditoria`.
-- Antes de la fase 2: contrato de encargo de tratamiento con el Ayuntamiento, EIPD e informe del DPD.
+      <!-- FORMACIÓN -->
+      <section id="view-formacion" class="view hidden">
+        <header><h2>Formación de agentes deportivos</h2></header>
+        <div class="ia-acciones" data-perm="escribir"><button class="btn" id="nueva-formacion" type="button">+ Registrar formación</button><button class="btn ghost" id="formacion-lote" type="button">+ Curso con varios asistentes</button></div>
+        <div class="card form buscador"><label>Buscar<input id="form-q" type="search" placeholder="Persona, curso o colectivo"></label>
+          <label>Mostrar<select id="form-filtro"><option value="">Todas</option><option value="vigente">Vigentes</option><option value="caducada">Caducadas</option></select></label></div>
+        <div class="card"><table id="tabla-formacion"></table></div>
+      </section>
 
-## Estructura
-```
-docs/                  Frontend (GitHub Pages)
-  CNAME                entornoseguro.escuelaydeporte.com
-  index.html
-  css/app.css
-  js/config.js         URL API + Client ID (públicos)
-  js/api.js            Cliente API
-  js/app.js            Lógica de vistas
-apps-script/           Backend
-  Code.gs              Router y acciones
-  Auth.gs              Verificación token + roles
-  Db.gs                Acceso a Sheets con LockService
-  Setup.gs             Crea hojas y requisitos A–K
-  Alertas.gs           Motor de alertas diario
-  IA.gs                Claude API
-  appsscript.json
-.github/workflows/     CI clasp
-```
+      <!-- ALERTAS -->
+      <section id="view-alertas" class="view hidden">
+        <header><h2>Alertas preventivas</h2><button class="btn ghost" id="regenerar" data-perm="escribir">Recalcular</button></header>
+        <div class="card"><table id="tabla-alertas"></table></div>
+      </section>
+
+      <!-- CONTENIDOS -->
+      <section id="view-contenidos" class="view hidden">
+        <header><h2>Generador de contenidos</h2></header>
+        <div class="grid2">
+          <form id="form-contenido" class="card form">
+            <label>Asunto<input name="asunto" required maxlength="200" placeholder="Ej.: Campaña delegado de protección · octubre"></label>
+            <label>Enfoque<select name="enfoque"><option value="proteccion">Protección de menores</option><option value="educacion">Educación en valores</option><option value="mixto">Mixto: valores + entorno seguro</option></select></label>
+            <label>Tema<input name="tema" required placeholder="Ej.: qué hace el Delegado/a de Protección de tu club"></label>
+            <label>Público<select name="publico">
+              <option>familias</option><option>deportistas de 12 a 17 años</option><option>deportistas de 6 a 11 años</option>
+              <option>entrenadores y monitores</option><option>directivos de clubes</option><option>población general</option>
+            </select></label>
+            <label>Formato<select name="formato">
+              <option value="publicacion">Publicación Instagram (pie de foto)</option>
+              <option value="carrusel">Carrusel Instagram</option><option value="story">Stories</option>
+              <option value="reel">Guion de reel</option><option value="infografia">Infografía</option>
+              <option value="familias">Mensaje a familias</option><option value="entrenadores">Mensaje a entrenadores</option>
+            </select></label>
+            <div id="pub-extra">
+              <label>Soporte<select name="soporte"><option>Foto</option><option>Carrusel</option><option>Reel</option></select></label>
+              <label>Objetivo<select name="objetivo">
+                <option>Informar</option><option>Que guarden la publicación</option><option>Generar comentarios</option><option>Que la compartan</option>
+                <option>Que participen (encuesta, formación o actividad)</option><option>Que contacten con el Delegado/a de Protección</option>
+              </select></label>
+            </div>
+            <div class="ia-acciones"><button class="btn">Preparar prompt</button><button class="btn ghost" type="button" data-nuevo="contenido">+ Nuevo</button></div>
+          </form>
+          <div class="card"><h3>Prompt preparado</h3><div id="out-contenido"><p class="empty">Rellena el formulario y pulsa "Preparar prompt".</p></div></div>
+        </div>
+        <div class="card"><div class="out-head"><h3>Últimos contenidos</h3><button class="link" type="button" data-vertodos="contenido">Ver todos</button></div><div id="rec-contenido"></div></div>
+      </section>
+
+      <!-- ASISTENTE -->
+      <section id="view-asistente" class="view hidden">
+        <header><h2>Asistente del Delegado de Protección</h2></header>
+        <p class="nota">No introduzcas nombres, datos ni detalles que permitan identificar a menores o casos. Las respuestas requieren validación profesional.</p>
+        <form id="form-asistente" class="card form">
+          <label>Asunto<input name="asunto" required maxlength="200" placeholder="Ej.: Análisis de riesgos torneo con pernocta"></label>
+          <label>Consulta<textarea name="pregunta" rows="4" required placeholder="Ej.: ¿Qué debe contener el análisis de riesgos de un club con pernoctas en torneos?"></textarea></label>
+          <div class="ia-acciones"><button class="btn">Preparar prompt</button><button class="btn ghost" type="button" data-nuevo="asistente">+ Nuevo</button></div>
+        </form>
+        <div class="card"><h3>Prompt preparado</h3><div id="out-asistente"><p class="empty">Escribe tu consulta y pulsa "Preparar prompt".</p></div></div>
+        <div class="card"><div class="out-head"><h3>Últimas consultas</h3><button class="link" type="button" data-vertodos="asistente">Ver todas</button></div><div id="rec-asistente"></div></div>
+      </section>
+      <!-- INFORMES -->
+      <section id="view-informes" class="view hidden">
+        <header><h2>Informes</h2></header>
+        <div class="grid2">
+          <div class="card form">
+            <h3>Informe de entidad</h3>
+            <p class="nota">Estado de implantación del sistema de protección: datos, matriz de cumplimiento, riesgos, formación y pendientes.</p>
+            <label>Entidad<select id="inf-entidad"></select></label>
+            <div class="ia-acciones">
+              <button class="btn" type="button" id="inf-ent-pdf">Ver / PDF</button>
+              <button class="btn ghost" type="button" id="inf-ent-word">Word</button>
+            </div>
+          </div>
+          <div class="card form" data-perm="leer">
+            <h3>Informe municipal de cumplimiento</h3>
+            <p class="nota">Situación de implantación del Protocolo Marco en todas las entidades con menores.</p>
+            <label class="check"><input type="checkbox" id="inf-anon"> Anonimizar entidades (Entidad 1, 2, 3…)</label>
+            <label>Valoración técnica (opcional)<textarea id="inf-valoracion" rows="5" placeholder="Texto que se incluirá en el informe. Puedes prepararlo con IA."></textarea></label>
+            <div class="ia-acciones">
+              <button class="btn" type="button" id="inf-mun-pdf">Ver / PDF</button>
+              <button class="btn ghost" type="button" id="inf-mun-word">Word</button>
+              <button class="btn ghost" type="button" id="inf-mun-ia" data-perm="ia">Valoración con IA</button>
+            </div>
+            <div id="inf-ia-out"></div>
+          </div>
+        </div>
+        <div class="card form">
+          <h3>Memoria anual · Informe por periodo</h3>
+          <p class="nota">Situación de implantación y actividad del periodo: formación, agentes, riesgos, autorizaciones, participación infantil, sensibilización y comunicaciones (solo cifras agregadas).</p>
+          <div class="fields">
+            <label>Año<select id="mem-anio"></select></label>
+            <label>Periodo<select id="mem-periodo"><option value="anual">Año completo</option><option value="1T">1.er trimestre</option><option value="2T">2.º trimestre</option><option value="3T">3.er trimestre</option><option value="4T">4.º trimestre</option><option value="S1">1.er semestre</option><option value="S2">2.º semestre</option><option value="temporada">Temporada (sep.–jun.)</option><option value="libre">Fechas a elegir</option></select></label>
+            <label>Desde<input type="date" id="mem-desde"></label>
+            <label>Hasta<input type="date" id="mem-hasta"></label>
+          </div>
+          <label class="check" id="mem-anon-l"><input type="checkbox" id="mem-anon"> Anonimizar entidades</label>
+          <label>Valoración técnica (opcional)<textarea id="mem-valoracion" rows="5" placeholder="Texto que se incluirá en la memoria. Puedes prepararlo con IA."></textarea></label>
+          <div class="ia-acciones">
+            <button class="btn" type="button" id="mem-pdf">Ver / PDF</button>
+            <button class="btn ghost" type="button" id="mem-word">Word</button>
+            <button class="btn ghost" type="button" id="mem-ia" data-perm="ia">Valoración con IA</button>
+          </div>
+          <div id="mem-ia-out"></div>
+        </div>
+      </section>
+
+      <!-- DOCUMENTOS -->
+      <section id="view-documentos" class="view hidden">
+        <header><h2>Documentos</h2></header>
+        <div class="card form buscador">
+          <label>Buscar<input id="doc-q" type="search" placeholder="Palabras del asunto o del contenido"></label>
+          <label>Tipo<select id="doc-tipo"><option value="">Todos</option><option value="asistente">Asistente IA</option><option value="contenido">Redes sociales</option><option value="riesgos">Análisis de riesgos</option><option value="plantilla">Plantillas</option><option value="revision">Revisión documental</option></select></label>
+        </div>
+        <p class="nota" id="doc-count"></p>
+        <div id="doc-lista"></div>
+      </section>
+
+      <!-- EDITOR DE DOCUMENTO -->
+      <section id="view-doc" class="view hidden">
+        <header><h2 id="doc-titulo">Documento</h2><button class="btn ghost" id="doc-volver" type="button">← Volver a Documentos</button></header>
+        <form id="form-doc" class="card form">
+          <label>Asunto<input name="asunto" required maxlength="200"></label>
+          <p class="nota" id="doc-meta"></p>
+          <div class="modo" role="tablist"><button type="button" class="modo-b activo" data-modo="vista" role="tab">Vista</button><button type="button" class="modo-b" data-modo="editar" role="tab">Editar</button></div>
+          <div id="doc-vista" class="md doc-vista"></div>
+          <label id="doc-editar" class="hidden">Contenido (formato: **negrita**, # título, - lista, | tabla |)<textarea name="resultado" rows="16" class="doc-texto"></textarea></label>
+          <div class="ia-acciones">
+            <button class="btn" type="submit">Guardar</button>
+            <button class="btn ghost" type="button" id="doc-copiar">Copiar</button>
+            <button class="btn ghost" type="button" id="doc-word">Word</button>
+            <button class="btn ghost" type="button" id="doc-pdf">PDF</button>
+            <button class="btn ghost" type="button" id="doc-txt">Texto</button>
+            <button class="btn ghost peligro" type="button" id="doc-borrar">Eliminar</button>
+          </div>
+          <details class="doc-prompt"><summary>Ver prompt original</summary><pre class="out prompt" id="doc-prompt"></pre></details>
+        </form>
+      </section>
+      <!-- MIS CLUBES (administrador) -->
+      <section id="view-clubes" class="view hidden">
+        <header><h2>Mis clubes</h2><button class="btn" id="nuevo-club" type="button">+ Nuevo club</button></header>
+        <p class="nota">Cada club tiene su propia hoja de datos y accede con el perfil MI CLUB. Aquí solo se muestran indicadores; las consultas de detalle quedan registradas y el club las ve.</p>
+        <div id="clubes-resumen" class="kpis"></div>
+        <div class="card"><table id="tabla-clubes"></table></div>
+      </section>
+
+      <!-- DOCUMENTACIÓN (administrador) -->
+      <section id="view-documentacion" class="view hidden">
+        <header><h2>Documentación del servicio</h2></header>
+        <div class="grid2">
+          <form id="form-prestador" class="card form">
+            <h3>Datos del prestador del servicio</h3>
+            <p class="nota">Se usan para rellenar los contratos y la ficha del DPD. Se guardan una sola vez.</p>
+            <label>Razón social<input name="nombre" placeholder="Escuela y Deporte …"></label>
+            <label>CIF / NIF<input name="cif"></label>
+            <label>Domicilio<input name="domicilio"></label>
+            <label>Representante<input name="representante"></label>
+            <label>Cargo<input name="cargo" placeholder="Administrador/a"></label>
+            <label>Localidad (firma y jurisdicción)<input name="localidad" placeholder="Sevilla"></label>
+            <button class="btn">Guardar datos</button>
+          </form>
+          <div>
+            <div class="card">
+              <h3>Contrato de encargo del tratamiento</h3>
+              <p class="nota">Modelo en blanco. El contrato de cada club, ya relleno, está en Mis clubes → Gestionar.</p>
+              <div class="ia-acciones"><button class="btn" type="button" data-doclegal="contrato" data-fmt="pdf">Ver / PDF</button><button class="btn ghost" type="button" data-doclegal="contrato" data-fmt="word">Word</button></div>
+            </div>
+            <div class="card">
+              <h3>Ficha técnica para el DPD · Módulo de incidencias</h3>
+              <p class="nota">Propuesta de diseño para su validación antes de activar el registro de incidencias.</p>
+              <div class="ia-acciones"><button class="btn" type="button" data-doclegal="ficha" data-fmt="pdf">Ver / PDF</button><button class="btn ghost" type="button" data-doclegal="ficha" data-fmt="word">Word</button></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MIS DATOS (club) -->
+      <section id="view-misdatos" class="view hidden">
+        <header><h2>Mis datos</h2></header>
+        <div class="grid2">
+          <div class="card">
+            <h3>Copia completa de mis datos</h3>
+            <p class="nota">Descarga todos los datos del club en un archivo Excel. Puedes hacerlo cuando quieras (derecho de portabilidad).</p>
+            <button class="btn" id="exportar-datos" type="button">Descargar Excel</button>
+          </div>
+          <div class="card">
+            <h3>Privacidad</h3>
+            <p>Los datos del club se guardan en una hoja propia, separada de la del ayuntamiento y de otros clubes.</p>
+            <p>El ayuntamiento, como gestor del servicio, solo ve indicadores. Cualquier consulta de detalle o copia de tus datos aparece en el registro de abajo.</p>
+            <p class="nota">Si prefieres una instalación totalmente independiente, en tu propia cuenta de Google, solicítala al administrador.</p>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Documentación del servicio</h3>
+          <div class="doc-legal"><span>Contrato de encargo del tratamiento</span><div class="ia-acciones"><button class="btn" type="button" data-doclegal="contrato" data-fmt="pdf">Ver / PDF</button><button class="btn ghost" type="button" data-doclegal="contrato" data-fmt="word">Word</button></div></div>
+          <div class="doc-legal"><span>Ficha técnica para el DPD · Incidencias</span><div class="ia-acciones"><button class="btn" type="button" data-doclegal="ficha" data-fmt="pdf">Ver / PDF</button><button class="btn ghost" type="button" data-doclegal="ficha" data-fmt="word">Word</button></div></div>
+        </div>
+        <div class="card"><h3>Registro de accesos del ayuntamiento</h3><table id="tabla-accesos"></table></div>
+      </section>
+
+      <!-- INCIDENCIAS -->
+      <section id="view-incidencias" class="view hidden">
+        <header><h2>Registro de incidencias</h2></header>
+        <div class="aviso-inc">🔒 <b>Registro confidencial.</b> Solo el Delegado/a de Protección. <b>No escribas nombres, iniciales ni datos que identifiquen a menores o a personas implicadas.</b> El relato y la documentación van al expediente oficial; aquí solo la trazabilidad del procedimiento. Si el asistente IA está activado, solo recibe categorías, nunca datos.</div>
+        <div id="inc-cont"></div>
+      </section>
+
+      <!-- CASO -->
+      <section id="view-caso" class="view hidden">
+        <header><h2 id="caso-titulo">Caso</h2><button class="btn ghost" id="caso-volver" type="button">← Volver al registro</button></header>
+        <div class="aviso-inc">🔒 No escribas nombres ni datos identificativos. Guía orientativa: las decisiones corresponden al profesional responsable.</div>
+        <div id="caso-cont"></div>
+      </section>
+
+      <!-- ENCUESTAS -->
+      <section id="view-encuestas" class="view hidden">
+        <header><h2>Encuestas anónimas a menores</h2><select id="enc-entidad" aria-label="Entidad"></select></header>
+        <p class="nota">Cuestionarios de percepción de seguridad adaptados a la edad. No piden nombre ni datos personales. Los resultados se muestran a partir de 5 respuestas.</p>
+        <div class="ia-acciones" data-perm="escribir"><button class="btn" id="nueva-encuesta" type="button">+ Nueva encuesta</button></div>
+        <div class="card"><table id="tabla-encuestas"></table></div>
+        <div id="enc-resultados"></div>
+      </section>
+
+      <!-- BIBLIOTECA -->
+      <section id="view-biblioteca" class="view hidden">
+        <header><h2>Biblioteca documental</h2></header>
+        <p class="nota">Normativa, Protocolo Marco, guías, modelos y protocolos. Prioriza siempre las fuentes oficiales.</p>
+        <div class="ia-acciones" data-perm="escribir"><button class="btn" id="nuevo-bib" type="button">+ Añadir documento o enlace</button></div>
+        <div class="card form buscador"><label>Buscar<input id="bib-q" type="search" placeholder="Palabras del título o la descripción"></label>
+          <label>Categoría<select id="bib-cat"><option value="">Todas</option></select></label></div>
+        <p class="nota" id="bib-count"></p>
+        <div id="bib-lista"></div>
+      </section>
+
+      <!-- AYUNTAMIENTOS (instancias clonadas, solo versión principal) -->
+      <section id="view-instancias" class="view hidden">
+        <header><h2>Ayuntamientos clientes</h2><button class="btn" id="nueva-instancia" type="button">+ Nuevo ayuntamiento</button></header>
+        <p class="nota">Cada ayuntamiento tiene su propia hoja y su propio servidor, pero entra por esta misma web escribiendo el usuario con su código: <b>admin@codigo</b>. Sus clubes entran igual: <b>usuario@codigo</b>.</p>
+        <div class="card"><table id="tabla-instancias"></table></div>
+      </section>
+
+      <!-- USUARIOS -->
+      <section id="view-usuarios" class="view hidden">
+        <header><h2>Usuarios</h2><button class="btn" id="nuevo-usuario" data-perm="admin">+ Nuevo usuario</button></header>
+        <div class="card"><table id="tabla-usuarios"></table></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL -->
+  <dialog id="modal"><form method="dialog" id="modal-form" class="form"></form></dialog>
+  <div id="toast" class="toast"></div>
+
+  <script>
+const LOGO = "https://entornoseguro.escuelaydeporte.com/img/logo-hd.jpg";
+document.querySelectorAll("[data-logo]").forEach(i => { i.onerror = () => { i.style.visibility = "hidden"; }; i.src = LOGO; });
+
+const API_URL = "https://script.google.com/macros/s/AKfycbx-9rREVClAUwFFehFqGhdlwrDwhjjHpROCf6v94K1G27AX20ZU7PMTB1Yc2H6bq9gM2w/exec";
+const EN_SCRIPT = !!(window.google && google.script && google.script.run);
+const WEB_PUBLICA = EN_SCRIPT ? 'https://entornoseguro.escuelaydeporte.com/' : location.origin + location.pathname;
+const COD_ENC = (() => { try { return (new URLSearchParams(location.search).get('e') || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); } catch { return ''; } })();
+const API = {
+  token: null,
+  base: (() => { try { return sessionStorage.getItem('es_api') || API_URL; } catch { return API_URL; } })(),
+  async call(accion, datos) {
+    let r;
+    if (EN_SCRIPT) {
+      r = await new Promise((ok, ko) => google.script.run.withSuccessHandler(ok)
+        .withFailureHandler(e => ko(new Error(e.message || String(e)))).api(this.token, accion, datos || {}));
+    } else {
+      let res;
+      try {
+        res = await fetch(this.base, { method: 'POST', credentials: 'omit', redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ token: this.token, accion, datos: datos || {} }) });
+        r = await res.json();
+      } catch (e) { throw new Error('No se puede conectar con el servidor. Revisa tu conexión.'); }
+    }
+    if (r && r.ok) return r.data;
+    const msg = (r && r.error) || 'Error de servidor';
+    if (msg === 'SESION') { salirLocal(); throw new Error('Sesión caducada. Vuelve a entrar.'); }
+    throw new Error(msg);
+  }
+};
+// EntornoSeguro · Frontend
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const state = { me: null, entidades: [], inst: (() => { try { return sessionStorage.getItem('es_inst') || ''; } catch { return ''; } })() };
+
+const ESTADOS = {
+  cumple: ['✓', 'ok', 'Cumple'], parcial: ['⚠', 'warn', 'Parcial'], no_cumple: ['✗', 'bad', 'No cumple'],
+  pendiente: ['·', 'muted', 'Pendiente'], no_aplica: ['—', 'muted', 'No aplica']
+};
+const COLECTIVOS = ['delegado', 'entrenador', 'monitor', 'directivo', 'arbitro', 'voluntario', 'personal_municipal'];
+
+function toast(msg, bad) {
+  const t = $('#toast'); t.textContent = msg; t.className = 'toast show' + (bad ? ' bad' : '');
+  setTimeout(() => t.className = 'toast', 3500);
+}
+async function run(fn) {
+  document.body.classList.add('busy');
+  try { return await fn(); } catch (e) { toast(e.message, true); throw e; }
+  finally { document.body.classList.remove('busy'); }
+}
+function etiquetar(t) {
+  const cab = [...t.querySelectorAll('thead th')].map(th => th.textContent.trim());
+  if (!cab.length) return;
+  t.querySelectorAll('tbody tr:not(.group)').forEach(tr => [...tr.children].forEach((td, i) => { if (!td.hasAttribute('data-label')) td.setAttribute('data-label', cab[i] || ''); }));
+}
+new MutationObserver(ms => ms.forEach(m => { const t = m.target.closest && m.target.closest('table'); if (t) etiquetar(t); }))
+  .observe(document.body, { childList: true, subtree: true });
+const can = p => state.me && state.me.permisos.includes(p);
+
+// ---------- LOGIN ----------
+function ssGet(k) { try { return sessionStorage.getItem(k); } catch { return null; } }
+function ssSet(k, v) { try { v ? sessionStorage.setItem(k, v) : sessionStorage.removeItem(k); } catch {} }
+
+function elegirPerfil(p) {
+  const f = $('#form-login');
+  f.perfil.value = p;
+  $('#login-titulo').textContent = p === 'club' ? 'Acceso MI CLUB' : 'Acceso ADMINISTRADOR';
+  $('#perfiles').classList.add('hidden'); f.classList.remove('hidden'); $('#login-error').textContent = '';
+  try { localStorage.setItem('es_perfil', p); } catch {}
+  f.usuario.focus();
+}
+$$('.perfil').forEach(b => b.onclick = () => elegirPerfil(b.dataset.perfil));
+$('#login-volver').onclick = () => { $('#form-login').classList.add('hidden'); $('#perfiles').classList.remove('hidden'); $('#login-error').textContent = ''; };
+$('#form-login').onsubmit = async ev => {
+  ev.preventDefault();
+  $('#login-error').textContent = '';
+  const d = Object.fromEntries(new FormData(ev.target));
+  try {
+    await elegirInstancia(d);
+    const r = await run(() => API.call('login', d));
+    API.token = r.token; ssSet('es_token', r.token);
+    await arrancar();
+  } catch (e) { $('#login-error').textContent = e.message; }
+};
+
+async function arrancar() {
+  document.body.classList.add('busy');
+  let r; try { r = await API.call('me'); } finally { document.body.classList.remove('busy'); }
+  state.me = r.me;
+  $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
+  $('#user-name').textContent = state.me.nombre || state.me.usuario;
+  $('#user-rol').textContent = state.me.rol;
+  $('#org').textContent = r.config.organismo || ''; state.cfg = r.config;
+  $$('[data-perm]').forEach(el => { if (!can(el.dataset.perm)) el.remove(); });
+  state.modo = r.config.modo || 'MUNICIPAL';
+  if (state.inst || String(r.config.tipo || '').toUpperCase() !== 'MAESTRO') { const ni = $('#nav-instancias'); if (ni) ni.remove(); }
+  $$('#menu-principal .nav-grupo').forEach(g => { let n = g.nextElementSibling, hay = false; while (n && !n.classList.contains('nav-grupo')) { if (n.tagName === 'BUTTON') hay = true; n = n.nextElementSibling; } if (!hay) g.remove(); });
+  state.club = state.modo === 'CLUB' || state.me.rol === 'entidad' || state.me.rol === 'club';
+  if (state.club) {
+    $('#nav-entidades').textContent = state.modo === 'CLUB' ? 'Mi club' : 'Mi entidad';
+    $('#panel-titulo').textContent = 'Panel del Delegado/a de Protección' + (state.modo === 'CLUB' ? ' del club' : '');
+    const mun = $('#inf-mun-pdf'); if (mun) mun.closest('.card').remove();
+    $('#mem-anon-l').classList.add('hidden');
+  }
+  if (state.me.debe_cambiar) formPassword(true); else show('panel');
+}
+
+/** 'usuario@codigo' → conecta con el servidor de ese ayuntamiento. Sin @ → versión principal. */
+async function elegirInstancia(d) {
+  const m = String(d.usuario || '').trim().match(/^([^@\s]+)@([a-z0-9-]+)$/i);
+  API.base = API_URL; ssSet('es_api', null); ssSet('es_inst', null); state.inst = '';
+  if (!m || EN_SCRIPT) return;
+  const r = await run(() => API.call('resolverInstancia', { codigo: m[2].toLowerCase() }));
+  API.base = r.api_url; ssSet('es_api', r.api_url); ssSet('es_inst', m[2].toLowerCase()); state.inst = m[2].toLowerCase();
+  d.usuario = m[1];
+}
+
+function salirLocal() {
+  API.token = null; ssSet('es_token', null);
+  $('#app').classList.add('hidden'); $('#login').classList.remove('hidden');
+}
+$('#logout').onclick = async () => { try { await API.call('logout'); } catch {} ssSet('es_api', null); ssSet('es_inst', null); location.reload(); };
+$('#cambiar-pass').onclick = () => formPassword(false);
+
+function formPassword(obligatorio) {
+  const campos = obligatorio
+    ? [['nueva', 'Nueva contraseña (mín. 8)', 'password', true], ['repite', 'Repite la contraseña', 'password', true]]
+    : [['actual', 'Contraseña actual', 'password', true], ['nueva', 'Nueva contraseña (mín. 8)', 'password', true], ['repite', 'Repite la contraseña', 'password', true]];
+  modal(obligatorio ? 'Crea tu contraseña personal' : 'Cambiar contraseña', campos, {}, async d => {
+    if (d.nueva !== d.repite) { toast('Las contraseñas no coinciden', true); return formPassword(obligatorio); }
+    try { await run(() => API.call('cambiarPassword', d)); } catch { return formPassword(obligatorio); }
+    state.me.debe_cambiar = false; toast('Contraseña actualizada'); show('panel');
+  }, obligatorio);
+}
+
+(async () => {
+  const t = ssGet('es_token');
+  if (!t || COD_ENC) return;
+  API.token = t;
+  try { await arrancar(); } catch { salirLocal(); }
+})();
+
+// ---------- NAVEGACIÓN ----------
+$$('nav button').forEach(b => b.onclick = () => show(b.dataset.view));
+$('#menu-toggle').onclick = () => {
+  const n = $('#menu-principal'), ab = !n.classList.contains('abierto');
+  n.classList.toggle('abierto', ab); $('#menu-toggle').setAttribute('aria-expanded', String(ab));
+};
+const VISTA_MADRE = { doc: 'documentos', caso: 'incidencias' };
+function show(v) {
+  const madre = VISTA_MADRE[v] || v;
+  const bAct = $(`nav button[data-view="${madre}"]`);
+  if (bAct) $('#menu-actual').textContent = (bAct.querySelector('.l-short') || bAct).textContent.replace(/\d+$/, '').trim();
+  $('#menu-principal').classList.remove('abierto'); $('#menu-toggle').setAttribute('aria-expanded', 'false');
+  window.scrollTo(0, 0);
+  $$('nav button').forEach(b => b.classList.toggle('active', b.dataset.view === madre));
+  $$('.view').forEach(s => s.classList.toggle('hidden', s.id !== 'view-' + v));
+  ({ panel: loadPanel, entidades: loadEntidades, matriz: loadMatriz, formacion: loadFormacion, alertas: loadAlertas, usuarios: loadUsuarios, documentos: loadDocumentos, riesgos: loadRiesgos, informes: loadInformes, agentes: loadAgentes, autorizaciones: loadAutorizaciones, plantillas: loadPlantillas, clubes: loadClubes, instancias: loadInstancias, misdatos: loadMisDatos, documentacion: loadDocumentacion, contenidos: () => loadRecientes('contenido'), asistente: () => loadRecientes('asistente'), incidencias: loadIncidencias, encuestas: loadEncuestas, biblioteca: loadBiblioteca }[v] || (() => {}))();
+}
+
+// ---------- PANEL ----------
+async function loadPanel() {
+  if (!$('#kpis').innerHTML) $('#panel-entidades').innerHTML = $('#panel-alertas').innerHTML = '<p class="empty">Cargando datos…</p>';
+  const d = await run(() => API.call('dashboard'));
+  const k = d.kpi;
+  const tiles = [
+    ['Entidades', k.entidades], ['Con menores', k.con_menores],
+    ['Con Delegado/a', `${k.con_delegado}/${k.con_menores}`], ['Aceptan Protocolo', `${k.aceptan_protocolo}/${k.con_menores}`],
+    ['Cumplimiento medio', k.cumplimiento_medio + '%'], ['Personas formadas', k.personas_formadas],
+    ['Alertas abiertas', k.alertas_abiertas], ['Riesgos altos pendientes', k.riesgos_altos || 0], ['Agentes deportivos', k.agentes || 0], ['Agentes sin certificado', k.agentes_sin_cert || 0]
+  ];
+  if (k.casos_abiertos !== null && k.casos_abiertos !== undefined) tiles.push(['Casos abiertos (incidencias)', k.casos_abiertos]);
+  if (k.propia && !state.club) tiles.splice(4, 0, ['Actividades municipales', k.propia.pct + '%']);
+  const ocultarClub = ['Entidades', 'Con menores', 'Con Delegado/a', 'Aceptan Protocolo'];
+  $('#kpis').innerHTML = tiles.filter(([l]) => !(state.club && ocultarClub.includes(l))).map(([l, v]) => `<div class="kpi"><span>${esc(l)}</span><strong>${esc(v)}</strong></div>`).join('');
+  $('#badge-alertas').textContent = k.alertas_abiertas || '';
+  $('#panel-entidades').innerHTML = d.entidades.length ? d.entidades.map(e => `
+    <div class="bar-row" data-id="${esc(e.id)}"><span>${e.propia ? '🏛️ ' : ''}${esc(e.nombre)}</span>
+      <div class="bar"><i style="width:${e.pct}%" class="${e.pct < 40 ? 'bad' : e.pct < 80 ? 'warn' : 'ok'}"></i></div><b>${e.pct}%</b></div>`).join('')
+    : '<p class="empty">Sin entidades con menores registradas.</p>';
+  $$('#panel-entidades .bar-row').forEach(r => r.onclick = () => { show('matriz'); setTimeout(() => { $('#matriz-entidad').value = r.dataset.id; loadMatriz(); }, 50); });
+  $('#panel-alertas').innerHTML = alertList(d.alertas);
+}
+function alertList(a) {
+  return a.length ? '<ul class="alerts">' + a.map(x => `<li class="p-${esc(x.prioridad)}"><span>${esc(x.mensaje)}</span>${x.fecha_limite ? `<small>${esc(x.fecha_limite)}</small>` : ''}</li>`).join('') + '</ul>'
+    : '<p class="empty">Sin alertas abiertas.</p>';
+}
+
+// ---------- ENTIDADES ----------
+async function loadEntidades() {
+  state.entidades = await run(() => API.call('listarEntidades'));
+  $('#tabla-entidades').innerHTML = `<thead><tr><th>Entidad</th><th>Modalidad</th><th>Menores</th><th>Delegado/a</th><th>Protocolo Marco</th><th></th></tr></thead><tbody>` +
+    state.entidades.map(e => `<tr><td><b>${esc(e.nombre)}</b>${e.propia === 'SI' ? ' <span class="chip">Propia</span>' : ''}<br><small>${esc(e.cif)}</small></td><td>${esc(e.modalidad)}</td>
+      <td>${e.trabaja_menores === 'SI' ? esc(e.n_menores || 'Sí') : 'No'}</td><td>${esc(e.delegado_nombre) || '<span class="bad-t">Sin designar</span>'}</td>
+      <td>${e.acepta_protocolo_marco === 'SI' ? '✓ ' + esc(e.fecha_aceptacion) : '<span class="bad-t">Pendiente</span>'}</td>
+      <td>${can('escribir') ? `<button class="link" data-edit="${esc(e.id)}">Editar</button>` : ''}</td></tr>`).join('') + '</tbody>';
+  $$('[data-edit]').forEach(b => b.onclick = () => formEntidad(state.entidades.find(e => e.id === b.dataset.edit)));
+  const nb = $('#nueva-entidad'); if (nb) nb.classList.toggle('hidden', !!state.club && state.entidades.length > 0);
+}
+$('#nueva-entidad') && ($('#nueva-entidad').onclick = () => formEntidad({}));
+
+function formEntidad(e) {
+  modal('Entidad deportiva', [
+    ['nombre', 'Nombre', 'text', true], ['cif', 'CIF'], ['tipo', 'Tipo', ['Club', 'Asociación', 'Escuela deportiva', 'Empresa de servicios', 'Ayuntamiento', 'Otro']],
+    ['modalidad', 'Modalidad deportiva'], ['trabaja_menores', '¿Trabaja con menores?', ['SI', 'NO']], ['n_menores', 'Nº aprox. de menores', 'number'],
+    ['delegado_nombre', 'Delegado/a de Protección'], ['delegado_email', 'Email delegado/a', 'email'], ['delegado_telefono', 'Teléfono delegado/a'],
+    ['fecha_designacion', 'Fecha designación', 'date'], ['acepta_protocolo_marco', 'Acepta Protocolo Marco', ['NO', 'SI']],
+    ['fecha_aceptacion', 'Fecha aceptación', 'date'], ['observaciones', 'Observaciones', 'textarea'], ['activo', 'Activa', ['SI', 'NO']]
+  ], e, async d => { d.id = e.id; await run(() => API.call('guardarEntidad', d)); toast('Entidad guardada'); loadEntidades(); });
+}
+
+// ---------- MATRIZ ----------
+async function loadMatriz() {
+  const sel = $('#matriz-entidad');
+  if (!sel.options.length) {
+    if (!state.entidades.length) state.entidades = await run(() => API.call('listarEntidades'));
+    sel.innerHTML = state.entidades.filter(e => e.trabaja_menores === 'SI').map(e => `<option value="${esc(e.id)}">${esc(e.nombre)}</option>`).join('');
+    sel.onchange = loadMatriz;
+  }
+  sel.classList.toggle('hidden', !!state.club);
+  if (!sel.value) { $('#tabla-matriz').innerHTML = '<tr><td class="empty">Registra primero una entidad que trabaje con menores.</td></tr>'; return; }
+  const rows = state.matriz = await run(() => API.call('matriz', { entidad_id: sel.value }));
+  let bloque = '';
+  $('#tabla-matriz').innerHTML = `<thead><tr><th>Requisito</th><th>Estado</th><th>Evidencia</th><th>Revisión</th><th>Próxima</th><th>Acción pendiente</th><th></th></tr></thead><tbody>` +
+    rows.map(r => {
+      const [ico, cls, txt] = ESTADOS[r.estado] || ESTADOS.pendiente;
+      const head = r.bloque !== bloque ? `<tr class="group"><td colspan="7">${esc(bloque = r.bloque)}</td></tr>` : '';
+      const venc = r.proxima_revision && new Date(r.proxima_revision) < new Date();
+      return head + `<tr><td><b>${esc(r.codigo)}</b> ${esc(r.requisito)}<br><small>${esc(r.referencia)}</small></td>
+        <td><span class="st ${cls}" title="${txt}">${ico} ${txt}</span></td>
+        <td>${r.evidencias.map(v => v.url_drive ? `<a href="${esc(v.url_drive)}" target="_blank" rel="noopener">${esc(v.titulo)}</a>` : esc(v.titulo)).join('<br>') || '—'}</td>
+        <td>${esc(r.fecha_revision) || '—'}</td><td class="${venc ? 'bad-t' : ''}">${esc(r.proxima_revision) || '—'}</td>
+        <td>${esc(r.accion_pendiente) || '—'}</td>
+        <td>${can('escribir') ? `<button class="link" data-req="${esc(r.codigo)}">Actualizar</button>` : ''}${can('ia') ? ` <button class="link" data-revia="${esc(r.codigo)}">Revisar con IA</button>` : ''}</td></tr>`;
+    }).join('') + '</tbody>';
+  $$('[data-req]').forEach(b => b.onclick = () => formCumplimiento(sel.value, rows.find(r => r.codigo === b.dataset.req)));
+  $$('[data-revia]').forEach(b => b.onclick = () => abrirRevision([b.dataset.revia]));
+}
+function formCumplimiento(entidad_id, r) {
+  modal(`${r.codigo} · ${r.requisito}`, [
+    ['estado', 'Estado', Object.entries(ESTADOS).map(([k, v]) => [k, v[2]])], ['fecha_revision', 'Fecha de revisión', 'date'],
+    ['proxima_revision', 'Próxima revisión (vacío = automática)', 'date'], ['responsable', 'Responsable'],
+    ['accion_pendiente', 'Acción pendiente', 'textarea'],
+    ['ev_titulo', 'Nueva evidencia · título'], ['ev_url', 'Nueva evidencia · enlace Drive', 'url'], ['ev_caducidad', 'Caducidad evidencia', 'date']
+  ], r, async d => {
+    await run(() => API.call('guardarCumplimiento', { id: r.cumplimiento_id, entidad_id, requisito_codigo: r.codigo,
+      estado: d.estado, fecha_revision: d.fecha_revision, proxima_revision: d.proxima_revision, responsable: d.responsable, accion_pendiente: d.accion_pendiente }));
+    if (d.ev_titulo) await run(() => API.call('guardarEvidencia', { entidad_id, requisito_codigo: r.codigo, titulo: d.ev_titulo, url_drive: d.ev_url, fecha_caducidad: d.ev_caducidad, fecha_documento: d.fecha_revision }));
+    toast('Cumplimiento actualizado'); loadMatriz();
+  });
+}
+
+// ---------- FORMACIÓN ----------
+async function loadFormacion() {
+  const [rows, ents] = await run(() => Promise.all([API.call('listarFormacion'), state.entidades.length ? state.entidades : API.call('listarEntidades')]));
+  state.entidades = ents; state.formacion = rows;
+  pintarFormacion();
+}
+function pintarFormacion() {
+  const ents = state.entidades, hoy = new Date();
+  const nom = id => (ents.find(e => e.id === id) || {}).nombre || id;
+  const q = norm($('#form-q').value), f = $('#form-filtro').value;
+  const cad = x => x.fecha_caducidad && new Date(x.fecha_caducidad) < hoy;
+  const rows = (state.formacion || []).filter(x => (!q || norm([x.persona_nombre, x.curso, x.colectivo].join(' ')).includes(q)) &&
+    (!f || (f === 'caducada' ? cad(x) : !cad(x)))).sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
+  $('#tabla-formacion').innerHTML = `<thead><tr><th>Persona</th><th>Colectivo</th><th>Entidad</th><th>Curso</th><th>Horas</th><th>Fecha</th><th>Caduca</th><th></th></tr></thead><tbody>` +
+    (rows.map(x => `<tr><td>${esc(x.persona_nombre)}</td><td>${esc(x.colectivo)}</td><td>${esc(nom(x.entidad_id))}</td><td>${x.certificado_url ? `<a href="${esc(x.certificado_url)}" target="_blank" rel="noopener">${esc(x.curso)}</a>` : esc(x.curso)}</td>
+      <td>${esc(x.horas)}</td><td>${esc(x.fecha)}</td><td class="${cad(x) ? 'bad-t' : ''}">${esc(x.fecha_caducidad) || '—'}</td>
+      <td><button class="link" data-cert="${esc(x.id)}">Certificado</button>${can('escribir') ? ` <button class="link" data-form="${esc(x.id)}">Editar</button>` : ''}</td></tr>`).join('')
+      || '<tr><td colspan="8" class="empty">Sin formación registrada.</td></tr>') + '</tbody>';
+  $$('[data-cert]').forEach(b => b.onclick = () => abrirInforme(htmlCertificados([state.formacion.find(x => x.id === b.dataset.cert)])));
+  $$('[data-form]').forEach(b => b.onclick = () => formFormacion(state.formacion.find(x => x.id === b.dataset.form)));
+}
+$('#form-q').oninput = pintarFormacion; $('#form-filtro').onchange = pintarFormacion;
+const camposFormacion = () => [['entidad_id', 'Entidad', state.entidades.map(e => [e.id, e.nombre])], ['colectivo', 'Colectivo', COLECTIVOS],
+  ['curso', 'Curso', 'text', true], ['entidad_formadora', 'Entidad formadora'], ['horas', 'Horas', 'number'], ['fecha', 'Fecha', 'date', true],
+  ['fecha_caducidad', 'Caducidad / reciclaje', 'date']];
+async function formFormacion(x) {
+  if (!state.entidades.length) state.entidades = await run(() => API.call('listarEntidades'));
+  const c = camposFormacion(); c.splice(1, 0, ['persona_nombre', 'Persona (agente deportivo adulto)', 'text', true]);
+  modal(x.id ? 'Editar formación' : 'Registrar formación', c.concat([['certificado_url', 'Enlace a certificado externo', 'url']]), x, async d => {
+    d.id = x.id; await run(() => API.call('guardarFormacion', d)); toast('Formación guardada'); loadFormacion();
+  });
+  if (x.id) {
+    const del = document.createElement('button'); del.type = 'button'; del.className = 'btn ghost peligro'; del.textContent = 'Eliminar';
+    del.onclick = async () => { if (!confirm('¿Eliminar este registro de formación?')) return; $('#modal').close('cancel');
+      await run(() => API.call('eliminarFormacion', { id: x.id })); toast('Registro eliminado'); loadFormacion(); };
+    $('#modal-form .actions').prepend(del);
+  }
+}
+$('#nueva-formacion') && ($('#nueva-formacion').onclick = () => formFormacion({ fecha: new Date().toISOString().slice(0, 10) }));
+$('#formacion-lote') && ($('#formacion-lote').onclick = async () => {
+  if (!state.entidades.length) state.entidades = await run(() => API.call('listarEntidades'));
+  modal('Curso con varios asistentes', camposFormacion().concat([['personas', 'Asistentes (una persona por línea, solo adultos)', 'textarea']]), { fecha: new Date().toISOString().slice(0, 10) }, async d => {
+    const r = await run(() => API.call('guardarFormacionLote', d));
+    toast(r.registradas + ' persona(s) registradas');
+    await loadFormacion();
+    if (confirm('¿Generar ahora los certificados de este curso?')) {
+      const lista = state.formacion.filter(x => x.entidad_id === d.entidad_id && x.curso === d.curso && String(x.fecha).slice(0, 10) === d.fecha);
+      abrirInforme(htmlCertificados(lista));
+    }
+  });
+});
+function htmlCertificados(lista) {
+  const cfg = state.cfg || {}, org = cfg.organismo || '';
+  const fmt = f => f ? new Date(String(f).slice(0, 10) + 'T12:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+  const hoy = fmt(new Date().toISOString().slice(0, 10));
+  const ent = id => state.entidades.find(e => e.id === id) || {};
+  const pags = lista.filter(Boolean).map(x => {
+    const e = ent(x.entidad_id);
+    const firmante = state.club ? (e.delegado_nombre || '') : (cfg.delegado_municipal || '');
+    return `<div class="cert"><div class="marco">
+      <div class="cab"><img src="${LOGO}" alt=""><div><b>${esc(org || 'EntornoSeguro')}</b><small>Sistema de protección de menores en el deporte</small></div></div>
+      <h1>CERTIFICADO DE FORMACIÓN</h1>
+      <p class="c">Se certifica que</p>
+      <p class="nombre">${esc(x.persona_nombre)}</p>
+      <p class="c">${x.colectivo ? esc(x.colectivo) + ' · ' : ''}${esc(e.nombre || '')}</p>
+      <p class="c">ha completado la acción formativa</p>
+      <p class="curso">«${esc(x.curso)}»</p>
+      <p class="c">${x.horas ? 'con una duración de <b>' + esc(x.horas) + ' horas</b>, ' : ''}realizada el ${esc(fmt(x.fecha))}${x.entidad_formadora ? ' e impartida por ' + esc(x.entidad_formadora) : ''},<br>
+      en materia de protección de las personas menores frente a la violencia en el deporte<br>(LO 8/2021, art. 5, y Protocolo Marco de Andalucía, Orden de 18 de noviembre de 2024).</p>
+      ${x.fecha_caducidad ? `<p class="c peq">Se recomienda su actualización antes del ${esc(fmt(x.fecha_caducidad))}.</p>` : ''}
+      <div class="pie-cert"><div>${esc(cfg.municipio || '')}${cfg.municipio ? ', a ' : ''}${esc(hoy)}</div>
+        <div class="firma-c">Delegado/a de Protección<br>${esc(firmante)}</div></div>
+      <div class="cod">Código de verificación: ${esc(x.id)}</div></div></div>`;
+  }).join('');
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Certificados de formación</title><style>
+@page { size: A4 landscape; margin: 1cm; }
+body{font-family:Calibri,Arial,sans-serif;color:#1d2a30;margin:0}
+.cert{page-break-after:always;height:18.5cm;box-sizing:border-box;padding:.2cm}.cert:last-child{page-break-after:auto}
+.marco{border:3px solid #0b3057;outline:1px solid #0d818f;outline-offset:-9px;height:100%;box-sizing:border-box;padding:1cm 1.6cm;position:relative}
+.cab{display:flex;align-items:center;gap:12px;border-bottom:3px solid #0d818f;padding-bottom:8px}.cab img{width:60px;height:60px;border-radius:12px}.cab b{color:#0b3057;font-size:14pt;display:block}.cab small{color:#4f5d65}
+h1{text-align:center;color:#0b3057;letter-spacing:.12em;font-size:24pt;margin:18px 0 10px}
+.c{text-align:center;font-size:12pt;margin:4px 0;line-height:1.5}.peq{font-size:10pt;color:#4f5d65}
+.nombre{text-align:center;font-size:22pt;font-weight:700;color:#0d818f;margin:6px 0}.curso{text-align:center;font-size:15pt;font-weight:700;color:#0b3057;margin:6px 0}
+.pie-cert{position:absolute;left:1.6cm;right:1.6cm;bottom:1.3cm;display:flex;justify-content:space-between;align-items:flex-end;font-size:11pt}
+.firma-c{border-top:1px solid #1d2a30;padding-top:4px;min-width:7cm;text-align:center}
+.cod{position:absolute;left:1.6cm;bottom:.5cm;font-size:8pt;color:#6b7a82}
+</style></head><body>${pags || '<p>No hay registros.</p>'}</body></html>`;
+}
+
+// ---------- ALERTAS ----------
+async function loadAlertas() {
+  const a = await run(() => API.call('listarAlertas'));
+  $('#badge-alertas').textContent = a.length || '';
+  const orden = { alta: 0, media: 1, baja: 2 };
+  a.sort((x, y) => orden[x.prioridad] - orden[y.prioridad]);
+  $('#tabla-alertas').innerHTML = `<thead><tr><th>Prioridad</th><th>Tipo</th><th>Alerta</th><th>Fecha límite</th><th></th></tr></thead><tbody>` +
+    (a.map(x => `<tr><td><span class="st ${x.prioridad === 'alta' ? 'bad' : x.prioridad === 'media' ? 'warn' : 'muted'}">${esc(x.prioridad)}</span></td>
+      <td>${esc(x.tipo)}</td><td>${esc(x.mensaje)}</td><td>${esc(x.fecha_limite) || '—'}</td>
+      <td>${can('escribir') ? `<button class="link" data-close="${esc(x.id)}">Cerrar</button>` : ''}</td></tr>`).join('')
+      || '<tr><td colspan="5" class="empty">Sin alertas abiertas.</td></tr>') + '</tbody>';
+  $$('[data-close]').forEach(b => b.onclick = async () => { await run(() => API.call('cerrarAlerta', { id: b.dataset.close })); loadAlertas(); });
+}
+$('#regenerar') && ($('#regenerar').onclick = async () => { const r = await run(() => API.call('regenerarAlertas')); toast(r.abiertas + ' alertas abiertas'); loadAlertas(); });
+
+
+// ---------- FORMATO (Markdown de Claude → documento limpio) ----------
+function mdInline(s) {
+  return esc(s)
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*\*([^*]+)\*\*\*/g, '<strong><em>$1</em></strong>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/__([^_]+)__/g, '<strong>$1</strong>')
+    .replace(/(^|[\s(])\*([^*\s][^*]*?)\*(?=[\s).,;:!?]|$)/g, '$1<em>$2</em>')
+    .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+}
+function mdToHtml(md) {
+  const L = String(md || '').replace(/\r\n?/g, '\n').split('\n');
+  const out = []; let i = 0;
+  const esFila = l => /^\s*\|.*\|\s*$/.test(l);
+  const esSep = l => /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/.test(l);
+  const celdas = l => l.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
+  const itemRe = /^(\s*)([-*+•]|\d+[.)])\s+(.*)$/;
+  while (i < L.length) {
+    const l = L[i];
+    if (!l.trim()) { i++; continue; }
+    if (esFila(l) && i + 1 < L.length && esSep(L[i + 1])) {
+      const cab = celdas(l); i += 2; const filas = [];
+      while (i < L.length && esFila(L[i])) filas.push(celdas(L[i++]));
+      out.push('<div class="md-scroll"><table class="md-tabla"><thead><tr>' + cab.map(c => '<th>' + mdInline(c) + '</th>').join('') + '</tr></thead><tbody>' +
+        filas.map(f => '<tr>' + f.map(c => '<td>' + mdInline(c) + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>');
+      continue;
+    }
+    let m = l.match(/^\s*(#{1,6})\s+(.*?)\s*#*\s*$/);
+    if (m) { const n = Math.min(m[1].length + 1, 5); out.push(`<h${n}>${mdInline(m[2])}</h${n}>`); i++; continue; }
+    if (/^\s*([-*_])(\s*\1){2,}\s*$/.test(l)) { out.push('<hr>'); i++; continue; }
+    if (/^\s*>/.test(l)) {
+      const q = []; while (i < L.length && /^\s*>/.test(L[i])) q.push(L[i++].replace(/^\s*>\s?/, ''));
+      out.push('<blockquote>' + mdToHtml(q.join('\n')) + '</blockquote>'); continue;
+    }
+    if (itemRe.test(l)) {
+      const pila = []; let html = '';
+      const sigue = j => { while (j < L.length && !L[j].trim()) j++; return j < L.length && (itemRe.test(L[j]) || /^\s{2,}\S/.test(L[j])); };
+      while (i < L.length && (itemRe.test(L[i]) || (L[i].trim() && /^\s{2,}/.test(L[i]) && pila.length) || (!L[i].trim() && pila.length && sigue(i)))) {
+        if (!L[i].trim()) { i++; continue; }
+        const mm = L[i].match(itemRe);
+        if (!mm) { html += ' ' + mdInline(L[i].trim()); i++; continue; }
+        const nivel = Math.floor(mm[1].replace(/\t/g, '  ').length / 2), tipo = /\d/.test(mm[2]) ? 'ol' : 'ul';
+        while (pila.length > nivel + 1 || (pila.length === nivel + 1 && pila[pila.length - 1] !== tipo)) html += '</li></' + pila.pop() + '>';
+        if (pila.length === nivel + 1) html += '</li><li>';
+        else while (pila.length < nivel + 1) { pila.push(tipo); const n0 = parseInt(mm[2], 10); html += '<' + tipo + (tipo === 'ol' && pila.length === nivel + 1 && n0 > 1 ? ' start="' + n0 + '"' : '') + '><li>'; }
+        html += mdInline(mm[3]); i++;
+      }
+      while (pila.length) html += '</li></' + pila.pop() + '>';
+      out.push(html); continue;
+    }
+    const p = []; while (i < L.length && L[i].trim() && !itemRe.test(L[i]) && !/^\s*#{1,6}\s/.test(L[i]) && !(esFila(L[i]) && esSep(L[i + 1] || ''))) p.push(mdInline(L[i++].trim()));
+    out.push('<p>' + p.join('<br>') + '</p>');
+  }
+  return out.join('\n');
+}
+function mdToText(md) {
+  return String(md || '').replace(/\r\n?/g, '\n').split('\n')
+    .filter(l => !/^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/.test(l) && !/^\s*([-*_])(\s*\1){2,}\s*$/.test(l))
+    .map(l => /^\s*\|.*\|\s*$/.test(l) ? l.trim().replace(/^\||\|$/g, '').split('|').map(c => c.trim()).join(' · ') : l)
+    .join('\n')
+    .replace(/^\s*#{1,6}\s+(.*)$/gm, '\n$1\n').replace(/^(\s*)[-*+]\s+/gm, '$1• ').replace(/^\s*>\s?/gm, '')
+    .replace(/\*\*\*([^*]+)\*\*\*/g, '$1').replace(/\*\*([^*]+)\*\*/g, '$1').replace(/__([^_]+)__/g, '$1')
+    .replace(/(^|[\s(])\*([^*\s][^*]*?)\*(?=[\s).,;:!?]|$)/g, '$1$2').replace(/`([^`]+)`/g, '$1')
+    .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '$1 ($2)').replace(/\n{3,}/g, '\n\n').trim();
+}
+// Si se pega texto con formato (seleccionado en Claude), se convierte a Markdown para conservar la estructura.
+function htmlToMd(html) {
+  const d = new DOMParser().parseFromString(html, 'text/html');
+  const txt = n => [...n.childNodes].map(conv).join('');
+  function conv(n) {
+    if (n.nodeType === 3) return n.textContent.replace(/\s+/g, ' ');
+    if (n.nodeType !== 1) return '';
+    const t = n.tagName.toLowerCase(), c = () => txt(n).trim();
+    if (/^h[1-6]$/.test(t)) return '\n\n' + '#'.repeat(+t[1]) + ' ' + c() + '\n\n';
+    if (t === 'strong' || t === 'b') { const v = c(); return v ? '**' + v + '**' : ''; }
+    if (t === 'em' || t === 'i') { const v = c(); return v ? '*' + v + '*' : ''; }
+    if (t === 'br') return '\n';
+    if (t === 'p' || t === 'div') return '\n\n' + c() + '\n\n';
+    if (t === 'hr') return '\n\n---\n\n';
+    if (t === 'ul' || t === 'ol') {
+      const prof = (() => { let k = 0, p = n.parentElement; while (p) { if (/^(ul|ol)$/i.test(p.tagName)) k++; p = p.parentElement; } return k; })();
+      return '\n' + [...n.children].filter(x => x.tagName === 'LI').map((li, j) => '  '.repeat(prof) + (t === 'ol' ? (j + 1) + '. ' : '- ') + txt(li).trim().replace(/\n{2,}/g, '\n')).join('\n') + '\n\n';
+    }
+    if (t === 'table') {
+      const filas = [...n.querySelectorAll('tr')].map(tr => [...tr.children].map(td => txt(td).trim().replace(/\|/g, '/').replace(/\n+/g, ' ')));
+      if (!filas.length) return '';
+      return '\n\n| ' + filas[0].join(' | ') + ' |\n|' + filas[0].map(() => ' --- ').join('|') + '|\n' + filas.slice(1).map(f => '| ' + f.join(' | ') + ' |').join('\n') + '\n\n';
+    }
+    if (t === 'script' || t === 'style') return '';
+    return txt(n);
+  }
+  return txt(d.body).replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+function pegarConFormato(ta, alCambiar) {
+  ta.addEventListener('paste', e => {
+    const html = e.clipboardData && e.clipboardData.getData('text/html');
+    const plano = e.clipboardData && e.clipboardData.getData('text/plain');
+    if (!html || /^\s*(#|\||- |\* |\d+\.)/m.test(plano || '')) return; // ya viene en Markdown
+    e.preventDefault();
+    const md = htmlToMd(html);
+    const s = ta.selectionStart, f = ta.selectionEnd;
+    ta.value = ta.value.slice(0, s) + md + ta.value.slice(f);
+    ta.selectionStart = ta.selectionEnd = s + md.length;
+    alCambiar && alCambiar();
+  });
+}
+function copiarRico(md) {
+  const html = mdToHtml(md), texto = mdToText(md);
+  if (navigator.clipboard && window.ClipboardItem && window.isSecureContext) {
+    return navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }), 'text/plain': new Blob([texto], { type: 'text/plain' }) })])
+      .then(() => toast('Copiado con formato'), () => copiarTexto(texto));
+  }
+  copiarTexto(texto);
+}
+
+// ---------- IA (prompts automáticos → Claude) ----------
+const CONTEXTO_IA = [
+  'Actúa como asistente técnico del Delegado/a de Protección de Menores en el Deporte, que puede serlo de un ayuntamiento o de una entidad deportiva de Andalucía.',
+  'Marco normativo: LO 8/2021 (LOPIVI, Capítulo IX deporte y ocio), Ley 4/2021 de Infancia y Adolescencia de Andalucía, Ley 5/2016 del Deporte de Andalucía, Decreto 41/2022 y Protocolo Marco de protección de menores en el deporte (Orden de 18 de noviembre de 2024).',
+  'Reglas: no emitas conclusiones jurídicas categóricas; no atribuyas responsabilidad ni califiques hechos como violencia; cita la norma o apartado que fundamenta cada afirmación cuando sea posible; indica qué debe validar una persona responsable.',
+  'Estilo: español de España, técnico, conciso.',
+  'FORMATO DE RESPUESTA: entrega únicamente el resultado final, listo para copiar y pegar, sin introducciones, comentarios ni preguntas al final.'
+].join('\n');
+const FORMATOS_IA = {
+  carrusel: 'Carrusel de Instagram de 6-8 diapositivas. Para cada una: título (máx. 8 palabras) y texto (máx. 25 palabras). Después, pie de publicación y 8 hashtags.',
+  story: 'Secuencia de 3-4 stories. Texto breve por pantalla y una llamada a la acción.',
+  reel: 'Guion de reel de 30-45 s: gancho (3 s), escenas con texto en pantalla y locución, cierre y pie de publicación.',
+  infografia: 'Contenido para infografía: título, 5-7 bloques con icono sugerido y frase, y fuente normativa.',
+  familias: 'Mensaje para familias (WhatsApp/email), tono cercano, máx. 150 palabras.',
+  entrenadores: 'Mensaje para entrenadores y monitores, operativo, con 3-5 pautas concretas.'
+};
+function sanearIA(t) {
+  return String(t || '')
+    .replace(/\b\d{8}[A-Za-z]\b/g, '[DNI]').replace(/\b[XYZxyz]\d{7}[A-Za-z]\b/g, '[NIE]')
+    .replace(/\b[6789]\d{8}\b/g, '[TEL]').replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, '[EMAIL]');
+}
+function mostrarPrompt(caja, prompt, meta) {
+  caja.innerHTML = '';
+  const pre = document.createElement('pre'); pre.className = 'out prompt'; pre.textContent = prompt;
+  const acc = document.createElement('div'); acc.className = 'ia-acciones';
+  const abrir = document.createElement('a'); abrir.className = 'btn'; abrir.target = '_blank'; abrir.rel = 'noopener';
+  abrir.href = 'https://claude.ai/new?q=' + encodeURIComponent(prompt); abrir.textContent = 'Abrir en Claude';
+  const copiar = document.createElement('button'); copiar.type = 'button'; copiar.className = 'btn ghost'; copiar.textContent = 'Copiar prompt';
+  copiar.onclick = () => copiarTexto(prompt);
+  acc.append(abrir, copiar);
+  const nota = document.createElement('p'); nota.className = 'nota';
+  nota.textContent = 'Se abrirá Claude con tu cuenta y el prompt preparado. Si aparece vacío, pulsa "Copiar prompt" y pégalo.';
+  caja.append(acc, nota, pre);
+  if (!meta) return;
+  const zona = document.createElement('div'); zona.className = 'guardar-res form';
+  zona.innerHTML = '<label>Pega aquí la respuesta de Claude<textarea rows="8" class="doc-texto" placeholder="En Claude, pulsa el botón Copiar de la respuesta y pégala aquí"></textarea></label><div class="vista-previa hidden"><b class="vp-tit">Vista previa</b><div class="md"></div></div>';
+  const taZ = zona.querySelector('textarea'), vp = zona.querySelector('.vista-previa');
+  const refrescar = () => { vp.classList.toggle('hidden', !taZ.value.trim()); vp.querySelector('.md').innerHTML = mdToHtml(taZ.value); };
+  taZ.addEventListener('input', refrescar); pegarConFormato(taZ, refrescar);
+  const g = document.createElement('button'); g.type = 'button'; g.className = 'btn'; g.textContent = 'Guardar en Documentos';
+  g.onclick = async () => {
+    const resultado = zona.querySelector('textarea').value.trim();
+    if (!resultado) { toast('Pega primero la respuesta de Claude', true); return; }
+    const r = await run(() => API.call('guardarDocumento', Object.assign({}, meta, { prompt, resultado, id: meta.id })));
+    meta.id = r.id; state.docs = null;
+    toast('Guardado en Documentos'); loadRecientes(meta.tipo);
+  };
+  zona.append(g); caja.append(zona);
+}
+function copiarTexto(t) {
+  const fin = () => toast('Copiado');
+  if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t).then(fin, () => copiarManual(t));
+  copiarManual(t);
+}
+function copiarManual(t) {
+  const ta = document.createElement('textarea'); ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); toast('Copiado'); } catch { toast('Selecciona el texto y cópialo'); }
+  ta.remove();
+}
+const pubExtra = () => { const f = $('#form-contenido'); $('#pub-extra').classList.toggle('hidden', f.formato.value !== 'publicacion'); };
+$('#form-contenido').formato.addEventListener('change', pubExtra);
+$('#form-contenido').addEventListener('reset', () => setTimeout(pubExtra, 0));
+pubExtra();
+const ENFOQUES = {
+  proteccion: { nombre: 'Protección de menores',
+    rol: 'especializado en comunicación institucional sobre protección de la infancia en el deporte',
+    contexto: 'Sistema de protección de menores en el deporte conforme a la LO 8/2021 (LOPIVI) y al Protocolo Marco de Andalucía.',
+    tono: 'Tono cercano e institucional, positivo y preventivo; nunca alarmista.',
+    claves: 'deporte base, delegado de protección, entorno seguro, protección de menores' },
+  educacion: { nombre: 'Educación en valores',
+    rol: 'especializado en educación en valores a través del deporte base',
+    contexto: 'El deporte como herramienta educativa: respeto, compañerismo, esfuerzo, juego limpio, gestión de la frustración, autoestima, igualdad e inclusión. Entrenadores y familias como educadores.',
+    tono: 'Tono cálido, inspirador y cercano, que emocione y motive; celebra el proceso y el esfuerzo por encima del resultado. Los valores son el ÚNICO protagonista: no menciones protección, seguridad, riesgos, violencia, protocolos, normativa (LOPIVI) ni formación en protección, aunque aparezcan en el tema; en ese caso omítelos.',
+    claves: 'deporte base, educación en valores, juego limpio, deporte en familia, valores del deporte' },
+  mixto: { nombre: 'Mixto: valores + entorno seguro',
+    rol: 'especializado en educación en valores a través del deporte y en entornos deportivos seguros',
+    contexto: 'El deporte educa en valores y lo hace en un entorno seguro y cuidado para niños, niñas y adolescentes (LOPIVI y Protocolo Marco de Andalucía como respaldo, sin protagonismo).',
+    tono: 'Tono cálido e inspirador; los valores son el protagonista y el entorno seguro aparece como garantía, en una frase, sin alarmismo.',
+    claves: 'deporte base, valores del deporte, entorno seguro, deporte en familia' }
+};
+function promptPublicacion(d, org) {
+  const mun = (state.cfg && state.cfg.municipio) || '';
+  const E = ENFOQUES[d.enfoque] || ENFOQUES.proteccion;
+  return ['Actúa como copywriter experto en Instagram y especialista en SEO para redes sociales, ' + E.rol + '.',
+    'Contexto: ' + org + (mun ? ' (' + mun + ')' : '') + '. ' + E.contexto, '',
+    'Redacta los textos (pies de foto) para mi próxima publicación con esta información:',
+    '- Soporte: ' + d.soporte,
+    '- Tema del post: ' + sanearIA(d.tema),
+    '- Objetivo principal: ' + d.objetivo,
+    '- Público objetivo: ' + sanearIA(d.publico), '',
+    'Dame 3 opciones independientes con enfoques diferentes (Corta, Mediana y Larga/Storytelling). Cada opción debe cumplir estrictamente:',
+    '1. El Gancho: primera línea impactante de menos de 125 caracteres, antes del botón «ver más».',
+    '2. El Cuerpo: información organizada con saltos de línea frecuentes y viñetas para que sea muy fácil de leer.',
+    '3. Llamada a la acción (CTA): una orden clara y directa al final, alineada con el objetivo.',
+    '4. Naturalidad SEO: integra palabras clave relevantes de forma natural (por ejemplo: ' + E.claves + (mun ? ', ' + mun : '') + ').', '',
+    'Reglas obligatorias:',
+    '- ' + E.tono + ' Lenguaje inclusivo.',
+    '- Nunca nombres ni datos de menores ni referencias a casos reales. No vendas ni hagas ofertas.',
+    '- Emojis con moderación. Cada pie completo por debajo de 2.200 caracteres.',
+    '- Para cada opción, propón la imagen o el vídeo SIN menores identificables (manos, siluetas, material deportivo, adultos formadores) y un texto alternativo (alt text) de 1-2 frases para accesibilidad.', '',
+    'Al final de las 3 opciones, incluye una lista única de 3 a 5 hashtags altamente específicos y relevantes para esta temática.', '',
+    'FORMATO DE RESPUESTA: entrega únicamente el resultado final, listo para copiar y pegar, sin introducciones ni preguntas al final.'].join('\n');
+}
+$('#form-contenido').onsubmit = ev => {
+  ev.preventDefault();
+  const d = Object.fromEntries(new FormData(ev.target));
+  const org = (state.cfg && state.cfg.organismo) || 'Ayuntamiento';
+  if (d.formato === 'publicacion') {
+    mostrarPrompt($('#out-contenido'), promptPublicacion(d, org), { asunto: d.asunto, tipo: 'contenido', formato: 'publicacion', publico: d.publico + ' · ' + (ENFOQUES[d.enfoque] || ENFOQUES.proteccion).nombre });
+    return;
+  }
+  const E = ENFOQUES[d.enfoque] || ENFOQUES.proteccion;
+  if (d.enfoque === 'educacion' || d.enfoque === 'mixto') {
+    const p2 = ['Actúa como comunicador experto en redes sociales, ' + E.rol + '.',
+      'Contexto: ' + org + '. ' + E.contexto, '',
+      'TAREA: crea un contenido para redes sociales.',
+      'Tema: ' + sanearIA(d.tema), 'Público: ' + sanearIA(d.publico),
+      'Tono: ' + E.tono + ' Lenguaje inclusivo. Nunca nombres ni datos de menores; propón imágenes sin menores identificables.',
+      'Formato: ' + (FORMATOS_IA[d.formato] || FORMATOS_IA.carrusel), '',
+      'FORMATO DE RESPUESTA: entrega únicamente el resultado final, listo para copiar y pegar, sin introducciones ni preguntas al final.'].join('\n');
+    mostrarPrompt($('#out-contenido'), p2, { asunto: d.asunto, tipo: 'contenido', formato: d.formato, publico: d.publico + ' · ' + E.nombre });
+    return;
+  }
+  const prompt = [CONTEXTO_IA, '',
+    'TAREA: crea un contenido de sensibilización para redes sociales.',
+    'Organismo: ' + org,
+    'Tema: ' + sanearIA(d.tema),
+    'Público: ' + sanearIA(d.publico),
+    'Tono: positivo y preventivo, sin lenguaje alarmista, lenguaje inclusivo, sin imágenes de menores identificables.',
+    'Formato: ' + (FORMATOS_IA[d.formato] || FORMATOS_IA.carrusel)].join('\n');
+  mostrarPrompt($('#out-contenido'), prompt, { asunto: d.asunto, tipo: 'contenido', formato: d.formato, publico: d.publico });
+};
+$('#form-asistente').onsubmit = ev => {
+  ev.preventDefault();
+  const d = Object.fromEntries(new FormData(ev.target));
+  const prompt = [CONTEXTO_IA, '',
+    'IMPORTANTE: la consulta no debe contener datos que identifiquen a menores ni a personas implicadas en casos.', '',
+    'CONSULTA:', sanearIA(d.pregunta)].join('\n');
+  mostrarPrompt($('#out-asistente'), prompt, { asunto: d.asunto, tipo: 'asistente' });
+};
+
+// ---------- MODAL GENÉRICO ----------
+function modal(titulo, campos, datos, onSave, obligatorio) {
+  const f = $('#modal-form');
+  f.innerHTML = `<h3>${esc(titulo)}</h3><div class="fields">` + campos.map(([n, l, t = 'text', req]) => {
+    const v = esc(datos[n] ?? '');
+    const r = req ? 'required' : '';
+    if (Array.isArray(t)) return `<label>${esc(l)}<select name="${n}">${t.map(o => { const [val, txt] = Array.isArray(o) ? o : [o, o];
+      return `<option value="${esc(val)}" ${String(datos[n]) === String(val) ? 'selected' : ''}>${esc(txt)}</option>`; }).join('')}</select></label>`;
+    if (t === 'textarea') return `<label class="full">${esc(l)}<textarea name="${n}" rows="3">${v}</textarea></label>`;
+    return `<label>${esc(l)}<input type="${t}" name="${n}" value="${v}" ${r}></label>`;
+  }).join('') + `</div><div class="actions">${obligatorio ? '' : '<button value="cancel" class="btn ghost" formnovalidate>Cancelar</button>'}<button value="ok" class="btn">Guardar</button></div>`;
+  const dlg = $('#modal');
+  dlg.onclose = async () => { if (dlg.returnValue === 'ok') await onSave(Object.fromEntries(new FormData(f))); };
+  dlg.oncancel = e => { if (obligatorio) e.preventDefault(); };
+  dlg.returnValue = '';
+  dlg.showModal();
+}
+
+// ---------- USUARIOS (admin) ----------
+const ROLES_TXT = [['admin', 'Administrador'], ['delegado', 'Delegado/a de Protección'], ['tecnico', 'Técnico/a'], ['entidad', 'Entidad deportiva'], ['lectura', 'Solo lectura']];
+async function loadUsuarios() {
+  const [us, ents] = await run(() => Promise.all([API.call('listarUsuarios'), state.entidades.length ? state.entidades : API.call('listarEntidades')]));
+  state.entidades = ents; state.usuarios = us;
+  const nom = id => (ents.find(e => e.id === id) || {}).nombre || '—';
+  $('#tabla-usuarios').innerHTML = `<thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Entidad</th><th>Activo</th><th>Último acceso</th><th></th></tr></thead><tbody>` +
+    us.map(u => `<tr><td><b>${esc(u.usuario)}</b></td><td>${esc(u.nombre)}<br><small>${esc(u.email)}</small></td><td>${esc(u.rol)}</td>
+      <td>${u.rol === 'entidad' ? esc(nom(u.entidad_id)) : '—'}</td><td>${u.activo === 'SI' ? '✓' : '<span class="bad-t">No</span>'}</td><td>${esc(u.ultimo_acceso) || '—'}</td>
+      <td><button class="link" data-u="${esc(u.usuario)}">Editar</button> · <button class="link" data-reset="${esc(u.usuario)}">Nueva contraseña</button></td></tr>`).join('') + '</tbody>';
+  $$('[data-u]').forEach(b => b.onclick = () => formUsuario(us.find(u => u.usuario === b.dataset.u)));
+  $$('[data-reset]').forEach(b => b.onclick = async () => {
+    if (!confirm('¿Generar una contraseña temporal nueva para ' + b.dataset.reset + '?')) return;
+    const r = await run(() => API.call('resetearPassword', { usuario: b.dataset.reset }));
+    mostrarTemporal(b.dataset.reset, r.temporal);
+  });
+}
+$('#nuevo-usuario') && ($('#nuevo-usuario').onclick = () => formUsuario({}));
+function formUsuario(u) {
+  const nuevo = !u.usuario;
+  modal(nuevo ? 'Nuevo usuario' : 'Editar usuario', [
+    ['usuario', 'Usuario (sin espacios ni @)', 'text', true], ['nombre', 'Nombre y apellidos', 'text', true], ['email', 'Email', 'email'],
+    ['rol', 'Rol', ROLES_TXT], ['entidad_id', 'Entidad (solo rol Entidad)', [['', '—']].concat(state.entidades.map(e => [e.id, e.nombre]))],
+    ['activo', 'Activo', ['SI', 'NO']]
+  ], u, async d => {
+    if (!nuevo) d.usuario = u.usuario;
+    const r = await run(() => API.call('guardarUsuario', d));
+    if (r.temporal) mostrarTemporal(d.usuario, r.temporal); else toast('Usuario guardado');
+    loadUsuarios();
+  });
+  if (!nuevo) $('#modal-form [name=usuario]').readOnly = true;
+}
+function mostrarTemporal(usuario, temp) {
+  const f = $('#modal-form');
+  f.innerHTML = `<h3>Contraseña temporal</h3><p>Usuario: <b>${esc(usuario)}</b></p><p class="temp">${esc(temp)}</p>
+    <p class="nota">Cópiala ahora: no se volverá a mostrar. Se pedirá cambiarla en el primer acceso.</p>
+    <div class="actions"><button value="cancel" class="btn">Entendido</button></div>`;
+  $('#modal').onclose = null; $('#modal').oncancel = null;
+  if (!$('#modal').open) $('#modal').showModal();
+}
+
+  
+// ---------- TAMAÑO DE TEXTO ----------
+function aplicarTamano(f) {
+  document.documentElement.style.setProperty('--fs', f);
+  document.querySelectorAll('.tamano button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.fs === String(f))));
+  try { localStorage.setItem('es_fs', f); } catch {}
+}
+document.querySelectorAll('.tamano button').forEach(b => b.onclick = () => aplicarTamano(b.dataset.fs));
+(() => { let f = '1'; try { f = localStorage.getItem('es_fs') || '1'; } catch {} aplicarTamano(f); })();
+
+// ---------- DOCUMENTOS ----------
+const TIPOS_DOC = { asistente: 'Asistente IA', contenido: 'Redes sociales', riesgos: 'Análisis de riesgos', plantilla: 'Plantillas', revision: 'Revisión documental' };
+const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+async function loadDocumentos(forzar) {
+  if (!state.docs || forzar) state.docs = await run(() => API.call('listarDocumentos'));
+  pintarDocumentos();
+}
+function pintarDocumentos() {
+  const q = norm($('#doc-q').value).split(/\s+/).filter(Boolean);
+  const tipo = $('#doc-tipo').value;
+  const lista = (state.docs || []).filter(d => (!tipo || d.tipo === tipo) &&
+    q.every(w => norm([d.asunto, mdToText(d.resultado), d.publico, d.formato].join(' ')).includes(w)));
+  const n = lista.length, pl = n === 1 ? '' : 's';
+  $('#doc-count').textContent = n + ' documento' + pl + (q.length || tipo ? ' encontrado' + pl : '');
+  const resaltar = t => { let s = esc(t); q.forEach(w => { if (w.length > 1) s = s.replace(new RegExp('(' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '<mark>$1</mark>'); }); return s; };
+  $('#doc-lista').innerHTML = lista.length ? lista.map(d => `
+    <div class="doc-item" tabindex="0" role="button" data-doc="${esc(d.id)}">
+      <h3>${resaltar(d.asunto)}</h3>
+      <div class="meta"><span class="chip">${esc(TIPOS_DOC[d.tipo] || d.tipo)}</span>${esc(d.actualizado || d.creado)} · ${esc(d.autor)}</div>
+      <p>${resaltar(mdToText(d.resultado).slice(0, 300))}</p>
+    </div>`).join('') : '<p class="empty">No hay documentos con esos criterios.</p>';
+  $$('[data-doc]').forEach(el => {
+    const abrir = () => abrirDoc(el.dataset.doc);
+    el.onclick = abrir; el.onkeydown = e => { if (e.key === 'Enter') abrir(); };
+  });
+}
+$('#doc-q').oninput = pintarDocumentos;
+$('#doc-tipo').onchange = pintarDocumentos;
+
+function abrirDoc(id) {
+  const d = (state.docs || []).find(x => x.id === id); if (!d) return;
+  state.doc = d;
+  const f = $('#form-doc');
+  f.asunto.value = d.asunto || ''; f.resultado.value = d.resultado || '';
+  $('#doc-titulo').textContent = d.asunto || 'Documento';
+  $('#doc-meta').innerHTML = `<span class="chip">${esc(TIPOS_DOC[d.tipo] || d.tipo)}</span>Creado ${esc(d.creado)} por ${esc(d.autor)}${d.actualizado ? ' · Modificado ' + esc(d.actualizado) : ''}`;
+  $('#doc-prompt').textContent = d.prompt || '';
+  show('doc');
+  modoDoc(d.resultado ? 'vista' : 'editar');
+}
+function modoDoc(m) {
+  const f = $('#form-doc');
+  $$('.modo-b').forEach(b => b.classList.toggle('activo', b.dataset.modo === m));
+  $('#doc-vista').innerHTML = mdToHtml(f.resultado.value) || '<p class="empty">Sin contenido.</p>';
+  $('#doc-vista').classList.toggle('hidden', m !== 'vista');
+  $('#doc-editar').classList.toggle('hidden', m !== 'editar');
+  if (m === 'editar') { f.resultado.style.height = 'auto'; f.resultado.style.height = Math.max(320, f.resultado.scrollHeight + 4) + 'px'; }
+}
+$$('.modo-b').forEach(b => b.onclick = () => modoDoc(b.dataset.modo));
+pegarConFormato($('#form-doc').resultado);
+$('#doc-volver').onclick = () => show('documentos');
+$('#form-doc').onsubmit = async ev => {
+  ev.preventDefault();
+  const f = ev.target;
+  const r = await run(() => API.call('guardarDocumento', { id: state.doc.id, asunto: f.asunto.value, tipo: state.doc.tipo, formato: state.doc.formato, publico: state.doc.publico, resultado: f.resultado.value }));
+  Object.assign(state.doc, { asunto: f.asunto.value, resultado: f.resultado.value });
+  $('#doc-titulo').textContent = f.asunto.value;
+  state.docs = null; toast('Documento guardado'); modoDoc('vista');
+};
+$('#form-doc').resultado.oninput = e => { e.target.style.height = 'auto'; e.target.style.height = Math.max(320, e.target.scrollHeight + 4) + 'px'; };
+$('#doc-copiar').onclick = () => copiarRico($('#form-doc').resultado.value);
+$('#doc-borrar').onclick = async () => {
+  if (!confirm('¿Eliminar definitivamente este documento?')) return;
+  await run(() => API.call('eliminarDocumento', { id: state.doc.id }));
+  state.docs = null; toast('Documento eliminado'); show('documentos');
+};
+function nombreArchivo(ext) {
+  return (norm($('#form-doc').asunto.value).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'documento') + '.' + ext;
+}
+function descargar(contenido, tipo, nombre) {
+  const url = URL.createObjectURL(new Blob([contenido], { type: tipo }));
+  const a = document.createElement('a'); a.href = url; a.download = nombre; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 500);
+}
+function htmlDocumento(paraWord) {
+  const f = $('#form-doc'); const org = (state.cfg && state.cfg.organismo) || '';
+  const cuerpo = mdToHtml(f.resultado.value);
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${esc(f.asunto.value)}</title>
+<style>body{font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#1d2a30;margin:${paraWord ? '0' : '2cm'};line-height:1.5}
+.cab{display:flex;align-items:center;gap:12px;border-bottom:3px solid #0d818f;padding-bottom:8px;margin-bottom:18px}
+.cab img{width:56px;height:56px}.cab b{color:#0b3057;font-size:14pt;display:block}.cab small{color:#4f5d65}
+h1{color:#0b3057;font-size:16pt;margin:0 0 4px}.fecha{color:#4f5d65;font-size:9pt;margin-bottom:16px}
+.pie{margin-top:28px;border-top:1px solid #cfd8dc;padding-top:6px;color:#4f5d65;font-size:8pt}
+h2,h3,h4,h5{color:#0b3057;margin:14px 0 6px}h2{font-size:14pt}h3{font-size:12pt}h4,h5{font-size:11pt;color:#0d818f}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:10pt}th{background:#0b3057;color:#fff;text-align:left}th,td{border:1px solid #9fb3bb;padding:5px 7px;vertical-align:top}tr:nth-child(even) td{background:#f1f6f7}
+ul,ol{margin:6px 0 10px;padding-left:22px}li{margin:2px 0}blockquote{border-left:3px solid #0d818f;margin:8px 0;padding:2px 12px;color:#4f5d65}hr{border:0;border-top:1px solid #cfd8dc;margin:14px 0}p{margin:0 0 8px}</style></head><body>
+<div class="cab"><img src="${LOGO}" alt=""><div><b>EntornoSeguro</b><small>${esc(org)}</small></div></div>
+<h1>${esc(f.asunto.value)}</h1><div class="fecha">${new Date().toLocaleDateString('es-ES')}</div>${cuerpo}
+<div class="pie">EntornoSeguro · ${esc(org)} · Borrador generado con apoyo de IA, sujeto a validación profesional.<br>EntornoSeguro © 2026 Escuela&amp;Deporte (by M.A. Ballesteros)</div></body></html>`;
+}
+$('#doc-word').onclick = () => descargar('﻿' + htmlDocumento(true), 'application/msword', nombreArchivo('doc'));
+$('#doc-txt').onclick = () => descargar('﻿' + $('#form-doc').asunto.value + '\n\n' + mdToText($('#form-doc').resultado.value), 'text/plain;charset=utf-8', nombreArchivo('txt'));
+$('#doc-pdf').onclick = () => {
+  const w = window.open('', '_blank');
+  if (!w) { toast('Permite las ventanas emergentes para imprimir', true); return; }
+  w.document.write(htmlDocumento(false)); w.document.close();
+  let hecho = false;
+  const imprimir = () => { if (hecho) return; hecho = true; try { w.focus(); w.print(); } catch {} };
+  w.onload = imprimir; setTimeout(imprimir, 800);
+};
+
+// ---------- ANÁLISIS DE RIESGOS ----------
+const CATALOGO_RIESGOS = {
+  'Vestuarios': [['Presencia de adultos no autorizados en vestuarios', 'Acceso restringido; supervisión por dos adultos del mismo sexo desde la puerta; nunca un adulto a solas con un menor.'],
+                 ['Coincidencia de menores con adultos ajenos a la actividad', 'Franjas horarias separadas o vestuarios diferenciados para menores.']],
+  'Duchas': [['Falta de intimidad en duchas compartidas', 'Duchas individuales o turnos; prohibición de móviles y cámaras en la zona.']],
+  'Entrenamientos': [['Sesiones con un único adulto y un solo menor', 'Regla de dos adultos o espacio abierto y visible; informar a la familia del horario.'],
+                     ['Contacto físico en correcciones técnicas', 'Pauta escrita de contacto físico necesario, explicado y consentido; formación del cuerpo técnico.']],
+  'Competiciones': [['Menores sin supervisión en instalaciones ajenas', 'Responsable identificado por grupo; punto de encuentro y control de asistencia.']],
+  'Desplazamientos': [['Traslado de un menor a solas en vehículo particular', 'Prohibir traslados individuales salvo autorización escrita de la familia; mínimo dos adultos o un tercer menor.'],
+                      ['Falta de autorizaciones familiares', 'Autorización firmada por desplazamiento con datos de contacto de emergencia.']],
+  'Viajes': [['Organización del viaje sin plan de protección', 'Plan escrito: responsables, ratios, teléfonos, normas de convivencia y protocolo ante incidentes.']],
+  'Concentraciones': [['Horarios libres sin supervisión', 'Cuadrante de responsables por franja y normas conocidas por los menores.']],
+  'Actividades fuera de instalaciones': [['Entorno desconocido y control de accesos limitado', 'Reconocimiento previo del lugar, ratios reforzadas y listado actualizado de participantes.']],
+  'Contacto individual entrenador-deportista': [['Reuniones a solas en espacios cerrados', 'Reuniones en espacios visibles o con puerta abierta; informar a otro responsable.']],
+  'Comunicación digital': [['Mensajes privados entre adultos y menores', 'Canales grupales oficiales con presencia de otro adulto o de la familia; prohibido el mensaje privado.']],
+  'Redes sociales': [['Publicación de contenidos con menores identificables', 'Autorización de imagen vigente; evitar nombres, geolocalización y uniformes identificables.']],
+  'Uso de imágenes': [['Grabaciones por terceros en entrenamientos o vestuarios', 'Normas de captación de imágenes visibles; prohibición absoluta en vestuarios y duchas.']],
+  'Entornos digitales': [['Exposición a contactos desconocidos en plataformas del club', 'Configuración privada de grupos y cuentas; administración por dos responsables.']],
+  'Público': [['Acceso libre de público a zonas de menores', 'Delimitar zonas de público y de deportistas; control de accesos.']],
+  'Personal externo': [['Personal sin certificado negativo de delitos sexuales', 'Exigir el certificado del Registro Central antes de iniciar la colaboración (LOPIVI art. 57).']],
+  'Voluntariado': [['Voluntarios sin formación ni certificado', 'Formación básica en protección, certificado negativo y aceptación del código de conducta.']],
+  'Actividades con pernocta': [['Distribución de habitaciones', 'Habitaciones separadas por sexo y edad; ningún adulto duerme en la habitación de menores; rondas por parejas.'],
+                               ['Normas nocturnas poco claras', 'Normas de convivencia escritas, horario de silencio y responsable de guardia identificado.']]
+};
+const NIVELES = { 1: 'Baja', 2: 'Media', 3: 'Alta' };
+const ESTADOS_R = [['pendiente', 'Pendiente'], ['en_curso', 'En curso'], ['implantada', 'Implantada']];
+
+async function loadRiesgos() {
+  const sel = $('#riesgos-entidad');
+  if (!sel.options.length) {
+    if (!state.entidades.length) state.entidades = await run(() => API.call('listarEntidades'));
+    sel.innerHTML = state.entidades.filter(e => e.trabaja_menores === 'SI').map(e => `<option value="${esc(e.id)}">${esc(e.nombre)}</option>`).join('');
+    sel.onchange = loadRiesgos;
+  }
+  sel.classList.toggle('hidden', !!state.club);
+  if (!sel.value) { $('#tabla-riesgos').innerHTML = '<tr><td class="empty">Registra primero una entidad que trabaje con menores.</td></tr>'; $('#riesgos-resumen').innerHTML = ''; return; }
+  const rows = await run(() => API.call('listarRiesgos', { entidad_id: sel.value }));
+  state.riesgos = rows;
+  const orden = { alto: 0, medio: 1, bajo: 2 };
+  rows.sort((a, b) => orden[a.nivel] - orden[b.nivel]);
+  const cuenta = n => rows.filter(r => r.nivel === n).length;
+  $('#riesgos-resumen').innerHTML = [['Riesgos', rows.length], ['Nivel alto', cuenta('alto')], ['Nivel medio', cuenta('medio')], ['Medidas pendientes', rows.filter(r => r.estado !== 'implantada').length]]
+    .map(([l, v]) => `<div class="kpi"><span>${l}</span><strong>${v}</strong></div>`).join('');
+  const estTxt = v => (ESTADOS_R.find(x => x[0] === v) || ['', 'Pendiente'])[1];
+  $('#tabla-riesgos').innerHTML = `<thead><tr><th>Riesgo</th><th>Nivel</th><th>Medidas preventivas</th><th>Responsable</th><th>Estado</th><th>Revisión</th><th></th></tr></thead><tbody>` +
+    (rows.map(r => `<tr><td><b>${esc(r.ambito)}</b><br>${esc(r.descripcion)}</td>
+      <td><span class="nivel ${esc(r.nivel)}">${esc(r.nivel)}</span><br><small>P ${esc(NIVELES[r.probabilidad])} · I ${esc(NIVELES[r.impacto])}</small></td>
+      <td>${esc(r.medidas) || '—'}</td><td>${esc(r.responsable) || '—'}</td><td>${esc(estTxt(r.estado))}</td>
+      <td class="${r.fecha_revision && new Date(r.fecha_revision) < new Date() ? 'bad-t' : ''}">${esc(r.fecha_revision) || '—'}</td>
+      <td>${can('escribir') ? `<button class="link" data-riesgo="${esc(r.id)}">Editar</button>` : ''}</td></tr>`).join('')
+      || '<tr><td colspan="7" class="empty">Sin riesgos registrados. Pulsa "+ Nuevo riesgo" o "Proponer con IA".</td></tr>') + '</tbody>';
+  $$('[data-riesgo]').forEach(b => b.onclick = () => formRiesgo(rows.find(r => r.id === b.dataset.riesgo)));
+}
+$('#nuevo-riesgo') && ($('#nuevo-riesgo').onclick = () => formRiesgo({ probabilidad: 2, impacto: 2, estado: 'pendiente' }));
+
+function formRiesgo(r) {
+  const entidad_id = $('#riesgos-entidad').value;
+  if (!entidad_id) { toast('Selecciona una entidad', true); return; }
+  const nuevo = !r.id;
+  modal(nuevo ? 'Nuevo riesgo' : 'Editar riesgo', [
+    ['ambito', 'Ámbito', Object.keys(CATALOGO_RIESGOS)],
+    ['descripcion', 'Situación o factor de riesgo', 'textarea', true],
+    ['probabilidad', 'Probabilidad', [[1, 'Baja'], [2, 'Media'], [3, 'Alta']]],
+    ['impacto', 'Impacto', [[1, 'Bajo'], [2, 'Medio'], [3, 'Alto']]],
+    ['medidas', 'Medidas preventivas', 'textarea'],
+    ['responsable', 'Responsable'], ['estado', 'Estado de las medidas', ESTADOS_R],
+    ['fecha_implantacion', 'Fecha de implantación', 'date'], ['fecha_revision', 'Próxima revisión', 'date']
+  ], r, async d => {
+    Object.assign(d, { id: r.id, entidad_id });
+    await run(() => API.call('guardarRiesgo', d)); toast('Riesgo guardado'); loadRiesgos();
+  });
+  const f = $('#modal-form');
+  const caja = document.createElement('div'); caja.className = 'sugerencias';
+  const pintar = () => {
+    const lista = CATALOGO_RIESGOS[f.ambito.value] || [];
+    caja.innerHTML = '<b>Sugerencias para este ámbito</b> <small>(pulsa para rellenar)</small>';
+    lista.forEach(([fac, med]) => {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = fac;
+      b.onclick = () => { f.descripcion.value = fac; if (!f.medidas.value) f.medidas.value = med; };
+      caja.appendChild(b);
+    });
+  };
+  f.ambito.onchange = pintar; pintar();
+  f.querySelector('.fields').insertBefore(caja, f.descripcion.closest('label'));
+  if (!nuevo) {
+    const del = document.createElement('button'); del.type = 'button'; del.className = 'btn ghost peligro'; del.textContent = 'Eliminar';
+    del.onclick = async () => {
+      if (!confirm('¿Eliminar este riesgo?')) return;
+      $('#modal').close('cancel'); await run(() => API.call('eliminarRiesgo', { id: r.id })); toast('Riesgo eliminado'); loadRiesgos();
+    };
+    f.querySelector('.actions').prepend(del);
+  }
+}
+
+$('#riesgos-ia') && ($('#riesgos-ia').onclick = () => {
+  const sel = $('#riesgos-entidad'); if (!sel.value) return;
+  const e = state.entidades.find(x => x.id === sel.value) || {};
+  const ya = (state.riesgos || []).map(r => '- ' + r.ambito + ': ' + r.descripcion).join('\n') || '- Ninguno todavía';
+  const prompt = [CONTEXTO_IA, '',
+    'TAREA: propón un análisis de riesgos de protección de menores para una entidad deportiva, conforme al apartado de análisis de riesgos del Protocolo Marco andaluz.',
+    'Tipo de entidad: ' + (e.tipo || 'club deportivo'),
+    'Modalidad: ' + (e.modalidad || 'no indicada'),
+    'Número aproximado de menores: ' + (e.n_menores || 'no indicado'),
+    'Ámbitos a valorar: ' + Object.keys(CATALOGO_RIESGOS).join(', ') + '.',
+    'Riesgos ya registrados:', ya, '',
+    'Entrega una tabla con columnas: Ámbito | Situación de riesgo | Probabilidad (Baja/Media/Alta) | Impacto (Bajo/Medio/Alto) | Medidas preventivas | Responsable sugerido (por cargo, nunca por nombre) | Periodicidad de revisión.',
+    'Prioriza los riesgos propios de la modalidad. No incluyas datos personales.'].join('\n');
+  mostrarPrompt($('#riesgos-ia-out'), prompt, { asunto: 'Análisis de riesgos · ' + (e.nombre || ''), tipo: 'riesgos' });
+});
+
+// ---------- INFORMES ----------
+function plantillaInforme(titulo, subtitulo, cuerpo, paraWord, pie) {
+  const org = (state.cfg && state.cfg.organismo) || '';
+  const hoy = new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${esc(titulo)}</title>
+<style>
+@page { size: A4; margin: 1.7cm 1.6cm 1.8cm; }
+body{font-family:Calibri,Arial,sans-serif;font-size:10.5pt;color:#1d2a30;margin:${paraWord ? '0' : '0'};line-height:1.45}
+.cab{display:flex;align-items:center;gap:12px;border-bottom:3px solid #0d818f;padding-bottom:8px;margin-bottom:16px}
+.cab img{width:58px;height:58px;border-radius:12px}.cab b{color:#0b3057;font-size:14pt;display:block}.cab small{color:#4f5d65}
+h1{color:#0b3057;font-size:17pt;margin:0 0 2px}.sub{color:#0d818f;font-size:11pt;margin:0 0 4px;font-weight:600}.fecha{color:#4f5d65;font-size:9pt;margin-bottom:14px}
+h2{color:#0b3057;font-size:12.5pt;margin:18px 0 6px;padding-bottom:3px;border-bottom:1px solid #cfd8dc;page-break-after:avoid}
+h3{color:#0d818f;font-size:11pt;margin:12px 0 4px;page-break-after:avoid}
+table{border-collapse:collapse;width:100%;margin:6px 0 10px;font-size:9.5pt}thead{display:table-header-group}
+th{background:#0b3057;color:#fff;text-align:left;font-weight:600}th,td{border:1px solid #b7c6cc;padding:4px 6px;vertical-align:top}
+tr{page-break-inside:avoid}tr:nth-child(even) td{background:#f3f7f8}
+td.k{width:34%;background:#eef4f6 !important;font-weight:600;color:#0b3057}
+.kpis{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 10px}.kpi{border:1px solid #cfd8dc;border-top:3px solid #0d818f;border-radius:6px;padding:6px 10px;min-width:110px}
+.kpi span{display:block;font-size:8.5pt;color:#4f5d65}.kpi b{font-size:15pt;color:#0b3057}
+.st{font-weight:700}.ok{color:#2e7d4f}.warn{color:#b7791f}.bad{color:#b83232}.muted{color:#6b7a82}
+.barra{height:8px;background:#e3eaed;border-radius:4px;overflow:hidden;min-width:60px}.barra i{display:block;height:100%}
+.nota{font-size:8.5pt;color:#4f5d65;border-left:3px solid #0d818f;padding:4px 10px;margin:14px 0;background:#f3f7f8}
+.campo{background:#fff176;font-weight:700}.just p,.just li{text-align:justify}.centro{text-align:center}
+.firma{margin-top:36px;display:flex;justify-content:space-between;gap:30px;page-break-inside:avoid}.firma div{flex:1;border-top:1px solid #1d2a30;padding-top:4px;font-size:9pt;text-align:center}
+.pie{margin-top:24px;border-top:1px solid #cfd8dc;padding-top:6px;color:#4f5d65;font-size:8pt}
+ul,ol{margin:4px 0 8px;padding-left:20px}p{margin:0 0 6px}
+</style></head><body>
+<div class="cab"><img src="${LOGO}" alt=""><div><b>EntornoSeguro</b><small>${esc(org)}</small></div></div>
+<h1>${esc(titulo)}</h1>${subtitulo ? `<div class="sub">${esc(subtitulo)}</div>` : ''}<div class="fecha">${esc(hoy)}</div>
+${cuerpo}
+<div class="pie">${pie || `EntornoSeguro · ${esc(org)} · Documento generado el ${esc(hoy)}. Estado de implantación documental; no constituye valoración de personas ni de entidades.`}<br>EntornoSeguro © 2026 Escuela&amp;Deporte (by M.A. Ballesteros)</div>
+</body></html>`;
+}
+function abrirInforme(html) {
+  const w = window.open('', '_blank');
+  if (!w) { toast('Permite las ventanas emergentes para ver el informe', true); return; }
+  w.document.write(html.replace('</body>', '<div style="position:fixed;top:10px;right:10px" class="noprint"><button onclick="window.print()" style="font:600 14px Arial;padding:10px 16px;background:#0b3057;color:#fff;border:0;border-radius:8px;cursor:pointer">Imprimir / Guardar PDF</button></div><style>@media print{.noprint{display:none}}</style></body>'));
+  w.document.close();
+}
+const fila = (k, v) => `<tr><td class="k">${esc(k)}</td><td>${v}</td></tr>`;
+const siNo = v => v ? '<span class="st ok">Sí</span>' : '<span class="st bad">No</span>';
+const barra = p => `<div class="barra"><i style="width:${p}%;background:${p < 40 ? '#b83232' : p < 80 ? '#b7791f' : '#2e7d4f'}"></i></div>`;
+
+async function loadInformes() {
+  if (!state.entidades.length) state.entidades = await run(() => API.call('listarEntidades'));
+  $('#inf-entidad').innerHTML = state.entidades.filter(e => e.trabaja_menores === 'SI').map(e => `<option value="${esc(e.id)}">${esc(e.nombre)}</option>`).join('')
+    || '<option value="">Sin entidades con menores</option>';
+}
+
+async function htmlInformeEntidad() {
+  const id = $('#inf-entidad').value; if (!id) { toast('Selecciona una entidad', true); return null; }
+  const d = await run(() => API.call('informeEntidad', { entidad_id: id }));
+  return construirInformeEntidad(d);
+}
+function construirInformeEntidad(d) {
+  const e = d.entidad, m = d.matriz;
+  const cuenta = s => m.filter(r => r.estado === s).length;
+  const okN = m.filter(r => r.estado === 'cumple' || r.estado === 'no_aplica').length;
+  const pct = m.length ? Math.round(okN * 100 / m.length) : 0;
+  const altos = d.riesgos.filter(r => r.nivel === 'alto' && r.estado !== 'implantada').length;
+  let b = '';
+  b += '<h2>1. Datos de la entidad</h2><table>' +
+    fila('Entidad', esc(e.nombre)) + fila('CIF', esc(e.cif) || '—') + fila('Tipo / modalidad', esc([e.tipo, e.modalidad].filter(Boolean).join(' · ')) || '—') +
+    fila('Nº aproximado de menores', esc(e.n_menores) || '—') + fila('Delegado/a de Protección', esc(e.delegado_nombre) || '<span class="st bad">Sin designar</span>') +
+    fila('Fecha de designación', esc(e.fecha_designacion) || '—') +
+    fila('Aceptación del Protocolo Marco', e.acepta_protocolo_marco === 'SI' ? '<span class="st ok">Sí</span>' + (e.fecha_aceptacion ? ' · ' + esc(e.fecha_aceptacion) : '') : '<span class="st bad">Pendiente</span>') + '</table>';
+  b += '<h2>2. Resumen de implantación</h2><div class="kpis">' +
+    [['Cumplimiento', pct + '%'], ['Cumple', cuenta('cumple')], ['Parcial', cuenta('parcial')], ['No cumple', cuenta('no_cumple')], ['Pendiente', cuenta('pendiente')],
+     ['Riesgos identificados', d.riesgos.length], ['Riesgos altos pendientes', altos], ['Personas formadas', d.formacion.length]]
+      .map(([k, v]) => `<div class="kpi"><span>${k}</span><b>${v}</b></div>`).join('') + '</div>' + barra(pct);
+  b += '<h2>3. Matriz de cumplimiento · Protocolo Marco</h2>';
+  let bloque = '';
+  m.forEach(r => {
+    if (r.bloque !== bloque) {
+      if (bloque) b += '</tbody></table>';
+      bloque = r.bloque;
+      b += `<h3>${esc(bloque)}</h3><table><thead><tr><th style="width:38%">Requisito</th><th>Estado</th><th>Revisión</th><th>Próxima</th><th>Acción pendiente</th></tr></thead><tbody>`;
+    }
+    const [ico, cls, txt] = ESTADOS[r.estado] || ESTADOS.pendiente;
+    b += `<tr><td><b>${esc(r.codigo)}</b> ${esc(r.requisito)}${r.evidencias.length ? '<br><small>Evidencias: ' + r.evidencias.map(v => esc(v.titulo)).join(', ') + '</small>' : ''}</td>
+      <td class="st ${cls}">${ico} ${txt}</td><td>${esc(r.fecha_revision) || '—'}</td><td>${esc(r.proxima_revision) || '—'}</td><td>${esc(r.accion_pendiente) || '—'}</td></tr>`;
+  });
+  if (bloque) b += '</tbody></table>';
+  b += '<h2>4. Análisis de riesgos</h2>' + (d.riesgos.length ?
+    '<table><thead><tr><th>Ámbito</th><th>Situación de riesgo</th><th>Nivel</th><th>Medidas preventivas</th><th>Estado</th><th>Revisión</th></tr></thead><tbody>' +
+    d.riesgos.sort((a, c) => ({ alto: 0, medio: 1, bajo: 2 })[a.nivel] - ({ alto: 0, medio: 1, bajo: 2 })[c.nivel]).map(r => `<tr><td>${esc(r.ambito)}</td><td>${esc(r.descripcion)}</td>
+      <td class="st ${r.nivel === 'alto' ? 'bad' : r.nivel === 'medio' ? 'warn' : 'ok'}">${esc(r.nivel)}</td><td>${esc(r.medidas) || '—'}</td>
+      <td>${esc((ESTADOS_R.find(x => x[0] === r.estado) || ['', 'Pendiente'])[1])}</td><td>${esc(r.fecha_revision) || '—'}</td></tr>`).join('') + '</tbody></table>'
+    : '<p class="muted">No hay riesgos registrados.</p>');
+  b += '<h2>5. Formación de agentes deportivos</h2>' + (d.formacion.length ?
+    '<table><thead><tr><th>Persona</th><th>Colectivo</th><th>Curso</th><th>Horas</th><th>Fecha</th><th>Caducidad</th></tr></thead><tbody>' +
+    d.formacion.map(f => `<tr><td>${esc(f.persona_nombre)}</td><td>${esc(f.colectivo)}</td><td>${esc(f.curso)}</td><td>${esc(f.horas)}</td><td>${esc(f.fecha)}</td><td>${esc(f.fecha_caducidad) || '—'}</td></tr>`).join('') + '</tbody></table>'
+    : '<p class="muted">No hay formación registrada.</p>');
+  const meses = (state.cfg && state.cfg.meses_certificado) || 12;
+  const ag = d.agentes || [];
+  const sinC = ag.filter(a => !a.cert_fecha).length, ren = ag.filter(a => a.cert_fecha && new Date(a.cert_fecha) < fechaMenos(meses)).length;
+  b += '<h2>6. Agentes deportivos</h2>' + (ag.length ?
+    `<div class="kpis"><div class="kpi"><span>Agentes activos</span><b>${ag.length}</b></div><div class="kpi"><span>Sin certificado negativo</span><b>${sinC}</b></div><div class="kpi"><span>Certificado a renovar</span><b>${ren}</b></div><div class="kpi"><span>Código aceptado</span><b>${ag.filter(a => a.codigo_aceptado === 'SI').length}</b></div></div>` +
+    '<table><thead><tr><th>Agente</th><th>Rol</th><th>Grupo</th><th>Certificado negativo</th><th>Código</th><th>Formación</th></tr></thead><tbody>' +
+    ag.sort((a, c) => String(a.nombre).localeCompare(String(c.nombre))).map(a => `<tr><td>${esc(a.nombre)}</td><td>${esc(a.rol)}</td><td>${esc(a.grupo) || '—'}</td>
+      <td class="st ${!a.cert_fecha ? 'bad' : new Date(a.cert_fecha) < fechaMenos(meses) ? 'warn' : 'ok'}">${esc(a.cert_fecha) || 'Sin registrar'}</td>
+      <td class="st ${a.codigo_aceptado === 'SI' ? 'ok' : 'bad'}">${a.codigo_aceptado === 'SI' ? 'Sí' : 'No'}</td><td>${esc(a.formacion_fecha) || '—'}</td></tr>`).join('') + '</tbody></table>'
+    : '<p class="muted">No hay agentes deportivos registrados.</p>');
+  const au = d.autorizaciones || [];
+  b += '<h2>7. Autorizaciones familiares por grupo</h2>' + (au.length ?
+    '<table><thead><tr><th>Grupo</th><th>Tipo</th><th>Temporada</th><th>Recibidas</th><th>Denegadas</th><th>Actualizado</th></tr></thead><tbody>' +
+    au.map(a => { const t = +a.total || 0, r = +a.recibidas || 0; return `<tr><td>${esc(a.grupo)}</td><td>${esc(a.tipo)}</td><td>${esc(a.temporada) || '—'}</td>
+      <td class="st ${r >= t ? 'ok' : 'warn'}">${r} de ${t}</td><td>${esc(a.denegadas || 0)}</td><td>${esc(a.fecha) || '—'}</td></tr>`; }).join('') + '</tbody></table>'
+    : '<p class="muted">No hay registros de autorizaciones.</p>');
+  const orden = { alta: 0, media: 1, baja: 2 };
+  b += '<h2>8. Actuaciones pendientes</h2>' + (d.alertas.length ?
+    '<table><thead><tr><th>Prioridad</th><th>Actuación</th><th>Fecha límite</th></tr></thead><tbody>' +
+    d.alertas.sort((a, c) => orden[a.prioridad] - orden[c.prioridad]).map(a => `<tr><td class="st ${a.prioridad === 'alta' ? 'bad' : a.prioridad === 'media' ? 'warn' : 'muted'}">${esc(a.prioridad)}</td><td>${esc(String(a.mensaje).replace(e.nombre + ': ', ''))}</td><td>${esc(a.fecha_limite) || '—'}</td></tr>`).join('') + '</tbody></table>'
+    : '<p class="ok st">Sin actuaciones pendientes.</p>');
+  b += `<div style="page-break-inside:avoid"><div class="nota">Referencias: LO 8/2021 (LOPIVI), Ley 4/2021 de Infancia y Adolescencia de Andalucía y Protocolo Marco aprobado por Orden de 18 de noviembre de 2024. Periodicidades de revisión orientativas.</div>`;
+  b += `<div class="firma"><div>Delegado/a de Protección de la entidad<br>${esc(e.delegado_nombre || '')}</div>${state.club ? '<div>Vº Bº Presidencia u órgano de gobierno<br>' + esc(e.presidencia_nombre || '') + '</div>' : '<div>Delegado/a de Protección municipal<br>' + esc(d.config.delegado_municipal || '') + '</div>'}</div></div>`;
+  return plantillaInforme('Informe de implantación del sistema de protección', e.nombre, b);
+}
+
+async function htmlInformeMunicipal() {
+  const d = await run(() => API.call('informeMunicipal'));
+  const anon = $('#inf-anon').checked, t = d.totales;
+  const nombre = (f, i) => anon ? 'Entidad ' + (i + 1) : esc(f.nombre);
+  let b = '<h2>1. Indicadores generales</h2><div class="kpis">' +
+    [['Entidades con menores', t.entidades], ['Menores (aprox.)', t.menores], ['Con Delegado/a', t.con_delegado + '/' + t.entidades], ['Aceptan Protocolo Marco', t.con_protocolo + '/' + t.entidades],
+     ['Cumplimiento medio', t.cumplimiento_medio + '%'], ['Personas formadas', t.formados], ['Riesgos identificados', t.riesgos], ['Riesgos altos pendientes', t.riesgos_altos], ['Alertas prioritarias', t.alertas_altas]]
+      .map(([k, v]) => `<div class="kpi"><span>${k}</span><b>${v}</b></div>`).join('') + '</div>';
+  if (d.propia) { const p = d.propia; b += `<h3>Actividades municipales propias</h3><table><thead><tr><th>Entidad</th><th>Delegado/a</th><th>Protocolo Marco</th><th colspan="2">Cumplimiento</th><th>Riesgos (altos)</th><th>Formados</th></tr></thead><tbody><tr><td>${esc(p.nombre)}</td><td>${siNo(p.delegado)}</td><td>${siNo(p.protocolo)}</td><td style="width:70px">${barra(p.pct)}</td><td><b>${p.pct}%</b></td><td>${p.riesgos} (${p.riesgos_altos})</td><td>${p.formados}</td></tr></tbody></table><p class="muted">El ayuntamiento no se incluye en los indicadores de entidades.</p>`; }
+  const filas = d.filas.slice().sort((a, c) => c.pct - a.pct);
+  b += '<h2>2. Situación por entidad</h2>' + (filas.length ?
+    '<table><thead><tr><th>Entidad</th><th>Delegado/a</th><th>Protocolo Marco</th><th colspan="2">Cumplimiento</th><th>Riesgos (altos)</th><th>Formados</th><th>Alertas altas</th></tr></thead><tbody>' +
+    filas.map((f, i) => `<tr><td>${nombre(f, i)}${!anon && f.modalidad ? '<br><small>' + esc(f.modalidad) + '</small>' : ''}</td><td>${siNo(f.delegado)}</td><td>${siNo(f.protocolo)}</td>
+      <td style="width:70px">${barra(f.pct)}</td><td><b>${f.pct}%</b></td><td>${f.riesgos} (${f.riesgos_altos})</td><td>${f.formados}</td><td>${f.alertas_altas}</td></tr>`).join('') + '</tbody></table>'
+    : '<p class="muted">No hay entidades con menores registradas.</p>');
+  b += '<h2>3. Implantación por bloque del Protocolo Marco</h2><p>Porcentaje de entidades que tienen completo cada bloque.</p><table><thead><tr><th>Bloque</th><th>Entidades con el bloque completo</th><th colspan="2">%</th></tr></thead><tbody>' +
+    d.bloques.map(x => `<tr><td>${esc(x.bloque)}</td><td>${x.entidades_completas} de ${t.entidades}</td><td style="width:90px">${barra(x.pct)}</td><td><b>${x.pct}%</b></td></tr>`).join('') + '</tbody></table>';
+  const menos = d.bloques.slice().sort((a, c) => a.pct - c.pct).slice(0, 3);
+  b += '<h2>4. Áreas prioritarias de mejora</h2><ul>' + menos.map(x => `<li><b>${esc(x.bloque)}</b>: ${x.pct}% de entidades con el bloque completo.</li>`).join('') +
+    (t.entidades - t.con_delegado > 0 ? `<li><b>${t.entidades - t.con_delegado}</b> entidad(es) sin Delegado/a de Protección designado.</li>` : '') +
+    (t.riesgos_altos ? `<li><b>${t.riesgos_altos}</b> riesgo(s) alto(s) sin medidas implantadas.</li>` : '') + '</ul>';
+  const val = $('#inf-valoracion').value.trim();
+  if (val) b += '<h2>5. Valoración técnica</h2>' + mdToHtml(val);
+  b += `<div class="nota">Datos agregados a fecha del informe. Referencias: LO 8/2021 (LOPIVI), Ley 4/2021 de Infancia y Adolescencia de Andalucía y Protocolo Marco (Orden de 18 de noviembre de 2024).</div>`;
+  b += `<div class="firma"><div>Delegado/a de Protección municipal<br>${esc(d.config.delegado_municipal || '')}</div><div>Visto bueno</div></div>`;
+  state.ultimoMunicipal = d;
+  return plantillaInforme('Informe municipal de cumplimiento', 'Protección de menores en el deporte · ' + (d.config.municipio || ''), b);
+}
+
+const nombreInf = base => base.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-') + '-' + new Date().toISOString().slice(0, 10) + '.doc';
+$('#inf-ent-pdf').onclick = async () => { const h = await htmlInformeEntidad(); if (h) abrirInforme(h); };
+$('#inf-ent-word').onclick = async () => { const h = await htmlInformeEntidad(); if (h) descargar('﻿' + h, 'application/msword', nombreInf('informe-' + ($('#inf-entidad').selectedOptions[0] || {}).text)); };
+$('#inf-mun-pdf') && ($('#inf-mun-pdf').onclick = async () => abrirInforme(await htmlInformeMunicipal()));
+$('#inf-mun-word') && ($('#inf-mun-word').onclick = async () => descargar('﻿' + await htmlInformeMunicipal(), 'application/msword', nombreInf('informe-municipal')));
+$('#inf-mun-ia') && ($('#inf-mun-ia').onclick = async () => {
+  const d = await run(() => API.call('informeMunicipal')); const t = d.totales;
+  const prompt = [CONTEXTO_IA, '',
+    'TAREA: redacta la valoración técnica de un informe municipal de cumplimiento del Protocolo Marco de protección de menores en el deporte. Máximo 350 palabras, en párrafos, tono técnico de administración local.',
+    'Datos agregados (sin identificar entidades):',
+    `- Entidades con menores: ${t.entidades}; menores aproximados: ${t.menores}`,
+    `- Con Delegado/a de Protección: ${t.con_delegado}; aceptan el Protocolo Marco: ${t.con_protocolo}`,
+    `- Cumplimiento medio: ${t.cumplimiento_medio}%; personas formadas: ${t.formados}`,
+    `- Riesgos identificados: ${t.riesgos}; riesgos altos sin medidas: ${t.riesgos_altos}; alertas prioritarias: ${t.alertas_altas}`,
+    'Implantación por bloque (% de entidades con el bloque completo):',
+    d.bloques.map(x => `- ${x.bloque}: ${x.pct}%`).join('\n'), '',
+    'Incluye: situación general, fortalezas, áreas de mejora prioritarias y 3-5 propuestas de actuación municipal. No valores a personas ni entidades concretas.'].join('\n');
+  mostrarPrompt($('#inf-ia-out'), prompt, null);
+  const nota = document.createElement('p'); nota.className = 'nota';
+  nota.textContent = 'Pega la respuesta de Claude en "Valoración técnica" y genera el informe.';
+  $('#inf-ia-out').appendChild(nota);
+});
+
+// ---------- SELECTOR DE ENTIDAD COMÚN ----------
+async function selEntidad(sel, recargar) {
+  if (!sel.options.length) {
+    if (!state.entidades.length) state.entidades = await run(() => API.call('listarEntidades'));
+    sel.innerHTML = state.entidades.filter(e => e.trabaja_menores === 'SI').map(e => `<option value="${esc(e.id)}">${esc(e.nombre)}</option>`).join('');
+    sel.onchange = recargar;
+  }
+  sel.classList.toggle('hidden', !!state.club);
+  return sel.value;
+}
+const fechaMenos = meses => { const d = new Date(); d.setMonth(d.getMonth() - meses); return d; };
+
+// ---------- AGENTES DEPORTIVOS ----------
+const ROLES_AGENTE = ['entrenador', 'monitor', 'delegado de protección', 'directivo', 'voluntario', 'árbitro/juez', 'personal externo', 'otro'];
+async function loadAgentes() {
+  const ent = await selEntidad($('#agentes-entidad'), loadAgentes);
+  if (!ent) { $('#tabla-agentes').innerHTML = '<tr><td class="empty">Registra primero una entidad que trabaje con menores.</td></tr>'; return; }
+  state.agentes = await run(() => API.call('listarAgentes', { entidad_id: ent }));
+  pintarAgentes();
+}
+function estadoAgente(a) {
+  const meses = (state.cfg && state.cfg.meses_certificado) || 12;
+  return { sincert: !a.cert_fecha, renovar: a.cert_fecha && new Date(a.cert_fecha) < fechaMenos(meses),
+           sincodigo: a.codigo_aceptado !== 'SI', sinform: !a.formacion_fecha };
+}
+function pintarAgentes() {
+  const todos = (state.agentes || []).filter(a => a.activo !== 'NO');
+  const est = todos.map(estadoAgente);
+  const pc = n => todos.length ? Math.round(n * 100 / todos.length) + '%' : '—';
+  $('#agentes-resumen').innerHTML = [['Agentes activos', todos.length], ['Sin certificado', est.filter(e => e.sincert).length],
+    ['Certificado a renovar', est.filter(e => e.renovar).length], ['Código aceptado', pc(est.filter(e => !e.sincodigo).length)], ['Con formación', pc(est.filter(e => !e.sinform).length)]]
+    .map(([l, v]) => `<div class="kpi"><span>${l}</span><strong>${v}</strong></div>`).join('');
+  const q = norm($('#agentes-q').value), f = $('#agentes-filtro').value;
+  const lista = (state.agentes || []).filter(a => (!q || norm([a.nombre, a.rol, a.grupo].join(' ')).includes(q)) && (!f || estadoAgente(a)[f]))
+    .sort((a, b) => String(a.nombre).localeCompare(String(b.nombre)));
+  const marca = (ok, txt) => ok ? `<span class="st ok">✓ ${esc(txt)}</span>` : `<span class="st bad">✗ Pendiente</span>`;
+  $('#tabla-agentes').innerHTML = `<thead><tr><th>Agente</th><th>Grupo</th><th>Certificado negativo</th><th>Código de conducta</th><th>Formación</th><th></th></tr></thead><tbody>` +
+    (lista.map(a => { const e = estadoAgente(a); return `<tr class="${a.activo === 'NO' ? 'inactivo' : ''}"><td><b>${esc(a.nombre)}</b><br><small>${esc(a.rol)}${a.activo === 'NO' ? ' · baja' : ''}</small></td>
+      <td>${esc(a.grupo) || '—'}</td>
+      <td>${e.sincert ? '<span class="st bad">✗ Sin registrar</span>' : e.renovar ? `<span class="st warn">⚠ ${esc(a.cert_fecha)} · renovar</span>` : `<span class="st ok">✓ ${esc(a.cert_fecha)}</span>`}</td>
+      <td>${marca(!e.sincodigo, a.codigo_fecha || 'Aceptado')}</td><td>${marca(!e.sinform, a.formacion_fecha || 'Sí')}</td>
+      <td><button class="link" data-agente="${esc(a.id)}">Editar</button></td></tr>`; }).join('')
+      || '<tr><td colspan="6" class="empty">Sin agentes con esos criterios.</td></tr>') + '</tbody>';
+  $$('[data-agente]').forEach(b => b.onclick = () => formAgente(state.agentes.find(a => a.id === b.dataset.agente)));
+}
+$('#agentes-q').oninput = pintarAgentes; $('#agentes-filtro').onchange = pintarAgentes;
+$('#nuevo-agente').onclick = () => formAgente({ activo: 'SI', codigo_aceptado: 'NO', fecha_alta: new Date().toISOString().slice(0, 10) });
+function formAgente(a) {
+  const entidad_id = $('#agentes-entidad').value; if (!entidad_id) return;
+  modal(a.id ? 'Editar agente' : 'Nuevo agente deportivo', [
+    ['nombre', 'Nombre y apellidos', 'text', true], ['rol', 'Rol', ROLES_AGENTE], ['grupo', 'Grupo / equipo'],
+    ['email', 'Email', 'email'], ['telefono', 'Teléfono'], ['fecha_alta', 'Fecha de alta', 'date'],
+    ['cert_fecha', 'Fecha del certificado negativo', 'date'], ['codigo_aceptado', 'Código de conducta aceptado', ['NO', 'SI']],
+    ['codigo_fecha', 'Fecha de aceptación', 'date'], ['formacion_fecha', 'Fecha de formación en protección', 'date'],
+    ['activo', 'Activo', ['SI', 'NO']], ['observaciones', 'Observaciones', 'textarea']
+  ], a, async d => { Object.assign(d, { id: a.id, entidad_id }); await run(() => API.call('guardarAgente', d)); toast('Agente guardado'); loadAgentes(); });
+  const f = $('#modal-form');
+  f.insertAdjacentHTML('afterbegin', '');
+  f.querySelector('h3').insertAdjacentHTML('afterend', '<p class="nota">Registra solo la fecha del certificado; el documento original lo custodia la entidad.</p>');
+  if (a.id) {
+    const del = document.createElement('button'); del.type = 'button'; del.className = 'btn ghost peligro'; del.textContent = 'Eliminar';
+    del.onclick = async () => { if (!confirm('¿Eliminar este agente? Si solo ha dejado la entidad, mejor márcalo como no activo.')) return;
+      $('#modal').close('cancel'); await run(() => API.call('eliminarAgente', { id: a.id })); toast('Agente eliminado'); loadAgentes(); };
+    f.querySelector('.actions').prepend(del);
+  }
+}
+
+// ---------- AUTORIZACIONES POR GRUPO ----------
+const TIPOS_AUT = ['imagen', 'desplazamiento', 'actividad con pernocta', 'actividad fuera de instalaciones', 'otra'];
+async function loadAutorizaciones() {
+  const ent = await selEntidad($('#aut-entidad'), loadAutorizaciones);
+  if (!ent) { $('#tabla-aut').innerHTML = '<tr><td class="empty">Registra primero una entidad que trabaje con menores.</td></tr>'; return; }
+  const rows = state.autorizaciones = await run(() => API.call('listarAutorizaciones', { entidad_id: ent }));
+  rows.sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
+  $('#tabla-aut').innerHTML = `<thead><tr><th>Grupo</th><th>Tipo</th><th>Temporada</th><th>Recibidas</th><th>Denegadas</th><th>Fecha</th><th></th></tr></thead><tbody>` +
+    (rows.map(a => { const t = +a.total || 0, r = +a.recibidas || 0, p = t ? Math.round(r * 100 / t) : 0;
+      return `<tr><td><b>${esc(a.grupo)}</b></td><td>${esc(a.tipo)}</td><td>${esc(a.temporada) || '—'}</td>
+      <td><div class="progreso"><i style="width:${p}%;background:${p < 100 ? 'var(--warn)' : 'var(--ok)'}"></i></div><small>${r} de ${t} (${p}%)</small></td>
+      <td>${esc(a.denegadas || 0)}</td><td>${esc(a.fecha) || '—'}</td><td><button class="link" data-aut="${esc(a.id)}">Editar</button></td></tr>`; }).join('')
+      || '<tr><td colspan="7" class="empty">Sin registros. Añade uno por grupo y tipo de autorización.</td></tr>') + '</tbody>';
+  $$('[data-aut]').forEach(b => b.onclick = () => formAut(rows.find(a => a.id === b.dataset.aut)));
+}
+$('#nueva-aut').onclick = () => formAut({ tipo: 'imagen', fecha: new Date().toISOString().slice(0, 10) });
+function formAut(a) {
+  const entidad_id = $('#aut-entidad').value; if (!entidad_id) return;
+  modal(a.id ? 'Editar autorizaciones' : 'Nuevo registro de autorizaciones', [
+    ['grupo', 'Grupo / equipo', 'text', true], ['tipo', 'Tipo de autorización', TIPOS_AUT], ['temporada', 'Temporada (ej. 2026-27)'],
+    ['total', 'Nº de menores del grupo', 'number', true], ['recibidas', 'Autorizaciones recibidas', 'number', true],
+    ['denegadas', 'De ellas, denegadas (no autorizan)', 'number'], ['fecha', 'Fecha de actualización', 'date'], ['observaciones', 'Observaciones', 'textarea']
+  ], a, async d => { Object.assign(d, { id: a.id, entidad_id }); await run(() => API.call('guardarAutorizacion', d)); toast('Registro guardado'); loadAutorizaciones(); });
+  if (a.id) {
+    const f = $('#modal-form'), del = document.createElement('button'); del.type = 'button'; del.className = 'btn ghost peligro'; del.textContent = 'Eliminar';
+    del.onclick = async () => { if (!confirm('¿Eliminar este registro?')) return; $('#modal').close('cancel');
+      await run(() => API.call('eliminarAutorizacion', { id: a.id })); toast('Registro eliminado'); loadAutorizaciones(); };
+    f.querySelector('.actions').prepend(del);
+  }
+}
+
+// ---------- PLANTILLAS DE DOCUMENTOS ----------
+const PLANTILLAS = [
+  ['protocolo', 'Protocolo de protección de la entidad', 'Documento completo adaptado al Protocolo Marco andaluz (bloque G).',
+   'Redacta el PROTOCOLO DE PROTECCIÓN frente a la violencia de la entidad, con índice y apartados: objeto y ámbito, principios, Delegado/a de Protección y funciones, análisis de riesgos y medidas, código de conducta (resumen), protección de datos e imágenes, desplazamientos y pernoctas, procedimiento de comunicación y actuación ante incidentes (con flujograma en texto), canal de comunicación, formación, difusión y revisión.'],
+  ['codigo', 'Código de conducta', 'Normas para agentes deportivos, con hoja de aceptación.',
+   'Redacta el CÓDIGO DE CONDUCTA de la entidad para agentes deportivos (entrenadores, monitores, directivos, voluntarios): conductas esperadas y prohibidas en trato, contacto físico, comunicación digital, vestuarios, desplazamientos e imágenes. Incluye al final una hoja de aceptación con campos para nombre, rol, fecha y firma.'],
+  ['designacion', 'Designación del Delegado/a de Protección', 'Acuerdo de designación y funciones.',
+   'Redacta el documento de DESIGNACIÓN DEL DELEGADO/A DE PROTECCIÓN de la entidad por su órgano de gobierno: antecedentes normativos (LOPIVI y Protocolo Marco), acuerdo, funciones, datos de contacto para comunicaciones, vigencia y firmas. Deja los datos personales como [CAMPO].'],
+  ['canal', 'Cartel del canal de comunicación', 'Texto claro para menores y familias.',
+   'Redacta el texto de un CARTEL informativo sobre el canal de comunicación de la entidad para menores y familias: a quién acudir, cómo contactar de forma confidencial, qué se puede comunicar y teléfonos de ayuda generales (ANAR 900 20 20 10, Emergencias 112). Lenguaje sencillo y adaptado a la edad; incluye una versión corta para menores de 6 a 11 años.'],
+  ['aut_imagen', 'Modelo de autorización de imagen', 'Autorización familiar conforme a RGPD.',
+   'Redacta un MODELO DE AUTORIZACIÓN FAMILIAR para la captación y uso de imágenes de menores en la entidad, conforme al RGPD y la LO 1/1982: finalidades separadas y marcables (web, redes sociales, prensa, uso interno), conservación, derechos y revocación. Deja los datos como [CAMPO].'],
+  ['aut_desplaz', 'Modelo de autorización de desplazamiento', 'Para viajes, torneos y pernoctas.',
+   'Redacta un MODELO DE AUTORIZACIÓN FAMILIAR para desplazamientos y actividades con pernocta: datos de la actividad, responsables, medio de transporte, alojamiento, normas de convivencia, contacto de emergencia e información médica relevante a comunicar por la familia. Deja los datos como [CAMPO].'],
+  ['actuacion', 'Guía rápida de actuación ante incidentes', 'Pasos para agentes deportivos.',
+   'Redacta una GUÍA RÁPIDA (1 página) para agentes deportivos sobre qué hacer ante una sospecha o comunicación de violencia: escuchar sin interrogar, no confrontar, proteger al menor, comunicar al Delegado/a de Protección, registrar hechos objetivos, cuándo avisar a emergencias o servicios sociales y deber de comunicación de la LOPIVI.'],
+  ['familias', 'Carta informativa a familias', 'Presentación del sistema de protección.',
+   'Redacta una CARTA a las familias presentando el sistema de protección de la entidad: compromiso, Delegado/a de Protección y cómo contactar, medidas principales, uso de imágenes y canal de comunicación. Tono cercano, máximo una página.']
+];
+async function loadPlantillas() {
+  loadRecientes('plantilla');
+  await selEntidad($('#plant-entidad'), () => {});
+  $('#plant-lista').innerHTML = PLANTILLAS.map(([id, t, s]) => `<button type="button" class="plantilla" data-plant="${id}"><b>${esc(t)}</b><small>${esc(s)}</small></button>`).join('');
+  $$('[data-plant]').forEach(b => b.onclick = () => prepararPlantilla(b.dataset.plant, b));
+}
+function prepararPlantilla(id, boton) {
+  $$('.plantilla').forEach(x => x.classList.toggle('activa', x === boton));
+  const p = PLANTILLAS.find(x => x[0] === id);
+  const e = state.entidades.find(x => x.id === $('#plant-entidad').value) || {};
+  const prompt = [CONTEXTO_IA, '',
+    'TAREA: ' + p[3],
+    '', 'Datos de la entidad (usa [CAMPO] para lo que falte):',
+    '- Nombre: ' + (e.nombre || '[NOMBRE DE LA ENTIDAD]'),
+    '- Tipo y modalidad: ' + ([e.tipo, e.modalidad].filter(Boolean).join(', ') || '[TIPO Y MODALIDAD]'),
+    '- Nº aproximado de menores: ' + (e.n_menores || '[Nº]'),
+    '- Delegado/a de Protección: ' + (e.delegado_nombre ? '[NOMBRE DEL DELEGADO/A]' : '[PENDIENTE DE DESIGNAR]') + ' (no incluyas datos personales reales)',
+    '- Municipio: ' + ((state.cfg && state.cfg.municipio) || '[MUNICIPIO]'),
+    '', 'Formato: documento listo para aprobar, con títulos, apartados numerados y listas. Referencia la norma que fundamenta cada apartado cuando proceda.'].join('\n');
+  mostrarPrompt($('#plant-out'), prompt, { asunto: p[1] + ' · ' + (e.nombre || ''), tipo: 'plantilla' });
+  $('#plant-out').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ---------- DESCARGA DE EXCEL ----------
+function descargarBase64(b64, nombre, tipo) {
+  const bin = atob(b64), bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  descargar(bytes, tipo || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', nombre);
+}
+
+// ---------- MIS CLUBES (administrador) ----------
+async function loadClubes() {
+  const rows = state.clubes = await run(() => API.call('listarClubes'));
+  const act = rows.filter(c => c.estado === 'activo');
+  const media = act.length ? Math.round(act.reduce((s, c) => s + (c.pct || 0), 0) / act.length) : 0;
+  $('#clubes-resumen').innerHTML = [['Clubes activos', act.length], ['Cumplimiento medio', media + '%'],
+    ['Agentes sin certificado', act.reduce((s, c) => s + (c.agentes_sin_cert || 0), 0)], ['Riesgos altos pendientes', act.reduce((s, c) => s + (c.riesgos_altos || 0), 0)]]
+    .map(([l, v]) => `<div class="kpi"><span>${l}</span><strong>${v}</strong></div>`).join('');
+  $('#tabla-clubes').innerHTML = `<thead><tr><th>Club</th><th>Cumplimiento</th><th>Delegado/a</th><th>Agentes (sin cert.)</th><th>Alertas altas</th><th>Último acceso</th><th></th></tr></thead><tbody>` +
+    (rows.map(c => `<tr class="${c.estado !== 'activo' ? 'inactivo' : ''}"><td><b>${esc(c.nombre)}</b><br><small>Usuario: ${esc(c.usuario)}${c.estado !== 'activo' ? ' · DESACTIVADO' : ''}</small></td>
+      <td>${c.error ? `<span class="bad-t">${esc(c.error)}</span>` : `<div class="progreso"><i style="width:${c.pct}%;background:${c.pct < 40 ? 'var(--bad)' : c.pct < 80 ? 'var(--warn)' : 'var(--ok)'}"></i></div><small>${c.pct}%</small>`}</td>
+      <td>${c.delegado ? '<span class="st ok">Sí</span>' : '<span class="st bad">No</span>'}</td>
+      <td>${c.agentes ?? 0} (${c.agentes_sin_cert ?? 0})</td><td>${c.alertas_altas ?? 0}</td><td>${esc(c.ultimo_acceso) || 'Nunca'}</td>
+      <td><button class="link" data-club="${esc(c.id)}">Gestionar</button></td></tr>`).join('')
+      || '<tr><td colspan="7" class="empty">Aún no hay clubes. Pulsa "+ Nuevo club".</td></tr>') + '</tbody>';
+  $$('[data-club]').forEach(b => b.onclick = () => gestionarClub(rows.find(c => c.id === b.dataset.club)));
+}
+$('#nuevo-club') && ($('#nuevo-club').onclick = () => {
+  modal('Nuevo club', [['nombre', 'Nombre del club', 'text', true], ['modalidad', 'Modalidad deportiva'], ['cif', 'CIF'], ['email', 'Email de contacto (recibirá las alertas)', 'email']], {}, async d => {
+    toast('Creando la hoja del club…');
+    const r = await run(() => API.call('crearClub', d));
+    mostrarClaves(d.nombre, r.usuario, r.temporal); loadClubes();
+  });
+});
+function mostrarClaves(nombre, usuario, clave) {
+  if (state.inst) usuario = usuario + '@' + state.inst;
+  const url = location.origin + location.pathname + '?perfil=club';
+  const f = $('#modal-form');
+  f.innerHTML = `<h3>Claves de acceso · ${esc(nombre)}</h3>
+    <p>Entrega estos datos al Delegado/a de Protección del club. Deberá entrar con el perfil <b>MI CLUB</b>.</p>
+    <table class="claves"><tr><td>Web</td><td><b>${esc(url)}</b></td></tr><tr><td>Usuario</td><td class="temp">${esc(usuario)}</td></tr><tr><td>Contraseña temporal</td><td class="temp">${esc(clave)}</td></tr></table>
+    <p class="nota">La contraseña no se volverá a mostrar. Al primer acceso el club la cambiará por una propia.</p>
+    <div class="actions"><button type="button" class="btn ghost" id="copiar-claves">Copiar</button><button value="cancel" class="btn">Entendido</button></div>`;
+  $('#copiar-claves').onclick = () => copiarTexto(`EntornoSeguro · Acceso MI CLUB\nWeb: ${url}\nUsuario: ${usuario}\nContraseña temporal: ${clave}\n(Se pedirá cambiarla en el primer acceso)`);
+  $('#modal').onclose = null; $('#modal').oncancel = null;
+  if (!$('#modal').open) $('#modal').showModal();
+}
+function gestionarClub(c) {
+  const f = $('#modal-form');
+  f.innerHTML = `<h3>${esc(c.nombre)}</h3><p class="nota">Usuario: ${esc(c.usuario)} · Estado: ${esc(c.estado)} · Alta: ${esc(c.creado)}</p>
+    <div class="acciones-club">
+      <button type="button" class="btn" data-acc="informe">Ver informe del club</button>
+      <button type="button" class="btn ghost" data-acc="clave">Generar nueva contraseña</button>
+      <button type="button" class="btn ghost" data-acc="estado">${c.estado === 'activo' ? 'Desactivar acceso' : 'Reactivar acceso'}</button>
+      <button type="button" class="btn ghost" data-acc="contrato">Contrato de encargo (PDF)</button>
+      <button type="button" class="btn ghost" data-acc="contrato-word">Contrato de encargo (Word)</button>
+      <button type="button" class="btn ghost" data-acc="exportar">Copia de datos (Excel)</button>
+      <button type="button" class="btn ghost peligro" data-acc="baja">Dar de baja y borrar</button>
+    </div>
+    <p class="nota">Ver el informe y descargar la copia quedan registrados en el apartado "Mis datos" del club.</p>
+    <div class="actions"><button value="cancel" class="btn ghost">Cerrar</button></div>`;
+  $('#modal').onclose = null; $('#modal').oncancel = null;
+  if (!$('#modal').open) $('#modal').showModal();
+  f.querySelectorAll('[data-acc]').forEach(b => b.onclick = async () => {
+    const acc = b.dataset.acc;
+    if (acc === 'informe') { $('#modal').close('cancel'); const d = await run(() => API.call('informeClub', { id: c.id })); abrirInforme(construirInformeEntidad(d)); }
+    if (acc === 'clave') { if (!confirm('¿Generar una contraseña nueva? La actual dejará de funcionar.')) return; const r = await run(() => API.call('claveClub', { id: c.id })); mostrarClaves(c.nombre, r.usuario, r.temporal); }
+    if (acc === 'estado') { await run(() => API.call('estadoClub', { id: c.id, estado: c.estado === 'activo' ? 'inactivo' : 'activo' })); $('#modal').close('cancel'); toast('Estado actualizado'); loadClubes(); }
+    if (acc === 'contrato' || acc === 'contrato-word') { $('#modal').close('cancel'); await docLegal('contrato', acc === 'contrato' ? 'pdf' : 'word', c.id); }
+    if (acc === 'exportar') { const r = await run(() => API.call('exportarClub', { id: c.id })); descargarBase64(r.base64, r.nombre); toast('Copia descargada'); }
+    if (acc === 'baja') {
+      const conf = prompt(`Se borrará la hoja del club "${c.nombre}" (queda 30 días en la papelera de Drive).\nEscribe el usuario del club para confirmar: ${c.usuario}`);
+      if (conf === null) return;
+      await run(() => API.call('bajaClub', { id: c.id, confirmar: conf })); $('#modal').close('cancel'); toast('Club dado de baja'); loadClubes();
+    }
+  });
+}
+
+// ---------- MIS DATOS (club) ----------
+async function loadMisDatos() {
+  const rows = await run(() => API.call('misAccesos'));
+  const txt = { CONSULTA_AYUNTAMIENTO: 'Consulta de informe', EXPORTACION_AYUNTAMIENTO: 'Copia completa de datos', ALTA_CLUB: 'Alta del club' };
+  $('#tabla-accesos').innerHTML = `<thead><tr><th>Fecha</th><th>Quién</th><th>Acción</th></tr></thead><tbody>` +
+    (rows.map(l => `<tr><td>${esc(l.timestamp)}</td><td>${esc(l.usuario)}</td><td>${esc(txt[l.accion] || l.accion)}</td></tr>`).join('')
+      || '<tr><td colspan="3" class="empty">El ayuntamiento no ha consultado datos de detalle del club.</td></tr>') + '</tbody>';
+}
+$('#exportar-datos') && ($('#exportar-datos').onclick = async () => {
+  const r = await run(() => API.call('exportarMisDatos')); descargarBase64(r.base64, r.nombre); toast('Copia descargada');
+});
+
+// ---------- DOCUMENTACIÓN LEGAL ----------
+const campo = (v, etiqueta) => v ? esc(v) : `<span class="campo">[${esc(etiqueta)}]</span>`;
+function textoCampos(t) { return esc(t).replace(/\[([^\]]+)\]/g, '<span class="campo">[$1]</span>'); }
+const pj = t => `<p>${textoCampos(t)}</p>`;
+const lista = arr => '<ul>' + arr.map(t => `<li>${textoCampos(t)}</li>`).join('') + '</ul>';
+const tablaKV = filas => '<table>' + filas.map(([k, v]) => `<tr><td class="k">${esc(k)}</td><td>${v}</td></tr>`).join('') + '</table>';
+
+function htmlContrato(p, e) {
+  const ENT = campo(e.nombre, 'DENOMINACIÓN DE LA ENTIDAD'), PRE = campo(p.nombre, 'RAZÓN SOCIAL DEL PRESTADOR');
+  const hoy = new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+  let b = `<p>En ${campo(p.localidad, 'LOCALIDAD')}, a ${esc(hoy)}.</p>
+  <h3 class="centro">REUNIDOS</h3>
+  <p>De una parte, ${campo(e.presidencia, 'NOMBRE Y APELLIDOS DEL REPRESENTANTE')}, con DNI <span class="campo">[DNI]</span>, en nombre y representación de ${ENT}, con CIF ${campo(e.cif, 'CIF')} y domicilio en ${campo(e.domicilio, 'DOMICILIO')}, en su condición de ${campo(e.presidencia ? 'Presidente/a' : '', 'CARGO')}, en adelante el RESPONSABLE DEL TRATAMIENTO o la ENTIDAD.</p>
+  <p>De otra parte, ${campo(p.representante, 'NOMBRE Y APELLIDOS')}, con DNI <span class="campo">[DNI]</span>, en nombre y representación de ${PRE}, con CIF/NIF ${campo(p.cif, 'CIF')} y domicilio en ${campo(p.domicilio, 'DOMICILIO')}, en su condición de ${campo(p.cargo, 'CARGO')}, en adelante el ENCARGADO DEL TRATAMIENTO.</p>
+  <p>Ambas partes se reconocen capacidad suficiente para suscribir el presente contrato y</p>
+  <h3 class="centro">EXPONEN</h3><ol type="I">
+  <li>Que la ENTIDAD desarrolla actividades deportivas con personas menores de edad y está sujeta a las obligaciones de la Ley Orgánica 8/2021, de 4 de junio, de protección integral a la infancia y la adolescencia frente a la violencia (LOPIVI), y del Protocolo Marco de Actuación para la Protección de las Personas Menores frente a la Violencia en el Deporte, aprobado por Orden de 18 de noviembre de 2024 de la Junta de Andalucía.</li>
+  <li>Que el ENCARGADO presta el servicio EntornoSeguro, aplicación web para la gestión documental del sistema de protección de la ENTIDAD, que conlleva el tratamiento de datos personales por cuenta de esta.</li>
+  <li>Que, conforme al artículo 28 del Reglamento (UE) 2016/679 (RGPD) y al artículo 33 de la Ley Orgánica 3/2018 (LOPDGDD), las partes formalizan el encargo con arreglo a las siguientes</li></ol>
+  <h3 class="centro">CLÁUSULAS</h3>
+  <h2>PRIMERA. Objeto del encargo</h2>` +
+  pj('El ENCARGADO tratará por cuenta de la ENTIDAD los datos personales necesarios para prestar el servicio EntornoSeguro: alojamiento y gestión de la información del sistema de protección de la ENTIDAD (cumplimiento del Protocolo Marco, análisis de riesgos, agentes deportivos, formación, autorizaciones agregadas, alertas, documentos e informes). El detalle del tratamiento figura en el Anexo I.') +
+  '<h2>SEGUNDA. Información tratada y exclusiones</h2>' +
+  pj('Se tratarán exclusivamente datos identificativos y de contacto de personas adultas vinculadas a la ENTIDAD (Delegado/a de Protección, directivos, entrenadores, monitores, voluntarios y otros agentes deportivos), así como la información documental del sistema de protección.') +
+  pj('Queda expresamente excluido el registro en el servicio de datos personales de personas menores de edad. Las autorizaciones familiares se controlan únicamente mediante cifras agregadas por grupo. La ENTIDAD se compromete a no introducir datos que permitan identificar a menores.') +
+  pj('Respecto al certificado negativo del Registro Central de Delincuentes Sexuales, el servicio registra únicamente la fecha de presentación. El documento original lo custodia la ENTIDAD y no se incorpora al servicio.') +
+  '<h2>TERCERA. Duración</h2>' + pj('El presente contrato tendrá la misma duración que la prestación del servicio, desde la fecha de firma hasta la baja de la ENTIDAD en el servicio.') +
+  '<h2>CUARTA. Obligaciones del encargado</h2>' + pj('El ENCARGADO se obliga a:') + lista([
+    'Tratar los datos solo para la finalidad del encargo y siguiendo las instrucciones documentadas de la ENTIDAD. Si considera que una instrucción infringe la normativa, lo comunicará de inmediato.',
+    'No acceder al detalle de la información de la ENTIDAD salvo cuando sea necesario para prestar soporte técnico, a petición de la ENTIDAD o por obligación legal. La aplicación muestra al ENCARGADO únicamente indicadores de cumplimiento; toda consulta de detalle o copia de datos realizada desde la aplicación queda registrada y es visible para la ENTIDAD en el apartado "Mis datos".',
+    'Garantizar que las personas autorizadas para tratar los datos se comprometen a respetar la confidencialidad.',
+    'Aplicar las medidas técnicas y organizativas descritas en el Anexo II.',
+    'No recurrir a otro encargado sin autorización previa de la ENTIDAD. Se autorizan los subencargados del Anexo III. Cualquier cambio se comunicará con al menos quince días de antelación, y la ENTIDAD podrá oponerse.',
+    'Asistir a la ENTIDAD en la atención de los derechos de las personas interesadas (acceso, rectificación, supresión, oposición, limitación y portabilidad). Si recibe directamente una solicitud, la trasladará a la ENTIDAD en un plazo máximo de cinco días hábiles.',
+    'Notificar a la ENTIDAD, sin dilación indebida y en todo caso en un plazo máximo de 48 horas, cualquier violación de la seguridad de los datos de la que tenga conocimiento, con la información necesaria para su documentación y, en su caso, comunicación a la autoridad de control.',
+    'Poner a disposición de la ENTIDAD la información necesaria para demostrar el cumplimiento de este contrato y permitir auditorías o inspecciones razonables.',
+    'Llevar, cuando proceda, el registro de actividades de tratamiento efectuadas por cuenta de la ENTIDAD.']) +
+  '<h2>QUINTA. Obligaciones de la entidad</h2>' + lista([
+    'Garantizar la licitud del tratamiento de los datos que incorpore al servicio e informar a las personas interesadas.',
+    'No introducir datos de menores ni datos de categorías especiales o relativos a infracciones penales, salvo la fecha de presentación del certificado indicada en la cláusula segunda.',
+    'Custodiar las credenciales de acceso de su perfil MI CLUB y comunicar al ENCARGADO cualquier uso indebido.',
+    'Supervisar el tratamiento, incluidas las auditorías que estime oportunas.',
+    'Si utiliza herramientas externas de inteligencia artificial a partir de los textos que prepara el servicio, hacerlo sin incluir datos personales. El servicio no envía datos de forma automática a proveedores de inteligencia artificial.']) +
+  '<h2>SEXTA. Portabilidad y destino de los datos</h2>' +
+  pj('La ENTIDAD puede descargar en cualquier momento una copia completa de sus datos en formato Excel desde el apartado "Mis datos".') +
+  pj('A la finalización del servicio, el ENCARGADO entregará a la ENTIDAD, si lo solicita, una copia completa de sus datos y, a continuación, suprimirá la hoja de datos de la ENTIDAD. Tras la supresión, el archivo permanece un máximo de 30 días en la papelera de Google Drive antes de su borrado definitivo. El ENCARGADO podrá conservar los datos bloqueados solo mientras puedan derivarse responsabilidades de la ejecución del servicio.') +
+  pj('La ENTIDAD podrá solicitar en cualquier momento el traslado de sus datos a una instalación independiente del servicio en su propia cuenta de Google.') +
+  '<h2>SÉPTIMA. Transferencias internacionales</h2>' +
+  pj('El alojamiento se presta sobre la infraestructura de Google. Google puede tratar datos fuera del Espacio Económico Europeo con las garantías del artículo 46 del RGPD (cláusulas contractuales tipo) o al amparo del Marco de Privacidad de Datos UE-EE. UU. No se realizarán otras transferencias internacionales sin autorización de la ENTIDAD.') +
+  '<h2>OCTAVA. Responsabilidad</h2>' +
+  pj('Si el ENCARGADO destina los datos a otra finalidad, los comunica o los utiliza incumpliendo este contrato, será considerado responsable del tratamiento a todos los efectos y responderá de las infracciones en que hubiera incurrido personalmente.') +
+  '<h2>NOVENA. Legislación y jurisdicción</h2>' +
+  `<p>Este contrato se rige por la legislación española. Para cualquier controversia, las partes se someten a los juzgados y tribunales de ${campo(p.localidad, 'LOCALIDAD')}.</p>` +
+  pj('Y en prueba de conformidad, firman el presente documento por duplicado en el lugar y fecha indicados.') +
+  `<div class="firma"><div>Por la ENTIDAD (Responsable)<br>${ENT}</div><div>Por el ENCARGADO<br>${PRE}</div></div>` +
+  '<h2 style="page-break-before:always">ANEXO I. Descripción del tratamiento</h2>' + tablaKV([
+    ['Responsable', `${ENT} · CIF ${campo(e.cif, 'CIF')}`], ['Encargado', `${PRE} · CIF/NIF ${campo(p.cif, 'CIF')}`],
+    ['Finalidad', 'Gestión documental del sistema de protección de menores de la entidad conforme a la LOPIVI y al Protocolo Marco andaluz: cumplimiento, riesgos, agentes deportivos, formación, alertas, documentos e informes.'],
+    ['Base jurídica', 'Cumplimiento de obligación legal (art. 6.1.c RGPD) en relación con la LOPIVI (arts. 47, 48 y 57) y el Protocolo Marco; interés legítimo de la entidad en la organización de su sistema de protección (art. 6.1.f RGPD).'],
+    ['Interesados', 'Personas adultas vinculadas a la entidad: Delegado/a de Protección, directivos, entrenadores, monitores, voluntarios, árbitros y otros agentes deportivos.'],
+    ['Categorías de datos', 'Nombre y apellidos, rol, grupo o equipo, correo electrónico, teléfono, fechas de alta, de formación, de aceptación del código de conducta y de presentación del certificado negativo. Datos de la entidad: denominación, CIF, modalidad y número aproximado de menores (cifra agregada).'],
+    ['Datos excluidos', 'Datos identificativos de menores, datos de salud, categorías especiales y contenido de certificados o antecedentes.'],
+    ['Operaciones', 'Registro, conservación, consulta, modificación, extracción, exportación, supresión y cálculo de indicadores y alertas.'],
+    ['Conservación', 'Mientras dure el servicio y, a su término, según la cláusula sexta.']]) +
+  '<h2>ANEXO II. Medidas técnicas y organizativas</h2>' + tablaKV([
+    ['Separación de datos', 'Cada entidad dispone de una hoja de datos propia, independiente de la del prestador y de las demás entidades.'],
+    ['Control de acceso', 'Acceso con usuario y contraseña personal. Contraseñas almacenadas mediante función resumen con sal, nunca en claro. Cambio obligatorio de la contraseña temporal en el primer acceso.'],
+    ['Protección frente a accesos indebidos', 'Bloqueo temporal tras cinco intentos fallidos. Sesiones con caducidad automática. Desactivación inmediata del acceso.'],
+    ['Trazabilidad', 'Registro de auditoría de las operaciones. Registro visible para la entidad de toda consulta de detalle o exportación realizada por el prestador desde la aplicación.'],
+    ['Minimización', 'Exclusión de datos de menores; autorizaciones familiares solo en cifras agregadas; certificado negativo registrado solo por fecha.'],
+    ['Cifrado', 'Comunicaciones cifradas mediante HTTPS. Cifrado en reposo proporcionado por la infraestructura de Google.'],
+    ['Disponibilidad y portabilidad', 'Descarga por la entidad de una copia completa en Excel en cualquier momento.'],
+    ['Inteligencia artificial', 'El servicio no transmite datos a proveedores de IA. Los textos para asistentes externos se preparan sin datos personales y con enmascaramiento de DNI, teléfonos y correos.'],
+    ['Organizativas', 'Acceso del prestador limitado a soporte, instrucción de la entidad u obligación legal. Deber de confidencialidad del personal. Notificación de brechas en 48 horas.']]) +
+  '<h2>ANEXO III. Subencargados autorizados</h2><table><thead><tr><th>Subencargado</th><th>Servicio</th><th>Ubicación y garantías</th></tr></thead><tbody>' +
+  '<tr><td>Google Ireland Ltd. / Google LLC</td><td>Alojamiento de las hojas de datos y ejecución de la aplicación (Google Workspace, Sheets, Apps Script)</td><td>UE y otros países con cláusulas contractuales tipo y Marco de Privacidad de Datos UE-EE. UU.</td></tr>' +
+  '<tr><td>GitHub, Inc.</td><td>Alojamiento de la página web de acceso (interfaz, sin datos personales)</td><td>EE. UU. · No trata datos personales de la entidad</td></tr></tbody></table>';
+  return plantillaInforme('Contrato de encargo del tratamiento', 'Servicio EntornoSeguro · ' + (e.nombre || 'Modelo'), '<div class="just">' + b + '</div>', false,
+    `EntornoSeguro · Contrato de encargo del tratamiento entre ${e.nombre ? esc(e.nombre) : 'la entidad'} y ${p.nombre ? esc(p.nombre) : 'el prestador'}.`);
+}
+
+function htmlFichaDPD(p, e) {
+  const PRE = campo(p.nombre, 'RAZÓN SOCIAL DEL PRESTADOR');
+  const b = tablaKV([
+      ['Documento', 'Propuesta de diseño para validación previa a su desarrollo'],
+      ['Responsable del tratamiento', campo(e.nombre, 'ENTIDAD CLIENTE: AYUNTAMIENTO O CLUB')],
+      ['Prestador del servicio (encargado)', `${PRE} · CIF ${campo(p.cif, 'CIF')}`],
+      ['Estado', 'Pendiente de informe del DPD (o aprobación del órgano de gobierno en entidades sin DPD). El módulo no se activará hasta su validación.']]) +
+    '<h2>1. Objeto</h2>' +
+    pj('El Protocolo Marco andaluz (Orden de 18 de noviembre de 2024) exige que las entidades deportivas dispongan de un procedimiento de comunicación y actuación ante incidentes y de su registro. Este documento describe cómo se propone incorporar ese registro a EntornoSeguro y qué garantías tendrá, para que el DPD valide el diseño antes de su desarrollo.') +
+    pj('El módulo se plantea como asistente de procedimiento y registro de actuaciones. No sustituye la decisión profesional, no califica hechos ni atribuye responsabilidades, y no reemplaza el expediente administrativo o judicial que corresponda.') +
+    '<h2>2. Marco normativo</h2>' + lista([
+      'LO 8/2021 (LOPIVI): deber de comunicación de situaciones de violencia (arts. 15 y 16) y obligaciones en el ámbito deportivo (arts. 47 y 48).',
+      'Ley 4/2021, de Infancia y Adolescencia de Andalucía, y Protocolo Marco de protección de menores en el deporte (Orden de 18 de noviembre de 2024).',
+      'RGPD, en particular arts. 5 (minimización), 6, 9, 10, 25 (protección desde el diseño), 32 (seguridad) y 35 (EIPD). LOPDGDD.']) +
+    '<h2>3. Principio rector: expediente mínimo</h2>' +
+    pj('El módulo registra la trazabilidad del procedimiento, no el contenido del caso. La información identificativa y el relato detallado permanecen en el expediente oficial (servicios sociales, sede electrónica, Fiscalía o Fuerzas y Cuerpos de Seguridad), al que la aplicación solo hace referencia.') +
+    '<table><thead><tr><th>Se registra</th><th>No se registra</th></tr></thead><tbody>' + [
+      ['Código de caso generado automáticamente (sin nombres)', 'Nombre, iniciales, fecha de nacimiento o cualquier dato que identifique al menor'],
+      ['Fecha de comunicación y de los hechos', 'Identidad de la persona a la que se atribuyen los hechos'],
+      ['Entidad y ámbito (entrenamiento, viaje, vestuario, digital…)', 'Relato detallado de los hechos'],
+      ['Tipo de situación según categorías cerradas', 'Datos de salud, informes médicos o psicológicos'],
+      ['Valoración inicial del riesgo (inmediato / no inmediato)', 'Documentos del caso (solo número o referencia del expediente oficial)'],
+      ['Actuaciones: fecha, tipo y destinatario institucional', 'Datos de testigos o de familias'],
+      ['Seguimiento: fechas previstas y realizadas', 'Calificación jurídica de los hechos'],
+      ['Resultado administrativo, fecha de cierre y responsable del caso', '']].map(([a, c]) => `<tr><td>${esc(a)}</td><td>${esc(c)}</td></tr>`).join('') + '</tbody></table>' +
+    pj('Los campos de texto libre aplicarán enmascaramiento automático de DNI, teléfonos y correos y mostrarán un aviso permanente de no introducir datos identificativos.') +
+    '<h2>4. Flujo de actuación</h2><ol>' + ['Hechos comunicados: registro mínimo de la comunicación recibida.',
+      'Valoración inicial: ¿existe riesgo inmediato? Si es así, la aplicación muestra los pasos urgentes (112, protección del menor, comunicación a la familia salvo contraindicación, Fuerzas y Cuerpos de Seguridad).',
+      'Actuaciones: comunicaciones a servicios sociales, Fiscalía, Fuerzas y Cuerpos de Seguridad, federación o Delegado/a municipal, con fecha y referencia.',
+      'Seguimiento: fechas de revisión con alertas que solo muestran el código de caso.', 'Resultado administrativo y cierre.'].map(t => `<li>${esc(t)}</li>`).join('') + '</ol>' +
+    '<h2>5. Control de acceso</h2><table><thead><tr><th>Perfil</th><th>Acceso al módulo</th></tr></thead><tbody>' + [
+      ['Delegado/a de Protección de la entidad', 'Completo sobre los casos de su entidad.'],
+      ['Otros usuarios de la entidad', 'Sin acceso. Solo ven el número de casos abiertos.'],
+      ['Administrador del servicio (encargado)', 'Sin acceso al módulo ni a sus indicadores de detalle. Solo soporte técnico a petición expresa y con registro visible para la entidad.'],
+      ['Delegado/a municipal (versión ayuntamiento)', 'Casos de su ámbito municipal. Las entidades no ven casos de otras.']].map(([a, c]) => `<tr><td>${esc(a)}</td><td>${esc(c)}</td></tr>`).join('') + '</tbody></table>' +
+    pj('Medidas adicionales: confirmación de la contraseña para abrir el módulo, sesión reducida a 30 minutos, registro de auditoría de cada consulta y modificación y exportación limitada al Delegado/a.') +
+    '<h2>6. Inteligencia artificial</h2>' +
+    pj('El registro de incidencias no envía datos de casos a ninguna herramienta de IA. De forma opcional, y solo si se valida expresamente con una segunda activación independiente, puede usarse un asistente de IA sin datos con estas condiciones:') +
+    lista(['La IA recibe exclusivamente categorías cerradas: tipo de situación, ámbito, fase del procedimiento, existencia de riesgo inmediato y tipo de organización. Nunca nombres, iniciales, fechas, lugares, relato, código de caso ni referencias de expedientes.',
+      'La IA devuelve orientación de procedimiento y borradores con marcadores ([FECHA], [DESTINATARIO]…). La aplicación completa los marcadores en local con los datos del registro, sin enviarlos a la IA.',
+      'No existe conexión automática: el prompt se muestra íntegro antes de abrir la herramienta externa con la cuenta del usuario.',
+      'Los borradores se guardan solo en la hoja de incidencias, asociados al caso, y se eliminan al anonimizarse el caso.',
+      'Cada uso del asistente queda en el registro de accesos del caso.']) +
+    '<h2>7. Seguridad y almacenamiento</h2>' + lista(['Hoja de datos separada para incidencias, con acceso solo desde la aplicación.',
+      'Cifrado en tránsito (HTTPS) y en reposo (infraestructura de Google).', 'Contraseñas con función resumen y sal; bloqueo tras intentos fallidos.',
+      'Registro de auditoría.', 'Estadísticas solo con datos agregados y anonimizados.']) +
+    '<h2>8. Conservación</h2>' + pj('Propuesta: los casos cerrados se conservan [PLAZO A DETERMINAR POR EL DPD] desde el cierre y después se anonimizan, manteniendo solo datos estadísticos.') +
+    '<h2>9. Riesgos identificados y medidas</h2><table><thead><tr><th>Riesgo</th><th>Medida</th></tr></thead><tbody>' + [
+      ['Identificación indirecta del menor por combinación de datos', 'Categorías cerradas, sin fechas de nacimiento ni equipos concretos; código de caso aleatorio.'],
+      ['Acceso de personas no autorizadas', 'Acceso restringido al Delegado/a, confirmación de contraseña, sesión corta y auditoría.'],
+      ['Introducción de datos identificativos en texto libre', 'Aviso permanente, enmascaramiento automático y revisión periódica.'],
+      ['Acceso del prestador del servicio', 'Sin acceso funcional; registro visible de cualquier intervención técnica; contrato de encargo.'],
+      ['Uso de IA con datos de casos', 'Sin envío de datos: el asistente opcional solo recibe categorías cerradas; los datos se completan en local. Activación independiente y validada.'],
+      ['Conservación excesiva', 'Anonimización automática al vencer el plazo fijado.']].map(([a, c]) => `<tr><td>${esc(a)}</td><td>${esc(c)}</td></tr>`).join('') + '</tbody></table>' +
+    '<h2>10. Cuestiones que se someten al DPD</h2><ol>' + ['¿Es suficiente el modelo de expediente mínimo, o debe limitarse aún más?',
+      '¿Procede realizar una Evaluación de Impacto (EIPD)? Recomendación del prestador: sí.', 'Base jurídica aplicable y plazo de conservación.',
+      '¿Debe residir la hoja de incidencias en la cuenta de Google de la propia entidad?', 'Información a las personas interesadas y cláusulas que deben mostrarse en la aplicación.', '¿Se autoriza el asistente de IA sin datos descrito en el apartado 6?'].map(t => `<li>${esc(t)}</li>`).join('') + '</ol>' +
+    '<h3>Informe del DPD</h3>' + tablaKV([['Valoración', '☐ Favorable &nbsp; ☐ Favorable con condiciones &nbsp; ☐ Desfavorable'], ['Condiciones u observaciones', '<br><br><br><br>'], ['Fecha y firma', '<br><br><br>']]);
+  return plantillaInforme('Ficha técnica para el Delegado de Protección de Datos', 'Módulo de registro y seguimiento de incidencias', '<div class="just">' + b + '</div>', false,
+    'EntornoSeguro · Ficha técnica para el DPD · Propuesta de diseño sujeta a validación.');
+}
+
+async function docLegal(tipo, fmt, clubId) {
+  const d = await run(() => API.call('datosContrato', clubId ? { club_id: clubId } : {}));
+  const html = tipo === 'contrato' ? htmlContrato(d.prestador, d.entidad) : htmlFichaDPD(d.prestador, d.entidad);
+  const base = (tipo === 'contrato' ? 'contrato-encargo-' : 'ficha-dpd-incidencias-') + (d.entidad.nombre || 'modelo');
+  if (fmt === 'word') descargar('﻿' + html, 'application/msword', nombreInf(base)); else abrirInforme(html);
+}
+document.addEventListener('click', ev => {
+  const b = ev.target.closest('[data-doclegal]'); if (!b) return;
+  docLegal(b.dataset.doclegal, b.dataset.fmt);
+});
+async function loadDocumentacion() {
+  const p = await run(() => API.call('datosPrestador'));
+  const f = $('#form-prestador'); Object.keys(p).forEach(k => { if (f[k]) f[k].value = p[k]; });
+}
+$('#form-prestador') && ($('#form-prestador').onsubmit = async ev => {
+  ev.preventDefault();
+  await run(() => API.call('guardarPrestador', Object.fromEntries(new FormData(ev.target)))); toast('Datos del prestador guardados');
+});
+
+// ---------- REGISTRO DE INCIDENCIAS ----------
+const txtFase = f => ((state.inc && state.inc.listas && state.inc.listas.fases.find(x => x[0] === f)) || ['', f])[1];
+const hoyISO = () => new Date().toISOString().slice(0, 10);
+async function incCall(accion, datos) {
+  document.body.classList.add('busy');
+  try { return await API.call(accion, datos); }
+  catch (e) {
+    if (e.message === 'INC_BLOQUEO') { toast('La sesión del registro ha caducado. Confirma tu contraseña.', true); show('incidencias'); }
+    else toast(e.message, true);
+    throw e;
+  } finally { document.body.classList.remove('busy'); }
+}
+async function loadIncidencias() {
+  const st = state.inc = await run(() => API.call('estadoIncidencias'));
+  if (!st.activo) return pintarIncInactivo(st);
+  if (!st.abierto) return pintarIncBloqueo();
+  if (!state.club && !state.entidades.length) state.entidades = await run(() => API.call('listarEntidades'));
+  state.casos = await incCall('listarCasos');
+  pintarCasos();
+}
+function pintarIncInactivo(st) {
+  $('#inc-cont').innerHTML = `<div class="grid2"><div class="card"><h3>Módulo desactivado</h3>
+    <p>El registro de incidencias permanece <b>desactivado</b> hasta que el Delegado/a de Protección de Datos (DPD) valide su diseño o, en entidades sin DPD, lo apruebe su órgano de gobierno.</p>
+    <p class="nota">Descarga la ficha técnica, entrégala al DPD (o a la junta directiva) y, con su visto bueno, activa el módulo.</p>
+    <div class="ia-acciones"><button class="btn" type="button" data-doclegal="ficha" data-fmt="pdf">Ficha para el DPD (PDF)</button><button class="btn ghost" type="button" data-doclegal="ficha" data-fmt="word">Word</button></div></div>
+    <div class="card">${st.puede_activar ? `<form id="form-activar" class="form"><h3>Activar el registro</h3>
+      <label class="check"><input type="checkbox" name="confirmo" value="SI" required> El DPD (o el órgano de gobierno, si la entidad no tiene DPD) ha validado el diseño del módulo</label>
+      <label>Fecha del informe o de la aprobación<input type="date" name="fecha_dpd" required></label>
+      <label>Plazo de conservación de casos cerrados (meses, fijado por el DPD)<input type="number" name="conservacion_meses" min="1" max="600" required></label>
+      <label>Confirma tu contraseña<input type="password" name="password" autocomplete="current-password" required></label>
+      <button class="btn">Activar registro de incidencias</button>
+      <p class="nota">Se creará una hoja de datos separada, solo accesible desde la aplicación.</p></form>`
+      : '<h3>Activación</h3><p>Solicita la activación al administrador del sistema cuando el diseño esté validado.</p>'}</div></div>`;
+  const f = $('#form-activar');
+  if (f) f.onsubmit = async ev => {
+    ev.preventDefault();
+    const d = Object.fromEntries(new FormData(f)); d.confirmo = f.confirmo.checked ? 'SI' : '';
+    await run(() => API.call('activarIncidencias', d)); state.cfg.incidencias = true;
+    toast('Registro de incidencias activado'); loadIncidencias();
+  };
+}
+function pintarIncBloqueo() {
+  $('#inc-cont').innerHTML = `<form id="form-abrir-inc" class="card form" style="max-width:460px"><h3>Abrir el registro</h3>
+    <p class="nota">Por seguridad, confirma tu contraseña. La sesión del registro dura 30 minutos sin actividad.</p>
+    <label>Contraseña<input type="password" name="password" autocomplete="current-password" required></label>
+    <button class="btn">Abrir registro</button></form>`;
+  $('#form-abrir-inc').onsubmit = async ev => {
+    ev.preventDefault();
+    await run(() => API.call('abrirIncidencias', { password: ev.target.password.value }));
+    loadIncidencias();
+  };
+  setTimeout(() => { const p = $('#form-abrir-inc [name=password]'); if (p) p.focus(); }, 50);
+}
+function pintarCasos() {
+  const cs = state.casos || [], hoy = hoyISO();
+  const abiertos = cs.filter(c => c.fase !== 'cerrada');
+  const vencida = abiertos.filter(c => c.proxima_revision && String(c.proxima_revision).slice(0, 10) < hoy).length;
+  const nomE = id => (state.entidades.find(e => e.id === id) || {}).nombre || '—';
+  $('#inc-cont').innerHTML = `<div class="kpis">${[['Casos abiertos', abiertos.length], ['Pendientes de valoración', abiertos.filter(c => c.fase === 'comunicada').length],
+      ['Con riesgo inmediato', abiertos.filter(c => c.riesgo_inmediato === 'SI').length], ['Revisión vencida', vencida], ['Cerrados', cs.length - abiertos.length]]
+      .map(([l, v]) => `<div class="kpi"><span>${l}</span><strong>${v}</strong></div>`).join('')}</div>
+    <div class="ia-acciones"><button class="btn" id="nuevo-caso" type="button">+ Registrar comunicación</button><button class="btn ghost" id="bloquear-inc" type="button">🔒 Cerrar registro</button></div>
+    ${state.inc.puede_activar ? `<div class="card"><b>Asistente IA en incidencias:</b> ${state.inc.ia ? `<span class="st ok">Activado</span> <small>desde ${esc(state.inc.ia_fecha)}</small>` : '<span class="st muted">Desactivado</span>'}
+      <button class="link" type="button" id="inc-ia-switch">${state.inc.ia ? 'Desactivar' : 'Activar'}</button>
+      <p class="nota" style="margin:6px 0 0">Solo recibe categorías (tipo, ámbito, fase, riesgo). Devuelve orientación y borradores que la app completa con los datos del caso sin enviarlos. Requiere validación (apartado 6 de la ficha técnica).</p></div>` : ''}
+    <div class="card form buscador"><label>Mostrar<select id="inc-filtro"><option value="abiertos">Casos abiertos</option><option value="">Todos</option>${state.inc.listas.fases.map(([k, t]) => `<option value="${k}">${esc(t)}</option>`).join('')}</select></label>
+      <label>Buscar código<input id="inc-q" type="search" placeholder="INC-…"></label></div>
+    <div class="card"><table id="tabla-casos"></table></div>`;
+  const pintar = () => {
+    const f = $('#inc-filtro').value, q = $('#inc-q').value.trim().toUpperCase();
+    const l = cs.filter(c => (f === 'abiertos' ? c.fase !== 'cerrada' : !f || c.fase === f) && (!q || String(c.codigo).includes(q)));
+    $('#tabla-casos').innerHTML = `<thead><tr><th>Código</th><th>Comunicación</th>${state.club ? '' : '<th>Entidad</th>'}<th>Situación</th><th>Fase</th><th>Próxima revisión</th><th></th></tr></thead><tbody>` +
+      (l.map(c => `<tr><td><b>${esc(c.codigo)}</b>${c.riesgo_inmediato === 'SI' && c.fase !== 'cerrada' ? '<br><span class="st bad">Riesgo inmediato</span>' : ''}</td>
+        <td>${esc(String(c.fecha_comunicacion).slice(0, 10))}</td>${state.club ? '' : `<td>${esc(nomE(c.entidad_id))}</td>`}
+        <td>${esc(c.tipo)}<br><small>${esc(c.ambito)}</small></td><td><span class="st ${c.fase === 'cerrada' ? 'muted' : c.fase === 'comunicada' ? 'bad' : 'warn'}">${esc(txtFase(c.fase))}</span></td>
+        <td class="${c.fase !== 'cerrada' && c.proxima_revision && String(c.proxima_revision).slice(0, 10) < hoy ? 'bad-t' : ''}">${esc(c.proxima_revision) || '—'}</td>
+        <td><button class="link" data-caso="${esc(c.id)}">Abrir</button></td></tr>`).join('')
+        || `<tr><td colspan="${state.club ? 6 : 7}" class="empty">No hay casos con esos criterios.</td></tr>`) + '</tbody>';
+    $$('[data-caso]').forEach(b => b.onclick = () => abrirCaso(b.dataset.caso));
+  };
+  $('#inc-filtro').onchange = pintar; $('#inc-q').oninput = pintar; pintar();
+  $('#nuevo-caso').onclick = () => formCaso({ fecha_comunicacion: hoyISO(), fase: 'comunicada', riesgo_inmediato: 'NO' });
+  $('#inc-ia-switch') && ($('#inc-ia-switch').onclick = () => {
+    const activar = !state.inc.ia;
+    modal(activar ? 'Activar asistente IA en incidencias' : 'Desactivar asistente IA', (activar ? [['confirmo', 'Validación', [['', '— elige —'], ['SI', 'El DPD o el órgano de gobierno ha validado el uso del asistente (apartado 6 de la ficha)']]], ['fecha', 'Fecha de la validación', 'date', true]] : []).concat([['password', 'Confirma tu contraseña', 'password', true]]), {}, async d => {
+      d.activar = activar ? 'SI' : 'NO';
+      await incCall('asistenteIAIncidencias', d); toast(activar ? 'Asistente IA activado' : 'Asistente IA desactivado'); loadIncidencias();
+    });
+  });
+  $('#bloquear-inc').onclick = async () => { await run(() => API.call('cerrarIncidencias')); toast('Registro cerrado'); loadIncidencias(); };
+}
+function formCaso(c, faseNueva) {
+  const L = state.inc.listas, nuevo = !c.id;
+  const campos = [];
+  if (!state.club) campos.push(['entidad_id', 'Entidad', state.entidades.filter(e => e.trabaja_menores === 'SI').map(e => [e.id, e.nombre])]);
+  campos.push(['fecha_comunicacion', 'Fecha de la comunicación', 'date', true], ['fecha_hechos', 'Fecha de los hechos (si se conoce)', 'date'],
+    ['ambito', 'Ámbito', L.ambitos], ['tipo', 'Tipo de situación', L.tipos], ['riesgo_inmediato', '¿Existe riesgo inmediato?', [['NO', 'No'], ['SI', 'Sí']]],
+    ['fase', 'Fase', L.fases], ['responsable', 'Responsable del caso (cargo, no nombre)'], ['ref_expediente', 'Referencia del expediente oficial'],
+    ['proxima_revision', 'Próxima revisión', 'date'], ['resultado', 'Resultado administrativo (para cerrar)', L.resultados.map(r => [r, r || '—'])],
+    ['fecha_cierre', 'Fecha de cierre', 'date']);
+  const datos = Object.assign({}, c, faseNueva ? { fase: faseNueva } : {});
+  modal(nuevo ? 'Registrar comunicación' : 'Caso ' + c.codigo, campos, datos, async d => {
+    d.id = c.id;
+    const r = await incCall('guardarCaso', d);
+    toast(nuevo ? 'Comunicación registrada: ' + r.codigo : 'Caso actualizado');
+    abrirCaso(r.id);
+  });
+  $('#modal-form h3').insertAdjacentHTML('afterend', '<p class="aviso-inc">No escribas nombres, iniciales ni datos que identifiquen a menores o a personas implicadas.</p>');
+}
+const GUIA_FASES = {
+  comunicada: ['¿Qué ha ocurrido? ¿Existe riesgo inmediato?', [
+    'Escucha con calma y sin interrogar; no pidas detalles ni hagas repetir el relato.',
+    'No confrontes a las personas implicadas ni investigues por tu cuenta.',
+    'Registra aquí solo fecha, ámbito y tipo de situación. El relato y los datos personales van al expediente oficial.',
+    'Valora si hay riesgo inmediato para el menor. Si lo hay, marca «Riesgo inmediato: Sí» y sigue los pasos urgentes.']],
+  valorada: ['¿Qué actuación corresponde? ¿A quién debe comunicarse?', [
+    'Ante indicios de violencia existe deber de comunicación a los servicios sociales y, en su caso, a las Fuerzas y Cuerpos de Seguridad, la Fiscalía o la autoridad judicial (LOPIVI, arts. 15 y 16).',
+    'Informa, cuando proceda, al Delegado/a de Protección municipal y, en su caso, a la federación deportiva, según el Protocolo Marco.',
+    'Informa a la familia, salvo que pueda perjudicar al menor.',
+    'Valora medidas de protección provisionales en la entidad (supervisión, reorganización de grupos…), sin prejuzgar responsabilidades.']],
+  en_actuacion: ['¿Qué documentación debe generarse? ¿Qué actuaciones deben realizarse?', [
+    'Registra cada comunicación con fecha, destinatario y número de registro o referencia.',
+    'Guarda escritos y justificantes en el expediente oficial, fuera de esta aplicación.',
+    'Anota las medidas organizativas adoptadas.',
+    'Fija la fecha de la próxima revisión: la aplicación te avisará.']],
+  en_seguimiento: ['¿Qué seguimiento debe establecerse? ¿Cuándo debe revisarse?', [
+    'Revisa la evolución en las fechas fijadas.',
+    'Coordínate con los servicios a los que se derivó el caso.',
+    'Comprueba que las medidas de protección siguen siendo adecuadas.',
+    'Cuando exista resultado administrativo, cierra el caso.']],
+  cerrada: ['Cierre y mejora continua', [
+    'Revisa si conviene actualizar el análisis de riesgos, el código de conducta o la formación.',
+    'Los datos se anonimizarán automáticamente al vencer el plazo de conservación fijado por el DPD.']]
+};
+const PASOS_URGENTES = ['Garantiza la seguridad del menor: sepáralo de la situación de riesgo y no lo dejes solo.',
+  'Si hay peligro para su vida o integridad, o un posible delito en curso, llama al 112.',
+  'Si necesita atención sanitaria, avisa a emergencias o acompáñalo al centro sanitario.',
+  'Comunica los hechos a Policía Nacional (091) o Guardia Civil (062) cuando proceda.',
+  'Informa a la familia, salvo que pueda perjudicar al menor.',
+  'Avisa al Delegado/a de Protección de la entidad y, si procede, al Delegado/a de Protección municipal.',
+  'Registra aquí cada actuación con fecha y hora.'];
+async function abrirCaso(id) {
+  const d = state.caso = await incCall('verCaso', { id });
+  const c = d.caso, L = state.inc.listas, i = L.fases.findIndex(x => x[0] === c.fase);
+  show('caso');
+  $('#caso-titulo').textContent = 'Caso ' + c.codigo;
+  const g = GUIA_FASES[c.fase] || GUIA_FASES.comunicada, sig = L.fases[i + 1];
+  const nomE = (state.entidades.find(e => e.id === c.entidad_id) || {}).nombre || '';
+  $('#caso-cont').innerHTML = `<div class="fases">${L.fases.map(([k, t], j) => `<span class="${j < i ? 'hecha' : j === i ? 'actual' : ''}">${j < i ? '✓ ' : ''}${esc(t)}</span>`).join('')}</div>
+    ${c.riesgo_inmediato === 'SI' && c.fase !== 'cerrada' ? `<div class="urgente"><h3>⚠ Riesgo inmediato · pasos urgentes</h3><ol>${PASOS_URGENTES.map(p => `<li>${esc(p)}</li>`).join('')}</ol></div>` : ''}
+    ${c.anonimizado === 'SI' ? '<p class="aviso-inc">Caso anonimizado por vencimiento del plazo de conservación. Solo se conservan datos estadísticos.</p>' : ''}
+    <div class="grid2">
+      <div class="card guia"><h3>Asistente de procedimiento</h3><p><b>${esc(g[0])}</b></p><ul>${g[1].map(t => `<li>${esc(t)}</li>`).join('')}</ul>
+        ${c.anonimizado !== 'SI' ? `<div class="ia-acciones">${sig ? `<button class="btn" type="button" id="caso-avanzar">Pasar a: ${esc(sig[1])}</button>` : ''}<button class="btn ghost" type="button" id="caso-actuacion">+ Añadir actuación</button></div>` : ''}</div>
+      <div class="card"><h3>Datos del caso</h3><table class="claves">
+        ${!state.club ? `<tr><td>Entidad</td><td>${esc(nomE)}</td></tr>` : ''}
+        <tr><td>Comunicación</td><td>${esc(String(c.fecha_comunicacion).slice(0, 10))}</td></tr><tr><td>Hechos</td><td>${esc(c.fecha_hechos) || '—'}</td></tr>
+        <tr><td>Ámbito</td><td>${esc(c.ambito)}</td></tr><tr><td>Situación</td><td>${esc(c.tipo)}</td></tr>
+        <tr><td>Riesgo inmediato</td><td>${c.riesgo_inmediato === 'SI' ? '<span class="st bad">Sí</span>' : 'No'}</td></tr>
+        <tr><td>Responsable</td><td>${esc(c.responsable) || '—'}</td></tr><tr><td>Expediente oficial</td><td>${esc(c.ref_expediente) || '—'}</td></tr>
+        <tr><td>Próxima revisión</td><td>${esc(c.proxima_revision) || '—'}</td></tr>
+        ${c.fase === 'cerrada' ? `<tr><td>Resultado</td><td>${esc(c.resultado)}</td></tr><tr><td>Cierre</td><td>${esc(c.fecha_cierre)}</td></tr>` : ''}</table>
+        <div class="ia-acciones">${c.anonimizado !== 'SI' ? '<button class="btn ghost" type="button" id="caso-editar">Editar datos</button>' : ''}<button class="btn ghost" type="button" id="caso-pdf">Informe PDF</button><button class="btn ghost" type="button" id="caso-word">Word</button></div></div>
+    </div>
+    ${state.inc.ia && c.anonimizado !== 'SI' ? `<div class="card form"><h3>🤖 Asistente IA sin datos</h3>
+      <p class="nota">Claude solo recibe: tipo de situación, ámbito, fase y riesgo inmediato. Nada que identifique el caso. Revisa el prompt antes de abrirlo.</p>
+      <div class="fields"><label>¿Qué necesitas?<select id="ia-tarea">${TAREAS_IA.map(([k, t]) => `<option value="${k}">${esc(k === 'com_municipal' && !state.club ? 'Borrador: comunicación a la entidad deportiva' : t)}</option>`).join('')}</select></label></div>
+      <div class="ia-acciones"><button class="btn" type="button" id="ia-preparar">Preparar prompt</button></div>
+      <div id="ia-caso-out"></div></div>` : ''}
+    ${d.borradores && d.borradores.length ? `<div class="card"><h3>Borradores del caso</h3>${d.borradores.map(x => `<div class="doc-legal"><span><b>${esc(x.titulo)}</b><br><small>${esc(x.creado)} · ${esc(x.usuario)}</small></span><div class="ia-acciones"><button class="btn ghost" type="button" data-bor-pdf="${esc(x.id)}">Ver / PDF</button><button class="btn ghost" type="button" data-bor-word="${esc(x.id)}">Word</button><button class="btn ghost peligro" type="button" data-bor-del="${esc(x.id)}">Eliminar</button></div></div>`).join('')}</div>` : ''}
+    <div class="card"><h3>Cronología de actuaciones</h3>${d.actuaciones.length ? `<ul class="linea">${d.actuaciones.map(a => `<li><b>${esc(a.tipo)}</b>${a.destinatario ? ' · ' + esc(a.destinatario) : ''}
+      <small>${esc(a.fecha)}${a.referencia ? ' · Ref.: ' + esc(a.referencia) : ''}${a.usuario ? ' · ' + esc(a.usuario) : ''}</small>${a.observaciones ? `<div>${esc(a.observaciones)}</div>` : ''}</li>`).join('')}</ul>` : '<p class="empty">Sin actuaciones.</p>'}</div>
+    <details class="card"><summary><b>Registro de accesos a este caso</b></summary><table><thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th></tr></thead><tbody>
+      ${d.accesos.map(l => `<tr><td>${esc(l.timestamp)}</td><td>${esc(l.usuario)}</td><td>${esc(l.accion)}</td></tr>`).join('')}</tbody></table></details>`;
+  const b = id => $('#' + id);
+  b('caso-avanzar') && (b('caso-avanzar').onclick = () => formCaso(c, sig[0]));
+  b('caso-editar') && (b('caso-editar').onclick = () => formCaso(c));
+  b('caso-actuacion') && (b('caso-actuacion').onclick = () => formActuacion(c));
+  b('caso-pdf').onclick = async () => abrirInforme(await htmlInformeCaso(c.id));
+  b('caso-word').onclick = async () => descargar('﻿' + await htmlInformeCaso(c.id), 'application/msword', nombreInf('informe-' + c.codigo));
+  b('ia-preparar') && (b('ia-preparar').onclick = () => prepararIACaso(c));
+  const bor = id => d.borradores.find(x => x.id === id);
+  $$('[data-bor-pdf]').forEach(x => x.onclick = () => abrirInforme(htmlBorrador(bor(x.dataset.borPdf), c)));
+  $$('[data-bor-word]').forEach(x => x.onclick = () => descargar('﻿' + htmlBorrador(bor(x.dataset.borWord), c), 'application/msword', nombreInf('borrador-' + c.codigo)));
+  $$('[data-bor-del]').forEach(x => x.onclick = async () => { if (!confirm('¿Eliminar este borrador?')) return; await incCall('eliminarBorrador', { id: x.dataset.borDel }); toast('Borrador eliminado'); abrirCaso(c.id); });
+}
+$('#caso-volver').onclick = () => show('incidencias');
+function formActuacion(c) {
+  const L = state.inc.listas;
+  modal('Nueva actuación · ' + c.codigo, [['fecha', 'Fecha', 'date', true], ['hora', 'Hora', 'time'], ['tipo', 'Tipo de actuación', L.actuaciones],
+    ['destinatario', 'Destinatario institucional', L.destinatarios.map(x => [x, x || '—'])], ['referencia', 'Nº de registro o referencia'],
+    ['observaciones', 'Observaciones (sin nombres ni datos personales)', 'textarea']], { fecha: hoyISO(), hora: new Date().toTimeString().slice(0, 5) }, async d => {
+    d.caso_id = c.id; await incCall('guardarActuacion', d); toast('Actuación registrada'); abrirCaso(c.id);
+  });
+  $('#modal-form h3').insertAdjacentHTML('afterend', '<p class="aviso-inc">Registra solo hechos de procedimiento: qué se hizo, cuándo y ante quién.</p>');
+}
+async function htmlInformeCaso(id) {
+  const d = await incCall('verCaso', { id, informe: true }), c = d.caso;
+  const nomE = (state.entidades.find(e => e.id === c.entidad_id) || {}).nombre || ((state.cfg || {}).organismo || '');
+  let b = '<div class="nota">DOCUMENTO CONFIDENCIAL. Contiene únicamente datos mínimos de trazabilidad del procedimiento. Los datos identificativos y el relato constan en el expediente oficial.</div>';
+  b += '<h2>1. Datos del caso</h2><table>' + fila('Código', esc(c.codigo)) + fila('Entidad', esc(nomE)) + fila('Fecha de comunicación', esc(String(c.fecha_comunicacion).slice(0, 10))) +
+    fila('Fecha de los hechos', esc(c.fecha_hechos) || '—') + fila('Ámbito', esc(c.ambito)) + fila('Tipo de situación comunicada', esc(c.tipo)) +
+    fila('Riesgo inmediato', c.riesgo_inmediato === 'SI' ? 'Sí' : 'No') + fila('Fase actual', esc(txtFase(c.fase))) + fila('Responsable', esc(c.responsable) || '—') +
+    fila('Referencia del expediente oficial', esc(c.ref_expediente) || '—') + fila('Próxima revisión', esc(c.proxima_revision) || '—') +
+    (c.fase === 'cerrada' ? fila('Resultado administrativo', esc(c.resultado)) + fila('Fecha de cierre', esc(c.fecha_cierre)) : '') + '</table>';
+  b += '<h2>2. Cronología de actuaciones</h2>' + (d.actuaciones.length ? '<table><thead><tr><th>Fecha</th><th>Actuación</th><th>Destinatario</th><th>Referencia</th><th>Observaciones</th></tr></thead><tbody>' +
+    d.actuaciones.map(a => `<tr><td>${esc(a.fecha)}</td><td>${esc(a.tipo)}</td><td>${esc(a.destinatario) || '—'}</td><td>${esc(a.referencia) || '—'}</td><td>${esc(a.observaciones) || '—'}</td></tr>`).join('') + '</tbody></table>' : '<p>Sin actuaciones registradas.</p>');
+  b += '<div class="nota">Este documento no califica los hechos ni atribuye responsabilidades. Referencias: LO 8/2021 (LOPIVI), arts. 15 y 16; Protocolo Marco de Andalucía (Orden de 18 de noviembre de 2024).</div>';
+  b += '<div class="firma"><div>Delegado/a de Protección</div><div>Fecha</div></div>';
+  return plantillaInforme('Informe de seguimiento de caso', c.codigo, b, false, 'EntornoSeguro · Registro de incidencias · Documento confidencial · ' + esc(c.codigo));
+}
+
+// ---------- ASISTENTE IA SIN DATOS (incidencias) ----------
+const TAREAS_IA = [
+  ['orientacion', 'Orientación para la fase actual'],
+  ['com_ss', 'Borrador: comunicación a Servicios Sociales'],
+  ['com_familia', 'Borrador: comunicación a la familia'],
+  ['com_municipal', 'Borrador: comunicación al Delegado/a municipal'],
+  ['acta', 'Borrador: acta de reunión de valoración'],
+  ['checklist', 'Checklist de documentación y actuaciones'],
+  ['seguimiento', 'Plan de seguimiento'],
+  ['medidas', 'Medidas preventivas de mejora (tras el cierre)']];
+const INSTR_IA = {
+  orientacion: 'Da una orientación práctica para la fase indicada: preguntas que debe hacerse el responsable, actuaciones que suelen corresponder, a quién comunicar y plazos orientativos. Máximo 350 palabras, en viñetas.',
+  com_ss: 'Redacta un escrito formal de comunicación a los Servicios Sociales Comunitarios en cumplimiento del deber de comunicación (LOPIVI, arts. 15 y 16). Incluye asunto, cuerpo, solicitud de coordinación y firma. Tono técnico y neutro, sin calificar los hechos.',
+  com_familia: 'Redacta una comunicación a la familia o tutores, cercana y prudente: informa de que se ha recibido una comunicación, de las medidas de protección y de la persona de contacto. Sin detalles de los hechos ni de otras personas.',
+  com_municipal: 'Redacta una comunicación formal entre el Delegado/a de Protección de la entidad y el Delegado/a de Protección municipal (o viceversa) informando del caso por su código, la fase y las actuaciones realizadas, y proponiendo coordinación.',
+  acta: 'Redacta un modelo de acta de reunión de valoración inicial: asistentes (por cargo), orden del día, valoración del riesgo, decisiones, comunicaciones acordadas, responsables y próxima revisión.',
+  checklist: 'Elabora una checklist de documentación y actuaciones para la fase indicada, con casillas ☐ y la referencia normativa cuando proceda.',
+  seguimiento: 'Propón un plan de seguimiento: qué revisar, con qué periodicidad, indicadores de evolución, coordinación con servicios y criterio para el cierre.',
+  medidas: 'Propón 5-8 medidas preventivas para reducir la probabilidad de situaciones similares en el ámbito indicado, formuladas para el análisis de riesgos del Protocolo Marco.'
+};
+const MARCADORES_IA = ['CODIGO_CASO', 'FECHA_HOY', 'FECHA_COMUNICACION', 'ORGANISMO', 'ENTIDAD', 'REF_EXPEDIENTE', 'RESPONSABLE', 'DELEGADO'];
+function prepararIACaso(c) {
+  const tarea = $('#ia-tarea').value;
+  const t = (TAREAS_IA.find(x => x[0] === tarea) || TAREAS_IA[0])[1];
+  const prompt = [CONTEXTO_IA, '',
+    'TAREA: ' + t + '. ' + INSTR_IA[tarea],
+    '', 'SITUACIÓN (solo categorías; no se facilitan datos personales ni del caso):',
+    '- Tipo de organización: ' + (state.club ? 'club o entidad deportiva' : 'ayuntamiento (Delegado/a de Protección municipal)'),
+    '- Tipo de situación comunicada: ' + c.tipo,
+    '- Ámbito: ' + c.ambito,
+    '- Fase del procedimiento: ' + txtFase(c.fase),
+    '- Riesgo inmediato: ' + (c.riesgo_inmediato === 'SI' ? 'sí' : 'no'),
+    '', 'REGLAS:',
+    '- No inventes hechos ni datos. No califiques los hechos ni atribuyas responsabilidades.',
+    '- Donde falten datos usa EXACTAMENTE estos marcadores: ' + MARCADORES_IA.map(m => '[' + m + ']').join(' ') + '.',
+    '- Para cualquier otro dato usa [COMPLETAR: descripción]. Nunca escribas nombres de personas.',
+    '- Referencia la norma (LOPIVI, Protocolo Marco de Andalucía) cuando proceda.'].join('\n');
+  const caja = $('#ia-caso-out');
+  mostrarPrompt(caja, prompt, null);
+  $('#ia-caso-out .nota').textContent = 'Revisa el prompt: solo contiene categorías. Se abrirá Claude con tu cuenta. Si aparece vacío, pulsa "Copiar prompt" y pégalo.';
+  incCall('usoIACaso', { caso_id: c.id, tarea }).catch(() => {});
+  const z = document.createElement('div'); z.className = 'guardar-res form';
+  z.innerHTML = `<label>Pega aquí la respuesta de Claude<textarea rows="8" class="doc-texto" id="ia-resp"></textarea></label>
+    <div class="ia-acciones"><button class="btn" type="button" id="ia-completar">Completar con los datos del caso</button></div><div id="ia-final"></div>`;
+  caja.appendChild(z); pegarConFormato($('#ia-resp'));
+  $('#ia-completar').onclick = () => {
+    const txt = $('#ia-resp').value.trim(); if (!txt) { toast('Pega primero la respuesta de Claude', true); return; }
+    const final = completarMarcadores(txt, c);
+    const quedan = (final.match(/\[[^\]]+\]/g) || []).length;
+    $('#ia-final').innerHTML = `<p class="nota">${quedan ? quedan + ' dato(s) por completar, marcados en amarillo. Complétalos en el documento final, fuera de la app si son datos personales.' : 'Todos los marcadores completados.'}</p>
+      <div class="md vista-previa">${mdToHtml(final).replace(/\[([^\]]+)\]/g, '<mark>[$1]</mark>')}</div>
+      <label>Título<input id="ia-titulo" value="${esc((x => x.charAt(0).toUpperCase() + x.slice(1))(t.replace(/^Borrador: /, '')) + ' · ' + c.codigo)}"></label>
+      <div class="ia-acciones"><button class="btn" type="button" id="ia-guardar">Guardar en el caso</button><button class="btn ghost" type="button" id="ia-copiar">Copiar</button></div>`;
+    $('#ia-copiar').onclick = () => copiarRico(final);
+    $('#ia-guardar').onclick = async () => { await incCall('guardarBorrador', { caso_id: c.id, tarea, titulo: $('#ia-titulo').value, texto: final }); toast('Borrador guardado en el caso'); abrirCaso(c.id); };
+  };
+}
+function completarMarcadores(txt, c) {
+  const cfg = state.cfg || {}, e = state.entidades.find(x => x.id === c.entidad_id) || {};
+  const f = v => v ? new Date(String(v).slice(0, 10) + 'T12:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+  const val = { CODIGO_CASO: c.codigo, FECHA_HOY: f(hoyISO()), FECHA_COMUNICACION: f(c.fecha_comunicacion), ORGANISMO: cfg.organismo || '',
+    ENTIDAD: e.nombre || cfg.organismo || '', REF_EXPEDIENTE: c.ref_expediente || '', RESPONSABLE: c.responsable || '',
+    DELEGADO: state.club ? (e.delegado_nombre || '') : (cfg.delegado_municipal || '') };
+  return String(txt).replace(/\[([A-Z_]+)\]/g, (m, k) => val[k] ? val[k] : m);
+}
+function htmlBorrador(x, c) {
+  return plantillaInforme(x.titulo, 'Borrador · ' + c.codigo, '<div class="nota">DOCUMENTO CONFIDENCIAL · Borrador elaborado con asistente de IA sin datos personales y completado en la aplicación. Revísalo antes de su uso.</div>' + mdToHtml(x.texto).replace(/\[([^\]]+)\]/g, '<span class="campo">[$1]</span>'), false, 'EntornoSeguro · Registro de incidencias · Documento confidencial · ' + esc(c.codigo));
+}
+
+// ---------- ENCUESTAS ANÓNIMAS ----------
+const PREGUNTAS_ENC = {
+  '6-11': ['Me lo paso bien en los entrenamientos.', 'Me siento seguro/a en el club.', 'Mis entrenadores me tratan bien.',
+    'Mis compañeros y compañeras me tratan bien.', 'Me siento cómodo/a en el vestuario.', 'Cuando hablo, las personas mayores del club me escuchan.',
+    'Nadie me hace sentir mal por cómo soy.', 'Si algo me preocupa, sé a quién contárselo.'],
+  '12-17': ['Me siento seguro/a en las actividades del club.', 'El trato de entrenadores y monitores es respetuoso.',
+    'El trato entre compañeros y compañeras es respetuoso.', 'Me siento cómodo/a en vestuarios y duchas.', 'En viajes y competiciones me siento seguro/a.',
+    'Me siento cómodo/a con los mensajes y grupos del club (WhatsApp, redes…).', 'Sé quién es el Delegado/a de Protección del club.',
+    'Si viera o viviera algo que no está bien, sabría cómo contarlo.']
+};
+const FRANJAS = [['6-11', 'De 6 a 11 años'], ['12-17', 'De 12 a 17 años']];
+const enlaceEnc = c => WEB_PUBLICA + '?e=' + encodeURIComponent(c) + (state.inst ? '&a=' + encodeURIComponent(state.inst) : '');
+async function loadEncuestas() {
+  const ent = await selEntidad($('#enc-entidad'), loadEncuestas);
+  if (!ent) { $('#tabla-encuestas').innerHTML = '<tr><td class="empty">Registra primero una entidad que trabaje con menores.</td></tr>'; return; }
+  const rows = state.encuestas = await run(() => API.call('listarEncuestas', { entidad_id: ent }));
+  $('#tabla-encuestas').innerHTML = `<thead><tr><th>Encuesta</th><th>Edades</th><th>Estado</th><th>Respuestas</th><th>Enlace</th><th></th></tr></thead><tbody>` +
+    (rows.map(e => `<tr><td><b>${esc(e.titulo)}</b><br><small>${[esc(e.grupo), e.fecha_inicio || e.fecha_fin ? esc(e.fecha_inicio || '…') + ' a ' + esc(e.fecha_fin || '…') : ''].filter(Boolean).join(' · ')}</small></td>
+      <td>${esc((FRANJAS.find(f => f[0] === e.franja) || ['', e.franja])[1])}</td>
+      <td><span class="st ${e.estado === 'abierta' ? 'ok' : 'muted'}">${e.estado === 'abierta' ? 'Abierta' : 'Cerrada'}</span></td><td>${e.respuestas}</td>
+      <td><button class="link" data-enl="${esc(e.id)}">Copiar enlace</button> <button class="link" data-cartel="${esc(e.id)}">Cartel</button></td>
+      <td><button class="link" data-res="${esc(e.id)}">Resultados</button>${can('escribir') ? ` <button class="link" data-enc="${esc(e.id)}">Editar</button>` : ''}</td></tr>`).join('')
+      || '<tr><td colspan="6" class="empty">Aún no hay encuestas. Pulsa "+ Nueva encuesta".</td></tr>') + '</tbody>';
+  const porId = id => rows.find(e => e.id === id);
+  $$('[data-enl]').forEach(b => b.onclick = () => copiarTexto(enlaceEnc(porId(b.dataset.enl).codigo)));
+  $$('[data-cartel]').forEach(b => b.onclick = () => abrirInforme(htmlCartelEncuesta(porId(b.dataset.cartel))));
+  $$('[data-res]').forEach(b => b.onclick = () => verResultados(b.dataset.res));
+  $$('[data-enc]').forEach(b => b.onclick = () => formEncuesta(porId(b.dataset.enc)));
+}
+$('#nueva-encuesta') && ($('#nueva-encuesta').onclick = () => formEncuesta({ franja: '12-17', estado: 'abierta', fecha_inicio: hoyISO() }));
+function formEncuesta(e) {
+  const entidad_id = $('#enc-entidad').value; if (!entidad_id) return;
+  modal(e.id ? 'Editar encuesta' : 'Nueva encuesta anónima', [['titulo', 'Título', 'text', true], ['grupo', 'Grupo o categoría (opcional)'],
+    ['franja', 'Edades', FRANJAS], ['estado', 'Estado', [['abierta', 'Abierta'], ['cerrada', 'Cerrada']]],
+    ['fecha_inicio', 'Desde', 'date'], ['fecha_fin', 'Hasta', 'date']], e, async d => {
+    Object.assign(d, { id: e.id, entidad_id });
+    const r = await run(() => API.call('guardarEncuesta', d));
+    toast('Encuesta guardada'); await loadEncuestas();
+    if (!e.id) copiarTexto(enlaceEnc(r.codigo));
+  });
+  const f = $('#modal-form');
+  f.querySelector('h3').insertAdjacentHTML('afterend', '<p class="nota">Preguntas fijas adaptadas a la edad (Sí / A veces / No). Evita grupos muy pequeños: con pocas personas las respuestas podrían identificarse.</p>');
+  if (e.id) {
+    const del = document.createElement('button'); del.type = 'button'; del.className = 'btn ghost peligro'; del.textContent = 'Eliminar';
+    del.onclick = async () => { if (!confirm('¿Eliminar la encuesta y todas sus respuestas?')) return; $('#modal').close('cancel');
+      await run(() => API.call('eliminarEncuesta', { id: e.id })); $('#enc-resultados').innerHTML = ''; toast('Encuesta eliminada'); loadEncuestas(); };
+    f.querySelector('.actions').prepend(del);
+  }
+}
+const pctTri = o => { const t = o.si + o.aveces + o.no; return t ? [o.si, o.aveces, o.no].map(v => Math.round(v * 100 / t)) : [0, 0, 0]; };
+const barraTri = o => { const [a, b, c] = pctTri(o); return `<div class="tri"><i class="si" style="width:${a}%">${a >= 10 ? a + '%' : ''}</i><i class="av" style="width:${b}%">${b >= 10 ? b + '%' : ''}</i><i class="no" style="width:${c}%">${c >= 10 ? c + '%' : ''}</i></div>`; };
+async function verResultados(id) {
+  const r = state.resEnc = await run(() => API.call('resultadosEncuesta', { id })), e = r.encuesta;
+  const cont = $('#enc-resultados');
+  if (r.oculto) { cont.innerHTML = `<div class="card"><h3>${esc(e.titulo)}</h3><p>Hay <b>${r.n}</b> respuesta(s). Los resultados se muestran a partir de ${r.minimo} para proteger el anonimato.</p></div>`; cont.scrollIntoView({ behavior: 'smooth' }); return; }
+  const P = PREGUNTAS_ENC[e.franja] || [];
+  cont.innerHTML = `<div class="card"><h3>Resultados · ${esc(e.titulo)} (${r.n} respuestas)</h3>
+    <p class="leyenda">🟩 Sí · 🟨 A veces · 🟥 No</p>
+    ${r.preguntas.map((o, i) => `<div class="res-preg"><p>${i + 1}. ${esc(P[i])}</p>${barraTri(o)}</div>`).join('')}
+    ${r.comentarios.length ? `<h3>Comentarios (${r.comentarios.length})</h3><ul>${r.comentarios.map(c => `<li>${esc(c)}</li>`).join('')}</ul>` : ''}
+    <div class="ia-acciones"><button class="btn" type="button" id="res-pdf">Informe PDF</button><button class="btn ghost" type="button" id="res-word">Word</button>${can('ia') ? '<button class="btn ghost" type="button" id="res-ia">Propuestas de mejora con IA</button>' : ''}</div>
+    <div id="res-ia-out"></div></div>`;
+  $('#res-pdf').onclick = () => abrirInforme(htmlResultadosEnc(r));
+  $('#res-word').onclick = () => descargar('﻿' + htmlResultadosEnc(r), 'application/msword', nombreInf('encuesta-' + e.titulo));
+  $('#res-ia') && ($('#res-ia').onclick = () => {
+    const prompt = [CONTEXTO_IA, '',
+      'TAREA: a partir de los resultados agregados de una encuesta anónima de percepción de seguridad a deportistas ' + ((FRANJAS.find(f => f[0] === e.franja) || ['', e.franja + ' años'])[1]).toLowerCase() + ', propón una valoración breve (máx. 200 palabras) y 5 medidas de mejora concretas para la entidad deportiva, en el marco del Protocolo Marco andaluz. No interpretes los datos como prueba de violencia.',
+      'Todos los ítems están redactados en positivo: «Sí» = percepción favorable; «A veces» y «No» = aspecto que conviene reforzar. Relaciona cada medida con los ítems concretos que la motivan (por su número y enunciado).',
+      r.n < 10 ? 'Muestra pequeña (' + r.n + ' respuestas): cada respuesta pesa ' + Math.round(100 / r.n) + ' puntos. Trata los resultados como orientativos, sin extrapolar ni dar porcentajes como conclusiones.' : '',
+      'Formato: «VALORACIÓN» en un párrafo; «MEDIDAS DE MEJORA» como lista numerada del 1 al 5, cada medida con una línea «Fundamento:» (norma o apartado; si no hay certeza, indícalo). Termina con «PENDIENTE DE VALIDAR» solo si hace falta.',
+      'Grupo: ' + (e.grupo || 'sin indicar') + ' · Respuestas: ' + r.n + (r.comentarios.length ? ' · Hay ' + r.comentarios.length + ' comentario(s) libre(s) que no se incluyen aquí por privacidad: léelos en la app.' : ''), 'Resultados por ítem (% Sí / A veces / No):',
+      r.preguntas.map((o, i) => { const [a, b, c] = pctTri(o); return `${i + 1}. ${P[i] || 'Ítem ' + (i + 1)}: ${a}% / ${b}% / ${c}%`; }).join('\n')].filter(Boolean).join('\n');
+    mostrarPrompt($('#res-ia-out'), prompt, { asunto: 'Mejoras tras encuesta · ' + e.titulo, tipo: 'asistente' });
+  });
+  cont.scrollIntoView({ behavior: 'smooth' });
+}
+function htmlResultadosEnc(r) {
+  const e = r.encuesta, P = PREGUNTAS_ENC[e.franja] || [];
+  let b = '<table>' + fila('Encuesta', esc(e.titulo)) + fila('Grupo', esc(e.grupo) || '—') + fila('Edades', esc((FRANJAS.find(f => f[0] === e.franja) || ['', e.franja])[1])) +
+    fila('Periodo', esc((e.fecha_inicio || '…') + ' a ' + (e.fecha_fin || '…'))) + fila('Respuestas', r.n) + '</table>';
+  b += '<h2>Resultados</h2><table><thead><tr><th>Pregunta</th><th>Sí</th><th>A veces</th><th>No</th></tr></thead><tbody>' +
+    r.preguntas.map((o, i) => { const [a, bb, c] = pctTri(o); return `<tr><td>${i + 1}. ${esc(P[i])}</td><td class="ok st">${a}%</td><td class="warn st">${bb}%</td><td class="bad st">${c}%</td></tr>`; }).join('') + '</tbody></table>';
+  if (r.comentarios.length) b += '<h2>Comentarios</h2><ul>' + r.comentarios.map(c => `<li>${esc(c)}</li>`).join('') + '</ul>';
+  b += '<div class="nota">Encuesta anónima: no se recogen nombres ni datos identificativos. Los resultados reflejan percepciones y orientan la mejora preventiva; no constituyen valoración de personas.</div>';
+  return plantillaInforme('Resultados de encuesta de percepción de seguridad', e.titulo, b);
+}
+function htmlCartelEncuesta(e) {
+  const url = enlaceEnc(e.codigo), peq = e.franja === '6-11';
+  const qr = 'https://api.qrserver.com/v1/create-qr-code/?size=360x360&margin=8&data=' + encodeURIComponent(url);
+  const b = `<div style="text-align:center">
+    <p style="font-size:26pt;font-weight:700;color:#0b3057;margin:18px 0 6px">${peq ? '¿Cómo te sientes en tu equipo?' : '¿Te sientes seguro/a en el club?'}</p>
+    <p style="font-size:15pt;margin:0 0 18px">${peq ? 'Cuéntanoslo. Son solo 8 preguntas y no tienes que poner tu nombre.' : 'Tu opinión nos ayuda a mejorar. Es anónima: no pedimos tu nombre.'}</p>
+    <img src="${qr}" alt="Código QR" style="width:9cm;height:9cm;border:1px solid #cfd8dc;border-radius:12px">
+    <p style="font-size:12pt;margin:14px 0 4px">Escanea el código con el móvil o entra en:</p>
+    <p style="font-size:13pt;font-weight:700;color:#0d818f;word-break:break-all">${esc(url)}</p>
+    <p style="font-size:11pt;color:#4f5d65;margin-top:22px">Si algo te preocupa, habla con tu familia, con un adulto de confianza o con el Delegado/a de Protección del club.<br>
+    Teléfono ANAR de ayuda a niños, niñas y adolescentes: <b>900 20 20 10</b> · Emergencias: <b>112</b></p></div>`;
+  return plantillaInforme(e.titulo, e.grupo || 'Encuesta anónima', b, false, 'EntornoSeguro · Encuesta anónima de percepción de seguridad');
+}
+
+// Página pública de la encuesta (sin acceso)
+async function iniciarEncuesta(codigo) {
+  $('#login').classList.add('hidden'); $('#encuesta').classList.remove('hidden');
+  document.title = 'Encuesta · EntornoSeguro';
+  const card = $('#enc-card');
+  let d;
+  try { d = await API.call('encuestaPublica', { codigo }); }
+  catch (e) { card.innerHTML = `<img src="${LOGO}" alt="" class="logo"><h1>Encuesta</h1><p class="ent">${esc(e.message)}</p>`; return; }
+  const cab = `<img src="${LOGO}" alt="" class="logo" onerror="this.style.visibility='hidden'"><h1>${esc(d.titulo)}</h1><p class="ent">${esc(d.entidad)}</p>`;
+  if (!d.abierta) { card.innerHTML = cab + '<div class="enc-intro">Esta encuesta no está abierta en este momento. ¡Gracias por tu interés!</div>'; return; }
+  let hecho = false; try { hecho = localStorage.getItem('es_enc_' + codigo) === '1'; } catch {}
+  if (hecho) {
+    card.innerHTML = cab + '<div class="enc-intro">Ya se ha respondido esta encuesta desde este dispositivo. ¡Gracias!</div><button class="btn ghost" type="button" id="enc-otra">Responder otra persona en este dispositivo</button>' + AYUDA_ENC;
+    $('#enc-otra').onclick = () => { try { localStorage.removeItem('es_enc_' + codigo); } catch {} iniciarEncuesta(codigo); };
+    return;
+  }
+  const fr = /^\d{4}-11-06/.test(String(d.franja)) ? '6-11' : d.franja;
+  const P = PREGUNTAS_ENC[fr] || PREGUNTAS_ENC['12-17'], peq = fr === '6-11';
+  const OPC = [['si', '😊', 'Sí'], ['aveces', '😐', 'A veces'], ['no', '🙁', 'No']];
+  card.innerHTML = cab + `<div class="enc-intro">${peq ? 'Hola 👋 Queremos saber cómo te sientes en el club. <b>No pongas tu nombre.</b> No hay respuestas buenas ni malas.' : 'Queremos saber cómo te sientes en el club. <b>Es anónima:</b> no pedimos tu nombre ni ningún dato personal. Responde con sinceridad.'}</div>
+    <form id="form-enc">${P.map((t, i) => `<div class="preg" role="group" aria-label="${esc(t)}"><p>${i + 1}. ${esc(t)}</p><div class="resp">${OPC.map(([v, ico, tx]) => `<button type="button" data-p="p${i + 1}" data-v="${v}" aria-pressed="false"><span aria-hidden="true">${ico}</span>${tx}</button>`).join('')}</div></div>`).join('')}
+    <div class="preg form"><label style="font-size:1rem;color:var(--ink)">${peq ? '¿Quieres contarnos algo más? (opcional)' : '¿Algo que quieras añadir o proponer? (opcional)'}<textarea name="comentario" rows="3" maxlength="300" placeholder="No escribas nombres de nadie"></textarea></label></div>
+    <button class="btn">Enviar</button><p class="error" id="enc-error"></p></form>`;
+  const resp = {};
+  card.querySelectorAll('.resp button').forEach(b => b.onclick = () => {
+    resp[b.dataset.p] = b.dataset.v;
+    b.parentElement.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  });
+  $('#form-enc').onsubmit = async ev => {
+    ev.preventDefault();
+    if (!Object.keys(resp).length) { $('#enc-error').textContent = 'Responde al menos una pregunta.'; return; }
+    try { await run(() => API.call('responderEncuesta', { codigo, respuestas: resp, comentario: ev.target.comentario.value })); }
+    catch (e) { $('#enc-error').textContent = e.message; return; }
+    try { localStorage.setItem('es_enc_' + codigo, '1'); } catch {}
+    card.innerHTML = cab + `<div class="enc-intro" style="text-align:center;font-size:1.15rem">✅ <b>¡Gracias!</b> Tus respuestas se han enviado.</div>` + AYUDA_ENC;
+    window.scrollTo(0, 0);
+  };
+}
+const AYUDA_ENC = `<div class="ayuda"><b>Si algo te preocupa o te hace sentir mal:</b><ul>
+  <li>Habla con tu familia, con un adulto de confianza o con el Delegado/a de Protección del club.</li>
+  <li>Llama gratis a la Fundación ANAR: <a href="tel:900202010">900 20 20 10</a> o al <a href="tel:116111">116 111</a> (niños, niñas y adolescentes, 24 h).</li>
+  <li>En una emergencia: <a href="tel:112">112</a>.</li></ul></div><span class="copy">EntornoSeguro © 2026 Escuela&amp;Deporte (by M.A. Ballesteros)</span>`;
+
+// ---------- BIBLIOTECA ----------
+const CATEGORIAS_BIB = ['Normativa estatal', 'Normativa andaluza', 'Protocolo Marco', 'Protección de datos', 'Guías y manuales', 'Modelos y plantillas', 'Formación', 'Protocolos de la entidad', 'Otros'];
+$('#bib-cat').innerHTML = '<option value="">Todas</option>' + CATEGORIAS_BIB.map(c => `<option>${esc(c)}</option>`).join('');
+async function loadBiblioteca(forzar) {
+  if (!state.bib || forzar) state.bib = await run(() => API.call('listarBiblioteca'));
+  pintarBiblioteca();
+}
+function pintarBiblioteca() {
+  const q = norm($('#bib-q').value).split(/\s+/).filter(Boolean), cat = $('#bib-cat').value;
+  const l = (state.bib || []).filter(x => (!cat || x.categoria === cat) && q.every(w => norm([x.titulo, x.descripcion, x.categoria].join(' ')).includes(w)));
+  $('#bib-count').textContent = l.length + ' documento' + (l.length === 1 ? '' : 's');
+  $('#bib-lista').innerHTML = l.map(x => `<div class="bib-item"><div><h3>${esc(x.titulo)}</h3><span class="chip">${esc(x.categoria)}</span>${x.fecha ? `<small>${esc(x.fecha)}</small>` : ''}${x.descripcion ? `<p>${esc(x.descripcion)}</p>` : ''}</div>
+    <div class="ia-acciones">${x.url ? `<a class="btn" href="${esc(x.url)}" target="_blank" rel="noopener">Abrir</a>` : ''}${can('escribir') ? `<button class="btn ghost" type="button" data-bib="${esc(x.id)}">Editar</button>` : ''}</div></div>`).join('')
+    || '<p class="empty">No hay documentos con esos criterios.</p>';
+  $$('[data-bib]').forEach(b => b.onclick = () => formBib(state.bib.find(x => x.id === b.dataset.bib)));
+}
+$('#bib-q').oninput = pintarBiblioteca; $('#bib-cat').onchange = pintarBiblioteca;
+$('#nuevo-bib') && ($('#nuevo-bib').onclick = () => formBib({ categoria: 'Protocolos de la entidad' }));
+function formBib(x) {
+  modal(x.id ? 'Editar documento' : 'Añadir a la biblioteca', [['titulo', 'Título', 'text', true], ['categoria', 'Categoría', CATEGORIAS_BIB],
+    ['url', 'Enlace (web oficial o Google Drive)', 'url'], ['fecha', 'Fecha del documento', 'date'], ['descripcion', 'Descripción', 'textarea']], x, async d => {
+    d.id = x.id; await run(() => API.call('guardarBiblioteca', d)); toast('Guardado en la biblioteca'); loadBiblioteca(true);
+  });
+  const f = $('#modal-form');
+  f.querySelector('h3').insertAdjacentHTML('afterend', '<p class="nota">En Drive, comparte el archivo solo con quien deba verlo. No subas documentos con datos de menores.</p>');
+  if (x.id) {
+    const del = document.createElement('button'); del.type = 'button'; del.className = 'btn ghost peligro'; del.textContent = 'Eliminar';
+    del.onclick = async () => { if (!confirm('¿Quitar este documento de la biblioteca?')) return; $('#modal').close('cancel');
+      await run(() => API.call('eliminarBiblioteca', { id: x.id })); toast('Eliminado'); loadBiblioteca(true); };
+    f.querySelector('.actions').prepend(del);
+  }
+}
+
+// ---------- MEMORIA ANUAL / INFORME POR PERIODO ----------
+(() => {
+  const y = new Date().getFullYear();
+  $('#mem-anio').innerHTML = [y, y - 1, y - 2].map(a => `<option>${a}</option>`).join('');
+  const fijar = () => {
+    const a = +$('#mem-anio').value, p = $('#mem-periodo').value;
+    const R = { anual: ['01-01', '12-31'], '1T': ['01-01', '03-31'], '2T': ['04-01', '06-30'], '3T': ['07-01', '09-30'], '4T': ['10-01', '12-31'], S1: ['01-01', '06-30'], S2: ['07-01', '12-31'] };
+    if (p === 'temporada') { $('#mem-desde').value = a + '-09-01'; $('#mem-hasta').value = (a + 1) + '-06-30'; }
+    else if (R[p]) { $('#mem-desde').value = a + '-' + R[p][0]; $('#mem-hasta').value = a + '-' + R[p][1]; }
+  };
+  $('#mem-anio').onchange = fijar; $('#mem-periodo').onchange = fijar;
+  $('#mem-desde').oninput = $('#mem-hasta').oninput = () => { $('#mem-periodo').value = 'libre'; };
+  fijar();
+})();
+const fmtFecha = f => new Date(f + 'T12:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+async function datosMemoria() { return run(() => API.call('memoria', { desde: $('#mem-desde').value, hasta: $('#mem-hasta').value })); }
+async function htmlMemoria() {
+  const d = await datosMemoria(), t = d.totales, a = d.actividad, anon = !d.club && $('#mem-anon').checked;
+  const org = d.config.organismo || '', periodo = fmtFecha(d.desde) + ' – ' + fmtFecha(d.hasta);
+  const kp = arr => '<div class="kpis">' + arr.map(([k, v]) => `<div class="kpi"><span>${k}</span><b>${v}</b></div>`).join('') + '</div>';
+  const pc = (n, tot) => tot ? Math.round(n * 100 / tot) + '%' : '—';
+  const tabObj = (o, c1) => { const ks = Object.keys(o || {}); return ks.length ? `<table><thead><tr><th>${c1}</th><th>Nº</th></tr></thead><tbody>` + ks.sort((x, y) => o[y] - o[x]).map(k => `<tr><td>${esc(k)}</td><td>${o[k]}</td></tr>`).join('') + '</tbody></table>' : ''; };
+  let b = `<h2>1. Presentación</h2><p>Memoria de actividad del sistema de protección de las personas menores frente a la violencia en el deporte de <b>${esc(org)}</b>, correspondiente al periodo <b>${esc(periodo)}</b>, conforme a la LO 8/2021 (LOPIVI) y al Protocolo Marco de Andalucía (Orden de 18 de noviembre de 2024).</p>`;
+  b += '<h2>2. Situación de implantación a la fecha</h2>' + kp((d.club ? [] : [['Entidades con menores', t.entidades], ['Con Delegado/a', t.con_delegado + '/' + t.entidades], ['Aceptan Protocolo Marco', t.con_protocolo + '/' + t.entidades]])
+    .concat([['Cumplimiento medio', t.cumplimiento_medio + '%'], ['Menores (aprox.)', t.menores], ['Riesgos altos pendientes', t.riesgos_altos], ['Alertas prioritarias', t.alertas_altas]]));
+  if (d.propia) { const p = d.propia; b += `<h3>Actividades municipales propias</h3><table><thead><tr><th>Entidad</th><th>Delegado/a</th><th>Protocolo Marco</th><th colspan="2">Cumplimiento</th></tr></thead><tbody><tr><td>${esc(p.nombre)}</td><td>${siNo(p.delegado)}</td><td>${siNo(p.protocolo)}</td><td style="width:70px">${barra(p.pct)}</td><td><b>${p.pct}%</b></td></tr></tbody></table><h3>Entidades deportivas</h3>`; }
+  if (!d.club && d.filas.length) {
+    b += '<table><thead><tr><th>Entidad</th><th>Delegado/a</th><th>Protocolo Marco</th><th colspan="2">Cumplimiento</th></tr></thead><tbody>' +
+      d.filas.slice().sort((x, y) => y.pct - x.pct).map((f, i) => `<tr><td>${anon ? 'Entidad ' + (i + 1) : esc(f.nombre)}</td><td>${siNo(f.delegado)}</td><td>${siNo(f.protocolo)}</td><td style="width:70px">${barra(f.pct)}</td><td><b>${f.pct}%</b></td></tr>`).join('') + '</tbody></table>';
+  }
+  b += '<h3>Implantación por bloque del Protocolo Marco</h3><table><thead><tr><th>Bloque</th><th colspan="2">' + (d.club ? 'Completo' : '% de entidades con el bloque completo') + '</th></tr></thead><tbody>' +
+    d.bloques.map(x => `<tr><td>${esc(x.bloque)}</td><td style="width:90px">${barra(x.pct)}</td><td><b>${d.club ? (x.pct === 100 ? 'Sí' : 'No') : x.pct + '%'}</b></td></tr>`).join('') + '</tbody></table>';
+  b += '<h2>3. Actividad del periodo</h2>';
+  b += '<h3>3.1 Formación</h3>' + kp([['Personas formadas', a.formacion.personas], ['Acciones formativas', a.formacion.acciones], ['Horas de formación', a.formacion.horas]]) + tabObj(a.formacion.por_colectivo, 'Colectivo');
+  const g = a.agentes;
+  b += '<h3>3.2 Agentes deportivos</h3>' + kp([['Agentes activos', g.activos], ['Altas en el periodo', g.altas], ['Con certificado negativo', pc(g.con_cert, g.activos)], ['Código de conducta aceptado', pc(g.con_codigo, g.activos)], ['Con formación en protección', pc(g.con_formacion, g.activos)]]);
+  b += '<h3>3.3 Análisis de riesgos</h3>' + kp([['Riesgos identificados en el periodo', a.riesgos.identificados], ['Medidas implantadas en el periodo', a.riesgos.implantados], ['Riesgos altos pendientes', a.riesgos.altos_pendientes]]);
+  b += '<h3>3.4 Autorizaciones familiares</h3>' + kp([['Registros por grupo', a.autorizaciones.registros], ['Autorizaciones recibidas', a.autorizaciones.recibidas + ' de ' + a.autorizaciones.total], ['% recibidas', pc(a.autorizaciones.recibidas, a.autorizaciones.total)]]);
+  const en = a.encuestas;
+  b += '<h3>3.5 Participación infantil y adolescente</h3>' + kp([['Encuestas', en.encuestas], ['Respuestas', en.respuestas], ['Respuestas «Sí» (percepción positiva)', en.pct_si === null ? '—' : en.pct_si + '%']]);
+  FRANJAS.forEach(([k, txt]) => {
+    const fr = en.por_franja[k]; if (!fr || fr.n < 5) return;
+    b += `<p><b>${txt}</b> (${fr.n} respuestas)</p><table><thead><tr><th>Pregunta</th><th>Sí</th><th>A veces</th><th>No</th></tr></thead><tbody>` +
+      fr.preguntas.map((o, i) => { const [x, y, z] = pctTri(o); return `<tr><td>${i + 1}. ${esc(PREGUNTAS_ENC[k][i])}</td><td>${x}%</td><td>${y}%</td><td>${z}%</td></tr>`; }).join('') + '</tbody></table>';
+  });
+  b += '<h3>3.6 Sensibilización y documentación</h3>' + kp([['Documentos y contenidos elaborados', a.documentos.total]]) + tabObj(Object.fromEntries(Object.entries(a.documentos.por_tipo || {}).map(([k, v]) => [TIPOS_DOC[k] || k, v])), 'Tipo');
+  if (a.incidencias) b += '<h3>3.7 Comunicaciones e incidencias (datos agregados)</h3>' + kp([['Comunicaciones registradas', a.incidencias.comunicados], ['Casos cerrados', a.incidencias.cerrados], ['Casos abiertos a la fecha', a.incidencias.abiertos]]) +
+    '<p class="muted">Solo se ofrecen cifras agregadas, sin tipología ni datos que permitan identificar casos.</p>';
+  const mej = d.bloques.slice().sort((x, y) => x.pct - y.pct).filter(x => x.pct < 100).slice(0, 3);
+  b += '<h2>4. Áreas prioritarias de mejora</h2><ul>' + (mej.map(x => `<li><b>${esc(x.bloque)}</b>${d.club ? ': pendiente de completar.' : ': ' + x.pct + '% de entidades con el bloque completo.'}</li>`).join('') +
+    (g.activos && g.con_cert < g.activos ? `<li><b>${g.activos - g.con_cert}</b> agente(s) sin certificado negativo registrado.</li>` : '') +
+    (a.riesgos.altos_pendientes ? `<li><b>${a.riesgos.altos_pendientes}</b> riesgo(s) alto(s) sin medidas implantadas.</li>` : '') +
+    (!en.respuestas ? '<li>Impulsar la participación de los menores mediante encuestas anónimas.</li>' : '')) + '</ul>';
+  const val = $('#mem-valoracion').value.trim();
+  if (val) b += '<h2>5. Valoración técnica</h2>' + mdToHtml(val);
+  b += '<div style="page-break-inside:avoid"><div class="nota">Datos extraídos de EntornoSeguro a fecha del informe. Estado de implantación documental; no constituye valoración de personas ni de entidades.</div>';
+  b += `<div class="firma"><div>Delegado/a de Protección<br>${esc(d.club ? ((state.entidades[0] || {}).delegado_nombre || '') : (d.config.delegado_municipal || ''))}</div><div>Visto bueno</div></div></div>`;
+  return plantillaInforme(periodoEsAnual() ? 'Memoria anual ' + $('#mem-anio').value : 'Informe de actividad', 'Protección de menores en el deporte · ' + periodo, b);
+}
+const periodoEsAnual = () => $('#mem-periodo').value === 'anual';
+$('#mem-pdf').onclick = async () => abrirInforme(await htmlMemoria());
+$('#mem-word').onclick = async () => descargar('﻿' + await htmlMemoria(), 'application/msword', nombreInf(periodoEsAnual() ? 'memoria-anual-' + $('#mem-anio').value : 'informe-actividad'));
+$('#mem-ia') && ($('#mem-ia').onclick = async () => {
+  const d = await datosMemoria(), t = d.totales, a = d.actividad;
+  const prompt = [CONTEXTO_IA, '',
+    'TAREA: redacta la valoración técnica de la memoria de actividad del sistema de protección de menores en el deporte' + (d.club ? ' de un club deportivo' : ' de un ayuntamiento') + ', periodo ' + d.desde + ' a ' + d.hasta + '. Máximo 400 palabras, en párrafos, tono técnico.',
+    'Datos agregados (sin identificar entidades ni personas):',
+    `- Cumplimiento medio del Protocolo Marco: ${t.cumplimiento_medio}%` + (d.club ? '' : `; entidades con menores: ${t.entidades}; con Delegado/a: ${t.con_delegado}; aceptan el Protocolo: ${t.con_protocolo}`),
+    `- Formación: ${a.formacion.personas} personas, ${a.formacion.acciones} acciones, ${a.formacion.horas} horas`,
+    `- Agentes deportivos activos: ${a.agentes.activos}; con certificado negativo: ${a.agentes.con_cert}; con código aceptado: ${a.agentes.con_codigo}; con formación: ${a.agentes.con_formacion}`,
+    `- Riesgos identificados en el periodo: ${a.riesgos.identificados}; medidas implantadas: ${a.riesgos.implantados}; riesgos altos pendientes: ${a.riesgos.altos_pendientes}`,
+    `- Encuestas a menores: ${a.encuestas.encuestas}; respuestas: ${a.encuestas.respuestas}; respuestas positivas: ${a.encuestas.pct_si === null ? 'sin datos' : a.encuestas.pct_si + '%'}`,
+    `- Documentos y contenidos de sensibilización: ${a.documentos.total}`,
+    'Implantación por bloque (%):', d.bloques.map(x => `- ${x.bloque}: ${x.pct}%`).join('\n'), '',
+    'Incluye: balance del periodo, fortalezas, áreas de mejora y 4-6 objetivos para el próximo periodo. No valores a personas ni entidades concretas. No incluyas datos de incidencias.'].join('\n');
+  mostrarPrompt($('#mem-ia-out'), prompt, null);
+  const nota = document.createElement('p'); nota.className = 'nota'; nota.textContent = 'Pega la respuesta de Claude en "Valoración técnica" y genera la memoria.';
+  $('#mem-ia-out').appendChild(nota);
+});
+
+// ---------- REVISIÓN DOCUMENTAL CON IA (matriz) ----------
+const CRITERIOS = {
+  A1: ['Aprobación por el órgano de gobierno (fecha o acta)', 'Compromiso expreso con la protección de menores y rechazo de toda forma de violencia', 'Firma del representante de la entidad', 'Previsión de difusión'],
+  A2: ['Referencia expresa al Protocolo Marco (Orden de 18 de noviembre de 2024)', 'Acuerdo de adhesión o aceptación', 'Fecha y firma'],
+  B1: ['Identificación del Delegado/a por cargo y datos de contacto', 'Órgano que designa y fecha', 'Funciones asignadas', 'Vigencia de la designación', 'Comunicación a agentes deportivos y familias'],
+  B2: ['Formación específica en protección de menores', 'Horas y fecha', 'Entidad formadora', 'Documento acreditativo'],
+  C1: ['Actividades y espacios analizados (entrenamientos, competiciones, vestuarios, viajes, entorno digital…)', 'Valoración del nivel de riesgo', 'Fecha de elaboración'],
+  C2: ['Medidas preventivas por cada riesgo', 'Responsable de cada medida', 'Fecha de implantación', 'Fecha o periodicidad de revisión'],
+  D1: ['Conductas esperadas y conductas no permitidas', 'Contacto físico', 'Comunicación digital y redes sociales', 'Vestuarios, desplazamientos y pernoctas', 'Consecuencias del incumplimiento', 'Aprobación por la entidad'],
+  D2: ['Documento o sistema de aceptación firmada por los agentes', 'Registro de aceptaciones', 'Difusión del código'],
+  E1: ['Modelo de autorización familiar de imagen', 'Finalidades separadas (web, redes, prensa, uso interno)', 'Derecho de revocación', 'Plazo de conservación'],
+  E2: ['Criterios de publicación de imágenes', 'Prohibición de captar imágenes en vestuarios y duchas', 'Evitar nombres y datos que identifiquen a menores', 'Responsable de las redes de la entidad'],
+  F1: ['Modelo de autorización familiar por desplazamiento', 'Datos de la actividad, fechas y transporte', 'Contacto de emergencia'],
+  F2: ['Responsables y ratio de adultos', 'Alojamiento y distribución de habitaciones', 'Normas de convivencia', 'Actuación ante incidentes durante el viaje'],
+  G1: ['Aprobación por la entidad y fecha', 'Objeto, ámbito y principios', 'Referencias a la LOPIVI y al Protocolo Marco', 'Previsión de revisión'],
+  G2: ['Medios de difusión del protocolo', 'Acceso para agentes, familias y menores', 'Versión adaptada a menores'],
+  H1: ['Pasos a seguir ante una sospecha o comunicación', 'Personas responsables', 'Comunicación a servicios sociales, Fuerzas y Cuerpos de Seguridad o Fiscalía (deber de comunicación, LOPIVI arts. 15 y 16)', 'Registro de actuaciones', 'Confidencialidad'],
+  H2: ['Flujograma o esquema secuencial de actuación', 'Difusión del flujograma'],
+  I1: ['Canal definido (persona, correo, buzón…)', 'Garantías de confidencialidad', 'Respuesta y seguimiento de las comunicaciones'],
+  I2: ['Información adaptada a la edad de los menores', 'Teléfonos de ayuda (ANAR 900 20 20 10, 112)', 'Información a las familias'],
+  J1: ['Formación prevista por colectivo', 'Periodicidad o reciclaje', 'Registro de asistentes'],
+  K1: ['Listado de agentes deportivos por rol o función', 'Previsión de actualización'],
+  K2: ['Exigencia del certificado negativo del Registro Central de Delincuentes Sexuales a todo el personal en contacto habitual con menores', 'Control de renovación']
+};
+const TIPOS_REV = [
+  ['protocolo', 'Protocolo de protección de la entidad', ['G1', 'G2', 'H1', 'H2', 'I1', 'I2', 'B1', 'C1', 'C2', 'D1', 'E2', 'F2']],
+  ['codigo', 'Código de conducta', ['D1', 'D2']],
+  ['designacion', 'Designación del Delegado/a', ['B1']],
+  ['formacion_del', 'Certificado de formación del Delegado/a', ['B2']],
+  ['riesgos', 'Análisis de riesgos', ['C1', 'C2']],
+  ['declaracion', 'Declaración institucional o adhesión', ['A1', 'A2']],
+  ['imagenes', 'Procedimiento de imágenes y redes sociales', ['E1', 'E2']],
+  ['viajes', 'Plan de desplazamientos o viajes', ['F1', 'F2']],
+  ['canal', 'Canal de comunicación / cartel informativo', ['I1', 'I2']],
+  ['plan_form', 'Plan de formación', ['J1']],
+  ['agentes', 'Registro de agentes deportivos', ['K1', 'K2']],
+  ['otro', 'Otro documento (elige los requisitos)', []]];
+const EST_REV = [['cumple', 'Cumple'], ['parcial', 'Parcial'], ['no_cumple', 'No cumple']];
+
+function abrirRevision(codigos) {
+  const rows = state.matriz || [];
+  const ent = state.entidades.find(e => e.id === $('#matriz-entidad').value) || {};
+  if (!rows.length) { toast('Selecciona una entidad', true); return; }
+  const caja = $('#revision-ia');
+  const preset = codigos ? 'otro' : 'protocolo';
+  caja.innerHTML = `<div class="card form"><h3>🔎 Revisar documento con IA · ${esc(ent.nombre || '')}</h3>
+    <p class="nota">Claude compara el documento del club con los criterios del Protocolo Marco y te propone el estado de cada requisito. Tú decides qué aplicar.</p>
+    <div class="fields"><label>Tipo de documento<select id="rev-tipo">${TIPOS_REV.map(([k, t]) => `<option value="${k}" ${k === preset ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></label>
+      <label>Nombre del documento<input id="rev-nombre" placeholder="Ej.: Protocolo de protección 2026"></label></div>
+    <b>Requisitos que debe cubrir</b><div class="rev-reqs">${rows.map(r => `<label class="check"><input type="checkbox" value="${esc(r.codigo)}"> <span><b>${esc(r.codigo)}</b> ${esc(r.requisito)}</span></label>`).join('')}</div>
+    <div class="ia-acciones"><button class="btn" type="button" id="rev-preparar">Preparar prompt</button><button class="btn ghost" type="button" id="rev-cerrar">Cerrar</button></div>
+    <div id="rev-prompt"></div><div id="rev-respuesta"></div><div id="rev-propuesta"></div></div>`;
+  const marcar = lista => caja.querySelectorAll('.rev-reqs input').forEach(i => { i.checked = lista.includes(i.value); });
+  const tipo = $('#rev-tipo');
+  tipo.onchange = () => { const t = TIPOS_REV.find(x => x[0] === tipo.value); if (t[2].length) marcar(t[2]); if (!$('#rev-nombre').value || $('#rev-nombre').dataset.auto) { $('#rev-nombre').value = t[0] === 'otro' ? '' : t[1]; $('#rev-nombre').dataset.auto = '1'; } };
+  $('#rev-nombre').oninput = e => delete e.target.dataset.auto;
+  if (codigos) marcar(codigos); else tipo.onchange();
+  $('#rev-cerrar').onclick = () => { caja.innerHTML = ''; };
+  $('#rev-preparar').onclick = () => prepararRevision(ent);
+  caja.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function prepararRevision(ent) {
+  const cods = [...$$('#revision-ia .rev-reqs input:checked')].map(i => i.value);
+  if (!cods.length) { toast('Marca al menos un requisito', true); return; }
+  const nombre = $('#rev-nombre').value.trim() || 'Documento de la entidad';
+  const req = cods.map(c => state.matriz.find(r => r.codigo === c));
+  const prompt = [CONTEXTO_IA, '',
+    'TAREA: revisa el documento ADJUNTO de una entidad deportiva y comprueba si cubre los requisitos del Protocolo Marco de Andalucía indicados abajo.',
+    'Documento: ' + nombre + (ent.nombre ? ' · Entidad: ' + ent.nombre : ''), '',
+    'IMPORTANTE: si el documento contiene datos personales (nombres, DNI, teléfonos, datos de menores), no los reproduzcas en la respuesta.', '',
+    'REQUISITOS Y ELEMENTOS A COMPROBAR (orientativos):',
+    req.map(r => `${r.codigo} · ${r.requisito}\n` + (CRITERIOS[r.codigo] || []).map(c => '  - ' + c).join('\n')).join('\n'), '',
+    'FORMATO DE RESPUESTA:',
+    '1. Para cada requisito, una tabla: Elemento | ¿Consta? (Sí / Parcial / No) | Dónde (página o apartado) | Observación.',
+    '2. Al final, EXACTAMENTE este bloque, una línea por requisito, sin negritas:',
+    'RESULTADO',
+    ...req.map(r => `${r.codigo} | cumple o parcial o no_cumple | qué falta o mejorar (máx. 15 palabras)`),
+    'FIN',
+    'Criterio: cumple = constan todos los elementos esenciales; parcial = constan algunos; no_cumple = no se aborda. Es una revisión documental orientativa, no una valoración de la entidad.'].join('\n');
+  mostrarPrompt($('#rev-prompt'), prompt, null);
+  $('#rev-prompt .nota').textContent = 'Al abrirse Claude, ADJUNTA el documento del club (PDF o Word) antes de enviar. Si el prompt no aparece, pulsa "Copiar prompt" y pégalo. No subas documentos con datos de menores.';
+  const z = $('#rev-respuesta');
+  z.innerHTML = `<div class="guardar-res"><label>Pega aquí la respuesta de Claude<textarea rows="8" class="doc-texto" id="rev-texto" placeholder="En Claude, pulsa Copiar en la respuesta y pégala aquí"></textarea></label>
+    <div class="ia-acciones"><button class="btn" type="button" id="rev-analizar">Ver propuesta</button></div></div>`;
+  pegarConFormato($('#rev-texto'));
+  $('#rev-analizar').onclick = () => proponerRevision(ent, nombre, prompt, cods);
+}
+
+function leerResultado(txt) {
+  const limpio = String(txt).replace(/\*\*/g, '').replace(/`/g, '');
+  const i = limpio.search(/RESULTADO/i);
+  const zona = i >= 0 ? limpio.slice(i) : limpio;
+  const out = {};
+  zona.split('\n').forEach(l => {
+    const m = l.replace(/^[\s|>*-]+/, '').match(/^([A-K]\d)\s*[|:·-]\s*(cumple|parcial|no[ _]?cumple|no consta)\s*(?:[|:·-]\s*(.*?))?\s*\|?\s*$/i);
+    if (!m) return;
+    const e = m[2].toLowerCase().replace(/\s/g, '_');
+    out[m[1].toUpperCase()] = { estado: e.startsWith('no') ? 'no_cumple' : e, obs: (m[3] || '').trim() };
+  });
+  return out;
+}
+
+function proponerRevision(ent, nombre, prompt, cods) {
+  const txt = $('#rev-texto').value.trim();
+  if (!txt) { toast('Pega primero la respuesta de Claude', true); return; }
+  const res = leerResultado(txt);
+  const lista = cods.filter(c => res[c]);
+  const cont = $('#rev-propuesta');
+  if (!lista.length) { cont.innerHTML = '<p class="aviso-inc">No encuentro el bloque RESULTADO en la respuesta. Pide a Claude: «Añade al final el bloque RESULTADO … FIN en el formato indicado».</p>'; return; }
+  const faltan = cods.filter(c => !res[c]);
+  const hoy = hoyISO();
+  cont.innerHTML = `<h3>Propuesta de actualización</h3>
+    <p class="nota">Revisa cada fila. Solo se aplican las marcadas. El estado actual queda sustituido.</p>
+    <table class="propuesta"><thead><tr><th></th><th>Requisito</th><th>Actual</th><th>Propuesto</th><th>Acción pendiente</th></tr></thead><tbody>
+    ${lista.map(c => { const r = state.matriz.find(x => x.codigo === c), p = res[c];
+      return `<tr><td><input type="checkbox" data-ap="${c}" checked style="width:22px;height:22px;min-height:0"></td><td><b>${c}</b> ${esc(r.requisito)}</td>
+        <td>${esc((ESTADOS[r.estado] || ESTADOS.pendiente)[2])}</td>
+        <td><select data-est="${c}">${EST_REV.map(([k, t]) => `<option value="${k}" ${k === p.estado ? 'selected' : ''}>${t}</option>`).join('')}</select></td>
+        <td><input data-acc="${c}" value="${esc(p.estado === 'cumple' ? '' : p.obs)}"></td></tr>`; }).join('')}</tbody></table>
+    ${faltan.length ? `<p class="nota">Sin resultado en la respuesta: ${faltan.join(', ')}.</p>` : ''}
+    <div class="fields"><label>Evidencia · título<input id="rev-ev-t" value="${esc(nombre)}"></label><label>Evidencia · enlace Drive (opcional)<input id="rev-ev-u" type="url" placeholder="https://drive.google.com/…"></label></div>
+    <label class="check"><input type="checkbox" id="rev-guardar" checked> Guardar el informe de Claude en Documentos</label>
+    <div class="ia-acciones"><button class="btn" type="button" id="rev-aplicar">Aplicar a la matriz</button></div>`;
+  $('#rev-aplicar').onclick = async () => {
+    const sel = lista.filter(c => $(`[data-ap="${c}"]`).checked);
+    if (!sel.length) { toast('No hay filas marcadas', true); return; }
+    const entidad_id = $('#matriz-entidad').value, evT = $('#rev-ev-t').value.trim(), evU = $('#rev-ev-u').value.trim();
+    await run(async () => {
+      for (const c of sel) {
+        const r = state.matriz.find(x => x.codigo === c);
+        await API.call('guardarCumplimiento', { id: r.cumplimiento_id, entidad_id, requisito_codigo: c, estado: $(`[data-est="${c}"]`).value,
+          fecha_revision: hoy, proxima_revision: '', responsable: r.responsable, accion_pendiente: $(`[data-acc="${c}"]`).value });
+        if (evT) await API.call('guardarEvidencia', { entidad_id, requisito_codigo: c, titulo: evT, url_drive: evU, fecha_documento: hoy });
+      }
+      if ($('#rev-guardar').checked) await API.call('guardarDocumento', { asunto: 'Revisión · ' + nombre + (ent.nombre ? ' · ' + ent.nombre : ''), tipo: 'revision', prompt, resultado: $('#rev-texto').value });
+    });
+    state.docs = null;
+    toast(sel.length + ' requisito(s) actualizados');
+    $('#revision-ia').innerHTML = ''; loadMatriz();
+  };
+  cont.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+$('#matriz-ia') && ($('#matriz-ia').onclick = () => abrirRevision(null));
+
+// ---------- AYUNTAMIENTOS (instancias) ----------
+async function loadInstancias() {
+  const rows = state.instancias = await run(() => API.call('listarInstancias'));
+  $('#tabla-instancias').innerHTML = `<thead><tr><th>Ayuntamiento</th><th>Acceso</th><th>Estado</th><th></th></tr></thead><tbody>` +
+    (rows.map(x => `<tr class="${x.estado === 'inactivo' ? 'inactivo' : ''}"><td><b>${esc(x.nombre)}</b><br><small>${esc(x.api_url)}</small></td>
+      <td><b>admin@${esc(x.codigo)}</b></td><td>${x.estado === 'inactivo' ? '<span class="st muted">Inactivo</span>' : '<span class="st ok">Activo</span>'}</td>
+      <td><button class="link" data-inst="${esc(x.codigo)}">Editar</button></td></tr>`).join('')
+      || '<tr><td colspan="4" class="empty">Aún no hay ayuntamientos clientes.</td></tr>') + '</tbody>';
+  $$('[data-inst]').forEach(b => b.onclick = () => formInstancia(rows.find(x => x.codigo === b.dataset.inst)));
+}
+$('#nueva-instancia') && ($('#nueva-instancia').onclick = () => formInstancia({ estado: 'activo' }));
+function formInstancia(x) {
+  modal(x.codigo ? 'Editar ayuntamiento' : 'Nuevo ayuntamiento cliente', [['codigo', 'Código (minúsculas, sin espacios: sanlucar)', 'text', true],
+    ['nombre', 'Nombre', 'text', true], ['api_url', 'URL de su aplicación web (/exec)', 'url', true], ['estado', 'Estado', [['activo', 'Activo'], ['inactivo', 'Inactivo']]]], x, async d => {
+    await run(() => API.call('guardarInstancia', d)); toast('Ayuntamiento guardado'); loadInstancias();
+  });
+  const f = $('#modal-form');
+  if (x.codigo) {
+    f.codigo.readOnly = true;
+    const del = document.createElement('button'); del.type = 'button'; del.className = 'btn ghost peligro'; del.textContent = 'Quitar';
+    del.onclick = async () => { if (!confirm('¿Quitar este ayuntamiento del acceso único? Su hoja y sus datos no se borran.')) return; $('#modal').close('cancel');
+      await run(() => API.call('eliminarInstancia', { codigo: x.codigo })); toast('Quitado'); loadInstancias(); };
+    f.querySelector('.actions').prepend(del);
+  }
+}
+
+// ---------- NUEVO · ÚLTIMOS · VER TODOS (contenidos, asistente, plantillas) ----------
+const VACIO = { contenido: 'Rellena el formulario y pulsa "Preparar prompt".', asistente: 'Escribe tu consulta y pulsa "Preparar prompt".' };
+async function loadRecientes(tipo) {
+  const caja = $('#rec-' + tipo); if (!caja) return;
+  try { if (!state.docs) state.docs = await API.call('listarDocumentos'); } catch { return; }
+  const l = (state.docs || []).filter(d => d.tipo === tipo).slice(0, 5);
+  caja.innerHTML = l.length ? l.map(d => `<div class="rec-item" role="button" tabindex="0" data-rec="${esc(d.id)}"><b>${esc(d.asunto)}</b><small>${esc(String(d.actualizado || d.creado).slice(0, 10))}</small></div>`).join('')
+    : '<p class="empty">Aún no hay nada guardado. Tras preparar el prompt, pega la respuesta de Claude y pulsa "Guardar en Documentos".</p>';
+  caja.querySelectorAll('[data-rec]').forEach(el => { el.onclick = () => abrirDoc(el.dataset.rec); el.onkeydown = e => { if (e.key === 'Enter') abrirDoc(el.dataset.rec); }; });
+}
+document.addEventListener('click', ev => {
+  const n = ev.target.closest('[data-nuevo]');
+  if (n) {
+    const t = n.dataset.nuevo;
+    if (t === 'plantilla') { $('#plant-out').innerHTML = ''; $$('.plantilla').forEach(x => x.classList.remove('activa')); }
+    else { const f = $('#form-' + t); if (f) f.reset(); $('#out-' + t).innerHTML = `<p class="empty">${VACIO[t]}</p>`; }
+    window.scrollTo(0, 0); toast('Listo para uno nuevo');
+    return;
+  }
+  const v = ev.target.closest('[data-vertodos]');
+  if (v) { $('#doc-tipo').value = v.dataset.vertodos; $('#doc-q').value = ''; show('documentos'); }
+});
+
+// ---------- ARRANQUE DE LA ENCUESTA PÚBLICA ----------
+if (COD_ENC) (async () => {
+  const a = (() => { try { return (new URLSearchParams(location.search).get('a') || '').toLowerCase().replace(/[^a-z0-9-]/g, ''); } catch { return ''; } })();
+  if (a && !EN_SCRIPT) { try { const r = await API.call('resolverInstancia', { codigo: a }); API.base = r.api_url; } catch (e) { $('#login').classList.add('hidden'); $('#encuesta').classList.remove('hidden'); $('#enc-card').innerHTML = `<p class="ent">${esc(e.message)}</p>`; return; } }
+  iniciarEncuesta(COD_ENC);
+})();
+
+// ---------- COORDINACIÓN Y VERIFICACIÓN CON ENTIDADES (v1.2) ----------
+// Pegar justo ENCIMA de la etiqueta de cierre del script, al final del archivo Index.
+// Añade en la ventana "Entidades" la tarjeta del procedimiento y genera sus documentos (PDF / Word).
+const COORD_DOCS = [
+  ['completo', 'Procedimiento completo', 'Procedimiento de coordinación y verificación con entidades deportivas'],
+  ['declaracion', 'I · Declaración responsable', 'Declaración responsable anual'],
+  ['ficha', 'II · Ficha de verificación', 'Ficha de verificación documental'],
+  ['requerimiento', 'III · Requerimiento', 'Requerimiento de subsanación'],
+  ['traslado', 'IV · Traslado y acuse', 'Traslado de comunicaciones y acuse de recibo'],
+  ['clausula', 'V · Cláusula tipo', 'Cláusula tipo para autorizaciones de uso y bases de subvenciones']
+];
+const COORD_REQ = ['Declaración responsable firmada', 'Declaración institucional', 'Aceptación del Protocolo Marco', 'Designación del Delegado/a de Protección',
+  'Formación del Delegado/a', 'Protocolo propio', 'Procedimiento y flujograma ante incidentes', 'Relación de personal con certificado negativo', 'Código de conducta',
+  'Análisis de riesgos', 'Canal de comunicación de incidencias', 'Autorizaciones de imagen y datos',
+  'Medidas en desplazamientos y viajes', 'Formación de agentes deportivos'];
+const COORD_DECLARA = [
+  'Su órgano de gobierno ha aprobado una declaración institucional de compromiso con la protección de menores frente a la violencia.',
+  'Ha aceptado el Protocolo Marco de Actuación para la Protección de las Personas Menores frente a la Violencia en el Deporte de Andalucía.',
+  'Ha designado un Delegado/a de Protección con formación específica.',
+  'Dispone de un protocolo de protección propio, aprobado y accesible para deportistas, familias y personal.',
+  'Todo su personal, técnicos y voluntariado en contacto habitual con menores tiene el certificado negativo del Registro Central de Delincuentes Sexuales en vigor.',
+  'Dispone de un código de conducta conocido y aceptado por sus agentes deportivos.',
+  'Ha realizado un análisis de riesgos de sus actividades y aplica las medidas preventivas derivadas.',
+  'Dispone de un procedimiento de actuación ante incidentes, con personas responsables y flujograma difundido entre su personal.',
+  'Dispone de un canal para comunicar incidencias, conocido por menores y familias.',
+  'Gestiona las autorizaciones de uso de imagen y los datos de menores conforme a la normativa.',
+  'Aplica medidas de protección en desplazamientos, viajes y actividades con pernocta.',
+  'Ha formado a sus agentes deportivos en protección de menores.'];
+
+const coordTemporada = () => { const d = new Date(), y = d.getFullYear(); return d.getMonth() >= 7 ? y + '/' + (y + 1) : (y - 1) + '/' + y; };
+const coordOl = arr => '<ol>' + arr.map(t => `<li>${t}</li>`).join('') + '</ol>';
+const coordOrg = cfg => cfg.organismo || 'el Ayuntamiento';
+const coordMuni = cfg => campo(cfg.municipio, 'MUNICIPIO');
+const coordH = (h, txt) => h ? `<h2>${esc(txt)}</h2>` : '';
+const coordLimite = 'La verificación municipal es formal y documental. Se limita a comprobar que la documentación se ha presentado y está completa. No supone validar su contenido ni su eficacia, ni investigar o valorar hechos, ni asumir las obligaciones de la entidad, que es la única responsable de su cumplimiento.';
+
+function coordProcedimiento(cfg) {
+  return '<h2>1. Objeto, alcance y límites</h2>' +
+    pj('Este procedimiento regula cómo se coordina ' + coordOrg(cfg) + ' con las entidades deportivas que trabajan con menores y usan instalaciones municipales o reciben subvenciones municipales.') +
+    pj('Cada entidad es responsable de cumplir sus propias obligaciones de protección y de contar con su propio Delegado o Delegada de Protección. El Ayuntamiento no sustituye a la entidad en esas obligaciones.') +
+    pj('La actuación del Delegado Municipal de Protección respecto a las entidades se limita a:') +
+    lista(['recibir la declaración responsable anual;', 'comprobar que la documentación se ha presentado y está completa;',
+      'requerir la subsanación de lo que falte;', 'recibir y trasladar las comunicaciones de posibles casos a quien corresponda;',
+      'ofrecer información, orientación y formación.']) +
+    `<div class="nota">${esc(coordLimite)}</div>` +
+    '<h2>2. Funcionamiento</h2>' + pj('El procedimiento se repite cada temporada deportiva:') +
+    coordOl([
+      '<b>Apertura.</b> Al inicio de cada temporada, el Área de Deportes comunica a las entidades el plazo de presentación.',
+      '<b>Presentación.</b> La entidad presenta la declaración responsable (Anexo I) antes de iniciar el uso de instalaciones o al solicitar la subvención.',
+      '<b>Verificación.</b> El Delegado Municipal comprueba la documentación con la ficha del Anexo II en un plazo de 15 días.',
+      '<b>Subsanación.</b> Si falta algo, se requiere a la entidad (Anexo III), que dispone de 10 días hábiles para aportarlo.',
+      '<b>Resultado.</b> La ficha se cierra como <i>conforme</i> o <i>incompleta</i>. La falta de subsanación tiene los efectos previstos en la cláusula del Anexo V.',
+      '<b>Registro.</b> El resultado se incorpora a la matriz de cumplimiento de la entidad en EntornoSeguro.',
+      '<b>Cambios.</b> La entidad comunica en 15 días cualquier cambio relevante, en especial el cambio de su Delegado/a de Protección.']) +
+    pj('Las comunicaciones de posibles casos se tramitan en cualquier momento por la vía del Anexo IV, con independencia del calendario anterior.');
+}
+
+function coordDeclaracion(e, temp, cfg, h) {
+  const contacto = [e.delegado_telefono, e.delegado_email].filter(Boolean).join(' · ');
+  const repr = e.presidencia_nombre ? esc(String(e.presidencia_nombre).trim()) + ' · Presidente/a' : '';
+  return coordH(h, 'Anexo I. Declaración responsable anual de la entidad deportiva') +
+    tablaKV([['Temporada', esc(temp)], ['Entidad', campo(String(e.nombre || '').trim(), 'DENOMINACIÓN DE LA ENTIDAD')], ['CIF', campo(e.cif, 'CIF')],
+      ['Representante legal', campo(repr ? String(e.presidencia_nombre).trim() + ' · Presidente/a' : '', 'NOMBRE Y APELLIDOS · CARGO')],
+      ['Delegado/a de Protección de la entidad', campo(e.delegado_nombre, 'NOMBRE Y APELLIDOS')],
+      ['Teléfono y correo del Delegado/a', campo(contacto, 'TELÉFONO · CORREO')]]) +
+    '<p>La persona abajo firmante, en representación de la entidad, <b>DECLARA BAJO SU RESPONSABILIDAD</b> que la entidad cumple lo siguiente y dispone de la documentación que lo acredita:</p>' +
+    COORD_DECLARA.map(t => `<p style="margin:3px 0 3px 10px">☐&nbsp; ${esc(t)}</p>`).join('') +
+    pj('Se acompaña: designación del Delegado/a de Protección y su certificado de formación, flujograma de actuación ante incidentes y relación nominal del personal en contacto con menores con la fecha de su certificado negativo.') +
+    pj('La entidad se compromete a mantener estos requisitos durante toda la temporada, a comunicar cualquier cambio en 15 días y a poner la documentación a disposición del Ayuntamiento cuando se le solicite.') +
+    pj('La entidad conoce que la comprobación municipal es formal y documental, y que la veracidad de lo declarado y el cumplimiento de estas obligaciones son responsabilidad exclusiva de la entidad.') +
+    `<p>En ${campo(e.municipio || cfg.municipio, 'MUNICIPIO')}, a ____ de ______________ de ______</p>` +
+    '<div class="firma"><div>Firma del representante legal' + (repr ? '<br>' + repr : '') + '</div><div>Sello de la entidad</div></div>';
+}
+
+function coordFicha(e, temp, cfg, h) {
+  return coordH(h, 'Anexo II. Ficha de verificación documental') +
+    tablaKV([['Entidad', campo(String(e.nombre || '').trim(), 'DENOMINACIÓN DE LA ENTIDAD')], ['Temporada', esc(temp)], ['Fecha de presentación', '<span class="campo">[FECHA]</span>']]) +
+    '<table><thead><tr><th style="width:34%">Requisito</th><th>Presentado (Sí/No)</th><th>Documento o evidencia</th><th>Fecha</th><th>Pendiente</th></tr></thead><tbody>' +
+    COORD_REQ.map(r => `<tr><td>${esc(r)}</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>`).join('') + '</tbody></table>' +
+    '<p><b>Resultado:</b> ☐ Conforme &nbsp;&nbsp; ☐ Incompleta, se requiere subsanación</p>' +
+    tablaKV([['Verificado por', 'Delegado/a Municipal de Protección · ' + campo(cfg.delegado_municipal, 'NOMBRE Y APELLIDOS')], ['Fecha', '&nbsp;']]) +
+    `<div class="nota">${esc(coordLimite)}</div>`;
+}
+
+function coordRequerimiento(e, temp, cfg, h, req) {
+  const plazo = (req && req.plazo) || 10;
+  let intro, cuerpoLista;
+  if (req && req.items && req.items.length) {
+    intro = '<p>Revisada la documentación del sistema de protección de menores de su entidad' + (req.fecha ? ' presentada el ' + esc(fmtFecha(req.fecha)) : '') +
+      ', se ha comprobado que falta o está incompleta la siguiente:</p>';
+    cuerpoLista = '<table><thead><tr><th style="width:38%">Requisito del Protocolo Marco</th><th style="width:14%">Situación</th><th>Qué deben aportar o completar</th></tr></thead><tbody>' +
+      req.items.map(x => `<tr><td><b>${esc(x.codigo)}</b> · ${esc(x.requisito)}</td><td>${esc(x.situacion)}</td><td>${esc(x.falta)}</td></tr>`).join('') + '</tbody></table>';
+  } else {
+    intro = pj('Revisada la declaración responsable presentada por su entidad el [FECHA], se ha comprobado que falta o está incompleta la siguiente documentación:');
+    cuerpoLista = lista(['[DOCUMENTO]', '[DOCUMENTO]']);
+  }
+  return coordH(h, 'Anexo III. Requerimiento de subsanación') +
+    tablaKV([['A', campo(String(e.nombre || '').trim(), 'ENTIDAD DEPORTIVA') + ', a la atención de su representante legal y de su Delegado/a de Protección'],
+      ['Asunto', 'Requerimiento de documentación · Protección de menores · Temporada ' + esc(temp)]]) +
+    intro + cuerpoLista +
+    `<p>Les requerimos para que la aporten en un plazo de <b>${esc(plazo)} días hábiles</b> desde la recepción de este escrito.</p>` +
+    pj('Si no se aporta en ese plazo, la declaración quedará como incompleta, con los efectos previstos en la autorización de uso de instalaciones o en las bases de la subvención correspondiente.') +
+    pj('Quedamos a su disposición para orientarles sobre la documentación requerida.') +
+    `<p>En ${coordMuni(cfg)}, a fecha de firma electrónica.</p>` +
+    `<div class="firma"><div>Delegado/a Municipal de Protección de Menores en el Deporte<br>${campo(cfg.delegado_municipal, 'NOMBRE Y APELLIDOS')}</div><div>Recibí (entidad)</div></div>`;
+}
+
+function coordTraslado(e, temp, cfg, h) {
+  return coordH(h, 'Anexo IV. Traslado de comunicaciones y acuse de recibo') +
+    pj('Cuando llegue al Delegado Municipal una comunicación sobre un posible caso relacionado con una entidad deportiva, se actúa así:') +
+    coordOl([
+      '<b>Riesgo inmediato.</b> Si el menor está en peligro, se llama al 112 antes de cualquier otro paso.',
+      '<b>Registro.</b> Se anota la fecha, la hora, la vía de entrada y lo comunicado, con las palabras de quien comunica y sin añadir valoraciones.',
+      '<b>Traslado.</b> Se traslada de inmediato a Servicios Sociales, Fiscalía de Menores o Fuerzas de Seguridad, según el caso, y al Delegado/a de Protección de la entidad, salvo que esa persona esté implicada.',
+      '<b>Acuse de recibo.</b> Se confirma a quien comunicó que su comunicación ha sido recibida y trasladada.',
+      '<b>Archivo.</b> Se custodia con acceso restringido y se anota el traslado en el registro municipal.']) +
+    '<p>El Delegado Municipal <b>no</b> entrevista a menores ni a personas implicadas, no recaba pruebas, no contrasta versiones y no emite conclusiones sobre los hechos. Esas funciones corresponden a los servicios y autoridades competentes.</p>' +
+    '<h3>Modelo de acuse de recibo</h3>' +
+    pj('Hemos recibido su comunicación de fecha [FECHA]. Le confirmamos que ha sido trasladada a los servicios competentes, que son quienes deben valorarla y actuar.') +
+    pj('Su comunicación se tratará con confidencialidad. Si conoce nuevos datos o la situación cambia, puede comunicarlo por la misma vía.') +
+    pj('Si en algún momento existe un riesgo inmediato para un menor, llame al 112.') +
+    `<div class="firma"><div>Delegado/a Municipal de Protección de Menores en el Deporte<br>${campo(cfg.delegado_municipal, 'NOMBRE Y APELLIDOS')}</div><div>Fecha</div></div>`;
+}
+
+function coordClausula(e, temp, cfg, h) {
+  return coordH(h, 'Anexo V. Cláusula tipo para autorizaciones de uso y bases de subvenciones') +
+    '<h3>En autorizaciones de uso de instalaciones deportivas</h3>' +
+    pj('La entidad autorizada que desarrolle actividades con menores deberá presentar, antes del inicio del uso y en cada temporada, la declaración responsable en materia de protección de menores aprobada por el Ayuntamiento. También deberá mantener vigentes durante toda la autorización los requisitos declarados.') +
+    pj('La falta de presentación, o la falta de subsanación en el plazo concedido, impedirá iniciar o continuar el uso de las instalaciones con menores. El cumplimiento de las obligaciones de protección corresponde exclusivamente a la entidad. La comprobación municipal es formal y documental.') +
+    '<h3>En bases de subvenciones a entidades deportivas</h3>' +
+    pj('Será requisito para obtener la condición de beneficiaria, en las entidades que desarrollen actividades con menores, haber presentado la declaración responsable en materia de protección de menores de la temporada correspondiente, con resultado conforme.') +
+    pj('El incumplimiento sobrevenido de los requisitos declarados durante el periodo subvencionado podrá dar lugar al reintegro, en los términos previstos en las bases.');
+}
+
+const COORD_PARTES = { declaracion: coordDeclaracion, ficha: coordFicha, requerimiento: coordRequerimiento, traslado: coordTraslado, clausula: coordClausula };
+
+function htmlCoord() {
+  const tipo = $('#coord-doc').value, cfg = state.cfg || {};
+  const e = state.entidades.find(x => x.id === $('#coord-entidad').value) || {};
+  const temp = $('#coord-temp').value.trim() || coordTemporada();
+  let titulo, cuerpo;
+  titulo = (COORD_DOCS.find(x => x[0] === tipo) || ['', '', 'Documento'])[2];
+  if (tipo === 'completo') {
+    cuerpo = coordProcedimiento(cfg) + Object.keys(COORD_PARTES).map(k => '<div style="page-break-before:always"></div>' + COORD_PARTES[k](e, temp, cfg, true)).join('');
+  } else {
+    cuerpo = COORD_PARTES[tipo](e, temp, cfg, false);
+  }
+  const sub = (e.nombre ? e.nombre : 'Modelo') + ' · Temporada ' + temp;
+  return plantillaInforme(titulo, sub, '<div class="just">' + cuerpo + '</div>', false,
+    'EntornoSeguro · ' + esc(coordOrg(cfg)) + ' · Coordinación con entidades deportivas en protección de menores. La verificación municipal es formal y documental.');
+}
+
+function pintarCoord() {
+  const vista = $('#view-entidades'); if (!vista) return;
+  let card = $('#coord-card');
+  if (state.club) { if (card) card.remove(); return; }
+  if (!card) {
+    card = document.createElement('div'); card.className = 'card form'; card.id = 'coord-card';
+    card.innerHTML = `<h3>🤝 Coordinación y verificación con entidades</h3>
+      <p class="nota" style="margin:0 0 12px">Declaración responsable anual, verificación documental, subsanación y traslado de comunicaciones. La verificación municipal es formal y documental: no valida el contenido de los documentos ni investiga hechos.</p>
+      <div class="fields"><label>Entidad<select id="coord-entidad"></select></label>
+        <label>Documento<select id="coord-doc">${COORD_DOCS.map(([k, t]) => `<option value="${k}">${esc(t)}</option>`).join('')}</select></label>
+        <label>Temporada<input id="coord-temp" value="${esc(coordTemporada())}"></label></div>
+      <div class="ia-acciones"><button class="btn" type="button" id="coord-pdf">Ver / PDF</button><button class="btn ghost" type="button" id="coord-word">Word</button></div>
+      ${can('escribir') ? '<div class="ia-acciones"><button class="btn ghost" type="button" id="coord-decl">📥 Registrar declaración recibida en la matriz</button></div>' : ''}`;
+    vista.appendChild(card);
+    $('#coord-decl') && ($('#coord-decl').onclick = () => abrirDeclaracion($('#coord-entidad').value));
+    const coordReqAuto = () => $('#coord-doc').value === 'requerimiento' && $('#coord-entidad').value && can('escribir');
+    $('#coord-pdf').onclick = () => coordReqAuto() ? abrirRequerimiento($('#coord-entidad').value) : abrirInforme(htmlCoord());
+    $('#coord-word').onclick = () => {
+      if (coordReqAuto()) return abrirRequerimiento($('#coord-entidad').value);
+      const e = state.entidades.find(x => x.id === $('#coord-entidad').value) || {};
+      descargar('﻿' + htmlCoord(), 'application/msword', nombreInf('coordinacion-' + $('#coord-doc').value + '-' + (e.nombre || 'modelo')));
+    };
+  }
+  const sel = $('#coord-entidad'), prev = sel.value;
+  sel.innerHTML = '<option value="">— Modelo en blanco —</option>' + state.entidades
+    .filter(x => x.trabaja_menores === 'SI' && x.propia !== 'SI' && x.activo !== 'NO')
+    .map(x => `<option value="${esc(x.id)}">${esc(x.nombre)}</option>`).join('');
+  sel.value = prev;
+}
+
+// ---- Registrar la declaración responsable recibida → matriz de cumplimiento (de una vez) ----
+// Cada punto de la declaración (mismo orden que COORD_DECLARA) actualiza estos requisitos de la matriz.
+const COORD_MAPA = [['A1'], ['A2'], ['B1', 'B2'], ['G1', 'G2'], ['K1', 'K2'], ['D1', 'D2'], ['C1', 'C2'], ['H1', 'H2'], ['I1', 'I2'], ['E1', 'E2'], ['F1', 'F2'], ['J1']];
+
+function abrirDeclaracion(entidadId) {
+  if (!entidadId) { toast('Elige primero la entidad', true); return; }
+  const e = state.entidades.find(x => x.id === entidadId) || {};
+  const temp0 = ($('#coord-temp') && $('#coord-temp').value.trim()) || coordTemporada();
+  const f = $('#modal-form');
+  f.innerHTML = `<h3>📥 Registrar declaración responsable</h3>
+    <p class="nota" style="margin:0 0 12px"><b>${esc(e.nombre || '')}</b>. Marca lo que la entidad declara. Se actualizan de una vez los requisitos de la matriz y la declaración queda como evidencia.</p>
+    <div class="fields"><label>Temporada<input name="temp" value="${esc(temp0)}"></label>
+      <label>Fecha de presentación<input type="date" name="fecha" value="${hoyISO()}"></label>
+      <label class="full">Enlace al documento en Drive (opcional)<input type="url" name="url" placeholder="https://drive.google.com/…"></label></div>
+    <div class="rev-reqs" style="grid-template-columns:1fr">${COORD_DECLARA.map((t, i) => `<label class="check"><input type="checkbox" name="d${i}" checked style="flex:0 0 22px"> <span>${esc(t)} <small>(${COORD_MAPA[i].join(', ')})</small></span></label>`).join('')}</div>
+    <label class="check"><input type="checkbox" name="marcarNo" checked> Marcar lo no declarado como «No cumple», con acción pendiente</label>
+    <p class="nota">Registro formal y documental: refleja lo que declara la entidad, no una comprobación del contenido de sus documentos.</p>
+    <div class="actions"><button value="cancel" class="btn ghost" formnovalidate>Cancelar</button><button type="button" class="btn" id="decl-aplicar">Aplicar a la matriz</button></div>`;
+  $('#modal').onclose = null; $('#modal').oncancel = null;
+  if (!$('#modal').open) $('#modal').showModal();
+  $('#decl-aplicar').onclick = async () => {
+    const fecha = f.fecha.value, temp = f.temp.value.trim() || temp0, url = f.url.value.trim(), marcarNo = f.marcarNo.checked;
+    if (!fecha) { toast('Indica la fecha de presentación', true); return; }
+    if (url && !/^https:\/\//i.test(url)) { toast('El enlace debe empezar por https://', true); return; }
+    const decl = COORD_DECLARA.map((x, i) => f['d' + i].checked);
+    $('#modal').close('cancel');
+    let n = 0;
+    await run(async () => {
+      const mat = await API.call('matriz', { entidad_id: entidadId });
+      const porCod = {}; mat.forEach(r => { porCod[r.codigo] = r; });
+      const tareas = [];
+      COORD_MAPA.forEach((cods, i) => cods.forEach(c => {
+        const r = porCod[c];
+        if (!r || (!decl[i] && !marcarNo)) return;
+        tareas.push(async () => {
+          await API.call('guardarCumplimiento', { id: r.cumplimiento_id, entidad_id: entidadId, requisito_codigo: c,
+            estado: decl[i] ? 'cumple' : 'no_cumple', fecha_revision: fecha, proxima_revision: '',
+            responsable: r.responsable || 'Entidad · declaración responsable',
+            accion_pendiente: decl[i] ? '' : 'No declarado en la declaración responsable ' + temp });
+          if (decl[i]) await API.call('guardarEvidencia', { entidad_id: entidadId, requisito_codigo: c,
+            titulo: 'Declaración responsable ' + temp, url_drive: url, fecha_documento: fecha });
+          n++;
+        });
+      }));
+      for (let k = 0; k < tareas.length; k += 4) await Promise.all(tareas.slice(k, k + 4).map(t => t()));
+      if (decl[COORD_MAPA.findIndex(m => m.indexOf('A2') >= 0)] && e.acepta_protocolo_marco !== 'SI') {
+        await API.call('guardarEntidad', { id: e.id, nombre: e.nombre, acepta_protocolo_marco: 'SI', fecha_aceptacion: e.fecha_aceptacion || fecha });
+      }
+      try { await API.call('regenerarAlertas'); } catch (er) { /* sin permiso: se recalculan en el aviso diario */ }
+      state.entidades = await API.call('listarEntidades');
+    });
+    toast(n + ' requisito(s) actualizados en la matriz');
+    show('matriz');
+    setTimeout(() => { const s = $('#matriz-entidad'); if (s) { s.value = entidadId; loadMatriz(); } }, 60);
+  };
+}
+
+function coordBotonMatriz() {
+  const v = $('#view-matriz'); if (!v) return;
+  const b = $('#matriz-decl');
+  if (state.club || !can('escribir')) { if (b) b.remove(); return; }
+  if (b) return;
+  const ia = $('#matriz-ia');
+  let cont = ia ? ia.parentElement : null;
+  if (!cont) { cont = document.createElement('div'); cont.className = 'ia-acciones'; v.insertBefore(cont, $('#revision-ia')); }
+  cont.insertAdjacentHTML('beforeend', '<button class="btn ghost" type="button" id="matriz-decl">📥 Registrar declaración responsable</button>' +
+    '<button class="btn ghost" type="button" id="matriz-req">📨 Generar requerimiento</button>');
+  $('#matriz-decl').onclick = () => abrirDeclaracion($('#matriz-entidad').value);
+  $('#matriz-req').onclick = () => abrirRequerimiento($('#matriz-entidad').value);
+}
+
+// ---- Requerimiento automático desde la matriz ----
+const COORD_FALTA = {
+  A1: 'Acuerdo del órgano de gobierno aprobando la declaración institucional de compromiso con la protección de menores.',
+  A2: 'Acuerdo o documento de aceptación del Protocolo Marco de Andalucía.',
+  B1: 'Acuerdo de designación del Delegado/a de Protección, con sus datos de contacto y funciones.',
+  B2: 'Certificado de formación específica del Delegado/a de Protección.',
+  C1: 'Análisis de riesgos de las actividades, con la valoración de cada riesgo y su fecha.',
+  C2: 'Medidas preventivas de cada riesgo, con responsable y fechas de implantación y revisión.',
+  D1: 'Código de conducta aprobado por la entidad.',
+  D2: 'Registro de aceptación del código de conducta por los agentes deportivos.',
+  E1: 'Modelo de autorización familiar de uso de imagen y control de las autorizaciones recibidas.',
+  E2: 'Procedimiento de uso de imágenes y redes sociales.',
+  F1: 'Modelo de autorización familiar para desplazamientos.',
+  F2: 'Medidas de protección en viajes y pernoctas: responsables, ratios, alojamiento y normas.',
+  G1: 'Protocolo de protección de la entidad, aprobado y con fecha.',
+  G2: 'Acreditación de la difusión del protocolo al personal, las familias y los menores.',
+  H1: 'Procedimiento de actuación ante incidentes, con personas responsables y pasos a seguir.',
+  H2: 'Flujograma de actuación ante incidentes y acreditación de su difusión.',
+  I1: 'Descripción del canal de comunicación y de sus garantías de confidencialidad.',
+  I2: 'Información sobre el canal adaptada a los menores y a las familias.',
+  J1: 'Plan o registro de formación de los agentes deportivos.',
+  K1: 'Relación de agentes deportivos en contacto habitual con menores.',
+  K2: 'Relación del personal con la fecha de su certificado negativo de delitos sexuales.'
+};
+const COORD_SIT = { no_cumple: 'No cumple', parcial: 'Parcial', pendiente: 'No acreditado' };
+
+// ---- Días hábiles (Ley 39/2015, art. 30): sin sábados, domingos ni festivos ----
+// Festivos de Andalucía según BOJA: 2026 (Decreto 101/2025) y 2027 (Decreto 84/2026). Otros años: cálculo estimado.
+const FESTIVOS_AND = {
+  2026: ['2026-01-01', '2026-01-06', '2026-02-28', '2026-04-02', '2026-04-03', '2026-05-01', '2026-08-15', '2026-10-12', '2026-11-02', '2026-12-07', '2026-12-08', '2026-12-25'],
+  2027: ['2027-01-01', '2027-01-06', '2027-03-01', '2027-03-25', '2027-03-26', '2027-05-01', '2027-08-16', '2027-10-12', '2027-11-01', '2027-12-06', '2027-12-08', '2027-12-25']
+};
+const isoDia = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+function pascua(y) {
+  const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+  return new Date(y, Math.floor((h + l - 7 * m + 114) / 31) - 1, ((h + l - 7 * m + 114) % 31) + 1, 12);
+}
+function festivosAnio(y) {
+  if (FESTIVOS_AND[y]) return { lista: FESTIVOS_AND[y], estimado: false };
+  const fijos = ['01-01', '01-06', '02-28', '05-01', '08-15', '10-12', '11-01', '12-06', '12-08', '12-25'].map(md => {
+    const d = new Date(y + '-' + md + 'T12:00'); if (d.getDay() === 0) d.setDate(d.getDate() + 1); return isoDia(d);
+  });
+  const p = pascua(y), js = new Date(p), vs = new Date(p); js.setDate(p.getDate() - 3); vs.setDate(p.getDate() - 2);
+  return { lista: fijos.concat([isoDia(js), isoDia(vs)]), estimado: true };
+}
+function leerLocales(txt) {
+  return String(txt || '').split(/[\s,;]+/).map(t => {
+    let m = t.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
+    if (m) return m[3] + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0');
+    m = t.match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? t : '';
+  }).filter(Boolean);
+}
+/** Suma n días hábiles desde el día siguiente a la fecha dada. Devuelve {fecha, estimado}. */
+function sumarHabiles(desdeISO, n, locales) {
+  const d = new Date(desdeISO + 'T12:00'); let c = 0, estimado = false;
+  const fest = {}, extra = new Set(locales || []);
+  const esFestivo = x => { const y = x.getFullYear(); if (!fest[y]) { fest[y] = festivosAnio(y); } if (fest[y].estimado) estimado = true; return fest[y].lista.indexOf(isoDia(x)) >= 0 || extra.has(isoDia(x)); };
+  while (c < n) { d.setDate(d.getDate() + 1); if (d.getDay() !== 0 && d.getDay() !== 6 && !esFestivo(d)) c++; }
+  return { fecha: isoDia(d), estimado };
+}
+const fmtCorta = iso => iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) + '/' + iso.slice(0, 4) : '';
+const claveLocales = () => 'es_festivos_locales_' + (state.inst || 'principal');
+function localesGuardados() { try { return localStorage.getItem(claveLocales()) || ''; } catch (e) { return ''; } }
+function guardarLocales(v) { try { localStorage.setItem(claveLocales(), v); } catch (e) { /* sin almacenamiento */ } }
+
+function coordRequerimientoMd(e, temp, cfg, items, plazo, fecha) {
+  const nom = String(e.nombre || '').trim(), cel = t => String(t || '').replace(/\|/g, '/').replace(/\n+/g, ' ');
+  return ['**A:** ' + nom + ', a la atención de su representante legal y de su Delegado/a de Protección',
+    '**Asunto:** Requerimiento de documentación · Protección de menores · Temporada ' + temp, '',
+    'Revisada la documentación del sistema de protección de menores de su entidad' + (fecha ? ' presentada el ' + fmtFecha(fecha) : '') + ', se ha comprobado que falta o está incompleta la siguiente:', '',
+    '| Requisito del Protocolo Marco | Situación | Qué deben aportar o completar |', '| --- | --- | --- |']
+    .concat(items.map(x => '| **' + x.codigo + '** · ' + cel(x.requisito) + ' | ' + cel(x.situacion) + ' | ' + cel(x.falta) + ' |'))
+    .concat(['', 'Les requerimos para que la aporten en un plazo de **' + plazo + ' días hábiles** desde la recepción de este escrito.', '',
+      'Si no se aporta en ese plazo, la declaración quedará como incompleta, con los efectos previstos en la autorización de uso de instalaciones o en las bases de la subvención correspondiente.', '',
+      'Quedamos a su disposición para orientarles sobre la documentación requerida.', '',
+      'En ' + (cfg.municipio || '[MUNICIPIO]') + ', a fecha de firma electrónica.', '',
+      'Delegado/a Municipal de Protección de Menores en el Deporte' + (cfg.delegado_municipal ? ' · ' + cfg.delegado_municipal : '')]).join('\n');
+}
+
+(() => {
+  TIPOS_DOC.requerimiento = 'Requerimientos';
+  const sel = $('#doc-tipo');
+  if (sel && !sel.querySelector('option[value="requerimiento"]')) sel.insertAdjacentHTML('beforeend', '<option value="requerimiento">Requerimientos</option>');
+  const orig = htmlDocumento;
+  htmlDocumento = function (paraWord) {
+    const h = orig(paraWord);
+    return state.doc && state.doc.tipo === 'requerimiento'
+      ? h.replace('Borrador generado con apoyo de IA, sujeto a validación profesional.', 'Requerimiento generado desde la matriz de cumplimiento.') : h;
+  };  const origAbrir = abrirDoc;
+  abrirDoc = function (id) {
+    origAbrir(id);
+    const d = $('.doc-prompt'); if (d) d.classList.toggle('hidden', !(state.doc && state.doc.prompt));
+  };
+})();
+
+async function abrirRequerimiento(entidadId) {
+  if (!entidadId) { toast('Elige primero la entidad', true); return; }
+  const e = state.entidades.find(x => x.id === entidadId) || {};
+  const mat = await run(() => API.call('matriz', { entidad_id: entidadId }));
+  const pend = mat.filter(r => ['no_cumple', 'parcial', 'pendiente'].indexOf(r.estado) >= 0);
+  if (!pend.length) { toast('Esta entidad no tiene requisitos pendientes: no hace falta requerimiento'); return; }
+  const sit = r => COORD_SIT[r.estado] || 'No acreditado';
+  const falta = r => String(r.accion_pendiente || '').replace(/^Requerido el [^·]*·\s*(plazo hasta [^·]*·\s*)?/, '').trim() ||
+    COORD_FALTA[r.codigo] || 'Aportar la documentación que acredite este requisito.';
+  const temp0 = ($('#coord-temp') && $('#coord-temp').value.trim()) || coordTemporada();
+  const f = $('#modal-form');
+  f.innerHTML = `<h3>📨 Requerimiento de subsanación</h3>
+    <p class="nota" style="margin:0 0 12px"><b>${esc(e.nombre || '')}</b>. Estos son los requisitos que la matriz tiene en No cumple, Parcial o Pendiente. Desmarca los que no quieras incluir y revisa el texto de lo que deben aportar.</p>
+    <div class="fields"><label>Temporada<input name="temp" value="${esc(temp0)}"></label>
+      <label>Plazo (días hábiles)<input type="number" name="plazo" min="1" max="60" value="10"></label>
+      <label>Fecha de envío o notificación<input type="date" name="notif" value="${hoyISO()}"></label>
+      <label>Vence el (calculado, editable)<input type="date" name="venc"></label>
+      <label class="full">Festivos locales del municipio (dd/mm/aaaa, separados por comas)<input name="locales" value="${esc(localesGuardados())}" placeholder="Ej.: 20/04/2026, 08/09/2026"></label>
+      <p class="nota full" id="req-venc-nota" style="margin:-6px 0 8px"></p>
+      <label class="full">Fecha de la documentación revisada (opcional)<input type="date" name="fecha"></label></div>
+    <div class="req-lista">${pend.map((r, i) => `<div class="req-fila"><label class="check"><input type="checkbox" name="r${i}" checked style="flex:0 0 22px"> <span><b>${esc(r.codigo)}</b> ${esc(r.requisito)} <span class="st ${(ESTADOS[r.estado] || ESTADOS.pendiente)[1]}">${esc(sit(r))}</span></span></label>
+      <input name="f${i}" value="${esc(falta(r))}" aria-label="Qué deben aportar · ${esc(r.codigo)}"></div>`).join('')}</div>
+    <label class="check"><input type="checkbox" name="guardar" checked> Guardar una copia en Documentos (para volver a consultarlo)</label>
+    <label class="check"><input type="checkbox" name="anotar" checked> Anotar en la matriz «Requerido el ${esc(new Date().toLocaleDateString('es-ES'))}» y poner el vencimiento como próxima revisión (genera alerta)</label>
+    <div class="actions"><button value="cancel" class="btn ghost" formnovalidate>Cancelar</button><button type="button" class="btn ghost" id="req-word">Word</button><button type="button" class="btn" id="req-pdf">Ver / PDF</button></div>`;
+  if (!$('#req-estilo')) {
+    const st = document.createElement('style'); st.id = 'req-estilo';
+    st.textContent = '.req-lista{max-height:46vh;overflow-y:auto;border:1px solid var(--line);border-radius:8px;padding:6px 10px;margin:4px 0 12px}' +
+      '.req-fila{padding:8px 0;border-bottom:1px solid var(--line)}.req-fila:last-child{border-bottom:0}.req-fila label.check{margin:0 0 6px}.req-fila .st{margin-left:6px}';
+    document.head.appendChild(st);
+  }
+  $('#modal').onclose = null; $('#modal').oncancel = null;
+  if (!$('#modal').open) $('#modal').showModal();
+  const recalcular = () => {
+    const n = Math.max(1, Math.min(60, Number(f.plazo.value) || 10)), base = f.notif.value || hoyISO();
+    const r = sumarHabiles(base, n, leerLocales(f.locales.value));
+    f.venc.value = r.fecha;
+    $('#req-venc-nota').textContent = n + ' días hábiles desde el día siguiente a la notificación, sin sábados, domingos ni festivos de Andalucía' +
+      (leerLocales(f.locales.value).length ? ' ni locales' : '') + '. Vence el ' + fmtCorta(r.fecha) + '.' +
+      (r.estimado ? ' Festivos autonómicos de ese año estimados: compruébalos en el BOJA.' : '');
+  };
+  ['plazo', 'notif', 'locales'].forEach(k => f[k].addEventListener('input', recalcular));
+  recalcular();
+  const generar = async fmt => {
+    const items = pend.map((r, i) => f['r' + i].checked ? { codigo: r.codigo, requisito: r.requisito, situacion: sit(r), falta: f['f' + i].value.trim() || falta(r), r } : null).filter(Boolean);
+    if (!items.length) { toast('Marca al menos un requisito', true); return; }
+    const temp = f.temp.value.trim() || temp0, plazo = Math.max(1, Math.min(60, Number(f.plazo.value) || 10)), fecha = f.fecha.value, anotar = f.anotar.checked, guardar = f.guardar.checked;
+    const venc = f.venc.value;
+    guardarLocales(f.locales.value.trim());
+    const cfg = state.cfg || {};
+    const html = plantillaInforme('Requerimiento de subsanación', (e.nombre || '') + ' · Temporada ' + temp,
+      '<div class="just">' + coordRequerimiento(e, temp, cfg, false, { items, plazo, fecha }) + '</div>', false,
+      'EntornoSeguro · ' + esc(coordOrg(cfg)) + ' · Coordinación con entidades deportivas en protección de menores. La verificación municipal es formal y documental.');
+    if (fmt === 'word') descargar('\uFEFF' + html, 'application/msword', nombreInf('requerimiento-' + (e.nombre || 'entidad')));
+    else abrirInforme(html);
+    $('#modal').close('cancel');
+    if (!anotar && !guardar) return;
+    const hoyTxt = new Date().toLocaleDateString('es-ES');
+    const avisos = [];
+    await run(async () => {
+      if (guardar) {
+        try {
+          await API.call('guardarDocumento', { asunto: 'Requerimiento · ' + String(e.nombre || '').trim() + ' · ' + hoyTxt, tipo: 'requerimiento', formato: 'requerimiento',
+            publico: String(e.nombre || '').trim(), prompt: '', resultado: coordRequerimientoMd(e, temp, cfg, items, plazo, fecha) });
+          state.docs = null; avisos.push('guardado en Documentos');
+        } catch (er) { avisos.push('no se pudo guardar en Documentos (' + er.message + ')'); }
+      }
+      if (anotar) {
+        for (let k = 0; k < items.length; k += 4) await Promise.all(items.slice(k, k + 4).map(x => API.call('guardarCumplimiento', {
+          id: x.r.cumplimiento_id, entidad_id: entidadId, requisito_codigo: x.codigo, estado: x.r.estado,
+          fecha_revision: x.r.fecha_revision || '', proxima_revision: venc || x.r.proxima_revision || '', responsable: x.r.responsable || '',
+          accion_pendiente: ('Requerido el ' + hoyTxt + (venc ? ' · plazo hasta ' + fmtCorta(venc) : '') + ' · ' + x.falta).slice(0, 300) })));
+        avisos.push(items.length + ' punto(s) anotados en la matriz' + (venc ? ' con vencimiento el ' + fmtCorta(venc) : ''));
+      }
+    });
+    toast('Requerimiento generado · ' + avisos.join(' · '));
+    if (!$('#view-matriz').classList.contains('hidden') && $('#matriz-entidad').value === entidadId) loadMatriz();
+  };
+  $('#req-pdf').onclick = () => generar('pdf');
+  $('#req-word').onclick = () => generar('word');
+}
+
+const coordLoadMatrizOriginal = loadMatriz;
+loadMatriz = async function () { await coordLoadMatrizOriginal(); coordBotonMatriz(); };
+
+// ---- Ajuste de TODAS las descargas en Word de la app ----
+// Word no aplica los estilos de la página a la imagen ni a las cajas: el logo salía a tamaño completo
+// y las firmas una debajo de otra. Aquí se convierten cabecera y firmas en tablas que Word sí respeta.
+function coordParaWord(h) {
+  const sb = 'border:none;background:none;';
+  h = h.replace(/<div class="cab"><img src="([^"]+)" alt=""[^>]*>\s*<div><b>([\s\S]*?)<\/b>\s*<small>([\s\S]*?)<\/small><\/div><\/div>/g,
+    (m, src, t, s) => `<table width="100%" style="width:100%;border-collapse:collapse;margin:0 0 14px"><tr>` +
+      `<td width="66" style="${sb}width:66px;border-bottom:3px solid #0d818f;padding:0 8px 6px 0;vertical-align:middle"><img src="${src}" width="58" height="58" style="width:58px;height:58px" alt=""></td>` +
+      `<td style="${sb}border-bottom:3px solid #0d818f;padding:0 0 6px;vertical-align:middle"><b style="color:#0b3057;font-size:14pt">${t}</b><br><span style="color:#4f5d65;font-size:9pt">${s}</span></td></tr></table>`);
+  h = h.replace(/<div class="firma">((?:\s*<div>[\s\S]*?<\/div>)+)\s*<\/div>/g, (m, inner) => {
+    const celdas = [...inner.matchAll(/<div>([\s\S]*?)<\/div>/g)].map(x => x[1]);
+    const ancho = Math.floor((100 - 6 * (celdas.length - 1)) / celdas.length);
+    return '<table width="100%" style="width:100%;border-collapse:collapse;margin-top:40px"><tr>' + celdas.map((c, i) =>
+      `<td width="${ancho}%" style="${sb}width:${ancho}%;border-top:1px solid #1d2a30;padding:4px 0 0;text-align:center;font-size:9pt">${c}</td>` +
+      (i < celdas.length - 1 ? `<td width="6%" style="${sb}width:6%"></td>` : '')).join('') + '</tr></table>';
+  });
+  return h;
+}
+const coordDescargarOriginal = descargar;
+descargar = function (contenido, tipo, nombre) {
+  if (tipo === 'application/msword' && typeof contenido === 'string') contenido = coordParaWord(contenido);
+  return coordDescargarOriginal(contenido, tipo, nombre);
+};
+
+const coordLoadEntOriginal = loadEntidades;
+loadEntidades = async function () { await coordLoadEntOriginal(); pintarCoord(); };
+
+// ---------- GUÍA DE USO · PREGUNTAS FRECUENTES (v1.2) ----------
+// Nueva ventana "Guía de uso" en el menú: preguntas por temas, buscador, enlace a cada ventana
+// y solo lo que corresponde al perfil (municipal, club o administrador).
+// Ámbito de cada pregunta: '' = todos · 'mun' = perfil municipal · 'club' = perfil club · 'admin' = administrador.
+const GUIA = [
+  ['🚀', 'Primeros pasos', [
+    ['¿Qué es EntornoSeguro y qué no es?', '<p>Es la herramienta del Delegado/a de Protección para organizar, documentar y hacer seguimiento del sistema de protección de menores en el deporte: entidades, requisitos del Protocolo Marco, riesgos, agentes, formación, alertas, informes e incidencias.</p><p><b>No valora a personas ni entidades</b> y no sustituye la decisión profesional. Los estados reflejan la implantación documental.</p>', ''],
+    ['¿Por dónde empiezo?', '<ol><li><b>Entidades</b>: da de alta las entidades y marca si trabajan con menores.</li><li><b>Matriz</b>: revisa los requisitos A–K de cada una.</li><li><b>Agentes</b> y <b>Formación</b>: registra al personal y su formación.</li><li><b>Riesgos</b>: elabora el análisis de riesgos.</li><li><b>Alertas</b>: atiende lo que el sistema te avise cada día.</li></ol>', 'mun', 'entidades'],
+    ['¿Por dónde empiezo con mi club?', '<ol><li><b>Mi club</b>: completa la ficha, el Delegado/a y la aceptación del Protocolo Marco.</li><li><b>Plantillas</b>: genera protocolo, código de conducta y designación.</li><li><b>Agentes</b>: registra a entrenadores, monitores y voluntarios.</li><li><b>Matriz</b>: marca lo que ya tienes y sube las evidencias.</li><li><b>Encuestas</b>: lanza la primera encuesta anónima.</li></ol>', 'club', 'entidades'],
+    ['¿Cómo entro y cómo cambio mi contraseña?', '<p>Elige el perfil y escribe usuario y contraseña:</p><ul><li><b>AYUNTAMIENTO / EQUIPO</b>: administración, delegado/a municipal, técnicos y entidades con usuario propio del ayuntamiento.</li><li><b>MI CLUB</b>: clubes y asociaciones con espacio propio (los dados de alta en <b>Mis clubes</b>).</li></ul><p>Si tu ayuntamiento tiene código, entra como <b>usuario@código</b>. Si te equivocas de perfil, la app te indica cuál es el tuyo. Enlace directo para clubes: <b>entornoseguro.escuelaydeporte.com/?perfil=club</b>.</p><p>La primera vez se pide cambiar la contraseña temporal. Después, en <b>Cambiar contraseña</b>, abajo del menú. Tras 5 intentos fallidos el acceso se bloquea 15 minutos.</p>', ''],
+    ['¿Puedo agrandar el texto?', '<p>Sí. Usa los botones <b>A · A+ · A++</b> abajo del menú (o en la pantalla de acceso). La app recuerda tu elección.</p>', '']
+  ]],
+  ['⭐', 'Matriz de cumplimiento · la pieza clave', [
+    ['★ Empieza aquí: qué es la Matriz y por qué es la pieza clave', '<p>Es la lista de los <b>21 requisitos del Protocolo Marco (A1–K2)</b>. Cada fila indica si el club <b>puede acreditar</b> ese requisito con un documento. No valora personas ni entidades: es estado documental.</p><ul><li>La <b>ficha</b> (Mi club) es lo que el club <b>declara</b>. La <b>Matriz</b> es lo que <b>acredita</b> con documento. Por eso el panel puede marcar «Delegado/a y Protocolo Marco» ✓ y la Matriz seguir en Pendiente.</li><li>El <b>% de cumplimiento</b>, las <b>alertas</b> y el <b>informe del club</b> salen de aquí.</li></ul>', '', 'matriz'],
+    ['Cómo se lee una fila', '<table class="md-tabla"><tbody><tr><td><b>Requisito</b></td><td>Código, nombre y norma de referencia.</td></tr><tr><td><b>Estado</b></td><td>✓ Cumple · ⚠ Parcial · ✗ No cumple · · Pendiente · — No aplica.</td></tr><tr><td><b>Evidencia</b></td><td>Enlace al documento que lo acredita (Drive).</td></tr><tr><td><b>Revisión</b></td><td>Fecha en que lo comprobaste.</td></tr><tr><td><b>Próxima</b></td><td>Cuándo toca revisarlo otra vez. Se calcula sola según la periodicidad.</td></tr><tr><td><b>Acción pendiente</b></td><td>Lo que falta, escrito por ti o propuesto por la IA.</td></tr></tbody></table>', '', 'matriz'],
+    ['Los dos botones de cada fila: «Actualizar» y «Revisar con IA»', '<ul><li><b>Actualizar</b>: aquí trabajas tú. Abre el formulario del requisito.</li><li><b>Revisar con IA</b> (opcional): Claude compara un documento con lo que pide ese requisito y propone estado y carencias. <b>No cambia nada</b> hasta que lo aceptas. Si revisas el protocolo contra A1 o A2 saldrá «No cumple»: esos requisitos piden <b>otros documentos</b> (declaración institucional y Anexo I).</li></ul>', '', 'matriz'],
+    ['Campos del formulario «Actualizar»', '<ul><li><b>Estado</b>: Cumple solo con el documento firmado o aprobado.</li><li><b>Fecha de revisión</b>: normalmente, hoy.</li><li><b>Próxima revisión</b>: déjala vacía, se calcula sola.</li><li><b>Responsable</b>: el Delegado/a.</li><li><b>Acción pendiente</b>: vacía si ya cumple; si no, qué falta.</li><li><b>Nueva evidencia · título</b>: p. ej. «Designación firmada 20/10/2026».</li><li><b>Nueva evidencia · enlace Drive</b>: el documento del club, compartido como «cualquiera con el enlace». En documentos personales, acceso restringido o sin enlace (ver «¿Pongo enlace a Drive en todas las evidencias?»).</li><li><b>Caducidad evidencia</b>: solo si el documento caduca.</li></ul>', '', 'matriz'],
+    ['El ciclo de cada requisito en 4 pasos', '<ol><li><b>Generar</b> el documento (Plantillas, el módulo que corresponda o el modelo oficial).</li><li><b>Aprobar</b>: firma o acuerdo de la Junta.</li><li><b>Subir</b> a Drive y copiar el enlace.</li><li><b>Registrar</b>: Matriz → Actualizar → Cumple, fecha y evidencia.</li></ol><p>Después, <b>Alertas → Recalcular</b>: la alerta del requisito desaparece.</p>', '', 'matriz'],
+    ['¿Dónde genero el documento de cada requisito (A1–K2)?', '<div class="md-scroll"><table class="md-tabla"><thead><tr><th>Requisito</th><th>Qué es</th><th>Dónde se genera</th></tr></thead><tbody><tr><td><b>A1</b></td><td>Declaración institucional</td><td><b>Plantillas</b> → Declaración institucional (A1), aprobada por la Junta.</td></tr><tr><td><b>A2</b></td><td>Aceptación del Protocolo Marco</td><td>Anexo I oficial de la Orden 18/11/2024 → Registro Electrónico Único de la Junta. Evidencia: el justificante.</td></tr><tr><td><b>B1</b></td><td>Designación del Delegado/a</td><td><b>Plantillas</b> → Designación (Anexo II) + justificante de registro.</td></tr><tr><td><b>B2</b></td><td>Formación del Delegado/a</td><td><b>Formación</b> (colectivo Delegado/a) + certificado del curso.</td></tr><tr><td><b>C1 · C2</b></td><td>Riesgos y medidas</td><td><b>Riesgos</b>: C1 con el 📄 Registro de riesgos; C2 con el 📄 documento de Medidas preventivas (implantadas + anexo de las que están en implantación).</td></tr><tr><td><b>D1</b></td><td>Código de conducta</td><td><b>Plantillas</b> → Código de conducta, aprobado por la Junta.</td></tr><tr><td><b>D2</b></td><td>Aceptación del código</td><td><b>Agentes</b> → «Código aceptado» de cada persona + hojas firmadas.</td></tr><tr><td><b>E1</b></td><td>Autorizaciones de imagen</td><td><b>Plantillas</b> → Autorización de imagen + recuento en <b>Autorizaciones</b>.</td></tr><tr><td><b>E2</b></td><td>Redes sociales</td><td>Apartado del protocolo o documento propio (<b>Asistente IA</b>).</td></tr><tr><td><b>F1 · F2</b></td><td>Desplazamientos y pernoctas</td><td><b>Plantillas</b> → Autorización de desplazamiento + protocolo. Si el club no viaja: <b>No aplica</b>.</td></tr><tr><td><b>G1</b></td><td>Protocolo propio</td><td><b>Plantillas</b> → Protocolo de protección, aprobado por la Junta.</td></tr><tr><td><b>G2</b></td><td>Difusión del protocolo</td><td><b>Plantillas</b> → Carta a familias + prueba de difusión (web, tablón, correo).</td></tr><tr><td><b>H1 · H2</b></td><td>Comunicación de incidentes y flujograma</td><td><b>Plantillas</b> → Guía rápida de actuación ante incidentes.</td></tr><tr><td><b>I1 · I2</b></td><td>Canal e información con el 116 111</td><td><b>Plantillas</b> → Cartel del canal + Carta a familias.</td></tr><tr><td><b>J1</b></td><td>Formación de agentes</td><td><b>Formación</b> (por persona o por lote).</td></tr><tr><td><b>K1 · K2</b></td><td>Agentes y certificados negativos</td><td><b>Agentes deportivos</b>: alta de cada persona y fecha de su certificado.</td></tr></tbody></table></div>', '', 'matriz'],
+    ['Ejemplo: marcar B2 · Formación del Delegado/a', '<ol><li>Sube el certificado del curso a Drive y copia el enlace.</li><li><b>Matriz → B2 → Actualizar</b>: Cumple · fecha de hoy · responsable · título «Certificado curso Delegado de Protección» · enlace.</li><li>Guardar. Resultado: ✓, sube el % y «Próxima» queda a 24 meses.</li></ol>', '', 'matriz'],
+    ['Reglas que conviene saber', '<ul><li>En el % solo suman <b>Cumple</b> y <b>No aplica</b>. <b>Parcial no suma</b>.</li><li>La app no guarda archivos: solo <b>enlaces de Drive</b>.</li><li>Cada «Nueva evidencia» se añade a las anteriores; no las borra. Para quitar una evidencia equivocada, pulsa <b>✕</b> junto a su título.</li><li>Con los botones de <b>filtro</b> sobre la tabla (Cumple, Parcial, No cumple, Pendiente, No aplica) ves solo los requisitos de ese estado.</li><li>Cerrar una alerta no resuelve el requisito: solo lo resuelve la Matriz.</li></ul>', '', 'matriz'],
+    ['¿Qué diferencia hay entre «Registrar declaración» y «Revisar documento con IA»?', '<ul><li><b>Registrar declaración</b> anota <b>lo que el club dice que tiene</b>: marcas casillas y la matriz se actualiza. No mira ningún documento. Es el registro anual rápido de todos los clubes.</li><li><b>Revisar documento con IA</b> comprueba <b>si un documento concreto</b> (protocolo, código de conducta, flujograma…) contiene lo que exige el Protocolo Marco. Claude lo lee y dice, elemento por elemento, qué consta y qué falta.</li></ul><p>Usa la revisión cuando quieras ir más allá de lo declarado en algo sensible (por ejemplo, el procedimiento de incidentes, H1) o para saber qué pedir en un requerimiento. Si la aplicas, sobrescribe el estado que dejó la declaración: lo revisado pesa más que lo declarado.</p>', 'mun', 'matriz'],
+    ['¿Cómo reviso un documento del club con IA?', '<ol><li><b>Matriz → 🔎 Revisar documento con IA</b>. Elige el <b>tipo de documento</b> y la app marca sola los requisitos que debe cubrir (con «Otro documento» los marcas tú).</li><li>Escribe el nombre del documento y pulsa <b>Preparar prompt → Abrir en Claude</b>.</li><li>En Claude, <b>adjunta el PDF o Word del club antes de enviar</b>: es el paso clave.</li><li>Copia la respuesta, pégala en la app y pulsa <b>Ver propuesta</b>.</li><li>Revisa la propuesta fila a fila (Cumple / Parcial / No cumple y qué falta), marca las que aceptas y pulsa <b>Aplicar a la matriz</b>.</li></ol><p>Es una ayuda orientativa: la decisión final es tuya. No adjuntes documentos con datos de menores.</p>', 'ia', 'matriz']
+  ], 'destacado'],
+  ['🤝', 'Entidades y coordinación con clubes', [
+    ['¿Cómo doy de alta una entidad?', '<p><b>Entidades → + Nueva entidad</b>. Lo imprescindible: nombre, si <b>trabaja con menores</b>, su Delegado/a de Protección y si <b>acepta el Protocolo Marco</b>. Solo las entidades con menores entran en la matriz, los informes y las alertas.</p>', 'mun', 'entidades'],
+    ['¿Qué es la entidad «Actividades municipales»?', '<p>Representa las escuelas y actividades deportivas que organiza directamente el ayuntamiento. Tiene su propia matriz y aparece aparte en los informes, sin contar en las medias de las entidades.</p>', 'mun', 'entidades'],
+    ['¿Qué hace el Delegado municipal respecto a los clubes?', '<p>Solo <b>coordinar y verificar</b>: recibe la declaración responsable, comprueba que la documentación está completa, requiere lo que falte y traslada las comunicaciones a quien corresponda.</p><p><b>No</b> investiga ni valora hechos, ni asume las obligaciones del club, que tiene su propio Delegado/a de Protección.</p>', 'mun'],
+    ['¿Cómo envío la declaración responsable a los clubes?', '<p><b>Entidades → tarjeta «Coordinación y verificación»</b>. Entidad: <i>Modelo en blanco</i> (o un club concreto, sale con sus datos). Documento: <i>I · Declaración responsable</i>. Pulsa <b>Word</b> y envíala con el plazo.</p>', 'mun', 'entidades'],
+    ['Me ha llegado una declaración firmada: ¿cómo la paso a la matriz?', '<ol><li>Guarda el PDF en Drive y copia el enlace.</li><li><b>Matriz</b> → elige el club → <b>📥 Registrar declaración responsable</b>.</li><li>Pon la fecha, pega el enlace y <b>desmarca lo que el club no haya marcado</b>.</li><li><b>Aplicar a la matriz</b>: se actualizan de una vez los 21 requisitos (A–K), con su evidencia.</li></ol>', 'mun', 'matriz'],
+    ['Falta documentación de un club: ¿qué hago?', '<p><b>Matriz</b> → elige el club → <b>📨 Generar requerimiento</b>. La app lista sola lo que está en No cumple, Parcial o Pendiente, con lo que falta. Quita lo que no quieras incluir, ajusta el plazo (10 días hábiles por defecto) y pulsa <b>Ver / PDF</b> o <b>Word</b>: sale ya relleno.</p><p>La app calcula el <b>vencimiento</b>: los días hábiles cuentan desde el día siguiente a la notificación, sin sábados, domingos ni festivos de Andalucía ni los <b>festivos locales</b> que indiques (la app los recuerda). Si dejas marcado «Anotar en la matriz», cada punto queda con «Requerido el [fecha] · plazo hasta [fecha]» y el vencimiento pasa a ser su próxima revisión: te avisa en Alertas cuando se acerque y, si vence sin respuesta, como alerta alta. Archiva la comprobación con la <b>II · Ficha de verificación</b>.</p>', 'mun', 'matriz'],
+    ['¿Dónde vuelvo a consultar un requerimiento que ya envié?', '<p>En <b>Documentos</b>: en «Tipo» elige <b>Requerimientos</b> o busca el nombre del club. Cada uno se guarda como «Requerimiento · [entidad] · [fecha]». Ábrelo para verlo y descárgalo de nuevo en <b>Word</b> o <b>PDF</b>.</p><p>Se guarda si dejas marcada la casilla «Guardar una copia en Documentos» al generarlo. Además, en la matriz cada punto requerido muestra «Requerido el [fecha]».</p>', 'mun', 'documentos'],
+    ['¿Qué cláusula pongo en autorizaciones de uso y subvenciones?', '<p>Documento <b>V · Cláusula tipo</b> de la tarjeta de coordinación. Hace obligatoria la declaración responsable para usar instalaciones con menores o ser beneficiaria de subvenciones.</p>', 'mun', 'entidades'],
+    ['¿Cómo creo un club alojado y le doy acceso?', '<p><b>Mis clubes → + Nuevo club</b>. Se crea su hoja propia y sus claves (se muestran una sola vez). En <b>Gestionar</b> puedes ver su informe, generar otra contraseña, desactivarlo o descargar el contrato de encargo. Ver su informe o copiar sus datos <b>queda registrado</b> y el club lo ve.</p>', 'admin', 'clubes']
+  ]],
+  ['🧪', 'Casos prácticos', [
+    ['Caso práctico: revisar el protocolo de protección de un club, paso a paso', '<p><b>Situación:</b> un club te envía su protocolo de protección y quieres saber qué cumple y qué le falta.</p><ol>' +
+      '<li><b>Que exista la entidad.</b> Si no está: <b>Entidades → + Nueva entidad</b>, con «¿Trabaja con menores?» en <b>SI</b>.</li>' +
+      '<li><b>Abrir la revisión.</b> <b>Matriz de cumplimiento</b> → elige el club arriba a la derecha → <b>🔎 Revisar documento con IA</b>.</li>' +
+      '<li><b>Configurarla.</b> Tipo de documento: <i>Protocolo de protección de la entidad</i> (se marcan solos 12 requisitos). Si el club tiene el código de conducta completo en otro documento, <b>desmarca D1</b>. Escribe el nombre, p. ej. «Protocolo de protección 2026/2027», y pulsa <b>Preparar prompt</b>.</li>' +
+      '<li><b>Enviar a Claude.</b> <b>Abrir en Claude</b> → <b>antes de enviar, adjunta el PDF</b> con el clip 📎 → envía.</li>' +
+      '<li><b>Traer la respuesta.</b> En Claude pulsa <b>Copiar</b> (abajo de la respuesta) → pégala en la app → <b>Ver propuesta</b>.</li>' +
+      '<li><b>Revisar la propuesta.</b> Cada fila muestra el estado actual, el propuesto y lo que falta. Puedes cambiar el estado, retocar la acción pendiente o desmarcar la fila para no aplicarla.</li>' +
+      '<li><b>Aplicar.</b> Deja marcado «Guardar el informe de Claude en Documentos» y pulsa <b>Aplicar a la matriz</b>.</li>' +
+      '<li><b>Cerrar el círculo.</b> En la misma matriz pulsa <b>📨 Generar requerimiento</b>: sale relleno con lo que haya quedado en No cumple, Parcial o Pendiente. Revisa la lista, pulsa <b>Word</b> o <b>Ver / PDF</b> y envíalo (10 días hábiles).</li></ol>' +
+      '<p><b>Ejemplo de resultado</b> con un protocolo típico de una asociación con campamento:</p>' +
+      '<div class="md-scroll"><table class="md-tabla"><thead><tr><th>Requisito</th><th>Propuesta</th><th>Motivo</th></tr></thead><tbody>' +
+      '<tr><td>B1 Designación</td><td>Cumple</td><td>Órgano, fecha, funciones, vigencia y difusión</td></tr>' +
+      '<tr><td>C1 Análisis de riesgos</td><td>Parcial</td><td>Enumera espacios pero no valora el nivel</td></tr>' +
+      '<tr><td>C2 Medidas preventivas</td><td>Parcial</td><td>Sin responsable ni fechas</td></tr>' +
+      '<tr><td>F2 Viajes y pernoctas</td><td>Parcial</td><td>Nada sobre habitaciones ni normas nocturnas</td></tr>' +
+      '<tr><td>G1 Protocolo propio</td><td>Parcial</td><td>Sin previsión de revisión</td></tr>' +
+      '<tr><td>H2 Flujograma</td><td>No cumple</td><td>No existe</td></tr>' +
+      '<tr><td>I1 Canal</td><td>Parcial</td><td>No garantiza la confidencialidad</td></tr>' +
+      '<tr><td>I2 Información a menores</td><td>No cumple</td><td>Nada adaptado a su edad ni teléfono ANAR</td></tr>' +
+      '</tbody></table></div>' +
+      '<p>La propuesta es orientativa: la decisión final es tuya. No adjuntes documentos con datos de menores.</p>', 'ia', 'matriz']
+  ]],
+  ['👥', 'Agentes, formación y autorizaciones', [
+    ['¿A quién registro como agente deportivo?', '<p>A todas las personas adultas que intervienen con menores: entrenadores, monitores, directivos, voluntarios, árbitros y personal externo.</p>', '', 'agentes'],
+    ['¿Qué registro del certificado negativo de delitos sexuales?', '<p><b>Solo la fecha.</b> El documento lo custodia la entidad. La app avisa de quien no lo tiene y de los certificados con más antigüedad de la configurada para renovar.</p>', '', 'agentes'],
+    ['¿Cómo registro un curso con varias personas y saco los certificados?', '<p><b>Formación → + Curso con varios asistentes</b>: una persona por línea. Al guardar, la app ofrece generar los certificados en PDF. Si el nombre coincide con un agente, se actualiza su fecha de formación.</p>', 'escribir', 'formacion'],
+    ['¿Cómo controlo las autorizaciones familiares?', '<p><b>Autorizaciones</b>: un registro por grupo y tipo (imagen, desplazamiento, pernocta…) con el total de menores y las recibidas. <b>Nunca se anotan nombres de menores</b>; los originales los guarda la entidad.</p>', '', 'autorizaciones']
+  ]],
+  ['⚠️', 'Análisis de riesgos', [
+    ['¿Cómo hago el análisis de riesgos?', '<p>Lo más rápido: <b>Riesgos → Proponer con IA</b> (usa los datos de la ficha) → pega la respuesta → <b>📥 Pasar los riesgos a la tabla</b>.</p><p>Para añadir uno suelto: <b>+ Nuevo riesgo</b>, elige el ámbito y escribe la situación y las medidas. Si necesitas ideas, despliega <b>💡 Ver riesgos típicos de este ámbito</b>: rellena solo los campos vacíos. Al <b>editar</b> un riesgo ya escrito no aparecen, para no sustituir el texto por error.</p><p>El nivel se calcula con probabilidad × impacto.</p>', '', 'riesgos'],
+    ['¿Qué pasa con un riesgo alto?', '<p>Genera una alerta prioritaria mientras sus medidas no estén <b>implantadas</b>. Pon fecha de revisión para que te avise a tiempo.</p>', '', 'riesgos']
+  ]],
+  ['🛡️', 'Incidencias y comunicaciones', [
+    ['Hay un menor en peligro ahora mismo: ¿qué hago?', '<p><b>Primero, llama al 112</b> y protege al menor. Después, registra. La app muestra los pasos urgentes cuando marcas «Riesgo inmediato: Sí».</p>', ''],
+    ['¿Cómo se activa el registro de incidencias?', '<p>Está desactivado hasta que el DPD (o la junta directiva en entidades sin DPD) valida su diseño. Descarga la <b>ficha técnica para el DPD</b>, y con su visto bueno actívalo indicando la fecha y el plazo de conservación.</p>', 'incidencias', 'incidencias'],
+    ['¿Qué escribo y qué no en un caso?', '<p>Solo trazabilidad: fechas, ámbito, tipo de situación, actuaciones y a quién se comunicó. <b>Nunca nombres, iniciales ni datos que identifiquen</b> a menores o personas implicadas. El relato va al expediente oficial.</p>', 'incidencias', 'incidencias'],
+    ['¿Por qué me pide la contraseña otra vez?', '<p>Por seguridad, el registro se abre con tu contraseña y se cierra tras <b>30 minutos</b> sin actividad. Puedes cerrarlo tú con <b>🔒 Cerrar registro</b>.</p>', 'incidencias', 'incidencias'],
+    ['¿Cómo avanzo un caso?', '<p>Cada caso sigue las fases <b>Hechos comunicados → Valoración inicial → Actuaciones → Seguimiento → Cerrado</b>. El asistente de procedimiento te dice qué toca en cada fase; añade cada actuación con fecha, destinatario y referencia.</p>', 'incidencias', 'incidencias'],
+    ['¿Puedo usar la IA en incidencias?', '<p>Solo si se activa aparte (segunda validación). La IA recibe <b>únicamente categorías</b> (tipo, ámbito, fase, riesgo) y devuelve orientación o borradores con marcadores que la app completa sin enviar datos.</p>', 'incidencias', 'incidencias'],
+    ['Me comunican algo sobre un club: ¿qué hago como Delegado municipal?', '<p>Registra lo comunicado sin valorarlo, traslada de inmediato a Servicios Sociales, Fiscalía o Fuerzas de Seguridad y al Delegado/a del club (salvo que esté implicado) y envía el acuse. Usa el documento <b>IV · Traslado y acuse</b>. No entrevistes ni recabes pruebas.</p>', 'mun', 'entidades']
+  ]],
+  ['📋', 'Encuestas a menores', [
+    ['¿Cómo lanzo una encuesta anónima?', '<p><b>Encuestas → + Nueva encuesta</b>: título, grupo y franja de edad (6-11 o 12-17). Comparte el <b>enlace</b> o imprime el <b>cartel con QR</b>. No se piden nombres ni datos.</p>', '', 'encuestas'],
+    ['¿Por qué no veo los resultados?', '<p>Se muestran a partir de <b>5 respuestas</b> para proteger el anonimato. Evita grupos muy pequeños.</p>', '', 'encuestas']
+  ]],
+  ['🤖', 'IA y documentos', [
+    ['¿Cómo funciona la IA en la app?', '<p>La app prepara el texto (prompt) y lo abre en <b>Claude con tu cuenta</b>. No envía datos automáticamente. Copia la respuesta, pégala en la app y pulsa <b>Guardar en Documentos</b>.</p>', 'ia', 'asistente'],
+    ['¿Qué no debo escribir nunca en la IA?', '<p>Nombres, DNI, teléfonos ni ningún dato que identifique a menores o a personas de un caso. La app enmascara DNI, teléfonos y correos, pero la responsabilidad es de quien escribe.</p>', 'ia'],
+    ['¿Dónde encuentro lo que he generado?', '<p>En <b>Documentos</b>: búscalo por palabras o tipo, edítalo y descárgalo en Word, PDF o texto.</p>', 'leer', 'documentos'],
+    ['¿Cómo consigo que las plantillas salgan completas, sin huecos?', '<ol><li>Completa la <b>ficha de la entidad</b> (Entidades → Editar): identificación, actividad, gobierno, protección, canal, imagen y datos, y procedimiento.</li><li>Completa una vez el <b>📇 Directorio de recursos locales</b>, arriba en Plantillas: Servicios Sociales, Policía Local, Fiscalía de Menores, centro de salud y Delegado/a municipal.</li><li>Al pulsar una plantilla, la app comprueba la ficha. Si falta algo, lo lista y te lleva al campo exacto con <b>Completar la ficha</b> o <b>Completar el directorio</b>.</li><li>Prepara el prompt y pega la respuesta de Claude: la app sustituye sola los nombres, teléfonos y correos.</li></ol><p><b>Privacidad:</b> los datos de personas y contactos nunca se envían a la IA. Viajan como marcadores (por ejemplo, [DELEGADO_NOMBRE]) y se completan en tu navegador. Solo quedan para rellenar a mano las firmas y los formularios de cada menor o de cada caso.</p>', 'ia', 'plantillas'],
+    ['¿Qué pasa si cierro una alerta?', '<p>La alerta pasa a <b>Cerradas</b>, al final de la lista, y puedes <b>Reabrirla</b>. Cada día el recálculo comprueba el problema de fondo:</p><ul><li><b>🔕</b> Cerrada, pero el problema sigue (por ejemplo, agentes aún sin certificado). Sigue a la vista y quien supervisa lo ve.</li><li><b>✓</b> Resuelta: el problema ya no se da. Queda como historial 180 días.</li></ul><p>Cerrar una alerta no resuelve el requisito: la Matriz y el % de cumplimiento no cambian.</p>', '', 'alertas'],
+    ['¿Hay una guía rápida para el club?', '<p>Sí: en <b>Guía de uso → Guía rápida del club (PDF)</b>. Una página con cómo entrar, los primeros pasos, la rutina de la temporada, qué hacer si ocurre algo y dónde pedir ayuda. Se puede imprimir o enviar a la junta directiva.</p>', 'club'],
+    ['¿Qué son los «Primeros pasos» y el «Siguiente paso» del panel?', '<p>Al entrar, el panel del club muestra <b>5 primeros pasos</b>: ficha del club, Delegado/a y Protocolo Marco, documentos básicos (protocolo, código y cartel), agentes deportivos y primera encuesta. Cada paso tiene su botón y se marca solo cuando está hecho.</p><p>Completados los cinco, aparece el <b>Siguiente paso recomendado</b>: primero las revisiones vencidas y después el primer requisito pendiente de la Matriz, con acceso directo a la plantilla o a la pantalla donde se resuelve.</p>', 'club', 'panel'],
+    ['¿Cómo hago un cartel visual con ChatGPT?', '<ol><li>En <b>Plantillas</b>, elige la entidad y pulsa <b>Cartel del canal de comunicación</b>.</li><li>Abajo aparece <b>🎨 Cartel visual con ChatGPT</b>: elige público (adolescentes y familias, o niños y niñas de 6 a 11 años) y activa o no la casilla <b>Incluir nombre y contacto del Delegado/a</b> (por defecto, desactivada: huecos en blanco).</li><li>Pulsa <b>Generar prompt</b> y luego <b>Abrir en ChatGPT</b> (o cópialo).</li><li>Pega el logotipo real y el QR en los recuadros blancos (Canva, Word o PowerPoint). El QR lo descargas en la misma pantalla: <b>🔳 Código QR del canal → Descargar QR (PNG)</b>, generado con el enlace del formulario de la ficha.</li><li><b>Antes de imprimir, comprueba cifra a cifra cada teléfono y correo.</b> Los generadores de imagen se equivocan con números y letras.</li></ol><p>El prompt nunca incluye datos internos de la entidad (número de menores, ratios, pernoctas, CIF). Con la casilla activada, solo lleva el nombre y el contacto del Delegado/a y del canal, que van a figurar en un cartel público.</p>', 'ia', 'plantillas'],
+    ['¿Qué hay en Plantillas, Contenidos y Biblioteca?', '<ul><li><b>Plantillas</b>: protocolo, código de conducta, designación, carteles y autorizaciones con los datos de la entidad.</li><li><b>Contenidos RRSS</b>: publicaciones para familias y redes.</li><li><b>Biblioteca</b>: normativa oficial y documentos propios por categorías.</li></ul>', 'ia', 'plantillas']
+  ]],
+  ['📄', 'Alertas e informes', [
+    ['¿Cuándo se generan las alertas?', '<p>Cada día a las 7:00, con resumen por correo si está configurado. Pulsa <b>Recalcular</b> para actualizarlas al momento y <b>Cerrar</b> cuando estén atendidas.</p>', '', 'alertas'],
+    ['¿Qué informes puedo sacar?', '<ul><li><b>Informe de entidad</b>: implantación completa de una entidad.</li><li><b>Informe municipal</b>: todas las entidades, con opción de anonimizarlas.</li><li><b>Memoria anual o por periodo</b>: actividad con cifras agregadas.</li></ul><p>Todos en PDF o Word, con valoración técnica opcional preparada con IA.</p>', 'informes', 'informes']
+  ]],
+  ['🔐', 'Mis datos y privacidad', [
+    ['¿Cómo descargo todos los datos del club?', '<p><b>Mis datos → Descargar Excel</b>, cuando quieras. En la misma ventana ves el registro de cada consulta o copia que haya hecho el ayuntamiento.</p>', 'club', 'misdatos']
+  ]],
+  ['⚙️', 'Administración', [
+    ['¿Cómo creo usuarios y qué rol les doy?', '<p><b>Usuarios → + Nuevo usuario</b>. Roles: <b>Delegado/a</b> (todo menos administración), <b>Técnico/a</b> (lectura y escritura), <b>Entidad</b> (solo su entidad), <b>Solo lectura</b>. La contraseña temporal se muestra una vez.</p>', 'admin', 'usuarios'],
+    ['¿Dónde están el contrato de encargo y la ficha del DPD?', '<p>En <b>Documentación</b>: guarda una vez los datos del prestador y descarga los modelos en PDF o Word.</p>', 'admin', 'documentacion']
+  ]],
+  ['💼', 'Modelo comercial y versiones (solo versión maestra)', [
+    ['¿Qué productos ofrece EntornoSeguro?', '<p>Tres productos sobre la misma aplicación. Lo que cambia es quién paga y cuántos clubes completos incluye.</p><table><thead><tr><th>Producto</th><th>Paga</th><th>Incluye</th></tr></thead><tbody><tr><td><b>1. Ayuntamiento Base</b></td><td>Ayuntamiento</td><td>Función municipal completa: actividades propias, incidencias, coordinación y verificación. Entidades ilimitadas en <b>modo A</b> (usuario «Entidad»: declaración, matriz, requerimientos). <b>Sin clubes con espacio propio</b> (max_clubes = 0).</td></tr><tr><td><b>2. Ayuntamiento + Clubes</b></td><td>Ayuntamiento</td><td>Lo anterior más un <b>paquete de N clubes completos</b> (5, 10, 20…). Cada club adicional, aparte. Precio por club con descuento por volumen.</td></tr><tr><td><b>3. SOLO CLUBES</b></td><td>El club</td><td>Un club completo con cuota anual. Para clubes sin ayuntamiento cliente o de un ayuntamiento Base que quieren la versión completa.</td></tr></tbody></table><p><b>Regla:</b> se cobra por <b>club completo</b>, lo pague el ayuntamiento o el club. Nunca se recortan funciones de protección a un club completo.</p>', 'maestro', 'clubes'],
+    ['¿Por dónde entra cada usuario?', '<table><thead><tr><th>Perfil en la portada</th><th>Quién entra</th><th>Usuario</th></tr></thead><tbody><tr><td><b>AYUNTAMIENTO / EQUIPO</b></td><td>Administración, delegado/a municipal, técnicos, solo lectura y entidades en modo A</td><td><code>usuario</code> en la maestra · <code>usuario@código</code> en un ayuntamiento</td></tr><tr><td><b>MI CLUB</b></td><td>Clubes con espacio propio (dados de alta en Mis clubes)</td><td><code>club</code> si es SOLO CLUBES · <code>club@código</code> si es de un ayuntamiento</td></tr></tbody></table><p>Enlace directo para clubes: <b>entornoseguro.escuelaydeporte.com/?perfil=club</b> (va incluido en las claves que genera Mis clubes). Si alguien elige el perfil equivocado con su contraseña correcta, la app le indica cuál es el suyo.</p>', 'maestro'],
+    ['¿Qué diferencia a un club de un ayuntamiento de uno SOLO CLUBES?', '<p>Técnicamente es el <b>mismo perfil</b> con las mismas funciones. La diferencia es contractual y de supervisión. Ejemplo: el club «Eslora».</p><table><thead><tr><th></th><th>Club de un ayuntamiento (eslora@sanlucar)</th><th>Club SOLO CLUBES (eslora)</th></tr></thead><tbody><tr><td>Hoja de datos</td><td>Instalación del ayuntamiento</td><td>Maestra (Escuela&amp;Deporte)</td></tr><tr><td>Supervisa</td><td>El ayuntamiento: resumen, informe y copia, todo registrado</td><td>Solo Escuela&amp;Deporte como prestador, registrado</td></tr><tr><td>Directorio de recursos</td><td>Hereda el del ayuntamiento</td><td>Lo rellena el club</td></tr><tr><td>Paga</td><td>El ayuntamiento (dentro de su paquete)</td><td>El club</td></tr><tr><td>Contrato de encargo</td><td>Dentro del contrato del ayuntamiento</td><td>Club ↔ Escuela&amp;Deporte</td></tr><tr><td>Soporte</td><td>Primero, el delegado/a municipal</td><td>Escuela&amp;Deporte</td></tr></tbody></table>', 'maestro', 'clubes'],
+    ['¿Por qué no hay clubes de «solo visualización»?', '<ul><li>El club no podría cumplir sus obligaciones (protocolo, canal, riesgos, Delegado/a): son suyas, no del ayuntamiento.</li><li>Ese modo ya existe: el usuario «Entidad» (modo A) rinde cuentas y ve lo suyo.</li><li>Una herramienta que aparenta cumplimiento sin permitirlo es un riesgo reputacional.</li></ul><p>Por eso el límite es de <b>número de clubes completos</b>, no de funciones.</p>', 'maestro'],
+    ['¿Cómo fijo el paquete de clubes de un ayuntamiento?', '<ol><li>Abre la <b>hoja de cálculo del ayuntamiento</b> (está en tu Drive; el cliente no tiene acceso a la hoja).</li><li>Pestaña <b>Config_Municipio</b> → fila <b>max_clubes</b> (aparece sola al actualizar a Ampliacion v1.4).</li><li>Escribe el valor: <b>0</b> = Ayuntamiento Base · <b>N</b> = paquete de N clubes · <b>vacío</b> = sin límite (solo demos o acuerdos especiales).</li></ol><ul><li>Cuentan todos los clubes dados de alta, también los desactivados. Dar de <b>baja</b> un club libera la plaza.</li><li>Al llegar al límite, <b>+ Nuevo club</b> se bloquea con el aviso «amplía el paquete con Escuela&amp;Deporte».</li><li>En la maestra no hay límite: es donde se alojan los clubes SOLO CLUBES.</li><li>En <b>Mis clubes</b> el ayuntamiento ve «X de N clubes de tu paquete».</li></ul>', 'maestro', 'instancias'],
+    ['¿Cómo doy de alta un ayuntamiento nuevo?', '<ol><li>Hoja de cálculo nueva → Extensiones → Apps Script.</li><li>Pega <b>Código.gs</b>, <b>Ampliacion.gs</b> y el HTML <b>Index</b>.</li><li>Ejecuta <b>setupSistema</b> y apunta la contraseña temporal de admin.</li><li>Config_Municipio: municipio, organismo, delegado_municipal, email_alertas, <b>tipo_instancia = CLON</b> y <b>max_clubes</b> según el producto contratado.</li><li>Implementar → Nueva implementación → Aplicación web (Yo · Cualquier usuario) → copia la URL /exec.</li><li>En la maestra: <b>Ayuntamientos → + Nuevo</b> (código, nombre y URL).</li><li>Entrega <b>admin@código</b> y la contraseña temporal. Contrato de encargo: Documentación.</li></ol><p>Mejora prevista: botón «Crear ayuntamiento» que automatice los pasos 1 a 4 y 6.</p>', 'maestro', 'instancias'],
+    ['¿Cómo doy de alta un club SOLO CLUBES?', '<ol><li>En la maestra: <b>Mis clubes → + Nuevo club</b>. Se crea su hoja en la carpeta «EntornoSeguro · Clubes».</li><li>Copia las claves: incluyen el enlace directo <b>?perfil=club</b>. La contraseña se muestra una sola vez.</li><li>En <b>Gestionar</b>, descarga el <b>contrato de encargo</b> club ↔ Escuela&amp;Deporte y la ficha DPD si va a usar Incidencias (en clubes sin DPD, acuerdo de su junta directiva).</li><li>Al entrar, el club ve los <b>Primeros pasos</b> y después el <b>Siguiente paso recomendado</b>.</li></ol>', 'maestro', 'clubes'],
+    ['¿Qué queda pendiente de decidir?', '<ul><li>Precios: tramos de SOLO CLUBES por número de menores y tamaño de los paquetes municipales.</li><li>Que el producto 2 quepa en un <b>contrato menor de servicios</b>.</li><li>Cómo justifica el ayuntamiento pagar la herramienta para clubes privados (apoyo al cumplimiento del Protocolo Marco en el deporte local).</li><li>Nombre comercial de SOLO CLUBES y criterio del <b>sello de implantación</b>.</li><li>Acuerdos con <b>federaciones</b> como multiplicador.</li></ul>', 'maestro']
+  ]]
+];
+
+const esMaestra = () => !state.club && can('admin') && !state.inst && String((state.cfg || {}).tipo || '').toUpperCase() === 'MAESTRO';
+function guiaVisible(ambito) {
+  if (!ambito) return true;
+  if (ambito === 'mun') return !state.club;
+  if (ambito === 'club') return !!state.club;
+  if (ambito === 'admin') return !state.club && can('admin');
+  if (ambito === 'maestro') return esMaestra();
+  return can(ambito);
+}
+
+function pintarGuia() {
+  const v = $('#view-guia'); if (!v) return;
+  const q = norm(($('#guia-q') || {}).value || '').split(/\s+/).filter(Boolean);
+  let total = 0;
+  const html = GUIA.map(([ico, tema, preguntas, dest]) => {
+    const items = preguntas.filter(p => guiaVisible(p[2]))
+      .filter(p => q.every(w => norm(tema + ' ' + p[0] + ' ' + p[1].replace(/<[^>]+>/g, ' ')).includes(w)));
+    if (!items.length) return '';
+    total += items.length;
+    return `<div class="card guia-tema${dest ? ' guia-destacada' : ''}"><h3>${ico} ${esc(tema)}${dest ? ' <span class="guia-badge">Imprescindible</span>' : ''}</h3>` + items.map(([pr, resp, amb, ir], k) => {
+      const destino = ir && $(`nav button[data-view="${ir}"]`);
+      const nombre = destino ? (destino.querySelector('.l-long') || destino).textContent.replace(/\d+$/, '').trim() : '';
+      return `<details class="guia-item"${q.length || (dest && k === 0) ? ' open' : ''}><summary>${esc(pr)}</summary><div class="md">${resp}` +
+        (destino ? `<p><button type="button" class="link" data-guia-ir="${esc(ir)}">Ir a ${esc(nombre)} →</button></p>` : '') + '</div></details>';
+    }).join('') + '</div>';
+  }).join('');
+  $('#guia-lista').innerHTML = html || '<p class="empty">No hay preguntas con esas palabras.</p>';
+  $('#guia-count').textContent = total + (total === 1 ? ' pregunta' : ' preguntas');
+  $$('[data-guia-ir]').forEach(b => b.onclick = () => show(b.dataset.guiaIr));
+}
+
+function htmlGuia() {
+  const cuerpo = GUIA.map(([ico, tema, preguntas, dest]) => {
+    const items = preguntas.filter(p => p[2] !== 'maestro' && guiaVisible(p[2]));
+    if (!items.length) return '';
+    return `<h2>${dest ? '★ ' : ''}${esc(tema)}${dest ? ' · imprescindible' : ''}</h2>` + items.map(([pr, resp]) => `<h3>${esc(pr)}</h3>${resp}`).join('');
+  }).join('');
+  return plantillaInforme('Guía de uso · Preguntas frecuentes', 'EntornoSeguro · ' + (state.club ? 'Perfil club' : 'Perfil municipal'), cuerpo, false,
+    'EntornoSeguro · Guía de uso. Las decisiones sobre casos corresponden siempre al profesional responsable.');
+}
+
+(() => {
+  const main = document.querySelector('#app main'), nav = $('#menu-principal');
+  if (!main || !nav || $('#view-guia')) return;
+  const st = document.createElement('style');
+  st.textContent = '.guia-item{border-top:1px solid var(--line);padding:2px 0}.guia-item:first-of-type{border-top:0}' +
+    '.guia-item summary{cursor:pointer;font-weight:600;padding:10px 0;min-height:44px;color:var(--ink)}' +
+    '.guia-item summary:hover{color:var(--brand-2)}.guia-item .md{padding:0 0 10px 4px}.guia-tema h3{color:var(--brand)}' +
+    '.guia-destacada{border:2px solid var(--brand-2);border-left-width:8px;background:linear-gradient(0deg,var(--card,#fff),rgba(31,122,90,.06))}' +
+    '.guia-badge{display:inline-block;margin-left:8px;padding:2px 10px;border-radius:999px;background:var(--brand-2);color:#fff;font-size:.75rem;font-weight:700;vertical-align:middle}' +
+    '.matriz-ayuda{display:flex;gap:10px;align-items:center;flex-wrap:wrap;border:1px solid var(--brand-2);border-left-width:6px;border-radius:10px;padding:10px 14px;margin:0 0 14px;background:rgba(31,122,90,.06)}';
+  document.head.appendChild(st);
+  const sec = document.createElement('section'); sec.id = 'view-guia'; sec.className = 'view hidden';
+  sec.innerHTML = `<header><h2>Guía de uso · Preguntas frecuentes</h2><button class="btn ghost" type="button" id="guia-pdf">Descargar guía (PDF)</button></header>
+    <p class="nota">Cómo trabajar con EntornoSeguro, por temas. Pulsa una pregunta para ver la respuesta.</p>
+    <div class="card form"><label>Buscar<input id="guia-q" type="search" placeholder="Ej.: declaración, certificado, contraseña, encuesta"></label><p class="nota" id="guia-count" style="margin:0"></p></div>
+    <div id="guia-lista"></div>`;
+  main.appendChild(sec);
+  const grupo = document.createElement('div'); grupo.className = 'nav-grupo'; grupo.setAttribute('aria-hidden', 'true'); grupo.textContent = '❓ Ayuda';
+  const boton = document.createElement('button'); boton.dataset.view = 'guia';
+  boton.innerHTML = '<span class="l-long">Guía de uso</span><span class="l-short">Guía</span>';
+  boton.onclick = () => { show('guia'); pintarGuia(); };
+  const adm = [...nav.querySelectorAll('.nav-grupo')].find(g => /Administraci/.test(g.textContent));
+  nav.insertBefore(grupo, adm || null); nav.insertBefore(boton, adm || null);
+  $('#guia-q').oninput = pintarGuia;
+  $('#guia-pdf').onclick = () => abrirInforme(htmlGuia());
+})();
+
+// ---------- FICHA AMPLIADA, DIRECTORIO Y PLANTILLAS COMPLETAS (v1.3) ----------
+// Requiere Ampliacion.gs en el servidor. Las plantillas salen completas con los datos de la entidad:
+// los datos no personales van a la IA; los de personas y contactos van como marcadores que la app rellena en local.
+const FICHA_SECCIONES = [
+  ['🏷️ Identificación', [['nombre', 'Nombre de la entidad', 'text', true], ['cif', 'CIF'],
+    ['tipo', 'Naturaleza', ['Club', 'Asociación', 'Escuela deportiva', 'Empresa de servicios', 'Ayuntamiento', 'Otro']],
+    ['n_registro', 'Nº de inscripción registral'], ['domicilio', 'Domicilio social'], ['municipio', 'Municipio'], ['provincia', 'Provincia'],
+    ['web', 'Web o página de la entidad']]],
+  ['🏅 Actividad', [['modalidad', 'Modalidad deportiva'], ['actividades', 'Actividades (escuela, competición, campamento…)', 'textarea'],
+    ['trabaja_menores', '¿Trabaja con menores?', ['SI', 'NO']], ['n_menores', 'Nº aproximado de menores', 'number'],
+    ['edades', 'Edades de los participantes (ej. de 6 a 16 años)'], ['lugar_actividad', 'Instalaciones o lugar habitual'],
+    ['competicion', 'Competición', ['NO', 'SI']], ['desplazamientos', 'Desplazamientos', ['NO', 'SI']], ['pernocta', 'Actividades con pernocta', ['NO', 'SI']],
+    ['ratio', 'Ratio de personas adultas por menores (ej. 1 por cada 10)'], ['direccion_nombre', 'Persona de dirección o coordinación de actividades'],
+    ['direccion_telefono', 'Teléfono de la dirección o coordinación de actividades']]],
+  ['🏛️ Gobierno', [['organo_gobierno', 'Órgano de gobierno (ej. Junta Directiva)'], ['presidencia_nombre', 'Presidente/a'],
+    ['secretaria_nombre', 'Secretario/a'], ['regimen_disciplinario', 'Norma disciplinaria de referencia (estatutos, reglamento interno…)']]],
+  ['🛡️ Protección', [['delegado_nombre', 'Delegado/a de Protección'], ['delegado_email', 'Correo del Delegado/a', 'email'],
+    ['delegado_telefono', 'Teléfono del Delegado/a'], ['fecha_designacion', 'Fecha de designación', 'date'],
+    ['designacion_vigencia', 'Vigencia de la designación (ej. dos temporadas)'], ['suplente_nombre', 'Suplente del Delegado/a'],
+    ['suplente_telefono', 'Teléfono del suplente'], ['suplente_email', 'Correo del suplente', 'email'], ['acepta_protocolo_marco', 'Acepta el Protocolo Marco', ['NO', 'SI']],
+    ['declaracion_fecha', 'Fecha de aprobación de la declaración institucional', 'date'],
+    ['fecha_aceptacion', 'Fecha de aceptación', 'date'], ['protocolo_fecha', 'Fecha de aprobación del protocolo propio', 'date'],
+    ['protocolo_version', 'Versión del protocolo (ej. 1.0)']]],
+  ['📣 Canal de comunicación', [['canal_email', 'Correo del canal', 'email'], ['canal_telefono', 'Teléfono o WhatsApp del canal'],
+    ['canal_buzon', 'Ubicación del buzón'], ['canal_presencial', 'Atención presencial (lugar y horario)'], ['canal_enlace', 'Enlace a formulario o código QR']]],
+  ['📷 Imagen y datos', [['datos_email', 'Correo para ejercer los derechos de protección de datos', 'email'],
+    ['redes_oficiales', 'Redes sociales oficiales (ej. Instagram @entidad)'], ['conservacion_imagenes', 'Plazo de conservación de las imágenes (ej. dos temporadas)']]],
+  ['⏱️ Procedimiento', [['plazo_comunicacion_h', 'Plazo para comunicar al Delegado/a (horas)', 'number'],
+    ['revision_meses', 'Revisión del protocolo (cada cuántos meses)', 'number'], ['observaciones', 'Observaciones', 'textarea'], ['activo', 'Activa', ['SI', 'NO']]]]
+];
+const DIR_CAMPOS = [['servicios_sociales', 'Servicios Sociales Comunitarios (teléfono y dirección)'], ['policia_local', 'Policía Local (teléfono)'],
+  ['fiscalia_menores', 'Fiscalía Provincial · Sección de Menores (teléfono)'], ['centro_salud', 'Centro de salud de referencia (teléfono)'],
+  ['delegado_municipal', 'Delegado/a municipal de Protección (teléfono y correo)'], ['otros', 'Otros recursos locales (uno por línea)', 'textarea']];
+const ETIQ_DATO = {};
+FICHA_SECCIONES.forEach(s => s[1].forEach(c => { ETIQ_DATO[c[0]] = c[1]; }));
+DIR_CAMPOS.forEach(c => { ETIQ_DATO['rec_' + c[0]] = 'Directorio · ' + c[1]; });
+
+let ampliacionPromesa = null;
+function comprobarAmpliacion() {
+  if (!ampliacionPromesa) ampliacionPromesa = API.call('ampliacion').then(() => { state.sinAmpliacion = false; }, () => { state.sinAmpliacion = true; });
+  return ampliacionPromesa;
+}
+
+if (!$('#ficha-estilo')) {
+  const st = document.createElement('style'); st.id = 'ficha-estilo';
+  st.textContent = '.ficha-sec{border:1px solid var(--line);border-radius:10px;margin:0 0 10px;padding:0 12px}' +
+    '.ficha-sec summary{cursor:pointer;font-weight:700;color:var(--brand);padding:10px 0;min-height:44px;display:flex;justify-content:space-between;align-items:center}' +
+    '.ficha-sec summary small{color:var(--muted);font-weight:600}.ficha-sec .fields{padding-bottom:6px}' +
+    '.plant-aviso{background:color-mix(in srgb,var(--warn) 10%,var(--panel));border:1px solid color-mix(in srgb,var(--warn) 40%,transparent);border-radius:10px;padding:10px 14px;margin-bottom:12px}' +
+    '.plant-aviso ul{margin:6px 0 0;padding-left:20px}.plant-ok{color:var(--ok);font-weight:600}';
+  document.head.appendChild(st);
+}
+
+/** Ficha de la entidad ampliada, por bloques plegables. */
+formEntidad = async function (e, despues, resaltar) {
+  e = e || {}; resaltar = resaltar || [];
+  await comprobarAmpliacion();
+  const def = { plazo_comunicacion_h: 24, revision_meses: 12, activo: 'SI', trabaja_menores: 'SI' };
+  const val = k => esc(e[k] !== undefined && e[k] !== '' ? e[k] : (e.id ? '' : (def[k] ?? '')));
+  const pinta = ([n, l, t = 'text', req]) => {
+    if (Array.isArray(t)) return `<label>${esc(l)}<select name="${n}">${t.map(o => `<option value="${esc(o)}" ${String(e[n] ?? def[n] ?? t[0]) === String(o) ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select></label>`;
+    if (t === 'textarea') return `<label class="full">${esc(l)}<textarea name="${n}" rows="2">${val(n)}</textarea></label>`;
+    return `<label>${esc(l)}<input type="${t}" name="${n}" value="${val(n)}" ${req ? 'required' : ''}></label>`;
+  };
+  const lleno = c => e[c[0]] !== undefined && String(e[c[0]]).trim() !== '';
+  const f = $('#modal-form');
+  f.innerHTML = `<h3>${e.id ? 'Ficha de la entidad' : 'Nueva entidad'}</h3>` +
+    (state.sinAmpliacion ? '<p class="aviso-inc">Falta instalar <b>Ampliacion.gs</b> en el servidor: solo se guardarán los campos básicos.</p>' : '') +
+    '<p class="nota" style="margin:0 0 10px">Cuantos más datos completes, más completos saldrán los documentos de Plantillas, la declaración y el contrato.</p>' +
+    (resaltar.length ? '<p class="plant-aviso" style="margin:0 0 10px">Completa los campos marcados para que el documento salga completo.</p>' : '') +
+    FICHA_SECCIONES.map(([tit, campos], i) => `<details class="ficha-sec"${(resaltar.length ? campos.some(c => resaltar.indexOf(c[0]) >= 0) : (i === 0 || !e.id)) ? ' open' : ''}><summary>${esc(tit)} <small>${campos.filter(lleno).length}/${campos.length}</small></summary><div class="fields">${campos.map(pinta).join('')}</div></details>`).join('') +
+    '<div class="actions"><button value="cancel" class="btn ghost" formnovalidate>Cancelar</button><button value="ok" class="btn">Guardar</button></div>';
+  resaltar.forEach(k => { const el = f.querySelector('[name="' + k + '"]'); if (el) { el.style.outline = '3px solid var(--warn)'; el.style.outlineOffset = '1px'; } });
+  const dlg = $('#modal');
+  dlg.oncancel = null;
+  dlg.onclose = async () => {
+    if (dlg.returnValue !== 'ok') return;
+    const d = Object.fromEntries(new FormData(f)); d.id = e.id;
+    const av = avisosFicha(d);
+    if (av.length && !confirm('Revisa estos datos antes de guardar:\n\n• ' + av.map(a => a[1]).join('\n• ') + '\n\n¿Guardar igualmente?')) {
+      return formEntidad(Object.assign({}, e, d), despues, av.map(a => a[0]));
+    }
+    try { await API.call('guardarEntidad', d); }
+    catch (er) {
+      const m = /^DUPLICADO_CLUB:(.*)\|(.*)$/.exec(er.message || '');
+      if (!m) { toast(er.message, true); return; }
+      if (!confirm(`«${m[1]}» ya tiene la aplicación como club alojado (usuario ${m[2]}), con su propia ficha y su propia Matriz.\n\nSi lo das de alta también aquí, tendrás DOS registros que no se sincronizan: cada dato habrá que mantenerlo dos veces y puede contarse doble en los informes.\n\nLo recomendable es seguirlo desde «Mis clubes». ¿Darlo de alta aquí igualmente?`)) return;
+      d.confirmar_duplicado = 'SI';
+      await run(() => API.call('guardarEntidad', d));
+    }
+    toast('Ficha guardada');
+    state.entidades = await run(() => API.call('listarEntidades'));
+    if (!$('#view-entidades').classList.contains('hidden')) loadEntidades();
+    if (typeof despues === 'function') despues();
+  };
+  dlg.returnValue = '';
+  if (!dlg.open) dlg.showModal();
+  const primero = resaltar.map(k => f.querySelector('[name="' + k + '"]')).find(Boolean);
+  if (primero) setTimeout(() => primero.focus(), 50);
+};
+
+// ---- Directorio de recursos locales (tarjeta en Plantillas) ----
+async function pintarDirectorio() {
+  const v = $('#view-plantillas'); if (!v) return;
+  let card = $('#dir-card');
+  const puede = can('escribir') || state.club;
+  if (!card) {
+    card = document.createElement('details'); card.id = 'dir-card'; card.className = 'card';
+    card.innerHTML = `<summary style="cursor:pointer;min-height:40px"><b>📇 Directorio de recursos locales</b> <small id="dir-estado" class="nota"></small></summary>
+      <p class="nota" style="margin:8px 0 12px">${state.club ? 'Teléfonos y direcciones de tu zona que se incluyen en tus protocolos, guías y carteles. Se rellena una vez. Si tu club depende de un ayuntamiento, se usan los suyos mientras no guardes los tuyos.' : 'Teléfonos y direcciones del municipio que se incluyen en protocolos, guías y carteles. Se rellena una vez y sirve para todas las entidades.'}</p>
+      <form id="form-dir" class="form"><div class="fields">${DIR_CAMPOS.map(([k, l, t]) => t === 'textarea'
+        ? `<label class="full">${esc(l)}<textarea name="${k}" rows="2"></textarea></label>` : `<label>${esc(l)}<input name="${k}"></label>`).join('')}</div>
+      ${puede ? '<div class="ia-acciones"><button class="btn" type="submit">Guardar directorio</button></div>' : ''}</form>`;
+    const lista = $('#plant-lista'); v.insertBefore(card, lista);
+    $('#form-dir').onsubmit = async ev => {
+      ev.preventDefault();
+      if (!puede) return;
+      const datosDir = Object.fromEntries(new FormData(ev.target));
+      const avd = avisosDirectorio(datosDir);
+      if (avd.length && !confirm('Revisa estos datos antes de guardar:\n\n• ' + avd.map(a => a[1]).join('\n• ') + '\n\n¿Guardar igualmente?')) {
+        const el = ev.target[avd[0][0]]; if (el) el.focus(); return;
+      }
+      state.dir = await run(() => API.call('guardarDirectorio', datosDir));
+      toast('Directorio guardado'); pintarDirectorio();
+      const act = $('.plantilla.activa'); if (act) prepararPlantilla(act.dataset.plant, act);
+    };
+  }
+  try { state.dir = await API.call('directorio'); } catch (er) { state.dir = {}; $('#dir-estado').textContent = '· requiere Ampliacion.gs'; return; }
+  const fd = $('#form-dir');
+  DIR_CAMPOS.forEach(([k]) => { if (fd[k]) fd[k].value = state.dir[k] || ''; });
+  const n = DIR_CAMPOS.filter(([k]) => state.dir[k]).length;
+  $('#dir-estado').textContent = '· ' + n + ' de ' + DIR_CAMPOS.length + ' completos' + (state.dir.heredado ? ' (heredado del ayuntamiento)' : '');
+}
+const plantLoadOrig = loadPlantillas;
+loadPlantillas = async function () { await plantLoadOrig(); comprobarAmpliacion(); pintarDirectorio(); };
+
+// ---- Plantillas: tareas, datos necesarios y marcadores ----
+const PLANT_TAREAS = {
+  protocolo: 'Redacta el PROTOCOLO DE PROTECCIÓN frente a la violencia de la entidad, completo y listo para que lo apruebe su órgano de gobierno. Apartados: 1. Datos de la entidad y control de versiones. 2. Objeto y ámbito (todas sus actividades). 3. Principios. 4. Delegado/a de Protección y suplente: funciones y contacto. 5. Análisis de riesgos y medidas preventivas adaptados a sus actividades (incluye pernocta y desplazamientos solo si los realiza). 6. Código de conducta (resumen). 7. Protección de datos e imágenes (autorización por canales separados, firma del menor desde 14 años, nunca nombre y apellidos junto a la imagen, sin geolocalización, nunca en vestuarios). 8. Desplazamientos y pernoctas (solo si procede). 9. Procedimiento de comunicación y actuación ante incidentes, con plazos y flujograma en pasos. 10. Canal de comunicación para menores y familias. 11. Formación. 12. Difusión. 13. Revisión. 14. Aprobación y firmas. Anexo A: hoja de registro de comunicación, como formulario con líneas de puntos. Anexo B: directorio de contactos con los marcadores y recursos indicados. Llama a los anexos propios «Anexo A» y «Anexo B», nunca «Anexo I» ni «Anexo II», para no confundirlos con los anexos oficiales de la Orden de 18 de noviembre de 2024 (Anexo I, aceptación del Protocolo Marco; Anexo II, designación del Delegado/a).',
+  codigo: 'Redacta el CÓDIGO DE CONDUCTA de la entidad para sus agentes deportivos (entrenadores, monitores, directivos, voluntariado): conductas esperadas y no permitidas en el trato, contacto físico, comunicación digital y redes sociales, vestuarios, imágenes y, si los realiza, desplazamientos y pernoctas; consecuencias del incumplimiento conforme a la norma disciplinaria indicada; aprobación por el órgano de gobierno. Al final, una HOJA DE ACEPTACIÓN individual con líneas de puntos para nombre y apellidos, DNI, rol, grupo, lugar y fecha, y firma (la app también genera estas hojas ya rellenas desde Agentes deportivos).',
+  designacion: 'Redacta el ACUERDO DE DESIGNACIÓN DEL DELEGADO/A DE PROTECCIÓN adoptado por el órgano de gobierno de la entidad: encabezado, antecedentes normativos (LOPIVI, art. 48, y Protocolo Marco), acuerdo de designación del titular y, si consta, del suplente, funciones, datos de contacto para las comunicaciones, vigencia y firmas de la Presidencia y la Secretaría, más la aceptación del Delegado/a con líneas de puntos para firma y DNI.',
+  canal: 'Redacta el texto de un CARTEL sobre el canal de comunicación para menores y familias: a quién acudir, cómo contactar (solo con los canales indicados), qué se puede contar, qué pasa después, confidencialidad y teléfonos de ayuda. Añade una versión corta para los niños y niñas más pequeños de la entidad: indica su franja a partir de la edad mínima de los participantes y hasta los 11 años (por ejemplo, «de 4 a 11 años»). Es un cartel: frases cortas y directas, sin bloques de fundamento legal (como mucho, una línea final con la norma). Teléfonos de ayuda en el cartel: solo 112, Fundación ANAR 900 20 20 10 y 116 111, más el 900 851 818 en la parte para familias; no incluyas los recursos locales (Servicios Sociales, Policía Local, Fiscalía, centro de salud): son para el Delegado/a, no para el cartel. En la versión infantil, si el dato de atención presencial no está escrito para niños, sustitúyelo por «Habla con él o ella en el entrenamiento».',
+  aut_imagen: 'Redacta la AUTORIZACIÓN FAMILIAR para la captación y el uso de imágenes de menores en la temporada indicada, conforme al RGPD, la LOPDGDD y la LO 1/1982. Apartados: 1. Datos del menor y de la persona tutora (líneas de puntos). 2. Información sobre protección de datos: responsable (la entidad, con sus datos), finalidad, base jurídica (consentimiento, art. 6.1.a RGPD), destinatarios (no se ceden a terceros salvo en los canales que se autoricen; las plataformas de redes sociales tienen sus propias condiciones), plazo de conservación, derechos y cómo ejercerlos, derecho a reclamar ante la Agencia Española de Protección de Datos (www.aepd.es) y revocación en cualquier momento, con retirada de las publicaciones de los canales propios de la entidad a la mayor brevedad. 3. Compromisos de la entidad al publicar: nunca nombre y apellidos junto a la imagen, sin geolocalización ni datos de horarios o lugares habituales, nunca en vestuarios, duchas o situaciones que afecten a la dignidad del menor, y solo imágenes tomadas en actividades de la entidad. 4. Tabla de consentimientos separados con columnas «SÍ autorizo» y «NO autorizo» y casillas ☐: web, redes sociales oficiales, prensa y medios, uso técnico e interno; indica que una casilla sin marcar equivale a «NO autorizo». 5. Consentimiento del propio menor: si tiene 14 años o más, firma también él o ella (art. 7 LOPDGDD y art. 3 LO 1/1982). 6. Firma: si firma una sola persona progenitora, declara que actúa con el conocimiento y la conformidad de la otra cuando ambas ejercen la patria potestad. Lugar y fecha de firma EN BLANCO: escribe una sola vez la línea «En ……………, a …… de …………… de ……», sin anteponer otra palabra, porque cada familia firma un día distinto; esta regla prevalece sobre la de fechas. Vigencia: la temporada indicada, salvo revocación.',
+  aut_desplaz: 'Redacta la AUTORIZACIÓN FAMILIAR para el desplazamiento o la actividad descrita. Apartados: 1. Datos de la actividad: denominación, fechas, destino, lugar y hora de salida y de regreso, transporte, alojamiento, persona responsable y teléfono durante la actividad, y número de personas adultas acompañantes (si hay pernocta, distribución de habitaciones por edad y sexo, nunca un adulto con un menor). 2. Datos del menor y de la persona tutora, y dos contactos de emergencia (líneas de puntos). 3. Información de salud que la familia quiera comunicar para atender al menor durante la actividad (alergias, medicación con pauta, otras necesidades), con la nota de que es voluntaria, se usa solo para esta actividad y se destruye al terminar; no la justifiques con la LOPIVI. 4. Normas de convivencia y recordatorio del protocolo de protección de la entidad. 5. Autorizaciones: participación, transporte y actuación urgente bajo indicación sanitaria; recogida al regreso por la persona tutora o por quien autorice por escrito. 6. Información básica de protección de datos: responsable, finalidad, base jurídica (consentimiento; para los datos de salud, consentimiento explícito, art. 9.2.a RGPD), conservación limitada a la actividad, derechos y reclamación ante la AEPD (www.aepd.es). 7. Firma: si firma una sola persona progenitora, declara que actúa con el conocimiento y la conformidad de la otra cuando ambas ejercen la patria potestad. Lugar y fecha de firma EN BLANCO: escribe una sola vez la línea «En ……………, a …… de …………… de ……», sin anteponer otra palabra, porque cada familia firma un día distinto; esta regla prevalece sobre la de fechas.',
+  actuacion: 'Redacta una GUÍA RÁPIDA DE ACTUACIÓN ANTE INCIDENTES (una página) para monitores y entrenadores: qué hacer y qué no hacer ante una sospecha o una revelación, protección inmediata del menor, comunicación al Delegado/a en el plazo indicado, registro de hechos objetivos, cuándo llamar a emergencias o a Servicios Sociales y deber de comunicación (LOPIVI, arts. 15 y 16). Incluye: si hay riesgo inmediato, primero el 112; escuchar con calma sin interrogar ni pedir detalles; no prometer secreto (sí discreción); no confrontar a la persona señalada ni investigar por cuenta propia; anotar las palabras literales del menor, con fecha y hora, sin interpretaciones; preservar mensajes o pruebas sin reenviarlos. Termina con un cuadro de contactos: Delegado/a (marcadores), 112, 116 111, Fundación ANAR 900 20 20 10, 900 851 818 y los recursos locales indicados.',
+  familias: 'Redacta una CARTA a las familias para la temporada, presentando el sistema de protección de la entidad: compromiso, Delegado/a de Protección y cómo contactar, medidas principales, uso de imágenes (la familia autoriza cada canal por separado; a partir de 14 años firma también el menor), canal de comunicación con los teléfonos 116 111 y Fundación ANAR 900 20 20 10, y participación de los menores mediante encuestas anónimas. Tono cercano, una página, firmada por la Presidencia en nombre del órgano de gobierno.'
+};
+PLANT_TAREAS.declaracion = 'Redacta la DECLARACIÓN INSTITUCIONAL de compromiso con la protección de la infancia y la adolescencia frente a la violencia (requisito A1 del Protocolo Marco andaluz, Anexo 0A), aprobada por el órgano de gobierno de la entidad. Estructura: encabezado con los datos de la entidad; exposición breve (LOPIVI, Ley 4/2021 de Andalucía y Protocolo Marco aprobado por Orden de 18 de noviembre de 2024); declaración de tolerancia cero frente a cualquier forma de violencia y de primacía del interés superior del menor sobre el resultado deportivo; compromisos concretos y verificables (aceptar el Protocolo Marco, designar Delegado/a de Protección y suplente, aprobar y difundir un protocolo propio y un código de conducta, analizar los riesgos de sus actividades, exigir el certificado negativo del Registro Central de Delincuentes Sexuales y de Trata de Seres Humanos a todo el personal, formar a sus agentes deportivos, disponer de un canal de comunicación seguro y confidencial, escuchar y hacer partícipes a los menores, proteger sus datos e imágenes, y revisar el sistema cada temporada); difusión de la declaración (web, redes oficiales, instalaciones y familias); certificación de la Secretaría del acuerdo con el visto bueno de la Presidencia, con la fecha de aprobación indicada. Una o dos páginas, tono institucional y claro.';
+if (!PLANTILLAS.some(p => p[0] === 'declaracion')) PLANTILLAS.unshift(['declaracion', 'Declaración institucional (A1)', 'Compromiso de la entidad aprobado por su órgano de gobierno (Anexo 0A).']);
+PLANTILLAS.forEach(p => { if (PLANT_TAREAS[p[0]]) p[3] = PLANT_TAREAS[p[0]]; });
+
+const PLANT_REQ = {
+  protocolo: ['municipio', 'provincia', 'actividades', 'organo_gobierno', 'presidencia_nombre', 'secretaria_nombre', 'delegado_nombre', 'delegado_telefono', 'delegado_email',
+    'canal_email|canal_telefono|canal_buzon', 'protocolo_fecha', 'rec_servicios_sociales', 'rec_policia_local'],
+  codigo: ['municipio', 'actividades', 'organo_gobierno'],
+  declaracion: ['municipio', 'organo_gobierno', 'presidencia_nombre', 'secretaria_nombre', 'declaracion_fecha|fecha_aceptacion'],
+  designacion: ['municipio', 'organo_gobierno', 'fecha_designacion', 'designacion_vigencia', 'delegado_nombre', 'delegado_telefono', 'delegado_email', 'presidencia_nombre', 'secretaria_nombre'],
+  canal: ['delegado_nombre', 'canal_email|canal_telefono|canal_buzon|canal_presencial', 'web|canal_enlace'],
+  aut_imagen: ['cif', 'domicilio', 'municipio', 'datos_email', 'redes_oficiales|web', 'conservacion_imagenes'],
+  aut_desplaz: ['municipio', 'direccion_telefono|delegado_telefono'],
+  actuacion: ['delegado_nombre', 'delegado_telefono', 'rec_servicios_sociales', 'rec_policia_local'],
+  familias: ['municipio', 'presidencia_nombre', 'delegado_nombre', 'delegado_email|delegado_telefono', 'canal_email|canal_telefono|canal_buzon']
+};
+// Datos de personas y contactos: nunca se envían a la IA; se sustituyen en local al pegar la respuesta.
+const PLANT_MARCAS = [
+  ['DELEGADO_NOMBRE', 'delegado_nombre', 'nombre y apellidos del Delegado/a de Protección'], ['DELEGADO_TELEFONO', 'delegado_telefono', 'teléfono del Delegado/a'],
+  ['DELEGADO_EMAIL', 'delegado_email', 'correo del Delegado/a'], ['SUPLENTE_NOMBRE', 'suplente_nombre', 'nombre y apellidos del suplente'],
+  ['SUPLENTE_TELEFONO', 'suplente_telefono', 'teléfono del suplente'], ['SUPLENTE_EMAIL', 'suplente_email', 'correo del suplente'],
+  ['DIRECCION_NOMBRE', 'direccion_nombre', 'nombre de la persona de dirección o coordinación de actividades'], ['PRESIDENCIA_NOMBRE', 'presidencia_nombre', 'nombre y apellidos de la Presidencia'],
+  ['SECRETARIA_NOMBRE', 'secretaria_nombre', 'nombre y apellidos de la Secretaría'], ['DOMICILIO', 'domicilio', 'domicilio social'],
+  ['CANAL_EMAIL', 'canal_email', 'correo del canal de comunicación'], ['CANAL_TELEFONO', 'canal_telefono', 'teléfono o WhatsApp del canal'],
+  ['CANAL_BUZON', 'canal_buzon', 'ubicación del buzón'], ['CANAL_PRESENCIAL', 'canal_presencial', 'lugar y horario de atención presencial'],
+  ['CANAL_ENLACE', 'canal_enlace', 'enlace al formulario o código QR'], ['WEB', 'web', 'web de la entidad'],
+  ['DIRECCION_TELEFONO', 'direccion_telefono', 'teléfono de la dirección o coordinación de actividades'], ['DATOS_EMAIL', 'datos_email', 'correo para ejercer los derechos de protección de datos'],
+  ['REDES', 'redes_oficiales', 'redes sociales oficiales'], ['DELEGADO_MUNICIPAL', 'rec_delegado_municipal', 'contacto del Delegado/a municipal de Protección'],
+  ['RESPONSABLE_NOMBRE', 'ev_responsable', 'nombre de la persona responsable de la actividad'], ['RESPONSABLE_TELEFONO', 'ev_responsable_tel', 'teléfono de contacto durante la actividad']
+];
+const plantDato = (k, e, dir, ev) => {
+  if (k.indexOf('rec_') === 0) return String((dir || {})[k.slice(4)] || '').trim();
+  if (k.indexOf('ev_') === 0) return String((ev || {})[k.slice(3)] || '').trim();
+  return String(e[k] ?? '').trim();
+};
+const fechaLarga = iso => { const s = String(iso || '').slice(0, 10); return /^\d{4}-\d{2}-\d{2}$/.test(s) ? fmtFecha(s) : ''; };
+
+function promptPlantilla(p, e, dir, ev) {
+  const si = v => String(v || '').toUpperCase() === 'SI';
+  const d = (etq, v) => v ? '- ' + etq + ': ' + v : '';
+  const hoy = fechaLarga(hoyISO());
+  const datos = [d('Nombre', e.nombre), d('CIF', e.cif), d('Naturaleza', e.tipo), d('Nº de inscripción registral', e.n_registro),
+    d('Municipio y provincia', [e.municipio, e.provincia].filter(Boolean).join(' (') + (e.provincia && e.municipio ? ')' : '')),
+    d('Modalidad deportiva', e.modalidad), d('Actividades', e.actividades), d('Edades', e.edades), d('Nº aproximado de menores', e.n_menores),
+    d('Instalaciones o lugar habitual', e.lugar_actividad),
+    '- Competición: ' + (si(e.competicion) ? 'sí' : 'no') + ' · Desplazamientos: ' + (si(e.desplazamientos) ? 'sí' : 'no') + ' · Pernocta: ' + (si(e.pernocta) ? 'sí' : 'no'),
+    d('Ratio de personas adultas', e.ratio), d('Órgano de gobierno', e.organo_gobierno), d('Norma disciplinaria de referencia', e.regimen_disciplinario),
+    d('Fecha de designación del Delegado/a', fechaLarga(e.fecha_designacion)), d('Vigencia de la designación', e.designacion_vigencia),
+    d('Hay suplente del Delegado/a', e.suplente_nombre ? 'sí' : ''), d('Aceptación del Protocolo Marco', si(e.acepta_protocolo_marco) ? 'sí' + (e.fecha_aceptacion ? ', el ' + fechaLarga(e.fecha_aceptacion) : '') : ''),
+    d('Fecha de aprobación del protocolo', fechaLarga(e.protocolo_fecha)), d('Versión del protocolo', e.protocolo_version),
+    d('Fecha de aprobación de la declaración institucional', fechaLarga(e.declaracion_fecha || e.fecha_aceptacion)),
+    d('Plazo de conservación de imágenes', e.conservacion_imagenes), d('Plazo para comunicar al Delegado/a', e.plazo_comunicacion_h ? e.plazo_comunicacion_h + ' horas como máximo' : ''),
+    d('Revisión del protocolo', e.revision_meses ? 'cada ' + e.revision_meses + ' meses' : '')].filter(Boolean);
+  const FECHA_APROB = { protocolo: 'protocolo_fecha', codigo: 'protocolo_fecha', declaracion: 'declaracion_fecha|fecha_aceptacion', designacion: 'fecha_designacion' };
+  const fAprob = FECHA_APROB[p[0]] ? fechaLarga(FECHA_APROB[p[0]].split('|').map(k => e[k]).find(Boolean)) : '';
+  if (fAprob) datos.push('- Fecha de aprobación de ESTE documento por el órgano de gobierno: ' + fAprob + ' (úsala en el texto, en la certificación y en el apartado de aprobación; no la dejes en blanco)');
+  if (ev) datos.push(d('Actividad', ev.actividad), d('Fechas', ev.fechas), d('Destino', ev.destino), d('Transporte', ev.transporte), d('Alojamiento', ev.alojamiento), d('Salida (lugar y hora)', ev.salida), d('Regreso (lugar y hora)', ev.regreso), d('Personas adultas acompañantes', ev.adultos));
+  const marcas = PLANT_MARCAS.filter(m => plantDato(m[1], e, dir, ev)).map(m => '- [' + m[0] + ']: ' + m[2]);
+  const rec = [d('Servicios Sociales Comunitarios', dir.servicios_sociales), d('Policía Local', dir.policia_local),
+    d('Fiscalía Provincial · Sección de Menores', dir.fiscalia_menores), d('Centro de salud de referencia', dir.centro_salud),
+    dir.otros ? '- Otros: ' + String(dir.otros).replace(/\n+/g, '; ') : ''].filter(Boolean);
+  return ['Actúas como técnico/a experto/a en protección de la infancia y la adolescencia en el deporte en Andalucía. Redactas documentos que la propia entidad aprueba y utiliza. Marco normativo: LO 8/2021 (LOPIVI), Ley 4/2021 de Infancia y Adolescencia de Andalucía, Ley 5/2016 del Deporte de Andalucía, Decreto 41/2022 y Protocolo Marco (Orden de 18 de noviembre de 2024).', '',
+    'TAREA: ' + p[3], '',
+    'DATOS DE LA ENTIDAD (úsalos tal cual):'].concat(datos.filter(Boolean)).concat(['- Temporada: ' + coordTemporada(), '- Fecha del documento: ' + hoy, ''])
+    .concat(marcas.length ? ['DATOS QUE NO CONOCES: escribe EXACTAMENTE estos marcadores donde corresponda; la aplicación los sustituirá por los datos reales:'].concat(marcas, ['']) : [])
+    .concat(['TELÉFONOS DE AYUDA OFICIALES: Emergencias 112 · Policía Nacional 091 · Guardia Civil 062 · Fundación ANAR 900 20 20 10 · Línea de ayuda a la infancia 116 111 · Junta de Andalucía, notificación de maltrato infantil 900 851 818.'])
+    .concat(rec.length ? ['RECURSOS LOCALES:'].concat(rec) : [])
+    .concat(['', 'REGLAS:',
+      '1. Entrega solo el documento final, completo y listo para aprobar y usar. Sin introducción, comentarios ni preguntas.',
+      '2. No uses corchetes salvo los marcadores indicados. No escribas «VALIDAR», «COMPLETAR», notas para quien lo revisa ni apartados de aspectos a validar.',
+      '3. No inventes datos: nombres, teléfonos, direcciones, fechas o canales. Si un dato no figura aquí, redacta sin él.',
+      '4. Lo que se rellena a mano (firmas, DNI, datos de cada menor o de cada caso) va con líneas de puntos: «……………………………». En los documentos que firma cada persona por separado (autorizaciones, hojas de aceptación, registros), el lugar y la fecha de firma van en blanco, en una sola línea: «En ……………, a …… de …………… de ……».',
+      '5. Los flujogramas, como pasos numerados unidos con «→», sin corchetes ni cajas.',
+      '6. Fechas en formato largo (por ejemplo, ' + hoy + ').',
+      '7. Español de España, lenguaje claro e inclusivo. Cita la norma solo donde aporte.',
+      '8. No atribuyas a una norma lo que es decisión de la entidad. Ejemplo: el art. 57 LOPIVI exige aportar el certificado negativo antes de la actividad; su renovación cada temporada es decisión del club y así debe decirse.',
+      '9. Si tratas los mensajes privados entre personas adultas y menores, usa exactamente esta redacción: «Prohibidos los mensajes privados de una persona adulta a un menor, salvo los estrictamente organizativos y con copia a la familia».',
+      '10. En las listas de conductas permitidas o no permitidas no mezcles excepciones: escríbelas en un párrafo aparte, después de la lista.',
+      '11. El documento termina en la firma o en el último apartado. Nunca añadas al final preguntas, ofrecimientos («Si necesitas…», «Puedo…») ni sugerencias de ampliación.',
+      '12. Sin citas ni referencias numeradas a fuentes web («[1]», enlaces con «#:~:text=»). Las direcciones web, solo como texto (www.aepd.es).',
+      '13. Si los datos de la entidad te llegan en MAYÚSCULAS (municipio, domicilio, órgano de gobierno, modalidad), escríbelos con mayúscula inicial: «Sevilla», «calle San Luis, 8», «Junta Directiva». Respeta tal cual el nombre de la entidad, las siglas y los marcadores.',
+      '14. Medidas mínimas de EntornoSeguro que ningún documento puede contradecir: ninguna persona adulta a solas con un menor en espacios cerrados ni en vehículos; al menos dos personas adultas en desplazamientos y pernoctas; en vestuarios, supervisión desde la puerta y sin móviles ni cámaras; nunca nombre y apellidos junto a la imagen de un menor; mensajes privados según la regla 9.',
+      '', 'FORMATO: Markdown con títulos (#, ##), listas y tablas cuando ayuden.']).join('\n');
+}
+
+function plantillaFaltan(id, e, dir) {
+  return (PLANT_REQ[id] || []).filter(req => !req.split('|').some(k => plantDato(k, e, dir)));
+}
+
+prepararPlantilla = async function (id, boton) {
+  $$('.plantilla').forEach(x => x.classList.toggle('activa', x === boton));
+  const p = PLANTILLAS.find(x => x[0] === id); if (!p) return;
+  await comprobarAmpliacion();
+  if (!state.entidades.length) state.entidades = await run(() => API.call('listarEntidades'));
+  const entId = $('#plant-entidad').value;
+  const e = state.entidades.find(x => x.id === entId) || (state.club ? state.entidades[0] : null);
+  const out = $('#plant-out');
+  if (!e) { out.innerHTML = '<p class="aviso-inc">Elige primero la entidad.</p>'; return; }
+  if (!state.dir) { try { state.dir = await API.call('directorio'); } catch (er) { state.dir = {}; } }
+  const dir = state.dir || {};
+  const faltanReq = plantillaFaltan(id, e, dir);
+  const faltan = faltanReq.map(req => req.split('|').map(k => ETIQ_DATO[k] || k).join(' o '));
+  const faltanFicha = [].concat(...faltanReq.map(r => r.split('|'))).filter(k => k.indexOf('rec_') !== 0);
+  const faltanDir = faltanReq.some(r => r.indexOf('rec_') === 0);
+  const evForm = id === 'aut_desplaz' ? `<div class="card form"><h3>Datos de la salida o actividad</h3><p class="nota" style="margin:0 0 8px">Rellena lo que conozcas; lo que dejes vacío saldrá con líneas para completar a mano.</p><div class="fields">
+      <label class="full">Actividad<input name="actividad" placeholder="Ej.: Campamento de verano"></label><label>Fechas<input name="fechas" placeholder="Ej.: del 1 al 10 de julio de 2027"></label>
+      <label>Destino<input name="destino"></label><label>Transporte<input name="transporte" placeholder="Ej.: autobús contratado"></label><label>Alojamiento<input name="alojamiento"></label>
+      <label>Persona responsable<input name="responsable"></label><label>Teléfono durante la actividad<input name="responsable_tel"></label>
+      <label>Salida (lugar y hora)<input name="salida" placeholder="Ej.: puerta del estadio, 9:00"></label><label>Regreso (lugar y hora)<input name="regreso" placeholder="Ej.: mismo lugar, 14:00 aprox."></label>
+      <label>Nº de personas adultas acompañantes<input name="adultos" type="number" min="1" placeholder="Ej.: 2"></label></div></div>` : '';
+  out.innerHTML = (faltan.length ? `<div class="plant-aviso"><b>Faltan ${faltan.length} dato(s) para que «${esc(p[1])}» salga completo:</b><ul>${faltan.map(f => `<li>${esc(f)}</li>`).join('')}</ul></div>`
+      : `<p class="plant-ok">✓ La ficha de ${esc(e.nombre)} tiene todos los datos para este documento.</p>`) + evForm +
+    `<div class="ia-acciones">${faltanFicha.length ? '<button class="btn" type="button" id="plant-ficha">Completar la ficha</button>' : ''}${faltanDir ? '<button class="btn" type="button" id="plant-dir">Completar el directorio</button>' : ''}<button class="btn${faltan.length ? ' ghost' : ''}" type="button" id="plant-preparar">${faltan.length ? 'Preparar igualmente' : 'Preparar prompt'}</button></div><div id="plant-prompt"></div>`;
+  $('#plant-ficha') && ($('#plant-ficha').onclick = () => formEntidad(e, () => prepararPlantilla(id, boton), faltanFicha));
+  $('#plant-dir') && ($('#plant-dir').onclick = () => { const c = $('#dir-card'); if (!c) return; c.open = true; c.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const k = faltanReq.filter(r => r.indexOf('rec_') === 0).map(r => r.split('|')[0].slice(4))[0]; const el = k && $('#form-dir')[k]; if (el) setTimeout(() => el.focus(), 300); });
+  $('#plant-preparar').onclick = () => {
+    const ev = id === 'aut_desplaz' ? Object.fromEntries([...out.querySelectorAll('.card.form input')].map(i => [i.name, i.value.trim()])) : null;
+    const mapa = {}; PLANT_MARCAS.forEach(m => { const v = plantDato(m[1], e, dir, ev); if (v) mapa[m[0]] = v; });
+    const caja = $('#plant-prompt');
+    mostrarPrompt(caja, promptPlantilla(p, e, dir, ev), { asunto: p[1] + ' · ' + e.nombre, tipo: 'plantilla' });
+    const ta = caja.querySelector('.guardar-res textarea'); if (!ta) return;
+    const nota = document.createElement('p'); nota.className = 'nota'; ta.closest('label').after(nota);
+    const aplicar = () => {
+      const nuevo = ta.value.replace(/\[([A-Z_]+)\]/g, (m, k) => mapa[k] || m);
+      if (nuevo !== ta.value) { ta.value = nuevo; ta.dispatchEvent(new Event('input')); return; }
+      const q = [...new Set(ta.value.match(/\[[^\]\n]{1,60}\]/g) || [])];
+      nota.innerHTML = !ta.value.trim() ? '' : q.length ? '⚠ Quedan ' + q.length + ' dato(s) entre corchetes: ' + esc(q.slice(0, 6).join(', ')) + '. Complétalos en la ficha o al editar el documento.'
+        : '<span class="plant-ok">✓ Datos de la entidad incorporados. Documento completo, listo para revisar y guardar.</span>';
+    };
+    ta.addEventListener('input', aplicar); ta.addEventListener('paste', () => setTimeout(aplicar, 0));
+    caja.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+  if (!faltan.length && id !== 'aut_desplaz') $('#plant-preparar').click();
+  out.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+// ---------- Cartel visual: prompt para ChatGPT (imagen) ----------
+function promptCartelVisual(e, publico, conDatos) {
+  const v = k => conDatos ? String(e[k] || '').trim() : '';
+  const hueco = etq => 'recuadro blanco con la etiqueta «' + etq + ':» y espacio para escribir a mano';
+  const linea = (etq, val) => '- ' + (val ? etq + ': «' + val + '»' : hueco(etq));
+  const entidad = String(e.nombre || '').trim();
+  const nino = publico === 'infantil';
+  const textos = nino ? [
+    'TÍTULO (muy grande): «¿Algo te hace sentir mal? ¡Cuéntalo!»',
+    'MENSAJE: «Tu cuerpo es tuyo. Nadie puede hacerte daño. Nadie puede pedirte un secreto que te haga sentir mal.»',
+    'BLOQUE «Díselo a»:', '- «Tu monitor o monitora»',
+    v('delegado_nombre') ? '- «' + v('delegado_nombre') + ', que cuida de que todos y todas estéis bien»' : '- ' + hueco('Persona que te cuida aquí'),
+    '- «Tu familia o la persona que te cuida»',
+    'BLOQUE «Recuerda»: «Te vamos a escuchar. Te vamos a creer. No es culpa tuya. Contarlo es ser valiente.»',
+    'PIE: «Teléfono gratis: 116 111 · Si hay peligro: 112»'
+  ] : [
+    'TÍTULO (muy grande): «¿Algo no va bien? Cuéntalo.»',
+    'SUBTÍTULO: «Aquí te escuchamos, te creemos y te protegemos.»',
+    'BLOQUE DESTACADO «Habla con nuestro Delegado/a de Protección»:',
+    linea('Nombre', v('delegado_nombre')), linea('Teléfono', v('delegado_telefono')), linea('Correo', v('delegado_email')),
+    'BLOQUE «También puedes»:', '- «Hablar con cualquier monitor/a o persona adulta del equipo»',
+    (v('canal_buzon') ? '- «Dejar una nota, sin firmar si quieres, en el buzón: ' + v('canal_buzon') + '»' : '- «Dejar una nota en el buzón, sin firmar si quieres»'),
+    'BLOQUE «Puedes contarnos»: «Insultos, golpes, amenazas, que te toquen o te miren de forma que no te gusta, mensajes o fotos que te hacen sentir mal, o algo que le pasa a otra persona.»',
+    'BLOQUE «Importante»: «No necesitas pruebas. No es tu culpa. No tendrás ningún problema por contarlo.»',
+    'PIE: «Peligro inmediato: 112 · Fundación ANAR (gratis, 24 h): 900 20 20 10 · Ayuda a la infancia: 116 111»'
+  ];
+  return ['Diseña un CARTEL vertical en formato A3 (proporción 297 × 420) para colgar en las instalaciones de una entidad deportiva.',
+    'Público: ' + (nino ? 'niños y niñas de ' + franjaInfantil(e) + '. Lenguaje muy sencillo, iconos grandes y amables.' : 'adolescentes y familias. Tono cercano y serio a la vez.'),
+    'Objetivo: que cualquier menor sepa en 10 segundos a quién acudir si algo no va bien.', '',
+    'TEXTO DEL CARTEL. Escribe EXACTAMENTE estos textos, letra por letra y cifra por cifra, en este orden:']
+    .concat(textos, entidad ? ['- Nombre de la entidad, pequeño, al pie: «' + entidad + '»'] : [])
+    .concat(['', 'ELEMENTOS RESERVADOS:',
+      '- Arriba a la derecha, un rectángulo blanco vacío para el logotipo. No dibujes ni inventes ningún logotipo.',
+      '- Abajo a la derecha, un cuadrado blanco vacío de unos 5 cm con el texto «Escanea para contarlo». No dibujes ningún código QR.',
+      '', 'DISEÑO:',
+      '- Legible a 2 metros: título muy grande, como máximo 90 palabras en total y mucho espacio en blanco.',
+      '- Tipografía sin serifa, alto contraste, como máximo tres colores más el blanco.',
+      '- Ilustración plana, no fotográfica. Niños y niñas diversos, con ropa deportiva, en actitud tranquila. Nunca escenas de violencia, peligro, llanto ni poca ropa.',
+      '', 'PROHIBIDO: añadir cualquier otro texto, dato, cifra, teléfono, correo, dirección, nombre, número de registro, ley o logotipo que no aparezca arriba.']).join('\n');
+}
+
+const franjaInfantil = e => { const m = String((e && e.edades) || '').match(/\d+/); const n = m ? +m[0] : 6; return (n >= 3 && n < 11 ? n : 6) + ' a 11 años'; };
+// v26: QR del canal (enlace del formulario de la ficha) para pegarlo en los carteles
+function pintarQrCanal(e) {
+  const out = $('#plant-out'); if (!out || !e || $('#qr-canal')) return;
+  const url = String(e.canal_enlace || '').trim();
+  const caja = document.createElement('div'); caja.className = 'card'; caja.id = 'qr-canal';
+  if (!/^https?:\/\/\S+$/i.test(url)) {
+    caja.innerHTML = '<h3>🔳 Código QR del canal</h3><p class="nota">Para generar el QR, escribe el enlace del formulario en la ficha: <b>Mi club → Canal de comunicación → Enlace a formulario o código QR</b>.</p>';
+    out.append(caja); return;
+  }
+  const src = 'https://api.qrserver.com/v1/create-qr-code/?size=600x600&margin=12&format=png&data=' + encodeURIComponent(url);
+  caja.innerHTML = `<h3>🔳 Código QR del canal</h3><div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+    <img src="${esc(src)}" alt="Código QR del formulario del canal" width="160" height="160" style="border:1px solid var(--line);border-radius:8px;background:#fff">
+    <div style="flex:1;min-width:220px"><p class="nota" style="margin:0 0 8px">Lleva al formulario de la ficha:<br><span style="word-break:break-all">${esc(url)}</span></p>
+    <p class="nota" style="margin:0 0 10px">Antes de imprimirlo, comprueba con el móvil que abre el formulario <b>sin iniciar sesión</b> y que no pide nombre ni correo.</p>
+    <div class="ia-acciones"><button class="btn" type="button" id="qr-desc">Descargar QR (PNG)</button></div></div></div>`;
+  out.append(caja);
+  $('#qr-desc').onclick = async () => {
+    try {
+      const r = await fetch(src); if (!r.ok) throw new Error();
+      const b = await r.blob(), a = document.createElement('a');
+      a.href = URL.createObjectURL(b); a.download = 'QR-canal-' + String(e.nombre || 'club').replace(/[^\w-]+/g, '_') + '.png';
+      document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    } catch (er) { window.open(src, '_blank', 'noopener'); toast('Se ha abierto el QR en otra pestaña: botón derecho → Guardar imagen como…'); }
+  };
+}
+function pintarCartelVisual(e) {
+  const out = $('#plant-out'); if (!out || !e) return;
+  const caja = document.createElement('details'); caja.className = 'card'; caja.id = 'cartel-visual'; caja.open = true;
+  caja.innerHTML = `<summary><b>🎨 Cartel visual con ChatGPT</b></summary>
+    <p class="nota" style="margin:8px 0">Prompt para generar la imagen del cartel. Solo lleva textos breves, sin datos internos de la entidad.</p>
+    <div class="form"><div class="fields">
+      <label>Público<select name="publico"><option value="general">Adolescentes y familias</option><option value="infantil">Niños y niñas de ${franjaInfantil(e)}</option></select></label>
+    </div>
+    <label style="display:flex;gap:10px;align-items:flex-start;margin:10px 0;cursor:pointer"><input type="checkbox" name="datos" style="width:auto;margin-top:3px">
+      <span><b>Incluir nombre y contacto del Delegado/a</b><br><span class="nota">Desactivado: solo diseño, con huecos en blanco para escribir los datos encima (riesgo cero). Activado: el prompt lleva nombre, teléfono, correo y buzón, que se envían a ChatGPT.</span></span></label></div>
+    <div class="ia-acciones"><button class="btn" type="button" id="cv-generar">Generar prompt</button></div>
+    <div id="cv-out"></div>`;
+  out.append(caja);
+  const sel = n => caja.querySelector('[name="' + n + '"]');
+  caja.querySelector('#cv-generar').onclick = () => {
+    const conDatos = sel('datos').checked;
+    const prompt = promptCartelVisual(e, sel('publico').value, conDatos);
+    const res = caja.querySelector('#cv-out'); res.innerHTML = '';
+    const acc = document.createElement('div'); acc.className = 'ia-acciones';
+    const abrir = document.createElement('a'); abrir.className = 'btn'; abrir.target = '_blank'; abrir.rel = 'noopener';
+    abrir.href = 'https://chatgpt.com/?q=' + encodeURIComponent(prompt); abrir.textContent = 'Abrir en ChatGPT';
+    const copiar = document.createElement('button'); copiar.type = 'button'; copiar.className = 'btn ghost'; copiar.textContent = 'Copiar prompt';
+    copiar.onclick = () => copiarTexto(prompt);
+    acc.append(abrir, copiar);
+    const aviso = document.createElement('div'); aviso.className = 'plant-aviso';
+    aviso.innerHTML = '<b>Antes de imprimir:</b><ul><li>Comprueba cifra a cifra cada teléfono y correo. Los generadores de imagen se equivocan con números y letras.</li>' +
+      '<li>Pega el logotipo real y el QR del canal en los recuadros blancos (Canva, Word o PowerPoint).</li>' +
+      (conDatos ? '<li>Este prompt incluye el nombre y el contacto del Delegado/a, que van a figurar en un cartel público. No incluye ningún otro dato de la entidad.</li>' : '') + '</ul>';
+    const pre = document.createElement('pre'); pre.className = 'out prompt'; pre.textContent = prompt;
+    res.append(acc, aviso, pre);
+  };
+}
+
+(function () {
+  const base = prepararPlantilla;
+  prepararPlantilla = async function (id, boton) {
+    await base(id, boton);
+    if (id !== 'canal') return;
+    const entId = $('#plant-entidad') && $('#plant-entidad').value;
+    const e = (state.entidades || []).find(x => x.id === entId) || (state.club ? (state.entidades || [])[0] : null);
+    pintarQrCanal(e);
+    pintarCartelVisual(e);
+  };
+})();
+
+// ---------- CLUBES · ENTREGA 1: acceso, primeros pasos, siguiente paso y validación de datos ----------
+// Validación de CIF y teléfonos (avisos, nunca bloquea el guardado).
+function cifInfo(v) {
+  const c = String(v || '').toUpperCase().replace(/[\s.\-]/g, '');
+  if (!c) return null;
+  if (/^[0-9XYZ]\d{7}[A-Z]$/.test(c)) return { ok: true, letra: c[0], persona: true };
+  if (!/^[ABCDEFGHJNPQRSUVW]\d{7}[0-9A-J]$/.test(c)) return { ok: false };
+  const d = c.slice(1, 8).split('').map(Number);
+  let suma = d[1] + d[3] + d[5];
+  [0, 2, 4, 6].forEach(i => { const x = d[i] * 2; suma += Math.floor(x / 10) + (x % 10); });
+  const ctrl = (10 - (suma % 10)) % 10, ult = c[8], letraCtrl = 'JABCDEFGHI'[ctrl];
+  const ok = 'NPQRSW'.includes(c[0]) ? ult === letraCtrl : 'ABEH'.includes(c[0]) ? ult === String(ctrl) : (ult === String(ctrl) || ult === letraCtrl);
+  return { ok, letra: c[0] };
+}
+const TEL_CORTOS = ['112', '091', '092', '062', '061', '080', '085', '016', '116111', '116000'];
+function telValido(v) {
+  const t = String(v || '').replace(/(\d)[\s.\-]+(?=\d)/g, '$1').replace(/(\+|00)34(?=\d{9}\b)/g, '');
+  return (t.match(/\d+/g) || []).some(n => (n.length === 9 && /^[6789]/.test(n)) || TEL_CORTOS.includes(n));
+}
+function avisosFicha(d) {
+  const av = [], ci = cifInfo(d.cif), tipo = String(d.tipo || '');
+  if (ci && !ci.ok) av.push(['cif', 'El CIF «' + d.cif + '» no tiene un formato válido (letra + 7 cifras + control).']);
+  else if (ci && ci.persona) av.push(['cif', 'El CIF «' + d.cif + '» parece un DNI o NIE de una persona, no el de la entidad.']);
+  else if (ci) {
+    const esperada = { Club: 'G', 'Asociación': 'G', 'Escuela deportiva': 'G', Ayuntamiento: 'P' }[tipo];
+    if (esperada && ci.letra !== esperada) av.push(['cif', 'El CIF empieza por «' + ci.letra + '», pero una entidad de tipo «' + tipo + '» suele empezar por «' + esperada + '»' + (ci.letra === 'P' ? ' (la P es de ayuntamientos y entidades locales)' : '') + '.']);
+  }
+  [['delegado_telefono', 'Teléfono del Delegado/a'], ['suplente_telefono', 'Teléfono del suplente'], ['canal_telefono', 'Teléfono del canal'],
+    ['direccion_telefono', 'Teléfono de la dirección o coordinación']].forEach(([k, l]) => {
+    if (String(d[k] || '').trim() && !telValido(d[k])) av.push([k, l + ': «' + d[k] + '» no parece un teléfono completo.']);
+  });
+  return av;
+}
+function avisosDirectorio(d) {
+  const av = [];
+  [['servicios_sociales', 'Servicios Sociales'], ['policia_local', 'Policía Local'], ['fiscalia_menores', 'Fiscalía de Menores'], ['centro_salud', 'Centro de salud']].forEach(([k, l]) => {
+    if (String(d[k] || '').trim() && !telValido(d[k])) av.push([k, l + ': «' + d[k] + '» no contiene un teléfono completo.']);
+  });
+  const dm = String(d.delegado_municipal || '').trim();
+  if (dm && !telValido(dm) && !/@/.test(dm)) av.push(['delegado_municipal', 'Delegado/a municipal: indica al menos un teléfono o un correo.']);
+  return av;
+}
+
+// Limpieza de restos que a veces deja la IA al copiar: citas «[1] (https://…#:~:text=…)» y «En En».
+(function () {
+  const base = mdToHtml;
+  mdToHtml = function (t) {
+    t = String(t == null ? '' : t)
+      .replace(/[ \t]*\[\d+\][ \t]*\(?<?https?:\/\/[^\s)>]*#:~:text=[^\s)>]*>?\)?/g, '')
+      .replace(/[ \t]*\(?<?https?:\/\/[^\s)>]*#:~:text=[^\s)>]*>?\)?/g, '')
+      .replace(/\bEn\s+En\b/g, 'En');
+    return base(t);
+  };
+})();
+
+// Modelos que firman las familias: pie de la entidad, sin el aviso interno de «borrador IA».
+(function () {
+  const base = htmlDocumento;
+  htmlDocumento = function (paraWord) {
+    const h = base(paraWord), d = state.doc || {}, f = $('#form-doc'), asunto = (f && f.asunto.value) || d.asunto || '';
+    if (!/^Modelo de autorización/i.test(asunto)) return h;
+    return h.replace(/<h1>Modelo de autorización/i, '<h1>Autorización').replace(/<div class="fecha">[^<]*<\/div>/, '').replace('Borrador generado con apoyo de IA, sujeto a validación profesional.', 'Temporada ' + esc(coordTemporada()) + ' · La entidad conserva el original firmado; la familia puede solicitar una copia.');
+  };
+})();
+
+// Pantalla de acceso: perfiles con nombres claros y enlace directo ?perfil=club.
+(function () {
+  const pa = document.querySelector('.perfil[data-perfil="admin"]'), pc = document.querySelector('.perfil[data-perfil="club"]');
+  if (pa) { pa.querySelector('b').textContent = 'AYUNTAMIENTO / EQUIPO'; pa.querySelector('small').textContent = 'Ayuntamiento, delegado/a, técnicos y entidades con usuario del ayuntamiento'; }
+  if (pc) pc.querySelector('small').textContent = 'Clubes y asociaciones con espacio propio';
+  // Iconos de línea a juego (mismo trazo y color de marca) en lugar de emojis de estilos distintos.
+  const svgI = d => '<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
+  const icA = pa && pa.querySelector('.perfil-ico'), icC = pc && pc.querySelector('.perfil-ico');
+  if (icA) { icA.innerHTML = svgI('<path d="M3 9.5 12 4l9 5.5"/><path d="M4 21h16"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8"/><path d="M4 18h16"/>'); icA.style.color = 'var(--brand)'; }
+  if (icC) { icC.innerHTML = svgI('<path d="M8 3h8l-2.5 6h-3z"/><path d="M8 3l2.5 6M16 3l-2.5 6"/><circle cx="12" cy="15" r="5.5"/><path d="m12 12.3.9 1.8 2 .3-1.45 1.4.35 2-1.8-.95-1.8.95.35-2-1.45-1.4 2-.3z"/>'); icC.style.color = 'var(--accent)'; }
+  const lema = document.querySelector('#login .login-card > p'); if (lema) lema.textContent = 'Protección de menores en el deporte';
+  const base = elegirPerfil;
+  elegirPerfil = function (p) {
+    base(p);
+    $('#login-titulo').textContent = p === 'club' ? 'Acceso MI CLUB' : 'Acceso AYUNTAMIENTO / EQUIPO';
+    let h = $('#login-ayuda');
+    if (!h) { h = document.createElement('p'); h.id = 'login-ayuda'; h.className = 'nota'; h.style.margin = '0 0 8px'; $('#login-titulo').after(h); }
+    h.textContent = p === 'club' ? 'Usuario de tu club. Si tu club está dado de alta por un ayuntamiento: usuario@código.'
+      : 'Tu usuario personal. Si tu ayuntamiento tiene código: usuario@código.';
+  };
+  try {
+    const q = new URLSearchParams(location.search).get('perfil');
+    if ((q === 'club' || q === 'admin') && !ssGet('es_token')) elegirPerfil(q);
+  } catch (e) { /* sin parámetros */ }
+})();
+
+// Panel del club: primeros pasos (asistente de bienvenida) y siguiente paso recomendado.
+const PASO_ORDEN = ['A1', 'A2', 'B1', 'B2', 'G1', 'G2', 'D1', 'D2', 'C1', 'C2', 'I1', 'I2', 'H1', 'H2', 'E1', 'E2', 'K1', 'K2', 'J1', 'F1', 'F2'];
+const PASO_VISTA = { B2: 'formacion', J1: 'formacion', C1: 'riesgos', C2: 'riesgos', K1: 'agentes', K2: 'agentes', E1: 'autorizaciones', F1: 'autorizaciones' };
+const PASO_PLANT = { A1: 'declaracion', G1: 'protocolo', G2: 'familias', D1: 'codigo', I2: 'canal', I1: 'canal', B1: 'designacion', E1: 'aut_imagen', F1: 'aut_desplaz', H1: 'actuacion' };
+const hayVista = v => !!document.querySelector('nav button[data-view="' + v + '"]');
+function irPlantilla(id) {
+  show('plantillas');
+  let n = 0;
+  const t = setInterval(() => {
+    const b = document.querySelector('.plantilla[data-plant="' + id + '"]');
+    if (b || ++n > 40) { clearInterval(t); if (b) prepararPlantilla(id, b); }
+  }, 150);
+}
+
+async function pintarPrimerosPasos() {
+  const v = $('#view-panel'); if (!v || !state.club) return;
+  let card = $('#pasos-card');
+  if (!card) {
+    card = document.createElement('div'); card.id = 'pasos-card'; card.className = 'card';
+    v.querySelector('header').after(card);
+    if (!$('#pasos-estilo')) {
+      const st = document.createElement('style'); st.id = 'pasos-estilo';
+      st.textContent = '#pasos-card{border:2px solid var(--brand-2)}.pasos{list-style:none;margin:10px 0 0;padding:0}' +
+        '.pasos li{display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line);flex-wrap:wrap}' +
+        '.pasos li:first-child{border-top:0}.pasos .n{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:var(--bg);flex:none}' +
+        '.pasos li.hecho .n{background:var(--ok);color:#fff}.pasos li.hecho .t{color:var(--muted)}.pasos .t{flex:1;min-width:200px}' +
+        '.pasos li.actual{background:color-mix(in srgb,var(--brand-2) 8%,transparent);border-radius:10px;padding:10px}' +
+        '.siguiente{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.siguiente .t{flex:1;min-width:220px}' +
+        '.pasos-barra{height:8px;border-radius:4px;background:var(--bg);overflow:hidden;margin-top:6px}.pasos-barra i{display:block;height:100%;background:var(--ok)}';
+      document.head.appendChild(st);
+    }
+  }
+  card.innerHTML = '<p class="empty">Preparando tus próximos pasos…</p>';
+  const ok = p => p.then(x => x, () => null);
+  const ents = state.entidades.length ? state.entidades : (await ok(API.call('listarEntidades'))) || [];
+  if (ents.length) state.entidades = ents;
+  const e = ents[0];
+  if (!e) { card.innerHTML = '<h3>👋 Primeros pasos</h3><p>Empieza creando la ficha de tu entidad.</p><button class="btn" type="button" id="paso-crear">Crear la ficha</button>'; $('#paso-crear').onclick = () => formEntidad({}, () => pintarPrimerosPasos()); return; }
+  const [mat, ag, enc] = await Promise.all([ok(API.call('matriz', { entidad_id: e.id })), ok(API.call('listarAgentes', {})), ok(API.call('listarEncuestas', {}))]);
+  const est = {}; (mat || []).forEach(r => { est[r.codigo] = r; });
+  const cumple = c => est[c] && ['cumple', 'no_aplica'].includes(est[c].estado);
+  const faltan = campos => campos.filter(k => !String(e[k] ?? '').trim() || (k === 'acepta_protocolo_marco' && e[k] !== 'SI'));
+  const recargar = () => { state.entidades = []; pintarPrimerosPasos(); };
+  const f1 = faltan(['nombre', 'cif', 'municipio', 'provincia', 'modalidad', 'edades']);
+  const f2 = faltan(['delegado_nombre', 'delegado_telefono', 'delegado_email', 'acepta_protocolo_marco']);
+  const docs = ['G1', 'D1', 'I1'].filter(c => !cumple(c));
+  const pasos = [
+    ['Completa la ficha del club', 'Identificación y actividad: con ella salen completos los documentos.', !f1.length, 'Abrir la ficha', () => formEntidad(e, recargar, f1)],
+    ['Delegado/a de Protección y Protocolo Marco', 'Nombre, teléfono y correo del Delegado/a, y aceptación del Protocolo Marco (Anexo I).', !f2.length, 'Completar', () => formEntidad(e, recargar, f2)],
+    ['Documentos básicos', 'Protocolo, código de conducta y cartel del canal. Genéralos en Plantillas y márcalos después en la Matriz (G1, D1, I1).', !docs.length,
+      can('ia') ? 'Ir a Plantillas' : 'Ir a la Matriz', () => can('ia') ? irPlantilla({ G1: 'protocolo', D1: 'codigo', I1: 'canal' }[docs[0]] || 'protocolo') : show('matriz')],
+    ['Agentes deportivos', 'Registra a entrenadores, monitores y voluntariado: certificado negativo, código y formación.', !!(ag && ag.length), 'Ir a Agentes', () => show('agentes')],
+    ['Primera encuesta a menores', 'Encuesta anónima de percepción de seguridad, con enlace y cartel QR.', !!(enc && enc.length), 'Ir a Encuestas', () => show('encuestas')]
+  ].filter(p => p[4] && (p[3] !== 'Ir a Agentes' || hayVista('agentes')) && (p[3] !== 'Ir a Encuestas' || hayVista('encuestas')));
+  const hechos = pasos.filter(p => p[2]).length, actual = pasos.findIndex(p => !p[2]);
+  let html = '';
+  if (actual >= 0) {
+    html = `<h3>👋 Primeros pasos · ${hechos} de ${pasos.length}</h3><div class="pasos-barra"><i style="width:${Math.round(hechos * 100 / pasos.length)}%"></i></div><ol class="pasos">` +
+      pasos.map((p, i) => `<li class="${p[2] ? 'hecho' : ''}${i === actual ? ' actual' : ''}"><span class="n">${p[2] ? '✓' : i + 1}</span><span class="t"><b>${esc(p[0])}</b><br><small>${esc(p[1])}</small></span>` +
+        (p[2] ? '' : `<button class="btn${i === actual ? '' : ' ghost'}" type="button" data-paso="${i}">${esc(p[3])}</button>`) + '</li>').join('') + '</ol>';
+  } else {
+    const hoy = hoyISO();
+    const vencido = PASO_ORDEN.map(c => est[c]).find(r => r && r.proxima_revision && String(r.proxima_revision).slice(0, 10) < hoy);
+    const pendiente = vencido || PASO_ORDEN.map(c => est[c]).find(r => r && !['cumple', 'no_aplica'].includes(r.estado));
+    if (pendiente) {
+      const c = pendiente.codigo, vista = PASO_VISTA[c], plant = can('ia') && PASO_PLANT[c];
+      html = `<h3>👉 Siguiente paso recomendado</h3><div class="siguiente"><span class="t"><b>${esc(c)} · ${esc(pendiente.requisito)}</b><br><small>${vencido ? 'Revisión vencida el ' + esc(String(pendiente.proxima_revision).slice(0, 10)) + '. ' : ''}${esc(pendiente.accion_pendiente || pendiente.referencia || '')}</small></span>` +
+        (plant ? `<button class="btn" type="button" id="sig-plant">Generar en Plantillas</button>` : '') +
+        (vista && hayVista(vista) ? `<button class="btn${plant ? ' ghost' : ''}" type="button" id="sig-vista">Ir a ${esc($('nav button[data-view="' + vista + '"]').textContent.trim())}</button>` : '') +
+        `<button class="btn ghost" type="button" id="sig-matriz">Ver en la Matriz</button></div>`;
+    } else {
+      const prox = PASO_ORDEN.map(c => est[c] && est[c].proxima_revision).filter(Boolean).sort()[0];
+      state.proxRevision = prox || ''; state.panelTodoAlDia = true;
+      html = `<h3>✓ Todo al día</h3><p style="margin:0">Todos los requisitos están acreditados.${prox ? ' Próxima revisión: <b>' + esc(String(prox).slice(0, 10)) + '</b>.' : ''}</p>`;
+    }
+  }
+  card.innerHTML = html;
+  if (actual >= 0 || /Siguiente paso/.test(html)) state.panelTodoAlDia = false;
+  card.querySelectorAll('[data-paso]').forEach(b => b.onclick = () => pasos[+b.dataset.paso][4]());
+  const pend = actual < 0 && card.querySelector('#sig-matriz');
+  if (pend) {
+    const r = PASO_ORDEN.map(c => est[c]).find(x => x && ((x.proxima_revision && String(x.proxima_revision).slice(0, 10) < hoyISO()) || !['cumple', 'no_aplica'].includes(x.estado)));
+    $('#sig-matriz').onclick = () => show('matriz');
+    $('#sig-plant') && ($('#sig-plant').onclick = () => irPlantilla(PASO_PLANT[r.codigo]));
+    $('#sig-vista') && ($('#sig-vista').onclick = () => show(PASO_VISTA[r.codigo]));
+  }
+}
+(function () {
+  const base = loadPanel;
+  loadPanel = async function () { await base(); if (state.club) pintarPrimerosPasos(); };
+})();
+
+// ---------- MODELO COMERCIAL: documento (solo maestra) y paquete de clubes en «Mis clubes» ----------
+function htmlModeloComercial() {
+  const t = GUIA.find(g => /Modelo comercial/.test(g[1]));
+  const cuerpo = t ? t[2].map(([pr, resp]) => `<h2>${esc(pr)}</h2>${resp}`).join('') : '';
+  return plantillaInforme('Modelo comercial y versiones', 'EntornoSeguro · Documento interno de Escuela&Deporte', cuerpo, false,
+    'EntornoSeguro · Documento interno. No se entrega a clientes.');
+}
+(function () {
+  const base = pintarGuia;
+  pintarGuia = function () {
+    base();
+    const h = document.querySelector('#view-guia header');
+    let b = $('#guia-comercial');
+    if (esMaestra() && h && !b) {
+      b = document.createElement('button'); b.type = 'button'; b.id = 'guia-comercial'; b.className = 'btn ghost';
+      b.textContent = 'Modelo comercial (PDF)'; b.onclick = () => abrirInforme(htmlModeloComercial());
+      h.appendChild(b);
+    }
+  };
+})();
+(function () {
+  if (typeof loadClubes !== 'function') return;
+  const base = loadClubes;
+  loadClubes = async function () {
+    await base();
+    let p = null; try { p = await API.call('paqueteClubes'); } catch (e) { return; }
+    const v = $('#view-clubes'); if (!v || !p) return;
+    let n = $('#paquete-clubes');
+    if (!n) { n = document.createElement('p'); n.id = 'paquete-clubes'; v.querySelector('header').after(n); }
+    const btn = $('#nuevo-club'), lleno = p.max !== null && p.usados >= p.max;
+    if (btn) btn.disabled = lleno;
+    n.className = lleno ? 'plant-aviso' : 'nota';
+    n.innerHTML = p.maestra ? 'Versión maestra: clubes SOLO CLUBES sin límite · ' + p.usados + ' dados de alta.'
+      : p.max === null ? p.usados + ' clubes dados de alta.'
+      : p.max === 0 ? '<b>Tu contrato no incluye clubes con espacio propio.</b> Tus entidades pueden entrar con usuario «Entidad» (Usuarios). Para clubes completos, amplía el paquete con Escuela&amp;Deporte.'
+      : '<b>' + p.usados + ' de ' + p.max + '</b> clubes de tu paquete.' + (lleno ? ' Has llegado al máximo: da de baja uno o amplía el paquete con Escuela&amp;Deporte.' : '');
+  };
+})();
+
+// ---------- CLUBES · ENTREGA 2: textos del club, panel y kit de bienvenida ----------
+
+// Panel del club: sin la tarjeta «Implantación por entidad» (solo hay una) y alertas a todo el ancho.
+(function () {
+  const base = loadPanel;
+  loadPanel = async function () {
+    await base();
+    const card = $('#panel-entidades') && $('#panel-entidades').closest('.card');
+    if (!card) return;
+    card.classList.toggle('hidden', !!state.club);
+    card.parentElement.style.gridTemplateColumns = state.club ? '1fr' : '';
+  };
+})();
+
+// Mis datos: quién es el gestor del servicio (ayuntamiento o Escuela&Deporte).
+(function () {
+  if (typeof loadMisDatos !== 'function') return;
+  const base = loadMisDatos;
+  loadMisDatos = async function () {
+    await base();
+    const v = $('#view-misdatos'); if (!v) return;
+    v.querySelectorAll('p').forEach(p => {
+      if (/separada de la del ayuntamiento/.test(p.textContent)) p.textContent = 'Los datos del club se guardan en una hoja propia, separada de la de cualquier otra entidad.';
+      if (/como gestor del servicio, solo ve indicadores/.test(p.textContent)) p.dataset.gestor = '1';
+      if (p.dataset.gestor) p.textContent = (state.inst ? 'El ayuntamiento, como gestor del servicio,' : 'Escuela&Deporte, como prestador del servicio,') + ' solo ve indicadores. Cualquier consulta de detalle o copia de tus datos aparece en el registro de abajo.';
+    });
+    v.querySelectorAll('h3').forEach(h => { if (/Registro de accesos del ayuntamiento/.test(h.textContent)) h.textContent = 'Registro de accesos del gestor del servicio'; });
+    if (!state.inst) v.querySelectorAll('#tabla-accesos tbody td:nth-child(2)').forEach(td => { td.textContent = td.textContent.replace(/^Ayuntamiento ·/, 'Escuela&Deporte ·'); });
+    const vacio = v.querySelector('#tabla-accesos .empty');
+    if (vacio) vacio.textContent = 'Nadie ha consultado datos de detalle del club.';
+  };
+})();
+
+// Kit de bienvenida: guía rápida del club (1 página) y mensaje de bienvenida al dar de alta un club.
+function htmlGuiaRapidaClub() {
+  const web = WEB_PUBLICA.replace(/\/$/, '') + '/?perfil=club';
+  const cuerpo =
+    '<h2>1. Cómo entrar</h2><ul><li>Web: <b>' + esc(web) + '</b> · perfil <b>MI CLUB</b>.</li><li>Usuario: el de tu club (con <b>@código</b> si te dio de alta un ayuntamiento).</li><li>La primera vez se pide cambiar la contraseña. Guárdala: solo la tiene el Delegado/a.</li></ul>' +
+    '<h2>2. Primeros pasos (el panel te guía)</h2><ol><li>Ficha del club: identificación y actividad.</li><li>Delegado/a de Protección y aceptación del Protocolo Marco (Anexos I y II, con su registro en la Junta).</li><li>Documentos básicos con <b>Plantillas</b>: protocolo, código de conducta y cartel del canal.</li><li>Agentes deportivos: certificado negativo, código y formación de cada persona.</li><li>Primera encuesta anónima a los menores.</li></ol>' +
+    '<h2>3. Durante la temporada</h2><ul><li>Atiende las <b>Alertas</b>: te avisan de lo pendiente y de lo que caduca.</li><li>Marca en la <b>Matriz</b> lo que vas acreditando y enlaza la evidencia.</li><li>Sigue el <b>Siguiente paso recomendado</b> del panel.</li><li>Al cerrar la temporada: <b>Informes → Memoria</b>.</li></ul>' +
+    '<h2>4. Si ocurre algo</h2><ol><li>Protege al menor y, si hay peligro, llama al <b>112</b>.</li><li>Escucha sin interrogar y no confrontes a nadie.</li><li>Comunica a quien corresponda: Servicios Sociales, 091 / 062, Fiscalía. Junta de Andalucía, maltrato infantil: <b>900 851 818</b>.</li><li>Registra fechas y actuaciones en <b>Incidencias</b>, sin relatos ni datos personales.</li></ol>' +
+    '<h2>5. Ayuda</h2><ul><li>Menú <b>Guía de uso</b>: preguntas frecuentes con buscador.</li><li>Línea de ayuda a la infancia: <b>116 111</b> · Fundación ANAR: <b>900 20 20 10</b>.</li></ul>';
+  return plantillaInforme('Guía rápida del club', 'EntornoSeguro · Protección de menores en el deporte', cuerpo, false, 'EntornoSeguro · Guía rápida para el Delegado/a de Protección del club.');
+}
+(function () {
+  const base = pintarGuia;
+  pintarGuia = function () {
+    base();
+    const h = document.querySelector('#view-guia header');
+    if (h && !$('#guia-rapida') && (state.club || can('admin'))) {
+      const b = document.createElement('button'); b.type = 'button'; b.id = 'guia-rapida'; b.className = 'btn ghost';
+      b.textContent = 'Guía rápida del club (PDF)'; b.onclick = () => abrirInforme(htmlGuiaRapidaClub());
+      h.appendChild(b);
+    }
+  };
+})();
+(function () {
+  if (typeof mostrarClaves !== 'function') return;
+  const base = mostrarClaves;
+  mostrarClaves = function (nombre, usuario, clave) {
+    base(nombre, usuario, clave);
+    const u = state.inst ? usuario + '@' + state.inst : usuario;
+    const web = location.origin + location.pathname + '?perfil=club';
+    const msg = 'Hola:\n\nYa tenéis activo EntornoSeguro para ' + nombre + ', la herramienta para organizar el sistema de protección de menores del club.\n\n' +
+      'Acceso (solo para el Delegado/a de Protección):\n· Web: ' + web + '\n· Perfil: MI CLUB\n· Usuario: ' + u + '\n· Contraseña temporal: ' + clave + ' (se cambia al entrar)\n\n' +
+      'Al entrar, el panel os guía en 5 primeros pasos: ficha del club, Delegado/a y Protocolo Marco, documentos básicos, agentes deportivos y primera encuesta. ' +
+      'En el menú «Guía de uso» tenéis las preguntas frecuentes y la guía rápida en PDF.\n\nUn saludo.';
+    const acc = $('#modal-form .actions');
+    if (acc && !$('#copiar-bienvenida')) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost'; b.id = 'copiar-bienvenida';
+      b.textContent = 'Copiar mensaje de bienvenida'; b.onclick = () => copiarTexto(msg);
+      acc.insertBefore(b, acc.firstChild);
+    }
+  };
+})();
+
+// ---------- Ver contraseña: botón «ojo» en todos los campos de contraseña ----------
+(function () {
+  if (!$('#ojo-estilo')) {
+    const st = document.createElement('style'); st.id = 'ojo-estilo';
+    st.textContent = '.pass-wrap{position:relative;display:block}.pass-wrap input{width:100%;padding-right:52px;box-sizing:border-box}' +
+      '.pass-ojo{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:44px;height:40px;border:0;background:transparent;cursor:pointer;' +
+      'font-size:1.25rem;line-height:1;border-radius:8px;color:var(--muted)}.pass-ojo:hover,.pass-ojo:focus-visible{background:var(--bg);color:var(--ink)}';
+    document.head.appendChild(st);
+  }
+  const OJO = '👁', OCULTO = '🙈';
+  function ponerOjo(inp) {
+    if (inp.dataset.ojo) return;
+    inp.dataset.ojo = '1';
+    const w = document.createElement('span'); w.className = 'pass-wrap';
+    inp.parentNode.insertBefore(w, inp); w.appendChild(inp);
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'pass-ojo';
+    b.textContent = OJO; b.setAttribute('aria-label', 'Mostrar contraseña'); b.title = 'Mostrar contraseña';
+    b.onclick = () => {
+      const ver = inp.type === 'password';
+      inp.type = ver ? 'text' : 'password';
+      b.textContent = ver ? OCULTO : OJO;
+      b.setAttribute('aria-label', ver ? 'Ocultar contraseña' : 'Mostrar contraseña'); b.title = b.getAttribute('aria-label');
+      inp.focus();
+    };
+    w.appendChild(b);
+    if (inp.form) inp.form.addEventListener('submit', () => { inp.type = 'password'; b.textContent = OJO; });
+  }
+  const revisar = raiz => (raiz.querySelectorAll ? raiz.querySelectorAll('input[type="password"]') : []).forEach(ponerOjo);
+  revisar(document);
+  new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => { if (n.nodeType !== 1) return; if (n.matches && n.matches('input[type="password"]')) ponerOjo(n); else revisar(n); })))
+    .observe(document.body, { childList: true, subtree: true });
+})();
+
+// ---------- Alta de club: usuario elegido por el administrador · botones desactivados en gris ----------
+(function () {
+  if (!$('#btn-off-estilo')) {
+    const st = document.createElement('style'); st.id = 'btn-off-estilo';
+    st.textContent = '.btn:disabled,.btn[disabled]{opacity:.45;filter:grayscale(1);cursor:not-allowed;box-shadow:none}';
+    document.head.appendChild(st);
+  }
+  const b = $('#nuevo-club'); if (!b) return;
+  b.onclick = () => {
+    modal('Nuevo club', [['nombre', 'Nombre del club', 'text', true],
+      ['usuario', 'Usuario de acceso (3-30 caracteres, sin espacios ni tildes; vacío = se genera del nombre)'],
+      ['modalidad', 'Modalidad deportiva'], ['cif', 'CIF'], ['email', 'Email de contacto (recibirá las alertas)', 'email']], {}, async d => {
+      d.usuario = String(d.usuario || '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, '');
+      toast('Creando la hoja del club…');
+      const r = await run(() => API.call('crearClub', d));
+      mostrarClaves(d.nombre, r.usuario, r.temporal); loadClubes();
+    });
+  };
+})();
+
+// ---------- Entidades inactivas: ocultas por defecto, al final, en gris y con etiqueta ----------
+let verInactivas = false;
+function marcarInactivas() {
+  const tb = $('#tabla-entidades'); if (!tb || !tb.tBodies[0]) return;
+  const body = tb.tBodies[0];
+  const inact = (state.entidades || []).filter(e => e.activo === 'NO');
+  let n = 0;
+  [...body.rows].forEach(tr => {
+    const b = tr.querySelector('[data-edit]'); if (!b) return;
+    const e = state.entidades.find(x => x.id === b.dataset.edit);
+    if (!e || e.activo !== 'NO') return;
+    n++;
+    tr.classList.add('ent-inactiva'); tr.hidden = !verInactivas;
+    const cel = tr.cells[0];
+    if (cel && !cel.querySelector('.chip-inactiva')) cel.querySelector('b').insertAdjacentHTML('afterend', ' <span class="chip chip-inactiva">Inactiva</span>');
+    body.appendChild(tr);
+  });
+  let pie = $('#pie-inactivas');
+  if (!n) { if (pie) pie.remove(); return; }
+  if (!pie) { pie = document.createElement('p'); pie.id = 'pie-inactivas'; pie.className = 'nota'; tb.closest('.card').appendChild(pie); }
+  pie.innerHTML = `${n} entidad${n === 1 ? '' : 'es'} inactiva${n === 1 ? '' : 's'} · <button type="button" class="link" id="ver-inactivas">${verInactivas ? 'Ocultar' : 'Mostrar'}</button>`;
+  $('#ver-inactivas').onclick = () => { verInactivas = !verInactivas; marcarInactivas(); };
+}
+(function () {
+  if (!$('#inactiva-estilo')) {
+    const st = document.createElement('style'); st.id = 'inactiva-estilo';
+    st.textContent = 'tr.ent-inactiva td{opacity:.55}tr.ent-inactiva td:last-child{opacity:1}.chip-inactiva{background:var(--line);color:var(--ink)}#pie-inactivas{margin:8px 0 0}';
+    document.head.appendChild(st);
+  }
+  const base = loadEntidades;
+  loadEntidades = async function () { await base(); marcarInactivas(); };
+})();
+
+// ---------- Alertas cerradas visibles: 🔕 cerrada pero sigue el problema · ✓ resuelta · Reabrir ----------
+(function () {
+  if (!$('#alertas-cerr-estilo')) {
+    const st = document.createElement('style'); st.id = 'alertas-cerr-estilo';
+    st.textContent = 'tr.al-cerrada td{color:var(--muted)}tr.al-cerrada td .st{opacity:.6}.al-ico{font-size:1.05rem;margin-right:6px;cursor:help}' +
+      'tr.al-sep td{background:var(--bg);font-weight:700;color:var(--ink);font-size:.85rem}#leyenda-alertas{margin:10px 0 0}';
+    document.head.appendChild(st);
+  }
+  const base = loadAlertas;
+  loadAlertas = async function () {
+    await base();
+    let c = [];
+    try { c = await API.call('alertasCerradas'); } catch (e) { return; }
+    const body = $('#tabla-alertas') && $('#tabla-alertas').tBodies[0]; if (!body) return;
+    const orden = { alta: 0, media: 1, baja: 2 };
+    c.sort((x, y) => (x.estado === y.estado ? 0 : x.estado === 'cerrada' ? -1 : 1) || orden[x.prioridad] - orden[y.prioridad]);
+    if (c.length) {
+      body.insertAdjacentHTML('beforeend', `<tr class="al-sep"><td colspan="5">Cerradas (${c.length})</td></tr>` + c.map(x => {
+        const sigue = x.estado === 'cerrada';
+        const ico = sigue ? '<span class="al-ico" title="Cerrada, pero el problema sigue sin resolver">🔕</span>' : '<span class="al-ico" title="Resuelta">✓</span>';
+        const cierre = x.cerrada_fecha ? `<br><small>Cerrada el ${esc(String(x.cerrada_fecha).slice(0, 10))}${x.cerrada_por ? ' por ' + esc(x.cerrada_por) : ''}${sigue ? ' · el problema sigue' : ' · resuelta'}</small>` : '';
+        return `<tr class="al-cerrada"><td>${ico}<span class="st ${x.prioridad === 'alta' ? 'bad' : x.prioridad === 'media' ? 'warn' : 'muted'}">${esc(x.prioridad)}</span></td>
+          <td>${esc(x.tipo)}</td><td>${esc(x.mensaje)}${cierre}</td><td>${esc(x.fecha_limite) || '—'}</td>
+          <td>${sigue && can('escribir') ? `<button class="link" data-reabrir="${esc(x.id)}">Reabrir</button>` : ''}</td></tr>`;
+      }).join(''));
+    }
+    const vacia = body.querySelector('td.empty'); if (vacia && c.length) vacia.textContent = 'Sin alertas abiertas.';
+    $$('[data-reabrir]').forEach(b => b.onclick = async () => { await run(() => API.call('reabrirAlerta', { id: b.dataset.reabrir })); toast('Alerta reabierta'); loadAlertas(); });
+    let ley = $('#leyenda-alertas');
+    if (!ley) { ley = document.createElement('p'); ley.id = 'leyenda-alertas'; ley.className = 'nota'; $('#tabla-alertas').closest('.card').appendChild(ley); }
+    ley.textContent = '🔕 Cerrada, pero el problema sigue: el recálculo diario lo comprueba. ✓ Resuelta: ya no se da. Cerrar una alerta no resuelve el requisito; la Matriz sigue indicándolo.';
+  };
+})();
+(function () {
+  if (typeof loadClubes !== 'function') return;
+  const base = loadClubes;
+  loadClubes = async function () {
+    await base();
+    $$('#tabla-clubes [data-club]').forEach(b => {
+      const c = (state.clubes || []).find(x => x.id === b.dataset.club);
+      const n = c && c.cerradas_sin_resolver;
+      if (!n) return;
+      const td = b.closest('tr').cells[4];
+      if (td && !td.querySelector('.al-ico')) td.insertAdjacentHTML('beforeend', ` <span class="al-ico" title="${n} alerta(s) cerrada(s) sin resolver">🔕 ${n}</span>`);
+    });
+  };
+})();
+
+// ---------- Usabilidad: botón «Arriba» flotante y acciones del documento en la parte superior ----------
+(function () {
+  if (!$('#arriba-estilo')) {
+    const st = document.createElement('style'); st.id = 'arriba-estilo';
+    st.textContent = '#btn-arriba{position:fixed;right:calc(20px + env(safe-area-inset-right, 0px));bottom:calc(20px + env(safe-area-inset-bottom, 0px));z-index:60;' +
+      'min-height:48px;padding:0 18px;border-radius:24px;border:0;background:var(--brand);color:#fff;font:inherit;font-weight:700;cursor:pointer;' +
+      'box-shadow:0 4px 14px rgba(0,0,0,.25);opacity:0;transform:translateY(12px);pointer-events:none;transition:opacity .2s,transform .2s}' +
+      '#btn-arriba.visible{opacity:1;transform:none;pointer-events:auto}#btn-arriba:focus-visible{outline:3px solid var(--accent);outline-offset:2px}' +
+      '@media (prefers-reduced-motion:reduce){#btn-arriba{transition:none}}' +
+      '#form-doc > .ia-acciones.arriba{margin:4px 0 12px;padding-bottom:12px;border-bottom:1px solid var(--line)}';
+    document.head.appendChild(st);
+  }
+  if (!$('#btn-arriba')) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.id = 'btn-arriba'; b.textContent = '↑ Arriba'; b.setAttribute('aria-label', 'Volver arriba'); b.tabIndex = -1;
+    b.onclick = () => {
+      const suave = !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+      window.scrollTo({ top: 0, behavior: suave ? 'smooth' : 'auto' });
+      const h = document.querySelector('#app .view:not(.hidden) h2'); if (h) { h.tabIndex = -1; setTimeout(() => h.focus({ preventScroll: true }), 400); }
+    };
+    document.body.appendChild(b);
+    const ver = () => { const on = window.scrollY > 400 && !$('#app').classList.contains('hidden'); b.classList.toggle('visible', on); b.tabIndex = on ? 0 : -1; };
+    window.addEventListener('scroll', ver, { passive: true }); ver();
+  }
+  // Documento: Guardar, Copiar, Word, PDF, Texto y Eliminar justo debajo del asunto, antes del contenido.
+  const f = $('#form-doc'), acc = f && f.querySelector(':scope > .ia-acciones'), modo = f && f.querySelector(':scope > .modo');
+  if (acc && modo) { f.insertBefore(acc, modo); acc.classList.add('arriba'); }
+})();
+
+// v22: acceso destacado a la guía de la Matriz desde la propia pantalla
+(() => {
+  const v = $('#view-matriz'), nota = v && v.querySelector(':scope > p.nota');
+  if (!nota || $('#matriz-ayuda')) return;
+  const d = document.createElement('div'); d.id = 'matriz-ayuda'; d.className = 'matriz-ayuda';
+  d.innerHTML = '<span>⭐ <b>La Matriz es la pieza clave.</b> Cómo leerla, qué hace cada botón y dónde se genera el documento de cada requisito.</span><button class="btn ghost" type="button">Ver la guía de la Matriz</button>';
+  nota.after(d);
+  d.querySelector('button').onclick = () => {
+    show('guia'); const q = $('#guia-q'); if (q) q.value = ''; pintarGuia();
+    const t = $('.guia-destacada'); if (t) { t.scrollIntoView({ behavior: 'smooth' }); const s = t.querySelector('summary'); if (s) s.focus(); }
+  };
+})();
+
+// v23: Matriz · filtro por estado y botón para quitar evidencias
+state.filtroMatriz = state.filtroMatriz || '';
+function matrizMejoras() {
+  const t = $('#tabla-matriz'), rows = state.matriz; if (!t || !rows || !rows.length) return;
+  if (!$('#matriz-mej-est')) {
+    const st = document.createElement('style'); st.id = 'matriz-mej-est';
+    st.textContent = '.matriz-filtro{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}.matriz-filtro button{min-height:40px;padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:inherit;font-weight:600;cursor:pointer}' +
+      '.matriz-filtro button[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:#fff}.matriz-filtro small{opacity:.8;margin-left:4px}' +
+      '.ev-x{border:0;background:none;color:var(--bad,#b42318);cursor:pointer;font-weight:700;padding:2px 6px;margin-left:4px;min-width:28px;min-height:28px}.ev-x:hover{background:color-mix(in srgb,var(--bad,#b42318) 12%,transparent);border-radius:6px}';
+    document.head.appendChild(st);
+  }
+  // Quitar evidencia
+  if (can('escribir')) rows.forEach(r => {
+    if (!r.evidencias.length) return;
+    const tr = [...t.querySelectorAll('tbody tr')].find(x => !x.classList.contains('group') && (x.querySelector('td b') || {}).textContent === r.codigo), td = tr && tr.children[2];
+    if (!td) return;
+    td.innerHTML = r.evidencias.map(v => (v.url_drive ? `<a href="${esc(v.url_drive)}" target="_blank" rel="noopener">${esc(v.titulo)}</a>` : esc(v.titulo)) +
+      `<button type="button" class="ev-x ev-ed" data-eved="${esc(v.id)}" title="Cambiar el título" aria-label="Cambiar el título de ${esc(v.titulo)}">✏️</button>` +
+      `<button type="button" class="ev-x" data-evx="${esc(v.id)}" title="Quitar esta evidencia" aria-label="Quitar la evidencia ${esc(v.titulo)}">✕</button>`).join('<br>');
+  });
+  // v64: renombrar una evidencia sin quitarla (mismo enlace, solo cambia el título)
+  $$('[data-eved]').forEach(x => x.onclick = () => {
+    const r = rows.find(y => y.evidencias.some(v => v.id === x.dataset.eved)), v = r && r.evidencias.find(y => y.id === x.dataset.eved); if (!v) return;
+    modal(`${r.codigo} · Cambiar el título de la evidencia`, [['titulo', 'Título de la evidencia', 'text', true]], { titulo: v.titulo }, async d => {
+      const t = String(d.titulo || '').trim(); if (!t || t === v.titulo) return;
+      try { await run(() => API.call('guardarEvidencia', { id: v.id, entidad_id: r.entidad_id || $('#matriz-entidad').value, requisito_codigo: r.codigo, titulo: t })); } catch (e) { return; }
+      toast('Título actualizado'); loadMatriz();
+    });
+    const f = $('#modal-form'), inp = f.titulo, modelo = (REQ_COMO[r.codigo] || [])[1];
+    const mayus = v.titulo === v.titulo.toUpperCase() && /[A-ZÁÉÍÓÚÑ]{3}/.test(v.titulo);
+    f.querySelector('h3').insertAdjacentHTML('afterend', `<p class="nota" style="margin:0 0 10px">El enlace no cambia. Usa un título descriptivo, sin mayúsculas sostenidas ni nombres de personas.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px">${mayus ? '<button type="button" class="btn ghost" id="ev-minus">Pasar a minúsculas</button>' : ''}${modelo ? `<button type="button" class="btn ghost" id="ev-modelo">Usar el título recomendado</button>` : ''}</div>
+      ${modelo ? `<p class="nota" style="margin:0 0 10px">Recomendado: «${esc(modelo)}». Cambia «dd/mm/aaaa», «vX» o «n de n» por tus datos.</p>` : ''}`);
+    const SIGLAS = /^(I{1,3}|IV|VI{0,3}|IX|X|PDF|CIF|DNI|NIE|QR|IA|RGPD|LOPIVI|LOPDGDD|BOJA|BOE|CD|UD|CF|AD|CDS|UPO|\d+[A-Z]?)$/;
+    const minus = $('#ev-minus'); if (minus) minus.onclick = () => {
+      const l = v.titulo.split(/(\s+)/).map(w => SIGLAS.test(w.replace(/[^\wÁÉÍÓÚÑ]/g, '')) ? w : w.toLocaleLowerCase('es')).join('');
+      inp.value = l.charAt(0).toLocaleUpperCase('es') + l.slice(1); inp.focus(); };
+    const mod = $('#ev-modelo'); if (mod) mod.onclick = () => { inp.value = modelo; inp.focus(); const i = modelo.search(/dd\/mm\/aaaa|vX|n de n/); if (i >= 0) inp.setSelectionRange(i, i + (modelo.match(/dd\/mm\/aaaa|vX|n de n/)[0].length)); };
+  });
+  $$('[data-evx]').forEach(x => x.onclick = async () => {
+    const r = rows.find(y => y.evidencias.some(v => v.id === x.dataset.evx)), v = r && r.evidencias.find(y => y.id === x.dataset.evx);
+    if (!v || !confirm(`¿Quitar la evidencia «${v.titulo}» de ${r.codigo}?\n\nSolo se quita el enlace de la Matriz: el documento sigue en Drive. El estado del requisito no cambia.`)) return;
+    try { await run(() => API.call('eliminarEvidencia', { id: v.id })); }
+    catch (e) { if (/desconocida/i.test(e.message)) toast('Falta actualizar Ampliacion.gs a la v1.7', true); return; }
+    toast('Evidencia quitada'); loadMatriz();
+  });
+  // Filtro por estado
+  let f = $('#matriz-filtro');
+  if (!f) { f = document.createElement('div'); f.id = 'matriz-filtro'; f.className = 'matriz-filtro'; f.setAttribute('role', 'group'); f.setAttribute('aria-label', 'Filtrar requisitos por estado');
+    const card = t.closest('.card') || t; card.parentNode.insertBefore(f, card); }
+  const cuenta = k => rows.filter(r => (r.estado || 'pendiente') === k).length;
+  const ops = [['', 'Todos', rows.length]].concat(Object.keys(ESTADOS).map(k => [k, ESTADOS[k][0] + ' ' + ESTADOS[k][2], cuenta(k)]));
+  if (state.filtroMatriz && !cuenta(state.filtroMatriz)) state.filtroMatriz = '';
+  f.innerHTML = ops.map(([k, l, n]) => `<button type="button" data-fm="${k}" aria-pressed="${state.filtroMatriz === k}"${k && !n ? ' disabled' : ''}>${esc(l)}<small>${n}</small></button>`).join('');
+  $$('[data-fm]').forEach(b => b.onclick = () => { state.filtroMatriz = b.dataset.fm; matrizMejoras(); });
+  const fil = state.filtroMatriz;
+  let grupo = null, visibles = 0;
+  [...t.querySelectorAll('tbody tr')].forEach(tr => {
+    if (tr.classList.contains('group')) { if (grupo) grupo.hidden = !visibles; grupo = tr; visibles = 0; return; }
+    const cod = (tr.querySelector('td b') || {}).textContent, r = rows.find(y => y.codigo === cod);
+    const ver = !fil || (r && (r.estado || 'pendiente') === fil);
+    tr.hidden = !ver; if (ver) visibles++;
+  });
+  if (grupo) grupo.hidden = !visibles;
+}
+const v23LoadMatriz = loadMatriz;
+loadMatriz = async function () {
+  await v23LoadMatriz(); try { matrizMejoras(); } catch (e) { console.error(e); }
+  const cod = state.tutResaltar; if (!cod) return; state.tutResaltar = '';
+  const fila = [...$$('#tabla-matriz tbody tr')].find(x => (x.querySelector('td b') || {}).textContent === cod);
+  if (!fila) return;
+  fila.classList.add('tut-fila'); fila.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const b = fila.querySelector('[data-req]'); if (b) setTimeout(() => b.focus({ preventScroll: true }), 600);
+  setTimeout(() => fila.classList.remove('tut-fila'), 8000);
+};
+
+// v23: TUTORIAL GUIADO DEL CLUB · misma ruta que la demo; cada paso se marca solo con los datos de la app
+const TUT_PASOS = [
+  { id: 'ficha', t: 'Completa la ficha del club', d: 'Identificación, actividad, gobierno, Delegado/a y canal: con la ficha completa, todos los documentos salen sin huecos.', ir: [['Abrir la ficha', 'ficha']] },
+  { id: 'B2', t: 'Formación del Delegado/a (B2)', d: 'Registra el curso del Delegado/a en Formación (colectivo Delegado/a). Después, Matriz → B2 → Actualizar: Cumple y enlace al certificado.', ir: [['Ir a Formación', 'v:formacion'], ['Ir a la Matriz', 'm:B2']] },
+  { id: 'B1', t: 'Designación del Delegado/a (B1)', d: 'Genera el acuerdo de designación, fírmalo y súbelo a Drive. En la Matriz: Parcial hasta presentar el Anexo II en el Registro de la Junta; después, Cumple.', ir: [['Ir a la plantilla', 'p:designacion'], ['Ir a la Matriz', 'm:B1']] },
+  { id: 'A1', t: 'Declaración institucional (A1)', d: 'Genera la declaración, apruébala en la Junta y regístrala en la Matriz con su evidencia.', ir: [['Ir a la plantilla', 'p:declaracion'], ['Ir a la Matriz', 'm:A1']] },
+  { id: 'A2', t: 'Aceptación del Protocolo Marco (A2)', d: 'Firma el Anexo I oficial de la Orden de 18/11/2024 y preséntalo en el Registro Electrónico Único de la Junta. La evidencia es el justificante.', ir: [['Ir a la Matriz', 'm:A2']] },
+  { id: 'G1', t: 'Protocolo de protección (G1)', d: 'Genera el protocolo, apruébalo en la Junta y súbelo como evidencia de G1.', ir: [['Ir a la plantilla', 'p:protocolo'], ['Ir a la Matriz', 'm:G1']] },
+  { id: 'D1', t: 'Código de conducta (D1)', d: 'Genera el código, apruébalo y regístralo en D1. Cada agente firmará después su aceptación (D2).', ir: [['Ir a la plantilla', 'p:codigo'], ['Ir a la Matriz', 'm:D1']] },
+  { id: 'I1', t: 'Canal de comunicación (I1)', d: 'Genera el cartel del canal, colócalo en la instalación y regístralo en I1.', ir: [['Ir a la plantilla', 'p:canal'], ['Ir a la Matriz', 'm:I1']] },
+  { id: 'K', t: 'Agentes deportivos (K1 · K2)', d: 'Da de alta a entrenadores, monitores y voluntariado con la fecha de su certificado negativo. Después marca K1 y K2 en la Matriz.', ir: [['Ir a Agentes', 'v:agentes'], ['Ir a la Matriz', 'm:K1']] },
+  { id: 'C', t: 'Análisis de riesgos (C1 · C2)', d: 'Registra los riesgos de cada actividad con su medida, responsable y estado. Después genera el Registro de riesgos (C1) y el documento de Medidas preventivas (C2), que deja en anexo las que aún no están implantadas', ir: [['Ir a Riesgos', 'v:riesgos'], ['Ir a la Matriz', 'm:C1']] },
+  { id: 'E', t: 'Imágenes y desplazamientos (E · F)', d: 'Genera las autorizaciones de imagen y de desplazamiento y anota en Autorizaciones las recibidas por grupo. Si el club no viaja, marca F1 y F2 como No aplica.', ir: [['Ir a Autorizaciones', 'v:autorizaciones'], ['Ir a la Matriz', 'm:E1']] },
+  { id: 'enc', t: 'Primera encuesta a menores', d: 'Crea una encuesta anónima, comparte el enlace o el cartel QR y revisa los resultados a partir de 5 respuestas.', ir: [['Ir a Encuestas', 'v:encuestas']] },
+  { id: 'inf', t: 'Informe del club', d: 'Descarga el informe de implantación: es la foto del sistema de protección del club para la Junta y las familias.', ir: [['Ir a Informes', 'v:informes']], manual: true }
+];
+// v73: tres tutoriales · club (MI CLUB) · entidad (usuario «Entidad» de un ayuntamiento) · municipal (gestor del ayuntamiento)
+const tutModo = () => state.club ? 'club' : (state.me && state.me.rol === 'entidad') ? 'entidad' : (state.me && ['admin', 'delegado', 'tecnico'].includes(state.me.rol) && !(typeof esMaestra === 'function' && esMaestra())) ? 'municipal' : '';
+const TUT_PASOS_ENT = [
+  { id: 'ficha', t: 'Completa la ficha de tu entidad', d: 'Identificación, actividad, gobierno, Delegado/a y canal de comunicación. Es la base de todo lo demás.', ir: [['Abrir la ficha', 'ficha']] },
+  { id: 'B2', t: 'Formación del Delegado/a (B2)', d: 'Registra en Formación el curso del Delegado/a (colectivo Delegado/a). En la Matriz, B2: Cumple, con el enlace al certificado.', ir: [['Ir a Formación', 'v:formacion'], ['Ir a la Matriz', 'm:B2']] },
+  { id: 'B1', t: 'Designación del Delegado/a (B1)', d: 'Sube a tu Drive el acuerdo de designación firmado y el justificante del Anexo II, y regístralos en B1. Abre B1 y mira «Cómo cumplir».', ir: [['Ir a la Matriz', 'm:B1']] },
+  { id: 'A1', t: 'Declaración institucional (A1)', d: 'Registra en A1 la declaración aprobada por tu órgano de gobierno, con su enlace.', ir: [['Ir a la Matriz', 'm:A1']] },
+  { id: 'A2', t: 'Aceptación del Protocolo Marco (A2)', d: 'Anexo I oficial presentado en el Registro Electrónico de la Junta. La evidencia es el justificante.', ir: [['Ir a la Matriz', 'm:A2']] },
+  { id: 'G1', t: 'Protocolo de protección (G1)', d: 'Registra en G1 el protocolo aprobado de tu entidad, con su enlace.', ir: [['Ir a la Matriz', 'm:G1']] },
+  { id: 'D1', t: 'Código de conducta (D1)', d: 'Registra en D1 el código aprobado. Cada agente firmará su aceptación (D2).', ir: [['Ir a la Matriz', 'm:D1']] },
+  { id: 'I1', t: 'Canal de comunicación (I1)', d: 'Registra en I1 el cartel o la información del canal publicado en tu instalación.', ir: [['Ir a la Matriz', 'm:I1']] },
+  { id: 'K', t: 'Agentes deportivos (K1 · K2)', d: 'Da de alta a entrenadores, monitores y voluntariado con la fecha de su certificado negativo, y marca K1 y K2.', ir: [['Ir a Agentes', 'v:agentes'], ['Ir a la Matriz', 'm:K1']] },
+  { id: 'C', t: 'Análisis de riesgos (C1 · C2)', d: 'Registra los riesgos de tus actividades con su medida, responsable y estado, y regístralo en C1 y C2.', ir: [['Ir a Riesgos', 'v:riesgos'], ['Ir a la Matriz', 'm:C1']] },
+  { id: 'E', t: 'Imágenes y desplazamientos (E · F)', d: 'Anota en Autorizaciones las recibidas por grupo. Si no viajáis, marca F1 y F2 como No aplica.', ir: [['Ir a Autorizaciones', 'v:autorizaciones'], ['Ir a la Matriz', 'm:E1']] },
+  { id: 'enc', t: 'Primera encuesta a menores', d: 'Crea una encuesta anónima y comparte el enlace o el cartel QR.', ir: [['Ir a Encuestas', 'v:encuestas']] },
+  { id: 'inf', t: 'Informe de tu entidad', d: 'Descarga el informe de implantación: es lo que presentarás al ayuntamiento.', ir: [['Ir a Informes', 'v:informes']], manual: true }
+];
+const TUT_PASOS_MUN = [
+  { id: 'dir', t: 'Directorio de recursos del municipio', d: 'Servicios Sociales, Policía Local, Fiscalía de Menores, centro de salud y Delegado/a municipal. Se usan en protocolos, carteles y fichas de emergencia de todas las entidades.', ir: [['Abrir el directorio', 'dir']] },
+  { id: 'propia', t: 'Ficha de las Actividades municipales', d: 'La entidad propia del ayuntamiento (escuelas, campus, actividades con menores): identificación, Delegado/a municipal y canal de comunicación.', ir: [['Abrir la ficha', 'ficha:propia']] },
+  { id: 'pdocs', t: 'Documentos de las actividades municipales (G1 · D1 · I1)', d: 'Protocolo, código de conducta y cartel del canal de las actividades municipales: genéralos en Plantillas y regístralos en su Matriz.', ir: [['Ir a Plantillas', 'p:protocolo'], ['Ir a su Matriz', 'm:G1']] },
+  { id: 'pag', t: 'Monitores y personal municipal (K1 · K2)', d: 'Da de alta en Agentes deportivos a monitores, técnicos y personal de las actividades municipales con su certificado negativo.', ir: [['Ir a Agentes', 'v:agentes'], ['Ir a su Matriz', 'm:K1']] },
+  { id: 'prie', t: 'Riesgos de las actividades municipales (C1 · C2)', d: 'Analiza los riesgos de las escuelas y actividades municipales y registra sus medidas.', ir: [['Ir a Riesgos', 'v:riesgos']] },
+  { id: 'ents', t: 'Entidades del municipio', d: 'Da de alta los clubes y asociaciones que trabajan con menores. Si alguno ya usa la app con su propio espacio, no lo dupliques: está en Mis clubes.', ir: [['Ir a Entidades', 'v:entidades']] },
+  { id: 'usu', t: 'Usuarios del equipo y de las entidades', d: 'Crea los accesos del equipo (Delegado/a, técnicos, solo lectura) y, si quieres, un usuario «Entidad» para cada club registrado.', ir: [['Ir a Usuarios', 'v:usuarios']], adm: true },
+  { id: 'coord', t: 'Coordinación con las entidades', d: 'En Entidades → Coordinación, genera la declaración responsable de la temporada, envíala y registra en su Matriz lo que cada entidad acredite.', ir: [['Ir a Entidades', 'v:entidades']] },
+  { id: 'clubes', t: 'Clubes con espacio propio', d: 'Si tu contrato incluye clubes con MI CLUB, da de alta el primero y entrégale sus claves. Si no, salta este paso.', ir: [['Ir a Mis clubes', 'v:clubes']], adm: true },
+  { id: 'infm', t: 'Informe municipal', d: 'Descarga el informe municipal: la situación de todas las entidades del municipio en un documento.', ir: [['Ir a Informes', 'v:informes']], manual: true }
+];
+const tutLista = () => ({ club: TUT_PASOS, entidad: TUT_PASOS_ENT, municipal: TUT_PASOS_MUN })[tutModo()] || TUT_PASOS;
+const tutKey = () => 'es_tut_' + (tutModo() === 'municipal' ? 'mun_' : '') + ((state.me && (state.me.usuario || state.me.club_id)) || 'club');
+const tutLeer = () => { try { return JSON.parse(localStorage.getItem(tutKey()) || '{}'); } catch (e) { return {}; } };
+const tutGuardar = o => { try { localStorage.setItem(tutKey(), JSON.stringify(o)); } catch (e) {} };
+state.tut = state.tut || { hechos: {} };
+const TUT_OK = ['cumple', 'parcial', 'no_aplica'];
+const tutCuenta = () => Object.values(state.tut.hechos || {}).filter(Boolean).length;
+function tutEvaluarMatriz(rows) {
+  const antes = tutCuenta();
+  tutEvaluarMatrizBase(rows);
+  if (tutCuenta() > antes) state.tut.ver = null;
+}
+function tutEvaluarMatrizBase(rows) {
+  const est = {}; (rows || []).forEach(r => { est[r.codigo] = r.estado; });
+  const ok = c => TUT_OK.includes(est[c]);
+  const h = state.tut.hechos;
+  ['B2', 'B1', 'A1', 'A2', 'G1', 'D1', 'I1'].forEach(c => { h[c] = ok(c); });
+  h.K = h.K || (ok('K1') && ok('K2')); h.C = h.C || ok('C1'); h.E = h.E || (ok('E1') && (ok('F1') || est.F1 === 'no_aplica'));
+}
+async function tutEvaluar() {
+  if (tutModo() === 'municipal') return tutEvaluarMun();
+  if (!tutModo()) return;
+  const ok = p => p.then(x => x, () => null);
+  const ents = state.entidades.length ? state.entidades : (await ok(API.call('listarEntidades'))) || [];
+  const e = ents[0] || {};
+  const [mat, ag, rie, aut, enc] = await Promise.all([e.id ? ok(API.call('matriz', { entidad_id: e.id })) : null, ok(API.call('listarAgentes', {})),
+    ok(API.call('listarRiesgos', {})), ok(API.call('listarAutorizaciones', {})), ok(API.call('listarEncuestas', {}))]);
+  const antes = tutCuenta();
+  const h = state.tut.hechos = {};
+  const lleno = k => String(e[k] ?? '').trim();
+  h.ficha = ['nombre', 'cif', 'municipio', 'actividades', 'organo_gobierno', 'presidencia_nombre', 'delegado_nombre', 'delegado_telefono'].every(lleno) &&
+    ['canal_email', 'canal_telefono', 'canal_buzon'].some(lleno);
+  tutEvaluarMatriz(mat);
+  h.K = h.K || !!(ag && ag.length && ag.every(a => a.cert_fecha));
+  h.C = h.C || !!(rie && rie.length);
+  h.E = h.E || !!(aut && aut.length);
+  h.enc = !!(enc && enc.length);
+  h.inf = !!tutLeer().inf;
+  if (tutCuenta() > antes) state.tut.ver = null;
+}
+async function tutEvaluarMun() {
+  const ok = p => p.then(x => x, () => null);
+  const ents = (await ok(API.call('listarEntidades'))) || [];
+  if (ents.length) state.entidades = ents;
+  const pr = ents.find(x => x.propia === 'SI') || {};
+  const [dir, mat, ag, rie, dash, usu, clu] = await Promise.all([ok(API.call('directorio')), pr.id ? ok(API.call('matriz', { entidad_id: pr.id })) : null,
+    pr.id ? ok(API.call('listarAgentes', { entidad_id: pr.id })) : null, pr.id ? ok(API.call('listarRiesgos', { entidad_id: pr.id })) : null, ok(API.call('dashboard')),
+    can('admin') ? ok(API.call('listarUsuarios')) : null, can('admin') && hayVista('clubes') ? ok(API.call('listarClubes')) : null]);
+  if (dir) state.dir = dir;
+  const antes = tutCuenta(), h = state.tut.hechos = {}, lleno = k => String(pr[k] ?? '').trim();
+  const est = {}; (mat || []).forEach(r => { est[r.codigo] = r.estado; }); const okc = c => TUT_OK.includes(est[c]);
+  h.dir = !!(dir && dir.servicios_sociales && dir.policia_local);
+  h.propia = !!pr.id && ['nombre', 'municipio', 'delegado_nombre', 'delegado_telefono'].every(lleno) && ['canal_email', 'canal_telefono', 'canal_buzon'].some(lleno);
+  h.pdocs = okc('G1') && okc('D1') && okc('I1');
+  h.pag = !!(ag && ag.filter(a => a.entidad_id === pr.id && a.activo !== 'NO').length && ag.filter(a => a.entidad_id === pr.id && a.activo !== 'NO').every(a => a.cert_fecha));
+  h.prie = !!(rie && rie.filter(r => r.entidad_id === pr.id).length);
+  h.ents = ents.some(x => x.propia !== 'SI' && x.trabaja_menores === 'SI' && x.activo !== 'NO');
+  h.usu = !!(usu && usu.filter(u => u.usuario !== 'admin' && u.activo !== 'NO').length);
+  h.coord = !!(dash && (dash.entidades || []).some(x => !x.propia && x.pct > 0));
+  h.clubes = !!(clu && clu.length) || !!tutLeer().clubes;
+  h.infm = !!tutLeer().infm;
+  if (tutCuenta() > antes) state.tut.ver = null;
+}
+const tutVisibles = () => tutLista().filter(p => (!p.adm || can('admin')) && (!p.ir.some(([, d]) => d.indexOf('v:') === 0 && !hayVista(d.slice(2))) || p.manual));
+function tutIr(dest) {
+  const [tipo, val] = dest.includes(':') ? dest.split(':') : [dest, ''];
+  const propia = () => (state.entidades || []).find(x => x.propia === 'SI');
+  const fijar = (sel, cargar) => { const pr = propia(); if (!pr || tutModo() !== 'municipal') return; let n = 0; const t = setInterval(() => { const s = $(sel); if ((s && s.querySelector('option[value="' + pr.id + '"]')) || ++n > 25) { clearInterval(t); if (s && s.value !== pr.id && s.querySelector('option[value="' + pr.id + '"]')) { s.value = pr.id; cargar(); } } }, 150); };
+  if (tipo === 'ficha') { const e = val === 'propia' ? propia() : state.entidades[0]; if (e) formEntidad(e, () => { state.entidades = []; tutRefrescar(true); }); else toast('Abre Entidades para ver la ficha', true); return; }
+  if (tipo === 'dir') { if (!can('ia')) return; show('plantillas'); let n = 0; const t = setInterval(() => { const c = $('#dir-card'); if (c || ++n > 30) { clearInterval(t); if (c) { c.open = true; c.scrollIntoView({ behavior: 'smooth', block: 'start' }); } } }, 200); return; }
+  if (tipo === 'v') { show(val); if (val === 'agentes') fijar('#agentes-entidad', () => loadAgentes()); if (val === 'riesgos') fijar('#riesgos-entidad', () => loadRiesgos()); return; }
+  if (tipo === 'p') {
+    if (!can('ia')) return show('matriz');
+    irPlantilla(val);
+    let n = 0; const t = setInterval(() => {
+      const b = document.querySelector('.plantilla[data-plant="' + val + '"]');
+      if (b || ++n > 40) { clearInterval(t); if (b) { b.classList.add('tut-destello'); setTimeout(() => b.classList.remove('tut-destello'), 5000); } }
+    }, 200);
+    return;
+  }
+  if (tipo === 'm') {
+    state.filtroMatriz = ''; state.tutResaltar = val;
+    const rc = $('#revision-ia'); if (rc) rc.innerHTML = '';
+    show('matriz'); fijar('#matriz-entidad', () => loadMatriz());
+  }
+}
+function tutPintar() {
+  const main = document.querySelector('#app main'); if (!main) return;
+  if (!$('#tut-estilo')) {
+    const st = document.createElement('style'); st.id = 'tut-estilo';
+    st.textContent = '#tut-pill{position:fixed;left:16px;bottom:16px;z-index:40;border:0;border-radius:999px;padding:10px 16px;min-height:44px;background:var(--brand);color:#fff;font:inherit;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.2)}#tut-pill[hidden]{display:none}' +
+      '#tut-barra{margin:0 0 16px;border:2px solid var(--brand-2);border-radius:12px;background:var(--panel);box-shadow:0 4px 14px rgba(11,48,87,.12);padding:12px 16px}' +
+      '#tut-barra .tut-cab{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-weight:700;color:var(--brand)}#tut-barra .tut-cab span{flex:1;min-width:180px}' +
+      '#tut-barra .tut-paso{margin:6px 0 10px}#tut-barra .tut-paso b{display:block;font-size:1.05rem}#tut-barra .tut-acc{display:flex;gap:8px;flex-wrap:wrap}' +
+      '#tut-barra .pasos-barra{height:8px;border-radius:4px;background:var(--bg);overflow:hidden;margin-top:6px}#tut-barra .pasos-barra i{display:block;height:100%;background:var(--ok)}' +
+      '#tut-barra .tut-mini{border:0;background:none;color:var(--brand);text-decoration:underline;cursor:pointer;font:inherit;padding:4px}' +
+      '.tut-oferta{border:2px solid var(--brand-2)}.tut-oferta .tut-acc{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}' +
+      '@keyframes tutDestello{0%,100%{background:color-mix(in srgb,var(--brand-2) 10%,transparent)}50%{background:color-mix(in srgb,var(--brand-2) 45%,transparent)}}' +
+      '@keyframes tutBorde{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 0 4px var(--brand-2)}}' +
+      'tr.tut-fila td{animation:tutDestello .9s ease-in-out 5;background:color-mix(in srgb,var(--brand-2) 15%,transparent)}tr.tut-fila td:first-child{box-shadow:inset 6px 0 0 var(--brand-2)}' +
+      '.plantilla.tut-destello{animation:tutBorde .9s ease-in-out 5}' +
+      '@media (prefers-reduced-motion:reduce){tr.tut-fila td,.plantilla.tut-destello{animation:none}.plantilla.tut-destello{box-shadow:0 0 0 4px var(--brand-2)}}' +
+      '.tut-lista{margin:8px 0 0;padding-left:20px}.tut-lista li{margin:0}#tut-barra .tut-lista .tut-mini{text-decoration:none;color:var(--ink);text-align:left;min-height:32px}#tut-barra .tut-lista li.hecho .tut-mini{color:var(--muted)}#tut-barra .tut-lista .tut-mini:hover{text-decoration:underline}' +
+      '.tut-ok{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:var(--ok);color:#fff;font-size:.72rem;vertical-align:middle}#tut-barra .btn:disabled{opacity:.45;cursor:default}';
+    document.head.appendChild(st);
+  }
+  let barra = $('#tut-barra');
+  const cfg = tutLeer();
+  if (!tutModo() || cfg.estado !== 'activo') { if (barra) barra.remove(); if ($('#tut-pill')) $('#tut-pill').remove(); tutOferta(); return; }
+  if ($('#tut-oferta')) $('#tut-oferta').remove();
+  if (!barra) { barra = document.createElement('section'); barra.id = 'tut-barra'; barra.setAttribute('aria-label', 'Tutorial guiado'); main.prepend(barra); }
+  const pasos = tutVisibles(), h = state.tut.hechos, salt = cfg.saltados || [];
+  const hechos = pasos.filter(p => h[p.id]).length;
+  const i = pasos.findIndex(p => !h[p.id] && !salt.includes(p.id));
+  const pend = pasos.findIndex(p => !h[p.id]);
+  if (i < 0 && pend < 0) {
+    barra.innerHTML = `<div class="tut-cab">🎉 <span>Tutorial completado: ${pasos.length} de ${pasos.length} pasos</span><button class="btn" type="button" id="tut-fin">Cerrar el tutorial</button></div>`;
+    $('#tut-fin').onclick = () => { tutGuardar(Object.assign(tutLeer(), { estado: 'completado' })); tutPintar(); };
+    return;
+  }
+  const auto = i >= 0 ? i : pend;
+  if (state.tut.ver != null && (state.tut.ver < 0 || state.tut.ver >= pasos.length)) state.tut.ver = null;
+  const k = state.tut.ver != null ? state.tut.ver : auto, p = pasos[k], hecho = !!h[p.id];
+  let pill = $('#tut-pill');
+  if (!pill) { pill = document.createElement('button'); pill.id = 'tut-pill'; pill.type = 'button'; pill.hidden = true; document.body.appendChild(pill);
+    pill.onclick = () => { window.scrollTo({ top: 0, behavior: 'smooth' }); };
+    new IntersectionObserver(en => { pill.hidden = !$('#tut-barra') || en[0].isIntersecting; }).observe(barra); }
+  pill.textContent = '🧭 Tutorial · paso ' + (k + 1) + ' de ' + pasos.length;
+  barra.innerHTML = `<div class="tut-cab">🧭 <span>Tutorial · paso ${k + 1} de ${pasos.length} · ${hechos} hechos</span>
+      <button type="button" class="tut-mini" id="tut-ver">Ver todos</button><button type="button" class="tut-mini" id="tut-act" title="Comprobar de nuevo">↻ Comprobar</button></div>
+    <div class="pasos-barra"><i style="width:${Math.round(hechos * 100 / pasos.length)}%"></i></div>
+    <div class="tut-paso"><b>${hecho ? '✓ ' : ''}${esc(p.t)}${hecho ? ' <span class="tut-ok">hecho</span>' : ''}</b><small>${esc(p.d)}</small></div>
+    <div class="tut-acc"><button class="btn ghost" type="button" id="tut-ant"${k === 0 ? ' disabled' : ''} aria-label="Paso anterior">← Anterior</button>
+      ${p.ir.map(([l, d], j) => `<button class="btn${j || hecho ? ' ghost' : ''}" type="button" data-tut-ir="${esc(d)}">${esc(l)}</button>`).join('')}
+      ${p.manual && !hecho ? '<button class="btn ghost" type="button" id="tut-hecho">✓ Ya lo he hecho</button>' : ''}
+      ${!hecho && k === auto ? '<button class="btn ghost" type="button" id="tut-saltar">Saltar este paso</button>' : ''}
+      <button class="btn ghost" type="button" id="tut-sig"${k === pasos.length - 1 ? ' disabled' : ''} aria-label="Paso siguiente">Siguiente →</button>
+      ${k !== auto ? '<button class="btn" type="button" id="tut-volver">Ir al paso pendiente</button>' : ''}
+      <button class="btn ghost" type="button" id="tut-pausa">Pausar</button></div>
+    <ol class="tut-lista${state.tut.lista ? '' : ' hidden'}" id="tut-todos">${pasos.map((x, j) => `<li class="${h[x.id] ? 'hecho' : ''}"><button type="button" class="tut-mini" data-tut-ver="${j}">${h[x.id] ? '✓ ' : salt.includes(x.id) ? '↷ ' : ''}${j === k ? '<b>' + esc(x.t) + '</b>' : esc(x.t)}</button></li>`).join('')}</ol>`;
+  $('#tut-ant').onclick = () => { state.tut.ver = k - 1; tutPintar(); };
+  $('#tut-sig').onclick = () => { state.tut.ver = k + 1; tutPintar(); };
+  $('#tut-volver') && ($('#tut-volver').onclick = () => { state.tut.ver = null; tutPintar(); });
+  $$('[data-tut-ver]').forEach(b => b.onclick = () => { state.tut.ver = +b.dataset.tutVer; tutPintar(); });
+  $$('[data-tut-ir]').forEach(b => b.onclick = () => tutIr(b.dataset.tutIr));
+  $('#tut-ver').onclick = () => { state.tut.lista = !state.tut.lista; $('#tut-todos').classList.toggle('hidden', !state.tut.lista); };
+  $('#tut-act').onclick = async () => {
+    const bt = $('#tut-act'); bt.disabled = true; bt.textContent = 'Comprobando…';
+    const antes = tutCuenta(); await tutRefrescar(true);
+    const d = tutCuenta() - antes;
+    toast(d > 0 ? '✓ ' + d + ' paso(s) nuevo(s) completado(s)' : 'Comprobado: sin cambios. Recuerda guardar en la Matriz o en la pantalla del paso.');
+  };
+  $('#tut-saltar') && ($('#tut-saltar').onclick = () => { const c = tutLeer(); c.saltados = [...new Set([...(c.saltados || []), p.id])]; tutGuardar(c); state.tut.ver = null; tutPintar(); });
+  $('#tut-pausa').onclick = () => { tutGuardar(Object.assign(tutLeer(), { estado: 'pausado' })); toast('Tutorial en pausa. Puedes retomarlo desde el Panel o la Guía de uso.'); tutPintar(); };
+  $('#tut-hecho') && ($('#tut-hecho').onclick = () => { tutGuardar(Object.assign(tutLeer(), { [p.id]: true })); state.tut.hechos[p.id] = true; tutPintar(); });
+}
+function tutOferta() {
+  const v = $('#view-panel'); let o = $('#tut-oferta');
+  const cfg = tutLeer();
+  if (!tutModo() || !v || cfg.estado === 'activo') { if (o) o.remove(); return; }
+  const QUE = { club: 'el sistema de protección del club, en el orden recomendado: ficha, Delegado/a, documentos, agentes, riesgos, autorizaciones, encuesta e informe', entidad: 'el sistema de protección de tu entidad: ficha, Delegado/a, documentos, agentes, riesgos, autorizaciones, encuesta e informe para el ayuntamiento', municipal: 'la puesta en marcha del sistema municipal: directorio, actividades municipales, entidades, usuarios, coordinación, clubes e informe municipal' }[tutModo()];
+  if (!o) { o = document.createElement('div'); o.id = 'tut-oferta'; o.className = 'card tut-oferta'; v.querySelector('header').after(o); }
+  if (!cfg.estado) {
+    o.innerHTML = '<h3>🧭 ¿Quieres que te guíe paso a paso?</h3><p>El tutorial te lleva por ' + QUE + '. Cada paso se marca solo cuando la app comprueba que está hecho. Puedes saltar pasos, pausarlo y retomarlo cuando quieras.</p>' +
+      '<div class="tut-acc"><button class="btn" type="button" id="tut-si">Empezar el tutorial</button><button class="btn ghost" type="button" id="tut-no">Prefiero ir por mi cuenta</button></div>';
+    $('#tut-no').onclick = () => { tutGuardar({ estado: 'rechazado' }); toast('De acuerdo. Si cambias de idea, tienes el tutorial en el Panel y en la Guía de uso.'); tutOferta(); };
+  } else {
+    o.innerHTML = `<div class="siguiente"><span class="t">🧭 <b>Tutorial guiado</b>${cfg.estado === 'completado' ? ' · completado' : cfg.estado === 'pausado' ? ' · en pausa' : ''}<br><small>Recorre paso a paso ${esc(QUE.split(':')[0].replace(/,.*$/, ''))}.</small></span><button class="btn ghost" type="button" id="tut-si">${cfg.estado === 'pausado' ? 'Retomar el tutorial' : cfg.estado === 'completado' ? 'Repasar el tutorial' : 'Empezar el tutorial'}</button></div>`;
+  }
+  $('#tut-si').onclick = () => tutActivar();
+}
+async function tutActivar() {
+  const c = tutLeer(); if (c.estado === 'completado') { c.saltados = []; delete c.inf; } c.estado = 'activo'; tutGuardar(c);
+  await tutRefrescar(true);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+let tutUltima = 0;
+async function tutRefrescar(forzar) {
+  if (!tutModo()) return;
+  if (forzar || Date.now() - tutUltima > 60000) { tutUltima = Date.now(); try { await tutEvaluar(); } catch (e) {} }
+  tutPintar();
+}
+(function () {
+  const basePanel = loadPanel;
+  loadPanel = async function () { await basePanel(); if (!tutModo()) return; if (tutLeer().estado === 'activo') tutRefrescar(true); else tutPintar(); };
+  const baseMatriz = loadMatriz;
+  loadMatriz = async function () { await baseMatriz(); if ((state.club || tutModo() === 'entidad') && state.matriz) { tutEvaluarMatriz(state.matriz); tutPintar(); } else if (tutModo() === 'municipal' && tutLeer().estado === 'activo') tutRefrescar(); };
+})();
+GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Hay tutorial para el ayuntamiento y para las entidades?', '<p>Sí. Cada perfil tiene el suyo y lo ve en su Panel:</p><ul><li><b>Ayuntamiento</b> (administración, Delegado/a municipal, técnicos): 10 pasos para poner en marcha el sistema municipal: directorio de recursos, ficha, documentos, personal y riesgos de las <b>Actividades municipales</b>, alta de entidades, usuarios, coordinación, clubes con espacio propio e informe municipal.</li><li><b>Usuario «Entidad»</b> (un club registrado por el ayuntamiento): 13 pasos para completar su sistema de protección y su informe para el ayuntamiento.</li><li><b>MI CLUB</b>: el tutorial completo del club.</li></ul><p>Todos funcionan igual: cada paso se marca solo al comprobarse, se pueden saltar, pausar y retomar.</p>', '', 'panel']); });
+GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Cómo funciona el tutorial guiado?', '<p>En el <b>Panel</b> del club aparece <b>«¿Quieres que te guíe paso a paso?»</b>. Con <b>Empezar el tutorial</b> se fija arriba una barra con el paso en el que estás, su explicación y botones que te llevan a la pantalla exacta (ficha, plantilla, Matriz…).</p><ul><li>Cada paso <b>se marca solo</b> cuando la app comprueba que está hecho; pulsa <b>↻ Comprobar</b> si acabas de guardar algo.</li><li><b>Saltar este paso</b> lo deja para después; <b>Pausar</b> oculta la barra.</li><li>Para retomarlo: <b>Panel → Retomar el tutorial</b>.</li><li>Los pasos hechos salen de los datos del club; los saltados y la pausa se recuerdan en este navegador.</li></ul>', 'club', 'panel']); });
+
+// v27: RIESGOS · prompt con los datos de la ficha y paso directo de la propuesta a la tabla de riesgos
+function promptRiesgos(e, ya) {
+  const si = v => String(v || '').toUpperCase() === 'SI';
+  const d = (k, v) => v ? '- ' + k + ': ' + v : '';
+  const sinViajes = !si(e.desplazamientos), sinPernocta = !si(e.pernocta);
+  const ambitos = Object.keys(CATALOGO_RIESGOS).filter(a => !(sinViajes && ['Desplazamientos', 'Viajes'].includes(a)) && !(sinPernocta && a === 'Actividades con pernocta'));
+  return ['Actúas como técnico/a experto/a en protección de la infancia y la adolescencia en el deporte en Andalucía. Marco: LO 8/2021 (LOPIVI), Ley 4/2021 de Infancia y Adolescencia de Andalucía, Ley 5/2016 del Deporte de Andalucía y Protocolo Marco aprobado por Orden de 18 de noviembre de 2024.', '',
+    'TAREA: elabora el ANÁLISIS DE RIESGOS de protección de menores de esta entidad (requisitos C1 y C2 del Protocolo Marco): situaciones de riesgo reales de SUS actividades, su valoración y las medidas preventivas. La entidad lo cargará directamente en su registro de riesgos.', '',
+    'DATOS DE LA ENTIDAD:',
+    ...[d('Tipo', e.tipo), d('Modalidad', e.modalidad), d('Actividades', e.actividades), d('Edades', e.edades), d('Nº aproximado de menores', e.n_menores),
+      d('Instalación o lugar habitual', e.lugar_actividad), '- Competición: ' + (si(e.competicion) ? 'sí' : 'no') + ' · Desplazamientos: ' + (si(e.desplazamientos) ? 'sí' : 'no') + ' · Pernocta: ' + (si(e.pernocta) ? 'sí' : 'no'),
+      d('Ratio de personas adultas', e.ratio), d('Órgano de gobierno', e.organo_gobierno), d('Plazo para comunicar al Delegado/a', e.plazo_comunicacion_h ? e.plazo_comunicacion_h + ' horas' : '')].filter(Boolean),
+    '', 'RIESGOS YA REGISTRADOS (no los repitas):', ya, '',
+    'FORMATO OBLIGATORIO: una sola tabla Markdown con EXACTAMENTE estas columnas y en este orden:',
+    '| Ámbito | Situación de riesgo | Probabilidad | Impacto | Medidas preventivas | Responsable |',
+    '- Ámbito: EXACTAMENTE uno de estos: ' + ambitos.join(' · ') + '.',
+    '- Probabilidad: Baja, Media o Alta. Impacto: Bajo, Medio o Alto. Valora con realismo para esta entidad: reserva «Alta» para lo que ocurre con frecuencia en la práctica.',
+    '- Medidas preventivas: concretas y verificables, en una sola celda, separadas por punto y seguido.',
+    '- Responsable: por cargo (Delegado/a de Protección, coordinación deportiva, entrenador/a responsable, Junta Directiva…), nunca por nombre.',
+    '- Entre 12 y 20 filas, sin repetir situaciones.',
+    '', 'REGLAS:',
+    '1. Entrega SOLO la tabla. Sin introducción, sin conclusiones, sin «aspectos a validar» ni notas para quien lo revisa.',
+    '2. No cites apartados ni letras de artículos salvo que estés seguro; si citas, hazlo de forma general (LOPIVI, Protocolo Marco).',
+    '3. No atribuyas a una norma lo que es decisión de la entidad (p. ej., la renovación anual del certificado negativo la decide el club; el art. 57 LOPIVI exige aportarlo).',
+    '4. Si tratas los mensajes privados, usa: «Prohibidos los mensajes privados de una persona adulta a un menor, salvo los estrictamente organizativos y con copia a la familia».',
+    '5. No inventes datos de la entidad ni la titularidad de las instalaciones.',
+    '6. Español de España, lenguaje claro.'].join('\n');
+}
+function parsearRiesgos(txt) {
+  const nivel = (v, tipo) => { const t = norm(v); return /alt/.test(t) ? 3 : /baj/.test(t) ? 1 : /medi/.test(t) ? 2 : 2; };
+  const amb = Object.keys(CATALOGO_RIESGOS);
+  const ambito = v => { const t = norm(v); return amb.find(a => norm(a) === t) || amb.find(a => t && (norm(a).includes(t) || t.includes(norm(a)))) || ''; };
+  return String(txt || '').split('\n').filter(l => /^\s*\|/.test(l) && !/^\s*\|?\s*:?-{2,}/.test(l))
+    .map(l => l.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim().replace(/\*\*/g, '')))
+    .filter(c => c.length >= 6 && !/^ámbito$/i.test(c[0]) && c[1])
+    .map(c => ({ ambito_txt: c[0], ambito: ambito(c[0]), descripcion: c[1], probabilidad: nivel(c[2]), impacto: nivel(c[3]), medidas: c[4], responsable: c[5] }));
+}
+function sumarMeses(m) { const f = new Date(); f.setMonth(f.getMonth() + m); return f.toISOString().slice(0, 10); }
+function pintarImportarRiesgos() {
+  const out = $('#riesgos-ia-out'), ta = out && out.querySelector('.guardar-res textarea');
+  if (!ta || $('#rie-imp-btn')) return;
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.id = 'rie-imp-btn'; b.textContent = '📥 Pasar los riesgos a la tabla'; b.style.marginLeft = '8px';
+  const zona = out.querySelector('.guardar-res'); zona.append(b);
+  const prev = document.createElement('div'); prev.id = 'rie-imp'; zona.after(prev);
+  b.onclick = () => abrirVistaRiesgos(ta.value, prev);
+}
+function abrirVistaRiesgos(texto, prev) {
+  {
+    const filas = parsearRiesgos(texto);
+    const yaTxt = new Set((state.riesgos || []).map(r => norm(r.descripcion).replace(/\W+/g, ' ').trim()));
+    filas.forEach(r => { r.ya = yaTxt.has(norm(r.descripcion).replace(/\W+/g, ' ').trim()); });
+    if (!filas.length) { toast('No encuentro la tabla. Pega la respuesta completa de Claude.', true); return; }
+    const amb = Object.keys(CATALOGO_RIESGOS), NV = { 1: 'Baja', 2: 'Media', 3: 'Alta' }, NI = { 1: 'Bajo', 2: 'Medio', 3: 'Alto' };
+    const lvl = r => { const v = r.probabilidad * r.impacto; return v >= 6 ? 'alto' : v >= 3 ? 'medio' : 'bajo'; };
+    prev.innerHTML = `<div class="card"><h3>Revisa antes de guardar · ${filas.length} riesgos${filas.some(r => r.ya) ? ' · ' + filas.filter(r => r.ya).length + ' ya están en la tabla (desmarcados)' : ''}</h3>
+      <p class="nota">Desmarca los que no quieras, corrige el ámbito si hace falta y elige el estado de las medidas. Si tu protocolo ya las recoge y se aplican, marca «Implantada»: así no generan alertas.</p>
+      <div class="fields form" style="margin-bottom:10px"><label>Estado de las medidas<select id="rie-est">${ESTADOS_R.map(([k, l]) => `<option value="${k}"${k === 'en_curso' ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
+      <label>Próxima revisión<input type="date" id="rie-rev" value="${sumarMeses(12)}"></label></div>
+      <div class="md-scroll"><table class="md-tabla"><thead><tr><th></th><th>Ámbito</th><th>Situación</th><th>P · I</th><th>Nivel</th></tr></thead><tbody>
+      ${filas.map((r, i) => `<tr><td><input type="checkbox" data-ri="${i}"${r.ya ? '' : ' checked'} aria-label="Incluir riesgo ${i + 1}"></td>
+        <td><select data-ra="${i}" aria-label="Ámbito del riesgo ${i + 1}">${(r.ambito ? [] : ['<option value="">— elige —</option>']).concat(amb.map(a => `<option${a === r.ambito ? ' selected' : ''}>${esc(a)}</option>`)).join('')}</select>${r.ambito ? '' : `<br><small>Propuesto: ${esc(r.ambito_txt)}</small>`}</td>
+        <td>${r.ya ? '<span class="st muted">Ya está en la tabla</span><br>' : ''}${esc(r.descripcion)}<br><small>${esc(r.medidas)}</small></td><td>${NV[r.probabilidad]} · ${NI[r.impacto]}</td><td><span class="nivel ${lvl(r)}">${lvl(r)}</span></td></tr>`).join('')}
+      </tbody></table></div><div class="ia-acciones" style="margin-top:12px"><button class="btn" type="button" id="rie-guardar">Guardar los riesgos marcados</button></div><p class="nota" id="rie-prog"></p></div>`;
+    $('#rie-guardar').onclick = async () => {
+      const entidad_id = $('#riesgos-entidad').value, estado = $('#rie-est').value, rev = $('#rie-rev').value;
+      const sel = filas.map((r, i) => Object.assign({}, r, { ambito: (prev.querySelector(`[data-ra="${i}"]`) || {}).value })).filter((r, i) => prev.querySelector(`[data-ri="${i}"]`).checked);
+      if (!sel.length) { toast('No hay ningún riesgo marcado', true); return; }
+      if (sel.some(r => !r.ambito)) { toast('Elige el ámbito de todos los riesgos marcados', true); return; }
+      const datos = sel.map(r => ({ ambito: r.ambito, descripcion: r.descripcion, probabilidad: r.probabilidad, impacto: r.impacto, medidas: r.medidas, responsable: r.responsable,
+        estado, fecha_revision: rev, fecha_implantacion: estado === 'implantada' ? hoyISO() : '' }));
+      const btn = $('#rie-guardar'); btn.disabled = true; $('#rie-prog').textContent = 'Guardando ' + datos.length + ' riesgos…';
+      try {
+        try { await API.call('guardarRiesgosLote', { entidad_id, riesgos: datos }); }
+        catch (er) {
+          if (!/desconocida/i.test(er.message)) throw er;
+          for (let i = 0; i < datos.length; i++) { $('#rie-prog').textContent = 'Guardando ' + (i + 1) + ' de ' + datos.length + '…'; await API.call('guardarRiesgo', Object.assign({ entidad_id }, datos[i])); }
+        }
+        toast(datos.length + ' riesgos guardados'); prev.innerHTML = '';
+        if (!prev.dataset.docId) { try { const ta = $('#riesgos-ia-out .guardar-res textarea'); if (ta && ta.value.trim() && !prev.dataset.guardado && !(await API.call('listarDocumentos')).some(x => x.tipo === 'riesgos' && String(x.resultado).trim() === ta.value.trim())) { await API.call('guardarDocumento', { asunto: 'Análisis de riesgos · propuesta IA · ' + hoyISO(), tipo: 'riesgos', resultado: ta.value.trim() }); prev.dataset.guardado = '1'; state.docs = null; } } catch (e2) {} }
+        loadRiesgos();
+        $('#view-riesgos').scrollIntoView({ behavior: 'smooth' });
+      } catch (er) { toast('No se pudieron guardar: ' + er.message, true); btn.disabled = false; $('#rie-prog').textContent = ''; }
+    };
+    prev.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+}
+$('#riesgos-ia') && ($('#riesgos-ia').onclick = () => {
+  const sel = $('#riesgos-entidad'); if (!sel.value) return;
+  const e = state.entidades.find(x => x.id === sel.value) || {};
+  const ya = (state.riesgos || []).map(r => '- ' + r.ambito + ': ' + r.descripcion).join('\n') || '- Ninguno todavía';
+  mostrarPrompt($('#riesgos-ia-out'), promptRiesgos(e, ya), { asunto: 'Análisis de riesgos · ' + (e.nombre || ''), tipo: 'riesgos' });
+  pintarImportarRiesgos();
+});
+GUIA.forEach(t => { if (t[1] === 'Análisis de riesgos') t[2].unshift(['¿Cómo hago el análisis de riesgos con IA y lo paso a la tabla?', '<ol><li><b>Riesgos → Proponer con IA</b>. El prompt lleva los datos de la ficha (actividades, edades, instalación, desplazamientos, pernocta, ratio) y nunca datos personales.</li><li><b>Abrir en Claude</b> → copia la respuesta (una tabla) → pégala en la app.</li><li><b>📥 Pasar los riesgos a la tabla</b>: revisa la lista, desmarca lo que no aplique y elige el estado de las medidas. Si el protocolo ya las recoge y se aplican, marca <b>Implantada</b> para que no generen alertas.</li><li><b>Guardar los riesgos marcados</b>. Después marca <b>C1 y C2</b> en la Matriz (puedes guardar también el análisis en Documentos como evidencia).</li></ol>', '', 'riesgos']); });
+
+// v28b: añadir riesgos desde un análisis guardado en Documentos, sin volver a Claude
+(function () {
+  const acc = $('#view-riesgos .ia-acciones'); if (!acc || $('#riesgos-recuperar')) return;
+  acc.insertAdjacentHTML('beforeend', '<button class="btn ghost" id="riesgos-recuperar" type="button" data-perm="escribir">➕ Añadir desde un análisis guardado</button>');
+  $('#riesgos-recuperar').onclick = async () => {
+    const docs = (await run(() => API.call('listarDocumentos'))).filter(d => d.tipo === 'riesgos' && parsearRiesgos(d.resultado).length);
+    const out = $('#riesgos-ia-out');
+    if (!docs.length) { out.innerHTML = '<div class="card"><p>No hay análisis de riesgos guardados en Documentos. Usa <b>Proponer con IA</b>.</p></div>'; return; }
+    out.innerHTML = `<div class="card"><h3>Análisis guardados</h3><p class="nota">Elige uno: verás sus riesgos, con los que ya están en tu tabla desmarcados.</p>
+      ${docs.map(d => `<p><button type="button" class="btn ghost" data-recdoc="${esc(d.id)}">${esc(d.asunto)} · ${esc(String(d.actualizado || d.creado).slice(0, 10))} · ${parsearRiesgos(d.resultado).length} riesgos</button></p>`).join('')}</div><div id="rie-imp"></div>`;
+    $$('[data-recdoc]').forEach(b => b.onclick = () => { const d = docs.find(x => x.id === b.dataset.recdoc); const prev = $('#rie-imp'); prev.dataset.docId = d.id; abrirVistaRiesgos(d.resultado, prev); });
+    out.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+})();
+// v28: registro de riesgos aprobado (lo guardado en la tabla) como evidencia de C1 y C2
+function htmlRegistroRiesgos(e, rows) {
+  const NV = { 1: 'Baja', 2: 'Media', 3: 'Alta' }, NI = { 1: 'Bajo', 2: 'Medio', 3: 'Alto' };
+  const est = v => (ESTADOS_R.find(x => x[0] === v) || ['', 'Pendiente'])[1];
+  const orden = { alto: 0, medio: 1, bajo: 2 };
+  const amb = [...new Set(rows.map(r => r.ambito))];
+  const n = k => rows.filter(r => r.nivel === k).length;
+  let b = '<table>' + fila('Entidad', esc(e.nombre || '')) + (e.actividades ? fila('Actividades', esc(e.actividades)) : '') + (e.edades ? fila('Edades', esc(e.edades)) : '') +
+    (e.lugar_actividad ? fila('Instalación habitual', esc(e.lugar_actividad)) : '') + fila('Riesgos registrados', rows.length + ' (alto ' + n('alto') + ' · medio ' + n('medio') + ' · bajo ' + n('bajo') + ')') +
+    fila('Medidas implantadas', rows.filter(r => r.estado === 'implantada').length + ' de ' + rows.length) + '</table>';
+  b += '<p>Registro de las situaciones de riesgo identificadas en las actividades de la entidad, su valoración (probabilidad × impacto) y las medidas preventivas adoptadas, conforme al análisis de riesgos del Protocolo Marco de protección de las personas menores frente a la violencia en el deporte (Orden de 18 de noviembre de 2024).</p>';
+  amb.forEach(a => {
+    const rs = rows.filter(r => r.ambito === a).sort((x, y) => orden[x.nivel] - orden[y.nivel]);
+    b += `<h2>${esc(a)}</h2><table><thead><tr><th>Situación de riesgo</th><th>P · I</th><th>Nivel</th><th>Medidas preventivas</th><th>Responsable</th><th>Estado</th><th>Revisión</th></tr></thead><tbody>` +
+      rs.map(r => `<tr><td>${esc(r.descripcion)}</td><td>${NV[r.probabilidad] || ''} · ${NI[r.impacto] || ''}</td><td class="${r.nivel === 'alto' ? 'bad' : r.nivel === 'medio' ? 'warn' : 'ok'} st">${esc(r.nivel)}</td><td>${esc(r.medidas || '')}</td><td>${esc(r.responsable || '')}</td><td>${esc(est(r.estado))}</td><td style="white-space:nowrap">${esc(String(r.fecha_revision || '').slice(0, 10).split('-').reverse().join('/'))}</td></tr>`).join('') + '</tbody></table>';
+  });
+  b += '<h2>Aprobación</h2><p>El órgano de gobierno de la entidad aprueba el presente análisis de riesgos y las medidas preventivas en sesión de fecha …………………………… y encarga su seguimiento al Delegado/a de Protección.</p>' +
+    '<div class="firma"><div>Delegado/a de Protección<br>' + esc(e.delegado_nombre || '') + '</div><div>Vº Bº Presidencia<br>' + esc(e.presidencia_nombre || '') + '</div></div>';
+  b += '<div class="nota">Documento generado a partir del registro de riesgos de EntornoSeguro. Recoge situaciones de riesgo y medidas preventivas; no valora personas ni hechos concretos.</div>';
+  return plantillaInforme('Análisis de riesgos y medidas preventivas', e.nombre || '', b);
+}
+(function () {
+  const acc = $('#view-riesgos .ia-acciones'); if (!acc || $('#riesgos-reg-pdf')) return;
+  acc.insertAdjacentHTML('beforeend', '<button class="btn ghost" id="riesgos-reg-pdf" type="button">📄 Registro de riesgos (PDF)</button><button class="btn ghost" id="riesgos-reg-word" type="button">Word</button>');
+  const datos = () => {
+    const rows = state.riesgos || [];
+    if (!rows.length) { toast('Aún no hay riesgos guardados en la tabla', true); return null; }
+    const e = state.entidades.find(x => x.id === $('#riesgos-entidad').value) || state.entidades[0] || {};
+    return htmlRegistroRiesgos(e, rows);
+  };
+  $('#riesgos-reg-pdf').onclick = () => { const h = datos(); if (h) abrirInforme(h); };
+  $('#riesgos-reg-word').onclick = () => { const h = datos(); if (h) descargar('﻿' + h, 'application/msword', nombreInf('analisis-de-riesgos')); };
+})();
+GUIA.forEach(t => { if (t[1] === 'Análisis de riesgos') t[2].splice(1, 0,
+  ['¿Qué subo como evidencia de C1 y C2?', '<table class="md-tabla"><thead><tr><th>Requisito</th><th>Documento</th><th>Dónde se genera</th><th>Estado en la Matriz</th></tr></thead><tbody>' +
+    '<tr><td><b>C1</b> · Análisis de riesgos</td><td><b>Registro de riesgos</b>: los riesgos de las actividades y su valoración</td><td>Riesgos → 📄 Registro de riesgos</td><td>Cumple cuando lo aprueba la Junta</td></tr>' +
+    '<tr><td><b>C2</b> · Medidas preventivas</td><td><b>Medidas preventivas</b>: las medidas implantadas y, en anexo, las que están en implantación</td><td>Riesgos → 📄 Medidas preventivas</td><td><b>Parcial</b> mientras el anexo tenga medidas; <b>Cumple</b> cuando esté vacío y aprobado</td></tr></tbody></table>' +
+    '<p>No subas la propuesta de la IA: es trabajo previo. Las evidencias son estos dos documentos, generados con lo que has guardado en la tabla.</p>', '', 'riesgos'],
+  ['¿Cómo funciona el documento de Medidas preventivas? (procedimiento)', '<ol>' +
+    '<li><b>Registra los riesgos y sus medidas</b> en Riesgos (a mano, con sugerencias o con <b>Proponer con IA</b> → <b>📥 Pasar los riesgos a la tabla</b>).</li>' +
+    '<li><b>Indica el estado de cada medida</b> con <b>Editar</b>: <b>Implantada</b> si ya se aplica (pon la fecha desde la que se aplica) o <b>En curso / Pendiente</b> si aún no (pon en «Fecha de implantación» la <b>fecha prevista</b> y revisa el responsable).</li>' +
+    '<li><b>Genera el documento</b>: <b>Riesgos → 📄 Medidas preventivas</b>. La app lo monta sola: las medidas <b>implantadas</b> van en el cuerpo, agrupadas por ámbito; las que <b>no</b> lo están van al <b>Anexo · Medidas en implantación</b>, con responsable y fecha prevista; y un apartado de <b>documentos de soporte</b> con lo que ya consta en la Matriz (protocolo, código, autorizaciones…).</li>' +
+    '<li><b>Apruébalo en la Junta Directiva</b> en su conjunto: aprueba las medidas implantadas y se compromete con las del anexo.</li>' +
+    '<li><b>Súbelo a Drive</b> y regístralo en la <b>Matriz → C2</b>: <b>Parcial</b> si el anexo tiene medidas (acción pendiente: «implantar las medidas del anexo»), <b>Cumple</b> si está vacío.</li>' +
+    '<li><b>Cuando se aplique una medida del anexo</b>: Riesgos → Editar → <b>Implantada</b> y fecha. Al vaciar el anexo, vuelve a generar el documento, apruébalo y pasa C2 a <b>Cumple</b>.</li></ol>' +
+    '<ul><li>No hace falta reaprobarlo por cada cambio: basta <b>una vez por temporada</b> o cuando el anexo quede vacío.</li><li>Las <b>recomendaciones</b> te avisan de las medidas del anexo (y de las que no tienen fecha prevista) y, cuando estén todas implantadas, de que ya puedes pasar C2 a Cumple.</li><li>Marca <b>Implantada</b> solo lo que de verdad se aplica hoy: el documento lo firma la Junta.</li></ul>', '', 'riesgos']); });
+
+// v30: informe de implantación · fechas dd/mm/aaaa, indicador «En marcha» y cabecera/firma correctas para clubes SOLO CLUBES vistos desde la maestra
+(function () {
+  const base = construirInformeEntidad;
+  construirInformeEntidad = function (d) {
+    const solo = !state.club && typeof esMaestra === 'function' && esMaestra() && /CLUB/i.test(String((d.config || {}).tipo_instancia || ''));
+    const prevClub = state.club, prevOrg = state.cfg && state.cfg.organismo;
+    if (solo) { state.club = true; if (state.cfg) state.cfg.organismo = (d.entidad && d.entidad.nombre) || prevOrg; }
+    let h;
+    try { h = base(d); } finally { if (solo) { state.club = prevClub; if (state.cfg) state.cfg.organismo = prevOrg; } }
+    const m = d.matriz || [], marcha = m.filter(r => ['cumple', 'parcial', 'no_aplica'].includes(r.estado)).length;
+    h = h.replace('<div class="kpi"><span>Cumple</span>', `<div class="kpi"><span>En marcha (cumple + parcial)</span><b>${marcha} de ${m.length}</b></div><div class="kpi"><span>Cumple</span>`);
+    return h.replace(/(>|· |\b)(\d{4})-(\d{2})-(\d{2})(?![\d-])/g, (x, p, y, mo, da) => p + da + '/' + mo + '/' + y);
+  };
+})();
+
+// v60: informe de implantación · evidencias con datos personales en genérico y versión sin nombres de personas
+(function () {
+  const caja = $('#inf-entidad');
+  if (caja && !$('#inf-sin-nombres')) caja.closest('label').insertAdjacentHTML('afterend', '<label style="display:flex;gap:8px;align-items:flex-start;font-weight:400;margin:6px 0"><input type="checkbox" id="inf-sin-nombres" style="width:auto;min-height:0;margin-top:4px"> <span>Versión para entregar fuera del club: <b>sin nombres</b> de agentes ni de personas formadas</span></label>');
+  const base = construirInformeEntidad;
+  construirInformeEntidad = function (d) {
+    const x = JSON.parse(JSON.stringify(d || {}));
+    (x.matriz || []).forEach(r => { if (REQ_GENERICO[r.codigo] && (r.evidencias || []).length) r.evidencias = [{ titulo: 'documentación con datos personales custodiada en la entidad' }]; });
+    const anon = !state.club || ($('#inf-sin-nombres') || {}).checked;
+    if (anon) {
+      const n = t => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+      const del = n((x.entidad || {}).delegado_nombre); let ia = 0;
+      const etq = {}; (x.agentes || []).forEach(a => { const l = del && n(a.nombre) === del ? 'Delegado/a de Protección' : 'Agente ' + (++ia); etq[n(a.nombre)] = l; a.nombre = l; });
+      let k = 0; (x.formacion || []).forEach(f => { f.persona_nombre = f.colectivo === 'delegado' ? 'Delegado/a de Protección' : (etq[n(f.persona_nombre)] || 'Persona ' + (++k)); });
+    }
+    let h = base(x);
+    if (anon) h = h.replace('</h1>', '</h1><p style="margin:0 0 8px;color:#4f5d65;font-size:9pt">Versión sin nombres de personas, apta para entregar fuera de la entidad.</p>');
+    return h;
+  };
+})();
+
+GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿A quién puedo entregar el Informe de entidad?', '<p>El informe de <b>Informes → Informe de entidad</b> es la foto del sistema de protección del club. Para la Junta Directiva sirve la versión completa. Para entregarlo <b>fuera del club</b> (ayuntamiento, federación, subvenciones, familias) marca <b>Versión para entregar fuera del club</b>: los agentes y las personas formadas salen como «Agente 1», «Agente 2»… El ayuntamiento, cuando lo consulta desde su perfil, siempre ve esta versión.</p><p>En las dos versiones, los requisitos con datos personales (K2, D2, E1 y F1) muestran «documentación con datos personales custodiada en la entidad», nunca el título ni el enlace. Antes de sacarlo, revisa que el Panel no tenga recomendaciones sobre la Matriz (acciones pendientes en requisitos que ya cumplen, títulos en mayúsculas o sin completar).</p>', '', 'informes']); });
+
+GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Importa si escribo en mayúsculas?', '<p>No. Al guardar, la app ajusta sola las mayúsculas: los <b>nombres de personas, lugares y cargos</b> escritos todo en mayúsculas o todo en minúsculas pasan a mayúscula inicial («MIGUEL ÁNGEL» → «Miguel Ángel», «JUNTA DIRECTIVA» → «Junta Directiva»), y los <b>títulos y textos</b> escritos enteros en mayúsculas también («CÓDIGO» → «Código»), respetando siglas como PDF o RGPD. Lo que escribes con mayúsculas y minúsculas normales se respeta tal cual. El nombre del club no se toca.</p><p>Lo único que la app no puede adivinar son las <b>tildes</b> que falten: si escribes «ANGEL», quedará «Angel». Añádela una vez y se conserva.</p>', '', 'entidades']); });
+
+// v31: RECOMENDACIONES AUTOMÁTICAS (Ampliacion v1.9) · reglas fijas sobre los datos, sin IA
+const REC_ICO = { alta: '🔴', media: '🟠', baja: '⚪' };
+const recItems = r => r.items && r.items.length ? '<ul class="rec-items">' + r.items.map(i => `<li>${esc(i.t)}${i.id && $('#view-riesgos') && !$('#view-riesgos').classList.contains('hidden') ? ` <button type="button" class="link" data-rec-rie="${esc(i.id)}">Editar</button>` : ''}</li>`).join('') + '</ul>' : '';
+document.addEventListener('click', ev => { const b = ev.target.closest && ev.target.closest('[data-rec-rie]'); if (!b) return; const r = (state.riesgos || []).find(x => String(x.id) === b.dataset.recRie); if (r) formRiesgo(r); });
+function recEstilo() {
+  if ($('#rec-estilo')) return;
+  const st = document.createElement('style'); st.id = 'rec-estilo';
+  st.textContent = '.rec-lista{list-style:none;margin:8px 0;padding:0}.rec-lista li{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid var(--line)}.rec-lista li:first-child{border-top:0}' +
+    '.rec-lista .t{flex:1}.rec-fila td{background:var(--bg);padding:4px 12px 10px}.rec-fila summary{cursor:pointer;font-weight:600;min-height:40px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}' +
+    '.rec-cab small{font-weight:400;color:var(--muted)}.rec-card{border:2px solid var(--warn)}.rec-items{margin:4px 0 0;padding-left:18px;font-size:.92em;color:var(--muted)}.rec-lista .rec-items li{display:list-item;border:0;padding:2px 0;margin:0;list-style:disc}';
+  document.head.appendChild(st);
+}
+function recTexto(nombre, recs) {
+  return 'Recomendaciones para ' + nombre + ' (EntornoSeguro, ' + new Date().toLocaleDateString('es-ES') + '):\n\n' +
+    recs.map((r, i) => (i + 1) + '. [' + ({ alta: 'Prioridad alta', media: 'Prioridad media', baja: 'Mejora' })[r.p] + '] ' + r.t + (r.items ? r.items.map(x => '\n   - ' + x.t).join('') : '')).join('\n') +
+    '\n\nPuedes resolverlas desde la aplicación: el tutorial del Panel te guía paso a paso.';
+}
+function recCuenta(recs) { const n = k => recs.filter(r => r.p === k).length; return (n('alta') ? REC_ICO.alta + ' ' + n('alta') + ' alta(s) ' : '') + (n('media') ? REC_ICO.media + ' ' + n('media') + ' media(s) ' : '') + (n('baja') ? REC_ICO.baja + ' ' + n('baja') + ' de mejora' : ''); }
+(function () {
+  if (typeof loadClubes !== 'function') return;
+  const base = loadClubes;
+  loadClubes = async function () {
+    await base(); recEstilo();
+    const hay = (state.clubes || []).some(c => Array.isArray(c.recomendaciones));
+    if (!hay) return;
+    $$('#tabla-clubes [data-club]').forEach(b => {
+      const c = (state.clubes || []).find(x => x.id === b.dataset.club), tr = b.closest('tr');
+      if (!c || !Array.isArray(c.recomendaciones) || tr.nextElementSibling && tr.nextElementSibling.classList.contains('rec-fila')) return;
+      const recs = c.recomendaciones;
+      const fila = document.createElement('tr'); fila.className = 'rec-fila';
+      fila.innerHTML = `<td colspan="${tr.cells.length}">${recs.length ? `<details><summary>💡 Recomendaciones para el club (${recs.length}) <span class="rec-cab"><small>${recCuenta(recs)}</small></span></summary>
+        <ul class="rec-lista">${recs.map(r => `<li><span aria-hidden="true">${REC_ICO[r.p]}</span><span class="t">${esc(r.t)}${recItems(r)}</span></li>`).join('')}</ul>
+        <div class="ia-acciones"><button type="button" class="btn ghost" data-rec-copiar="${esc(c.id)}">Copiar para enviar al club</button>${c.email ? `<a class="btn ghost" href="mailto:${esc(c.email)}?subject=${encodeURIComponent('EntornoSeguro · Recomendaciones para ' + c.nombre)}&body=${encodeURIComponent(recTexto(c.nombre, recs))}">Enviar por correo</a>` : ''}</div>
+        <p class="nota" style="margin:4px 0 0">Se calculan solas con los datos del club (ficha, Matriz, agentes, formación, riesgos, autorizaciones y encuestas). No usan IA ni muestran datos personales.</p></details>`
+        : '<small class="st ok">✓ Sin recomendaciones pendientes</small>'}</td>`;
+      tr.after(fila);
+    });
+    $$('[data-rec-copiar]').forEach(b => b.onclick = () => { const c = state.clubes.find(x => x.id === b.dataset.recCopiar); copiarTexto(recTexto(c.nombre, c.recomendaciones)); });
+  };
+})();
+// Panel del club: las mismas recomendaciones, con acceso directo a cada pantalla
+async function pintarRecomendacionesClub() {
+  const v = $('#view-panel'); if (!v || !state.club) return;
+  recEstilo();
+  let recs; try { recs = await API.call('misRecomendaciones', {}); } catch (e) { return; }
+  let card = $('#rec-card');
+  if (!card) { card = document.createElement('div'); card.id = 'rec-card'; card.className = 'card rec-card'; const ref = $('#pasos-card') || v.querySelector('header'); ref.after(card); }
+  state.recsClub = recs.length;
+  if (!recs.length) { card.innerHTML = '<h3>💡 Recomendaciones</h3><p class="st ok">✓ No hay recomendaciones pendientes. ¡Buen trabajo!</p>'; return; }
+  const DEST = { matriz: ['Ir a la Matriz', r => { const m = /\b([A-K][12])\b/.exec(r.t); state.filtroMatriz = ''; if (m) state.tutResaltar = m[1]; const c = $('#revision-ia'); if (c) c.innerHTML = ''; show('matriz'); }], ficha: ['Abrir la ficha', () => state.entidades[0] && formEntidad(state.entidades[0], () => { state.entidades = []; loadPanel(); })],
+    agentes: ['Ir a Agentes', () => show('agentes')], formacion: ['Ir a Formación', () => show('formacion')], riesgos: ['Ir a Riesgos', () => show('riesgos')],
+    autorizaciones: ['Ir a Autorizaciones', () => show('autorizaciones')], encuestas: ['Ir a Encuestas', () => show('encuestas')] };
+  card.innerHTML = `<details${recs.some(r => r.p === 'alta') ? ' open' : ''}><summary><b>💡 Recomendaciones (${recs.length})</b> <small>${recCuenta(recs)}</small></summary>
+    <ul class="rec-lista">${recs.map((r, i) => `<li><span aria-hidden="true">${REC_ICO[r.p]}</span><span class="t">${esc(r.t)}${recItems(r)}</span>${DEST[r.ir] && hayVista(r.ir === 'ficha' ? 'panel' : r.ir) ? `<button class="btn ghost" type="button" data-rec-ir="${i}">${DEST[r.ir][0]}</button>` : ''}</li>`).join('')}</ul>
+    <p class="nota" style="margin:0">Se calculan solas con los datos del club. Tu ${esc(state.inst ? 'ayuntamiento' : 'gestor')} ve las mismas recomendaciones.</p></details>`;
+  card.querySelector('summary').style.cssText = 'cursor:pointer;min-height:40px;display:flex;gap:8px;align-items:center;flex-wrap:wrap';
+  $$('[data-rec-ir]').forEach(b => b.onclick = () => DEST[recs[+b.dataset.recIr].ir][1](recs[+b.dataset.recIr]));
+}
+(function () {
+  const base = loadPanel;
+  loadPanel = async function () { await base(); if (state.club) pintarRecomendacionesClub(); };
+})();
+GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Qué son las «Recomendaciones» del Panel?', '<p>Una lista que la app calcula sola, <b>sin IA</b>, con los datos del club: ficha incompleta, requisitos sin evidencia o sin fecha, revisiones vencidas, agentes sin certificado o sin formación registrada, requisitos que ya podrías marcar (K1, K2, D2), riesgos altos sin implantar, autorizaciones o encuestas pendientes…</p><ul><li>🔴 prioridad alta · 🟠 media · ⚪ mejora.</li><li>Cada una tiene un botón que te lleva a la pantalla donde se resuelve.</li><li>Tu gestor (ayuntamiento o Escuela&amp;Deporte) ve las mismas recomendaciones en <b>Mis clubes</b> y puede enviártelas por correo.</li></ul>', '', 'panel']); if (t[1] === '💼 Modelo comercial y versiones (solo versión maestra)' || t[1] === 'Entidades y coordinación con clubes') t[2].push(['¿Qué son las recomendaciones de «Mis clubes»?', '<p>Debajo de cada club aparece <b>💡 Recomendaciones para el club</b>: reglas fijas sobre sus datos (sin IA y sin datos personales) que indican qué le falta y en qué orden. Con <b>Copiar para enviar al club</b> o <b>Enviar por correo</b> se las haces llegar. El club ve la misma lista en su Panel.</p>', 'admin', 'clubes']); });
+
+// v32: recomendaciones automáticas también en Entidades (modo municipal) y aviso de clubes duplicados
+(function () {
+  const base = loadEntidades;
+  loadEntidades = async function () {
+    await base();
+    if (state.club || !can('leer')) return;
+    let r; try { r = await API.call('recomendacionesEntidades', {}); } catch (e) { return; }
+    recEstilo();
+    const n = t => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
+    const aloj = new Set((r.alojados || []).map(n));
+    $$('#tabla-entidades tbody tr').forEach(tr => {
+      if (tr.classList.contains('rec-fila')) return;
+      const b = tr.querySelector('[data-edit]'); if (!b) return;
+      const e = state.entidades.find(x => x.id === b.dataset.edit); if (!e) return;
+      if (aloj.has(n(e.nombre)) && !tr.querySelector('.chip-aloj')) tr.cells[0].querySelector('b').insertAdjacentHTML('afterend', ' <span class="chip chip-aloj" title="Este club también usa la app como club alojado: sus datos reales están en Mis clubes">También en Mis clubes</span>');
+      const recs = (r.recs || {})[e.id];
+      if (!recs || (tr.nextElementSibling && tr.nextElementSibling.classList.contains('rec-fila'))) return;
+      const fila = document.createElement('tr'); fila.className = 'rec-fila'; if (tr.hidden || tr.classList.contains('inactiva')) fila.hidden = true;
+      fila.innerHTML = `<td colspan="${tr.cells.length}">${recs.length ? `<details><summary>💡 Recomendaciones (${recs.length}) <span class="rec-cab"><small>${recCuenta(recs)}</small></span></summary>
+        <ul class="rec-lista">${recs.map(x => `<li><span aria-hidden="true">${REC_ICO[x.p]}</span><span class="t">${esc(x.t)}${recItems(x)}</span></li>`).join('')}</ul>
+        <div class="ia-acciones"><button type="button" class="btn ghost" data-rec-ent="${esc(e.id)}">Copiar para enviar a la entidad</button><button type="button" class="btn ghost" data-rec-mat="${esc(e.id)}">Ver su Matriz</button></div></details>`
+        : '<small class="st ok">✓ Sin recomendaciones pendientes</small>'}</td>`;
+      tr.after(fila);
+    });
+    $$('[data-rec-ent]').forEach(b => b.onclick = () => { const e = state.entidades.find(x => x.id === b.dataset.recEnt); copiarTexto(recTexto(e.nombre, r.recs[e.id]).replace('el tutorial del Panel te guía paso a paso.', 'o presentando la documentación al Delegado/a de Protección municipal.')); });
+    $$('[data-rec-mat]').forEach(b => b.onclick = () => { show('matriz'); setTimeout(() => { const s = $('#matriz-entidad'); if (s) { s.value = b.dataset.recMat; loadMatriz(); } }, 60); });
+  };
+})();
+GUIA.forEach(t => { if (t[1] === 'Entidades y coordinación con clubes') t[2].push(['¿Qué pasa si doy de alta en Entidades un club que ya tiene la app?', '<p>Son <b>dos registros distintos que no se sincronizan</b>: el club alojado (su hoja, su ficha y su Matriz, en <b>Mis clubes</b>) y la entidad del ayuntamiento (en <b>Entidades</b>). Habría que mantener cada dato dos veces y podría contarse doble en los informes.</p><ul><li>Si el club usa la app: síguelo desde <b>Mis clubes</b> (indicadores, recomendaciones e informe).</li><li><b>Entidades</b> es para las que no usan la app: el ayuntamiento registra lo que presentan (declaración responsable, verificación, requerimientos).</li><li>La app avisa al dar de alta un nombre que ya existe como club alojado, y marca la fila con <b>«También en Mis clubes»</b>.</li></ul>', 'mun', 'entidades']); });
+
+// v34: hojas de aceptación del código de conducta, una por agente, generadas en el navegador (sin IA)
+function htmlHojasAceptacion(e, agentes) {
+  const lista = agentes.length ? agentes : [{}];
+  const temp = typeof coordTemporada === 'function' ? coordTemporada() : '';
+  const ver = e.protocolo_version ? ', versión ' + esc(e.protocolo_version) : '';
+  const hoja = (a, i) => `<div style="${i ? 'page-break-before:always;' : ''}">
+    <h2>Hoja de aceptación del código de conducta</h2>
+    <p><b>${esc(e.nombre || '')}</b>${temp ? ' · Temporada ' + esc(temp) : ''}</p>
+    <table>${fila('Nombre y apellidos', esc(a.nombre || '') || '……………………………………………')}${fila('DNI o NIE', '……………………………………………')}
+      ${fila('Rol en el club', esc(a.rol || '') || '……………………………………………')}${fila('Equipo, grupo o actividad', esc(a.grupo || '') || '……………………………………………')}</table>
+    <p><b>Declaro que:</b></p><ul>
+      <li>He recibido, leído y comprendido el Código de Conducta y el Protocolo de protección de ${esc(e.nombre || 'la entidad')}${ver}.</li>
+      <li>Me comprometo a cumplirlos en todas las actividades de la entidad, presenciales y digitales.</li>
+      <li>He aportado el certificado negativo del Registro Central de Delincuentes Sexuales y de Trata de Seres Humanos, y comunicaré de inmediato cualquier cambio en mi situación.</li>
+      <li>Conozco al Delegado/a de Protección${e.delegado_nombre ? ' (' + esc(e.delegado_nombre) + ')' : ''} y los canales de comunicación, y mi deber de comunicar cualquier sospecha o situación de violencia en un plazo máximo de ${esc(e.plazo_comunicacion_h || 24)} horas.</li>
+      <li>Acepto que el incumplimiento se tramite conforme a ${esc(e.regimen_disciplinario || 'los Estatutos de la entidad')}, sin perjuicio de las responsabilidades legales.</li></ul>
+    <p>En ${esc(e.municipio || '……………………')}, a …… de ……………………… de ………</p>
+    <div class="firma"><div>Firma de la persona interesada</div><div>Recibido: Delegado/a de Protección o Secretaría<br>Fecha: ……………………</div></div></div>`;
+  return plantillaInforme('Hojas de aceptación del código de conducta', e.nombre || '', lista.map(hoja).join('') +
+    '<div class="nota">Documento con datos personales: una vez firmado, se custodia en la entidad (Secretaría o Delegado/a). No lo subas a enlaces compartidos; en la Matriz (D2) registra solo cuántas hojas hay y dónde se guardan.</div>');
+}
+(function () {
+  const acc = $('#view-agentes .ia-acciones'); if (!acc || $('#ag-hojas')) return;
+  acc.insertAdjacentHTML('beforeend', '<button class="btn ghost" id="ag-hojas" type="button">📄 Hojas de aceptación del código</button><button class="btn ghost" id="ag-hoja-blanco" type="button">Hoja en blanco</button>');
+  const ent = () => state.entidades.find(x => x.id === $('#agentes-entidad').value) || state.entidades[0] || {};
+  $('#ag-hojas').onclick = () => {
+    const ag = (state.agentes || []).filter(a => a.activo !== 'NO');
+    if (!ag.length) { toast('No hay agentes activos: usa «Hoja en blanco»', true); return; }
+    const pend = ag.filter(a => a.codigo_aceptado !== 'SI');
+    const usar = pend.length && pend.length < ag.length && confirm(`${pend.length} de ${ag.length} agentes aún no han aceptado el código.\n\n¿Generar solo sus hojas? (Cancelar = todas)`) ? pend : ag;
+    abrirInforme(htmlHojasAceptacion(ent(), usar));
+  };
+  $('#ag-hoja-blanco').onclick = () => abrirInforme(htmlHojasAceptacion(ent(), []));
+})();
+GUIA.forEach(t => { if (t[1] === 'Agentes, formación y autorizaciones') t[2].push(['¿Cómo saco las hojas de aceptación del código de conducta?', '<p><b>Agentes deportivos → 📄 Hojas de aceptación del código</b>: una página por agente con su nombre, rol y grupo ya puestos; solo falta el DNI, la fecha y la firma. Si hay agentes que aún no lo han aceptado, la app ofrece generar solo las suyas. Con <b>Hoja en blanco</b> sacas una para rellenar a mano (nuevas altas, voluntariado puntual).</p><p>Se generan en tu navegador, sin IA. Una vez firmadas, se guardan en el club; en el agente marca <b>Código aceptado: SI</b> y en la Matriz registra <b>D2</b> sin enlace («n de n hojas, custodiadas en Secretaría»).</p>', '', 'agentes']); });
+
+// v35: recomendaciones de la Matriz dentro de la propia Matriz (solo las que se resuelven aquí)
+function resaltarFilaMatriz(cod) {
+  const fila = [...$$('#tabla-matriz tbody tr')].find(x => (x.querySelector('td b') || {}).textContent === cod);
+  if (!fila) return;
+  if (fila.hidden) { state.filtroMatriz = ''; matrizMejoras(); }
+  fila.classList.remove('tut-fila'); void fila.offsetWidth; fila.classList.add('tut-fila');
+  fila.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const b = fila.querySelector('[data-req]'); if (b) setTimeout(() => b.focus({ preventScroll: true }), 600);
+  setTimeout(() => fila.classList.remove('tut-fila'), 8000);
+}
+async function pintarRecMatriz() {
+  const sel = $('#matriz-entidad'), t = $('#tabla-matriz'); if (!sel || !sel.value || !t) return;
+  let recs; try { recs = await API.call('misRecomendaciones', { entidad_id: sel.value }); } catch (e) { return; }
+  recEstilo();
+  if (!$('#tut-estilo') && typeof tutPintar === 'function') tutPintar();
+  recs = recs.filter(r => r.ir === 'matriz');
+  state.recSug = {}; recs.forEach(r => (r.items || []).forEach(it => { if (it.c && it.e) state.recSug[it.c] = it; }));
+  let c = $('#rec-matriz');
+  if (!c) { c = document.createElement('div'); c.id = 'rec-matriz'; c.className = 'card rec-card'; const f = $('#matriz-filtro') || t.closest('.card'); f.parentNode.insertBefore(c, f); }
+  if (!recs.length) { c.innerHTML = '<small class="st ok">💡 ✓ Sin recomendaciones pendientes en la Matriz</small>'; return; }
+  c.innerHTML = `<details><summary style="cursor:pointer;min-height:40px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>💡 Recomendaciones sobre la Matriz (${recs.length})</b> <small>${recCuenta(recs)}</small></summary>
+    <ul class="rec-lista">${recs.map((r, i) => { const cods = [...new Set(r.t.match(/\b[A-K][12]\b/g) || [])].slice(0, 21);
+      return `<li><span aria-hidden="true">${REC_ICO[r.p]}</span><span class="t">${esc(r.t)}${recItems(r)}</span>${cods.map(cd => `<button type="button" class="btn ghost" data-recm="${cd}" style="min-height:36px;padding:4px 10px">${cd}</button>`).join(' ')}</li>`; }).join('')}</ul></details>`;
+  $$('[data-recm]').forEach(b => b.onclick = () => resaltarFilaMatriz(b.dataset.recm));
+}
+(function () {
+  const base = loadMatriz;
+  loadMatriz = async function () { await base(); pintarRecMatriz(); };
+})();
+
+// v36: criterio de enlaces en las evidencias (guía + aviso en el formulario de la Matriz)
+const REQ_SENSIBLES = { K2: 'certificados negativos de delitos sexuales', D2: 'hojas de aceptación firmadas con DNI', E1: 'autorizaciones de imagen firmadas por las familias', F1: 'autorizaciones de desplazamiento firmadas por las familias', B2: 'certificado de formación del Delegado/a', J1: 'certificados de formación de los agentes' };
+const REQ_GENERICO = { K2: 1, D2: 1, E1: 1, F1: 1 }; // en informes: texto genérico en lugar del título
+const EJ_SENSIBLE = { K2: 'Certificados negativos 2026/2027 (2 de 2) · carpeta restringida', B2: 'Certificado de formación del Delegado/a · carpeta restringida', J1: 'Certificados de formación 2026/2027 · carpeta restringida' };
+(function () {
+  const base = formCumplimiento;
+  formCumplimiento = function (entidad_id, r) {
+    base(entidad_id, r);
+    const f = $('#modal-form'), url = f && f.querySelector('[name="ev_url"]'); if (!url) return;
+    delete f.dataset.ev2; delete f.dataset.url2; f.classList.remove('modo-sug', 'modo-sug2'); // el formulario se reutiliza entre requisitos
+    const sg = (state.recSug || {})[r.codigo];
+    if (sg) {
+      // v59: con sugerencia, el formulario se reduce a una decisión: aplicar (y guardar) o hacerlo a mano.
+      const ETQ = { cumple: 'Cumple', parcial: 'Parcial', no_aplica: 'No aplica' };
+      const faltaEnlace = !!(sg.ev && !sg.url && (sg.enlace || REQ_SENSIBLES[sg.c])); // documentos y carpetas que solo tiene el club
+      f.classList.add('modo-sug');
+      f.querySelector('h3').insertAdjacentHTML('afterend', `<div class="plant-ok" id="sug-req" style="grid-column:1/-1;margin:0 0 10px;padding:12px 14px;border-radius:10px">💡 <b>La app sugiere: ${ETQ[sg.e] || sg.e}</b><br>${esc(String(sg.t).replace(/^[A-K][12] → [^:]+: /, ''))}
+        <ul style="margin:8px 0 0;padding-left:18px">${sg.ev ? `<li><small>Evidencia: «${esc(sg.ev)}»${sg.url ? ' (con el enlace que ya consta en la Matriz)' : faltaEnlace ? ' (pegarás el enlace' + (REQ_SENSIBLES[sg.c] ? ' de la carpeta restringida' : ' al documento') + ')' : ''}</small></li>` : ''}${sg.ev2 ? `<li><small>Evidencia: «${esc(sg.ev2)}»${sg.url2 ? ' (con su enlace)' : ''}</small></li>` : ''}${sg.acc ? `<li><small>Acción pendiente: ${esc(sg.acc)}</small></li>` : ''}</ul>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button type="button" class="btn" id="sug-aplicar">${faltaEnlace ? 'Aplicar y pegar el enlace' : '✓ Aplicar y guardar'}</button><button type="button" class="btn ghost" id="sug-cancelar">Cancelar</button>
+        <button type="button" class="link" id="sug-mano">Prefiero hacerlo a mano</button></div></div>`);
+      const set = (n, v) => { const el = f.querySelector('[name="' + n + '"]'); if (el && v != null) { el.value = v; el.dispatchEvent(new Event('change', { bubbles: true })); } };
+      const verForm = () => { f.classList.remove('modo-sug'); };
+      $('#sug-mano').onclick = () => { verForm(); $('#sug-req').remove(); };
+      $('#sug-cancelar').onclick = () => { const d = $('#modal'); d.returnValue = 'cancel'; d.close(); };
+      $('#sug-aplicar').onclick = () => {
+        set('estado', sg.e); if (sg.ev) set('ev_titulo', sg.ev); if (sg.url) set('ev_url', sg.url); set('accion_pendiente', sg.acc || '');
+        f.dataset.ev2 = sg.ev2 || ''; f.dataset.url2 = sg.url2 || '';
+        if (!f.fecha_revision.value) set('fecha_revision', new Date().toISOString().slice(0, 10));
+        f.querySelectorAll('[data-reus]').forEach(i => { i.checked = false; }); // la sugerencia ya decide qué evidencias van
+        if (faltaEnlace) { verForm(); f.classList.add('modo-sug2'); $('#sug-req').remove(); url.required = true; url.focus(); toast('Pega el enlace y pulsa Guardar'); return; }
+        const d = $('#modal'); d.returnValue = 'ok'; d.close('ok');
+      };
+    }
+    pintarComoCumplir(f, r);
+    // v58: al guardar, añade las evidencias reutilizadas (casillas 🔗) y la segunda evidencia sugerida, sin duplicar enlaces
+    const dlg = $('#modal'), cierreBase = dlg.onclose;
+    dlg.onclose = async () => {
+      const ok = dlg.returnValue === 'ok';
+      const extra = ok ? [...f.querySelectorAll('[data-reus]:checked')].map(i => ({ t: i.dataset.t, u: i.dataset.u })) : [];
+      if (ok && f.dataset.ev2) extra.push({ t: f.dataset.ev2, u: f.dataset.url2 || '' });
+      await cierreBase();
+      if (!extra.length) return;
+      const fila = (state.matriz || []).find(x => x.codigo === r.codigo) || {};
+      const vistos = new Set((fila.evidencias || []).map(v => v.url_drive || v.titulo).filter(Boolean));
+      if (f.ev_titulo.value) vistos.add(f.ev_url.value || f.ev_titulo.value);
+      let n = 0;
+      for (const x of extra) { const k = x.u || x.t; if (!k || vistos.has(k)) continue; vistos.add(k);
+        try { await API.call('guardarEvidencia', { entidad_id, requisito_codigo: r.codigo, titulo: x.t, url_drive: x.u, fecha_documento: f.fecha_revision.value }); n++; } catch (er) {} }
+      if (n) { toast(n + ' evidencia(s) reutilizada(s) añadida(s)'); loadMatriz(); }
+    };
+    const lab = url.closest('label');
+    const sens = REQ_SENSIBLES[r.codigo];
+    lab.insertAdjacentHTML('afterend', sens
+      ? `<p class="aviso-inc" style="grid-column:1/-1;margin:0">🔒 <b>${esc(r.codigo)}: ${esc(sens)}.</b> Enlaza la <b>carpeta</b> (no cada archivo) con acceso <b>Restringido</b> solo a las personas autorizadas por la Junta, y escribe un título <b>sin nombres de personas</b>, p. ej. «${esc(EJ_SENSIBLE[r.codigo] || 'Documentación ' + r.codigo + ' 2026/2027 · carpeta restringida')}».</p>`
+      : `<p class="nota" style="grid-column:1/-1;margin:0">🔒 Ningún documento del club debe ser público: en Drive (u otra nube), acceso <b>Restringido</b> solo para las personas que autorice la Junta. Título descriptivo y sin nombres de personas.</p>`);
+  };
+})();
+GUIA.forEach(t => { if (t[1] === 'Matriz de cumplimiento · la pieza clave') t[2].splice(4, 0, ['¿Cómo enlazo las evidencias? (confidencialidad)', '<p><b>Criterio del sistema:</b> los documentos se guardan solo en la nube del club (Drive u otra) y <b>nunca con carácter público</b>. Solo pueden verlos las personas que autorice el club por acuerdo de su Junta (normalmente Delegado/a, suplente y Secretaría). La app guarda únicamente el enlace: quién puede abrirlo lo deciden los permisos de la nube.</p>' +
+  '<table class="md-tabla"><thead><tr><th>Tipo de documento</th><th>Ejemplos</th><th>Cómo enlazarlo</th></tr></thead><tbody>' +
+  '<tr><td><b>Documentos del club</b></td><td>Protocolo, código, declaración, designación, cartel, registro de riesgos, medidas preventivas</td><td>Enlace al archivo, con acceso <b>Restringido</b> a las personas autorizadas.</td></tr>' +
+  '<tr><td><b>Documentos con datos personales</b></td><td>Certificados negativos (K2), hojas de aceptación (D2), autorizaciones firmadas por las familias (E1, F1), certificados de formación</td><td>Enlace a la <b>carpeta</b> del requisito (no a cada archivo), con acceso <b>Restringido</b>. Título <b>sin nombres de personas</b>: «Certificados negativos 2026/2027 (2 de 2) · carpeta restringida».</td></tr></tbody></table>' +
+  '<ul><li>En Drive: clic derecho → <b>Compartir</b> → Acceso general → <b>Restringido</b>, y añade solo a las personas autorizadas. Nunca «Cualquier persona con el enlace».</li><li>Recuerda que la app del club entra con una sola contraseña: quien la tenga ve los enlaces, pero sin permiso en la nube no podrá abrirlos.</li><li>Los informes y el documento de Medidas preventivas muestran solo títulos, nunca enlaces; en K2, D2, E1 y F1 ni siquiera el título.</li><li>Las <b>recomendaciones</b> avisan si una evidencia lleva en el título el nombre de un agente o del Delegado/a.</li></ul>', '', 'matriz']); });
+
+GUIA.forEach(t => { if (t[1] === 'Matriz de cumplimiento · la pieza clave') t[2].push(['¿Qué es «Aplicar sugerencia»?', '<p>La app detecta, sin IA, los requisitos que ya puedes marcar con tus datos: <b>A1, A2, B1, D1 y G1</b> con las fechas de aprobación de la ficha; <b>B2</b> y <b>J1</b> con Formación; <b>C1 y C2</b> con Riesgos; <b>D2, K1 y K2</b> con Agentes; <b>E1 y F1</b> con Autorizaciones; <b>E2, F2, H1 y H2</b> con el protocolo aprobado; <b>I1</b> con el canal de la ficha; <b>I2</b> con el cartel y la carta a familias; y <b>F1/F2 No aplica</b> si el club no viaja. Solo G2 (difusión) depende de algo que la app no puede saber: que hayas enviado la carta.</p><p>Aparecen en <b>💡 Recomendaciones sobre la Matriz</b>. Al abrir el requisito verás solo <b>💡 La app sugiere</b>, con lo que se va a registrar. Pulsa <b>✓ Aplicar y guardar</b> y queda hecho: estado, evidencia (con el enlace si el documento ya está en otro requisito, como el protocolo de G1), acción pendiente y fecha. En E1 y F1 el botón es <b>Aplicar y pegar el enlace</b>: pega la carpeta restringida y guarda. Si prefieres decidir tú, pulsa <b>Prefiero hacerlo a mano</b> y verás el formulario completo con <b>📋 Cómo cumplir</b>.</p>', '', 'matriz']); });
+
+(function () { if ($('#css-modo-sug')) return; const st = document.createElement('style'); st.id = 'css-modo-sug';
+  st.textContent = '#modal-form.modo-sug .fields,#modal-form.modo-sug .actions,#modal-form.modo-sug #como-req,#modal-form.modo-sug2 #como-req{display:none}';
+  document.head.appendChild(st); })();
+// v56: «Cómo cumplir este requisito» dentro del formulario de la Matriz, para que el club sea autónomo sin ayuda externa.
+// [cómo se cumple, título de evidencia modelo, cuándo es Cumple, plantillas, pantalla]
+const REQ_COMO = {
+  A1: ['Genera la Declaración institucional, apruébala en la Junta y fírmala.', 'Declaración institucional (Junta dd/mm/aaaa)', 'Aprobada y firmada.', ['declaracion']],
+  A2: ['Presenta el Anexo I oficial de la Orden de 18/11/2024 en el Registro Electrónico Único de la Junta de Andalucía. La app no lo genera: la evidencia es el justificante.', 'Justificante de registro del Anexo I (aceptación del Protocolo Marco)', 'Con justificante de registro.'],
+  B1: ['Genera la Designación del Delegado/a, apruébala en la Junta y regístrala con el Anexo II oficial.', 'Acuerdo de designación del Delegado/a (Junta dd/mm/aaaa) + justificante Anexo II', 'Acuerdo firmado y Anexo II registrado.', ['designacion']],
+  B2: ['Registra en Formación el curso del Delegado/a (colectivo Delegado/a) y guarda el certificado.', 'Certificado de formación del Delegado/a · carpeta restringida', 'Curso específico realizado.', null, 'formacion'],
+  C1: ['En Riesgos: Proponer con IA → importar los riesgos → 📄 Registro de riesgos. Apruébalo en la Junta.', 'Registro de riesgos ' + coordTemporada(), 'Registro aprobado por la Junta.', null, 'riesgos'],
+  C2: ['En Riesgos: 📄 Medidas preventivas. Las medidas no implantadas van al anexo.', 'Medidas preventivas ' + coordTemporada(), 'Parcial mientras el anexo tenga medidas; Cumple con el anexo vacío y el documento aprobado.', null, 'riesgos'],
+  D1: ['Genera el Código de conducta y apruébalo en la Junta.', 'Código de conducta (Junta dd/mm/aaaa)', 'Aprobado por la Junta.', ['codigo']],
+  D2: ['En Agentes deportivos: 📄 Hojas de aceptación; que las firme cada agente y marca «Código aceptado: SI».', 'Hojas de aceptación del código ' + coordTemporada() + ' (n de n) · carpeta restringida', 'Todos los agentes lo han aceptado.', null, 'agentes'],
+  E1: ['Genera la Autorización de imagen, repártela a las familias y anota en Autorizaciones cuántas has recibido por grupo (sin nombres).', 'Documentación E1 ' + coordTemporada() + ' · carpeta restringida', 'Todas las autorizaciones recibidas; Parcial mientras falten.', ['aut_imagen'], 'autorizaciones'],
+  E2: ['Lo cubre el apartado de datos e imágenes del protocolo (G1), o un documento propio sobre redes sociales.', 'Protocolo de protección, apartado de datos e imágenes', 'Protocolo aprobado con ese apartado.'],
+  F1: ['Genera una Autorización de desplazamiento por cada salida y anota el recuento en Autorizaciones. Si el club no viaja: No aplica.', 'Documentación F1 ' + coordTemporada() + ' · carpeta restringida', 'Autorizaciones de cada salida recibidas.', ['aut_desplaz'], 'autorizaciones'],
+  F2: ['Lo cubre el apartado de desplazamientos del protocolo más las medidas de desplazamientos de Riesgos. Si el club no viaja ni pernocta: No aplica.', 'Protocolo de protección, desplazamientos + Medidas preventivas ' + coordTemporada(), 'Protocolo aprobado y medidas implantadas.', null, 'riesgos'],
+  G1: ['Genera el Protocolo de protección y apruébalo en la Junta.', 'Protocolo de protección vX (Junta dd/mm/aaaa)', 'Aprobado por la Junta y con fecha.', ['protocolo']],
+  G2: ['Genera la Carta a familias y envíala (correo, grupo de familias, web o tablón). Guarda la prueba del envío.', 'Carta a familias ' + coordTemporada() + ' + prueba de envío', 'Carta enviada; Parcial hasta enviarla.', ['familias']],
+  H1: ['Lo cubre el procedimiento del protocolo (G1). Genera además la Guía rápida de actuación y entrégala a entrenadores y monitores.', 'Protocolo, procedimiento de comunicación + Guía rápida de actuación', 'Procedimiento aprobado y guía entregada.', ['actuacion']],
+  H2: ['Lo cubre el flujograma del protocolo o de la Guía rápida. Difúndelo entre los agentes.', 'Flujograma de actuación (protocolo / guía rápida)', 'Flujograma aprobado y difundido.', ['actuacion']],
+  I1: ['Completa el canal en la ficha (correo, teléfono o buzón), genera el Cartel del canal (con QR) y colócalo en las instalaciones.', 'Cartel del canal de comunicación (PDF) + foto del tablón', 'Canal operativo y cartel publicado.', ['canal']],
+  I2: ['El cartel (versión infantil) y la Carta a familias informan del canal y del 116 111.', 'Cartel del canal y Carta a familias (116 111)', 'Cartel publicado y carta enviada.', ['canal', 'familias']],
+  J1: ['Registra en Formación la formación de cada agente (por persona o por lote).', 'Registro de formación en EntornoSeguro, n de n agentes', 'Todos los agentes formados; Parcial mientras falten.', null, 'formacion'],
+  K1: ['Da de alta en Agentes deportivos a cada entrenador, monitor, directivo o voluntario en contacto con menores.', 'Registro de agentes en EntornoSeguro, n agentes', 'Todos los agentes registrados.', null, 'agentes'],
+  K2: ['Anota en Agentes la fecha del certificado negativo de cada persona y guarda los certificados en la carpeta restringida.', 'Certificados negativos ' + coordTemporada() + ' (n de n) · carpeta restringida', 'Todos los agentes con certificado.', null, 'agentes']
+};
+// Requisitos cuya evidencia puede ser un documento ya registrado en otro requisito
+const REQ_FUENTE = { E2: ['G1'], F2: ['G1', 'C2'], H1: ['G1'], H2: ['G1', 'H1'], I2: ['I1', 'G2'] };
+const NOM_PLANT = { declaracion: 'Declaración institucional', designacion: 'Designación', codigo: 'Código de conducta', protocolo: 'Protocolo', familias: 'Carta a familias', actuacion: 'Guía rápida de actuación', canal: 'Cartel del canal', aut_imagen: 'Autorización de imagen', aut_desplaz: 'Autorización de desplazamiento' };
+const NOM_VISTA = { formacion: 'Formación', riesgos: 'Riesgos', agentes: 'Agentes deportivos', autorizaciones: 'Autorizaciones' };
+function pintarComoCumplir(f, r) {
+  const c = REQ_COMO[r.codigo]; if (!c) return;
+  const abierto = !r.estado || r.estado === 'pendiente';
+  const bots = (c[3] || []).map(id => `<button type="button" class="btn ghost" data-como-plant="${id}">📄 Generar: ${esc(NOM_PLANT[id] || id)}</button>`).join(' ')
+    + (c[4] ? ` <button type="button" class="btn ghost" data-como-vista="${c[4]}">Ir a ${esc(NOM_VISTA[c[4]] || c[4])}</button>` : '');
+  // Documentos que ya constan en otros requisitos y sirven para este (se añaden al guardar si están marcados)
+  const filas = state.matriz || [], propia = filas.find(x => x.codigo === r.codigo) || {};
+  const yaUrls = new Set((propia.evidencias || []).map(v => v.url_drive).filter(Boolean));
+  const reus = []; (REQ_FUENTE[r.codigo] || []).forEach(cf => { const fl = filas.find(x => x.codigo === cf); ((fl && fl.evidencias) || []).forEach(v => {
+    if (v.url_drive && !yaUrls.has(v.url_drive) && !reus.some(z => z.u === v.url_drive)) reus.push({ c: cf, t: v.titulo, u: v.url_drive }); }); });
+  const reusHtml = reus.length ? `<div style="margin-top:6px;padding:6px 8px;background:color-mix(in srgb,var(--accent) 8%,transparent);border-radius:8px"><small><b>🔗 Documentos que ya están en la Matriz y sirven aquí</b> (se añaden como evidencia al guardar; desmarca los que no correspondan):</small>
+    ${reus.map(z => `<label style="display:flex;gap:6px;align-items:flex-start;font-weight:400;margin:4px 0"><input type="checkbox" checked data-reus data-t="${esc(z.t)}" data-u="${esc(z.u)}" style="width:auto;min-height:0;margin-top:3px"> <small>${esc(z.t)} <span class="muted">(de ${esc(z.c)})</span></small></label>`).join('')}</div>` : '';
+  if (reus.length && !abierto) setTimeout(() => { const d = $('#como-req'); if (d) d.open = true; }, 0);
+  const ref = f.querySelector('#sug-req') || f.querySelector('h3');
+  ref.insertAdjacentHTML('afterend', `<details id="como-req" ${abierto ? 'open' : ''} style="grid-column:1/-1;margin:0 0 10px;border:1px solid var(--line);border-radius:10px;padding:8px 12px">
+    <summary style="cursor:pointer;font-weight:600">📋 Cómo cumplir ${esc(r.codigo)}</summary>
+    <p style="margin:6px 0">${esc(c[0])}</p>
+    <p style="margin:4px 0"><small><b>Evidencia:</b> «${esc(c[1])}» <button type="button" class="btn ghost" id="como-titulo" style="min-height:30px;padding:2px 8px">Usar este título</button></small></p>
+    <p style="margin:4px 0"><small><b>Cumple cuando:</b> ${esc(c[2])}</small></p>
+    ${reusHtml}
+    ${bots ? `<p style="margin:8px 0 4px"><small><b>¿Aún no tienes el documento?</b> Estos botones cierran el formulario y te llevan donde se hace; después vuelve a la Matriz y pulsa Actualizar.</small></p><div style="display:flex;gap:6px;flex-wrap:wrap">${bots}</div>` : ''}</details>`);
+  const cerrar = () => { const d = $('#modal'); d.returnValue = 'cancel'; d.close(); };
+  $('#como-titulo').onclick = () => { f.ev_titulo.value = c[1]; f.ev_titulo.focus(); toast('Cambia «dd/mm/aaaa», «vX» o «n de n» por tus datos'); };
+  f.querySelectorAll('[data-como-plant]').forEach(b => b.onclick = () => { cerrar(); irPlantilla(b.dataset.comoPlant); });
+  f.querySelectorAll('[data-como-vista]').forEach(b => b.onclick = () => { cerrar(); show(b.dataset.comoVista); });
+}
+GUIA.forEach(t => { if (t[1] === 'Matriz de cumplimiento · la pieza clave') t[2].push(['¿Cómo sé qué tengo que hacer en cada requisito?', '<p>Al abrir un requisito con <b>Actualizar</b> verás <b>📋 Cómo cumplir</b>: qué hay que hacer, el título recomendado para la evidencia (botón <b>Usar este título</b>), cuándo se considera Cumple y botones que te llevan a la plantilla o a la pantalla donde se hace. No necesitas ayuda externa: sigue esos pasos y vuelve a la Matriz para registrar el resultado.</p>', '', 'matriz']); });
+
+// v37: recomendaciones en cada pantalla (solo las que se resuelven en ella)
+const REC_VISTAS = { riesgos: ['riesgos', '#riesgos-entidad'], agentes: ['agentes', '#agentes-entidad'], formacion: ['formacion', null],
+  autorizaciones: ['autorizaciones', '#aut-entidad'], encuestas: ['encuestas', '#enc-entidad'], entidades: ['ficha', null] };
+async function pintarRecVista(vista) {
+  const cfgV = REC_VISTAS[vista], v = $('#view-' + vista); if (!cfgV || !v) return;
+  if (!state.club && (vista === 'formacion' || vista === 'entidades')) return; // en municipal: Entidades ya lo muestra por fila
+  const sel = cfgV[1] && $(cfgV[1]), entidad_id = sel ? sel.value : '';
+  if (!state.club && !entidad_id) return;
+  let recs; try { recs = await API.call('misRecomendaciones', entidad_id ? { entidad_id } : {}); } catch (e) { return; }
+  recEstilo(); if (!$('#tut-estilo') && typeof tutPintar === 'function') tutPintar();
+  recs = recs.filter(r => r.ir === cfgV[0]);
+  let c = $('#rec-' + vista);
+  if (!c) { c = document.createElement('div'); c.id = 'rec-' + vista; c.className = 'card rec-card'; const ref = v.querySelector(':scope > p.nota') || v.querySelector(':scope > header'); ref.after(c); }
+  if (!recs.length) { c.innerHTML = '<small class="st ok">💡 ✓ Sin recomendaciones pendientes en esta pantalla</small>'; return; }
+  c.innerHTML = `<details${recs.some(r => r.p === 'alta') ? ' open' : ''}><summary style="cursor:pointer;min-height:40px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>💡 Recomendaciones (${recs.length})</b> <small>${recCuenta(recs)}</small></summary>
+    <ul class="rec-lista">${recs.map(r => { const cods = [...new Set(r.t.match(/\b[A-K][12]\b/g) || [])];
+      return `<li><span aria-hidden="true">${REC_ICO[r.p]}</span><span class="t">${esc(r.t)}${recItems(r)}</span>${cods.map(cd => `<button type="button" class="btn ghost" data-recv="${cd}" title="Ver ${cd} en la Matriz" style="min-height:36px;padding:4px 10px">${cd} en la Matriz</button>`).join(' ')}</li>`; }).join('')}</ul></details>`;
+  c.querySelectorAll('[data-recv]').forEach(b => b.onclick = () => { state.filtroMatriz = ''; state.tutResaltar = b.dataset.recv; const rc = $('#revision-ia'); if (rc) rc.innerHTML = ''; show('matriz'); });
+}
+(function () {
+  [['riesgos', () => loadRiesgos, f => { loadRiesgos = f; }], ['agentes', () => loadAgentes, f => { loadAgentes = f; }], ['formacion', () => loadFormacion, f => { loadFormacion = f; }],
+   ['autorizaciones', () => loadAutorizaciones, f => { loadAutorizaciones = f; }], ['encuestas', () => loadEncuestas, f => { loadEncuestas = f; }], ['entidades', () => loadEntidades, f => { loadEntidades = f; }]]
+    .forEach(([vista, get, set]) => { const base = get(); if (typeof base !== 'function') return; set(async function () { await base.apply(this, arguments); pintarRecVista(vista); }); });
+})();
+
+// v39: Panel del club con una sola guía a la vez.
+// · Tutorial activo → él marca el camino: se ocultan «Primeros pasos» y «Siguiente paso recomendado».
+// · Sin tutorial → «Primeros pasos» mientras falten; después, el «siguiente paso» es la primera recomendación (sin tarjeta aparte).
+function panelUnaGuia() {
+  const card = $('#pasos-card'); if (!card || !state.club) return;
+  const tutActivo = tutLeer().estado === 'activo';
+  const esSiguiente = /Siguiente paso recomendado/.test(card.textContent);
+  card.classList.toggle('hidden', tutActivo || esSiguiente);
+  const rc = $('#rec-card'); if (!rc) return;
+  const prim = rc.querySelector('.rec-lista > li');
+  rc.querySelectorAll('.rec-empieza').forEach(x => x.remove());
+  if (prim && !tutActivo) {
+    prim.querySelector('.t').insertAdjacentHTML('afterbegin', '<span class="rec-empieza">👉 Empieza por aquí</span> ');
+    const d = rc.querySelector('details'); if (d) d.open = true;
+  }
+}
+(function () {
+  if (!$('#rec-empieza-est')) { const st = document.createElement('style'); st.id = 'rec-empieza-est'; st.textContent = '.rec-empieza{display:inline-block;margin-right:6px;padding:1px 8px;border-radius:999px;background:var(--brand-2);color:#fff;font-size:.75rem;font-weight:700}'; document.head.appendChild(st); }
+  const basePP = pintarPrimerosPasos;
+  pintarPrimerosPasos = async function () { await basePP.apply(this, arguments); panelUnaGuia(); };
+  const baseRC = pintarRecomendacionesClub;
+  pintarRecomendacionesClub = async function () { await baseRC.apply(this, arguments); panelUnaGuia(); };
+  const baseTP = tutPintar;
+  tutPintar = function () { baseTP.apply(this, arguments); panelUnaGuia(); };
+})();
+GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['En el Panel veo el tutorial y las recomendaciones: ¿cuál sigo?', '<ul><li><b>🧭 Tutorial</b>: un <b>recorrido de aprendizaje</b> por todo el sistema, en orden. Úsalo la primera vez. Mientras está activo, el Panel no muestra otras guías para no mezclar caminos.</li><li><b>💡 Recomendaciones</b>: la <b>lista viva</b> de lo que le falta hoy al club, calculada con sus datos y ordenada por prioridad. La primera lleva <b>«👉 Empieza por aquí»</b>. Es lo que también ve tu gestor.</li><li><b>👋 Primeros pasos</b>: los 5 básicos para arrancar; desaparecen al completarlos.</li></ul><p>Regla sencilla: <b>con el tutorial activo, sigue el tutorial; sin él, sigue las recomendaciones</b> de arriba abajo.</p>', 'club', 'panel']); });
+
+// v41: Panel del club más limpio, sin perder información.
+// · Las alertas se pliegan en «🔔 Alertas abiertas (n)»: se consultan con un toque y siguen completas en su pantalla y en el correo diario.
+// · El tutorial siempre se puede elegir: con él activo, la tarjeta de oferta desaparece; sin él, queda el botón para empezar o retomarlo.
+function panelAlertasPlegadas() {
+  const cont = $('#panel-alertas'); if (!cont) return;
+  const card = cont.closest('.card'); if (!card) return;
+  const h3 = card.querySelector(':scope > h3');
+  if (!state.club) { if (card.dataset.plegada) { const d = card.querySelector(':scope > details'); if (d) { card.insertBefore(cont, d); d.remove(); } if (h3) h3.hidden = false; delete card.dataset.plegada; } return; }
+  const n = cont.querySelectorAll('li').length, altas = cont.querySelectorAll('li.p-alta').length;
+  let d = card.querySelector(':scope > details');
+  if (!d) {
+    d = document.createElement('details');
+    d.innerHTML = '<summary style="cursor:pointer;min-height:40px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"></summary>';
+    card.insertBefore(d, cont); d.append(cont); card.dataset.plegada = '1';
+    if (h3) h3.hidden = true;
+    const pie = document.createElement('p'); pie.className = 'nota'; pie.style.margin = '8px 0 0';
+    pie.innerHTML = 'Las alertas son los avisos diarios del sistema (también llegan por correo). Las <b>recomendaciones</b> te dicen qué hacer con ellas. <button type="button" class="link" id="panel-ir-alertas">Ver todas en Alertas →</button>';
+    d.append(pie); pie.querySelector('button').onclick = () => show('alertas');
+  }
+  const vacio = !n;
+  const kpiTot = [...$$('#kpis .kpi')].find(k => /Alertas abiertas/i.test(k.textContent)), tot = kpiTot ? parseInt((kpiTot.querySelector('strong,b') || {}).textContent, 10) : NaN;
+  const cuenta = !isNaN(tot) && tot > n ? n + ' de ' + tot : String(n);
+  d.querySelector('summary').innerHTML = vacio ? '<b>🔔 Alertas prioritarias</b> <small class="st ok">✓ ninguna</small>' : `<b>🔔 Alertas prioritarias (${cuenta})</b> <small>${altas ? '🔴 ' + altas + ' alta(s) · ' : ''}toca para verlas</small>`;
+}
+(function () {
+  const base = loadPanel;
+  loadPanel = async function () { await base.apply(this, arguments); try { panelAlertasPlegadas(); } catch (e) {} };
+})();
+
+// v42: móvil · recomendaciones y tutorial a todo el ancho
+(function () {
+  if ($('#movil-rec-est')) return;
+  const st = document.createElement('style'); st.id = 'movil-rec-est';
+  st.textContent = '@media (max-width:640px){' +
+    '.rec-lista>li{flex-wrap:wrap}.rec-lista>li>.t{flex:1 1 calc(100% - 30px);min-width:0}' +
+    '.rec-lista>li>.btn{flex:1 1 100%;margin-left:28px;min-height:44px}' +
+    '.rec-lista .rec-items{padding-left:16px}' +
+    'body #tut-barra{padding:10px 12px}body #tut-barra .tut-acc{display:grid;grid-template-columns:1fr 1fr;gap:8px}body #tut-barra .tut-acc .btn{width:100%;min-height:44px;padding:6px 8px;font-size:.95rem;margin:0}' +
+    'body #tut-barra .tut-acc .btn:not(.ghost){grid-column:1/-1}' +
+    'body #tut-barra .tut-cab{font-size:.95rem}' +
+    '}';
+  document.head.appendChild(st);
+})();
+
+// v44: documento «Medidas preventivas» (evidencia de C2): implantadas en el cuerpo, en implantación en el anexo
+function fechaCorta(v) { const t = String(v || '').slice(0, 10); return /^\d{4}-\d{2}-\d{2}$/.test(t) ? t.split('-').reverse().join('/') : ''; }
+function htmlMedidasPreventivas(e, rows, matriz) {
+  const imp = rows.filter(r => r.estado === 'implantada'), pend = rows.filter(r => r.estado !== 'implantada');
+  const ordN = { alto: 0, medio: 1, bajo: 2 }, EST = { pendiente: 'Pendiente', en_curso: 'En curso' };
+  const riesgo = r => esc(r.descripcion || '') + ' <small>(nivel ' + esc(r.nivel || '') + ')</small>';
+  const temp = typeof coordTemporada === 'function' ? coordTemporada() : '';
+  let b = '<table>' + fila('Entidad', esc(e.nombre || '')) + (temp ? fila('Temporada', esc(temp)) : '') + fila('Versión', 'Documento generado el ' + new Date().toLocaleDateString('es-ES')) +
+    fila('Medidas implantadas', imp.length + ' de ' + rows.length) + fila('Medidas en implantación (anexo)', String(pend.length)) + '</table>';
+  b += '<p>Este documento recoge las medidas preventivas que la entidad aplica frente a los riesgos identificados en su análisis de riesgos, conforme al Protocolo Marco de protección de las personas menores frente a la violencia en el deporte (Orden de 18 de noviembre de 2024). Las medidas que aún no están implantadas figuran en el anexo, con su responsable y fecha prevista.</p>';
+  b += '<h2>1. Medidas preventivas implantadas</h2>';
+  if (!imp.length) b += '<p class="muted">Aún no hay medidas marcadas como implantadas.</p>';
+  [...new Set(imp.map(r => r.ambito))].forEach(a => {
+    const rs = imp.filter(r => r.ambito === a).sort((x, y) => ordN[x.nivel] - ordN[y.nivel]);
+    b += `<h3>${esc(a)}</h3><table><thead><tr><th style="width:46%">Medida</th><th>Responsable</th><th>Desde</th><th style="width:26%">Riesgo al que responde</th></tr></thead><tbody>` +
+      rs.map(r => `<tr><td>${esc(r.medidas || '—')}</td><td>${esc(r.responsable || '—')}</td><td style="white-space:nowrap">${fechaCorta(r.fecha_implantacion) || '—'}</td><td>${riesgo(r)}</td></tr>`).join('') + '</tbody></table>';
+  });
+  const soporte = (matriz || []).filter(m => ['cumple', 'parcial'].includes(m.estado) && (m.evidencias || []).length && !/^C[12]$/.test(m.codigo));
+  b += '<h2>2. Documentos de soporte</h2>' + (soporte.length
+    ? '<p>Las medidas se apoyan en los siguientes documentos de la entidad, registrados en su matriz de cumplimiento:</p><ul>' + soporte.map(m => `<li><b>${esc(m.codigo)}</b> ${esc(m.requisito)}: ${typeof REQ_GENERICO !== 'undefined' && REQ_GENERICO[m.codigo] ? 'documentación con datos personales custodiada en la entidad' : m.evidencias.map(v => esc(v.titulo)).join('; ')}${m.estado === 'parcial' ? ' <small>(en tramitación)</small>' : ''}</li>`).join('') + '</ul>'
+    : '<p class="muted">Aún no hay documentos registrados en la matriz.</p>');
+  const org = String(e.organo_gobierno || 'órgano de gobierno').trim(), orgTxt = /^(el|la|los|las)\s/i.test(org) ? org.charAt(0).toUpperCase() + org.slice(1) : (/^junta|^asamblea|^comisi/i.test(org) ? 'La ' : 'El ') + org;
+  b += '<h2>3. Aprobación</h2><p>' + esc(orgTxt) + ' de ' + esc(e.nombre || 'la entidad') + ', en sesión de fecha ……………………………, aprueba las medidas preventivas recogidas en el apartado 1' + (pend.length ? ' y se compromete a implantar las del anexo en los plazos indicados' : '') + ', encomendando su seguimiento al Delegado/a de Protección.</p>' +
+    '<div class="firma"><div>Delegado/a de Protección<br>' + esc(e.delegado_nombre || '') + '</div><div>Vº Bº Presidencia<br>' + esc(e.presidencia_nombre || '') + '</div></div>';
+  b += '<h2 style="page-break-before:always">Anexo · Medidas en implantación</h2>' + (pend.length
+    ? '<table><thead><tr><th style="width:38%">Medida</th><th style="width:24%">Riesgo al que responde</th><th>Responsable</th><th>Fecha prevista</th><th>Estado</th></tr></thead><tbody>' +
+      pend.sort((x, y) => ordN[x.nivel] - ordN[y.nivel]).map(r => `<tr><td>${esc(r.medidas || '—')}</td><td>${esc(r.ambito)}: ${riesgo(r)}</td><td>${esc(r.responsable || '—')}</td><td style="white-space:nowrap" class="${fechaCorta(r.fecha_implantacion) ? '' : 'warn st'}">${fechaCorta(r.fecha_implantacion) || 'Sin fecha'}</td><td>${EST[r.estado] || 'Pendiente'}</td></tr>`).join('') + '</tbody></table>' +
+      '<p>Cuando cada medida se aplique, se marcará como implantada y pasará al apartado 1 en la siguiente versión de este documento.</p>'
+    : '<p class="st ok">No hay medidas pendientes: todas las medidas preventivas están implantadas.</p>');
+  b += '<div class="nota">Documento generado a partir del registro de riesgos de EntornoSeguro. Recoge medidas preventivas organizativas; no valora personas ni hechos concretos. Evidencia del requisito C2 del Protocolo Marco: Parcial mientras el anexo tenga medidas; Cumple cuando esté vacío y aprobado.</div>';
+  return plantillaInforme('Medidas preventivas', e.nombre || '', b);
+}
+(function () {
+  const acc = $('#view-riesgos .ia-acciones'); if (!acc || $('#riesgos-med-pdf')) return;
+  const ref = $('#riesgos-reg-word');
+  const html = '<button class="btn ghost" id="riesgos-med-pdf" type="button" title="Evidencia de C2">📄 Medidas preventivas (PDF)</button><button class="btn ghost" id="riesgos-med-word" type="button">Word</button>';
+  if (ref) ref.insertAdjacentHTML('afterend', html); else acc.insertAdjacentHTML('beforeend', html);
+  if ($('#riesgos-reg-pdf')) $('#riesgos-reg-pdf').title = 'Evidencia de C1';
+  const generar = async () => {
+    const rows = state.riesgos || [];
+    if (!rows.length) { toast('Aún no hay riesgos guardados en la tabla', true); return null; }
+    const id = ($('#riesgos-entidad') || {}).value, e = state.entidades.find(x => x.id === id) || state.entidades[0] || {};
+    let m = []; try { m = await API.call('matriz', { entidad_id: e.id }); } catch (er) {}
+    return htmlMedidasPreventivas(e, rows, m);
+  };
+  $('#riesgos-med-pdf').onclick = async () => { const h = await generar(); if (h) abrirInforme(h); };
+  $('#riesgos-med-word').onclick = async () => { const h = await generar(); if (h) descargar('﻿' + h, 'application/msword', nombreInf('medidas-preventivas')); };
+})();
+// En el formulario del riesgo, la fecha es «de implantación» o «prevista» según el estado
+(function () {
+  const base = formRiesgo;
+  formRiesgo = function (r) {
+    base(r);
+    const f = $('#modal-form'), est = f && f.estado, fe = f && f.fecha_implantacion; if (!est || !fe) return;
+    const lab = fe.closest('label'), txtNodo = lab && [...lab.childNodes].find(n => n.nodeType === 3 && n.textContent.trim());
+    const pinta = () => { if (txtNodo) txtNodo.textContent = est.value === 'implantada' ? 'Fecha de implantación (desde cuándo se aplica)' : 'Fecha prevista de implantación'; };
+    est.addEventListener('change', pinta); pinta();
+    // v45: sugerencias del catálogo · fuera al editar; al crear, plegadas y sin sobrescribir lo escrito
+    const sug = f.querySelector('.sugerencias');
+    if (sug && r && r.id) { sug.remove(); return; }
+    if (!sug) return;
+    const det = document.createElement('details'); det.className = 'sug-plegadas'; det.style.cssText = 'grid-column:1/-1;margin:0';
+    det.innerHTML = '<summary style="cursor:pointer;min-height:40px;display:flex;align-items:center;font-weight:600;color:var(--brand)">💡 ¿Necesitas ideas? Ver riesgos típicos de este ámbito</summary>';
+    sug.before(det); det.append(sug);
+    const arreglar = () => {
+      const t = sug.querySelector('b'); if (t) t.parentNode.innerHTML = '<small>Pulsa uno para rellenar la situación y las medidas. Solo rellena los campos que estén vacíos.</small>' + [...sug.querySelectorAll('button')].map(x => x.outerHTML).join('');
+      const lista = CATALOGO_RIESGOS[f.ambito.value] || [];
+      sug.querySelectorAll('button').forEach(x => x.onclick = () => {
+        const it = lista.find(l => l[0] === x.textContent) || [x.textContent, ''];
+        if (f.descripcion.value.trim() && f.descripcion.value.trim() !== it[0] && !confirm('La situación ya tiene texto. ¿Sustituirlo por «' + it[0] + '»?')) return;
+        f.descripcion.value = it[0]; if (!f.medidas.value.trim() && it[1]) f.medidas.value = it[1];
+      });
+    };
+    arreglar();
+    const prev = f.ambito.onchange; f.ambito.onchange = function () { if (prev) prev.apply(this, arguments); arreglar(); };
+  };
+})();
+
+// v62: ACABADO VISUAL · capa de presentación (no cambia datos ni lógica)
+// Tarjetas con sombra suave, indicadores con icono de línea, tarjeta principal de estado en el Panel del club,
+// iconos de línea en el menú y fechas dd/mm/aaaa en pantalla (los campos de formulario siguen en ISO).
+const ICO = (d, w) => `<svg viewBox="0 0 24 24" width="${w || 20}" height="${w || 20}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const ICOS = {
+  formadas: '<path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/>',
+  alertas: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>',
+  riesgos: '<path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17h.01"/>',
+  agentes: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-4-6"/>',
+  cert: '<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3z"/><path d="m9 12 2 2 4-4"/>',
+  entidades: '<path d="M3 21h18M5 21V8l7-4 7 4v13"/><path d="M9 21v-6h6v6"/>',
+  pct: '<path d="M4 20 20 4"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/>',
+  casos: '<path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/>',
+  cal: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  idea: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>',
+  seg: '<path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/>', cum: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="m8 12 3 3 5-6"/>',
+  prot: '<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3z"/>', ia: '<path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><path d="M9 13h6M9 17h4"/>',
+  inf: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>', adm: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  ayuda: '<circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/>'
+};
+(function () {
+  if ($('#es-skin')) return;
+  const st = document.createElement('style'); st.id = 'es-skin';
+  st.textContent = [
+    ':root{--radius:14px;--shadow:0 1px 2px rgba(16,24,40,.04),0 4px 14px rgba(16,24,40,.06);--bg:#f5f8f8}',
+    '@media (prefers-color-scheme:dark){:root{--bg:#11181c;--shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25)}}',
+    '.card{border:1px solid color-mix(in srgb,var(--line) 55%,transparent);box-shadow:var(--shadow);padding:18px 20px}',
+    '.btn{border-radius:10px;transition:filter .15s,transform .05s}.btn:hover{filter:brightness(1.08)}.btn:active{transform:translateY(1px)}',
+    'main header h2{font-size:1.5rem;letter-spacing:-.01em}',
+    /* indicadores */
+    '.kpis{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px}',
+    '.kpi{border:1px solid color-mix(in srgb,var(--line) 55%,transparent);border-top:1px solid color-mix(in srgb,var(--line) 55%,transparent);box-shadow:var(--shadow);padding:16px 18px;display:grid;grid-template-columns:1fr auto;align-items:start;gap:6px 10px}',
+    '.kpi span{grid-column:1;font-size:.78rem;line-height:1.3}.kpi strong{grid-column:1;font-size:2rem;line-height:1.1;letter-spacing:-.02em}',
+    '.kpi .kpi-ico{grid-column:2;grid-row:1/3;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:var(--brand-2);background:color-mix(in srgb,var(--brand-2) 10%,transparent)}',
+    '.kpi.kpi-alerta strong{color:var(--bad)}.kpi.kpi-alerta .kpi-ico{color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,transparent)}',
+    '.kpi.kpi-ok .kpi-ico{color:var(--ok);background:color-mix(in srgb,var(--ok) 10%,transparent)}',
+    /* tarjeta principal */
+    '#panel-hero{display:flex;gap:22px;align-items:center;padding:22px 24px;background:linear-gradient(135deg,color-mix(in srgb,var(--brand-2) 7%,var(--panel)),var(--panel) 60%)}',
+    '#panel-hero .anillo{flex:0 0 auto;position:relative;width:104px;height:104px}#panel-hero .anillo b{position:absolute;inset:0;display:grid;place-items:center;font-size:1.5rem;color:var(--brand);letter-spacing:-.02em}',
+    '#panel-hero h3{font-size:1.25rem;margin:0 0 4px;color:var(--brand)}#panel-hero p{margin:0 0 12px;color:var(--muted)}',
+    '.hero-chips{display:flex;gap:8px;flex-wrap:wrap}.hero-chips button{display:inline-flex;gap:6px;align-items:center;min-height:36px;padding:6px 12px;border-radius:999px;border:1px solid color-mix(in srgb,var(--line) 70%,transparent);background:var(--panel);color:var(--ink);font:inherit;font-size:.82rem;cursor:pointer}',
+    '.hero-chips button:hover{border-color:var(--brand-2)}.hero-chips .ok{color:var(--ok)}.hero-chips .warn{color:var(--warn)}.hero-chips .bad{color:var(--bad)}',
+    '@media (max-width:600px){#panel-hero{flex-direction:column;align-items:flex-start;gap:12px}}',
+    /* recomendaciones y pasos: acento lateral en lugar de borde completo */
+    'main .rec-card{border:1px solid color-mix(in srgb,var(--line) 55%,transparent)!important;border-left:4px solid var(--warn)!important}main #pasos-card,main .tut-oferta{border:1px solid color-mix(in srgb,var(--line) 55%,transparent)!important;border-left:4px solid var(--brand-2)!important}',
+    /* menú */
+    '.nav-grupo{background:none;border-left:0;padding:14px 12px 4px;color:var(--muted);font-size:.7rem;font-weight:700;letter-spacing:.09em}.nav-grupo svg{color:var(--brand-2)}',
+    'nav button{border-radius:10px;transition:background .15s}nav button.active{box-shadow:0 2px 8px color-mix(in srgb,var(--brand-2) 35%,transparent)}',
+    '@media (max-width:860px){.nav-grupo{padding:10px 0 2px}}',
+    /* v66: resto de pantallas · tablas, formularios, diálogos y avisos con el mismo acabado */
+    'main h3{color:var(--brand);font-weight:700}.card>h3:first-child{margin-bottom:14px}',
+    'th{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);background:color-mix(in srgb,var(--bg) 70%,var(--panel));border-bottom:1px solid var(--line);padding:10px 8px}',
+    'tbody tr:not(.group):hover td{background:color-mix(in srgb,var(--brand-2) 4%,transparent)}td{border-bottom:1px solid color-mix(in srgb,var(--line) 60%,transparent)}',
+    'tr.group td{background:color-mix(in srgb,var(--brand-2) 7%,var(--panel));color:var(--brand);letter-spacing:.06em;padding:8px}',
+    'input,select,textarea{border-radius:10px;border-color:color-mix(in srgb,var(--line) 85%,transparent);transition:border-color .15s,box-shadow .15s}',
+    'input:focus,select:focus,textarea:focus{outline:none;border-color:var(--brand-2);box-shadow:0 0 0 3px color-mix(in srgb,var(--brand-2) 18%,transparent)}',
+    'dialog{border-radius:18px;box-shadow:0 24px 60px rgba(16,24,40,.25)}dialog::backdrop{background:rgba(11,48,87,.35);backdrop-filter:blur(2px)}',
+    'dialog h3{font-size:1.1rem;color:var(--brand)}.actions{border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent);padding-top:14px;margin-top:14px}',
+    '.btn.ghost{border-color:color-mix(in srgb,var(--brand) 55%,transparent)}.btn.ghost:hover{background:color-mix(in srgb,var(--brand) 6%,transparent);filter:none}',
+    '.chip{border-radius:999px}.st{border-radius:999px;padding:3px 10px}',
+    '.aviso-inc{border-radius:12px}.toast{border-radius:12px;box-shadow:0 10px 30px rgba(16,24,40,.25)}',
+    '.empty{font-style:normal;color:var(--muted);padding:6px 0}'
+  ].join('');
+  document.head.appendChild(st);
+  // Menú: iconos de línea en lugar de emojis
+  const GRP = [[/Seguimiento/i, 'seg'], [/Cumplimiento/i, 'cum'], [/Protecci/i, 'prot'], [/IA y doc/i, 'ia'], [/Informes/i, 'inf'], [/Administraci/i, 'adm'], [/Ayuda/i, 'ayuda']];
+  const iconosMenu = () => $$('.nav-grupo').forEach(g => { if (g.dataset.ico) return; const t = g.textContent.replace(/^[^\p{L}]+/u, '').trim(); const m = GRP.find(x => x[0].test(t)); g.innerHTML = (m ? ICO(ICOS[m[1]], 15) : '') + '<span>' + esc(t) + '</span>'; g.dataset.ico = '1'; });
+  iconosMenu(); setTimeout(iconosMenu, 1500);
+})();
+
+// Indicadores con icono y color solo cuando piden atención
+const KPI_ICO = [[/Personas formadas/i, 'formadas'], [/Alertas/i, 'alertas', 1], [/Riesgos altos/i, 'riesgos', 1], [/sin certificado/i, 'cert', 1], [/Agentes deportivos/i, 'agentes'],
+  [/Casos abiertos/i, 'casos', 1], [/Entidades|Con menores|Con Delegado|Aceptan|Actividades municipales/i, 'entidades'], [/Cumplimiento/i, 'pct']];
+function decorarKpis() {
+  $$('#kpis .kpi').forEach(k => {
+    const lab = (k.querySelector('span') || {}).textContent || '', v = parseInt((k.querySelector('strong') || {}).textContent, 10);
+    const m = KPI_ICO.find(x => x[0].test(lab)); if (!m) return;
+    if (!k.querySelector('.kpi-ico')) k.insertAdjacentHTML('beforeend', '<i class="kpi-ico">' + ICO(ICOS[m[1]], 20) + '</i>');
+    k.classList.toggle('kpi-alerta', !!m[2] && v > 0); k.classList.toggle('kpi-ok', !!m[2] && v === 0);
+  });
+}
+// Tarjeta principal del club: una sola lectura del estado (sustituye a «Todo al día», «Sin recomendaciones» y «Alertas: ninguna»)
+function pintarHeroClub() {
+  const v = $('#view-panel'); if (!v || !state.club) { const h = $('#panel-hero'); if (h) h.remove(); return; }
+  const tile = re => [...$$('#kpis .kpi')].find(k => re.test(k.textContent));
+  const tPct = tile(/Cumplimiento/i), tAl = tile(/Alertas abiertas/i);
+  const pct = tPct ? parseInt(tPct.querySelector('strong').textContent, 10) || 0 : 0, al = tAl ? parseInt(tAl.querySelector('strong').textContent, 10) || 0 : 0;
+  [tPct, tAl].forEach(t => t && t.classList.add('hidden'));
+  const recs = state.recsClub, todo = pct === 100 && !recs && state.panelTodoAlDia;
+  let h = $('#panel-hero');
+  if (!h) { h = document.createElement('div'); h.id = 'panel-hero'; h.className = 'card'; v.querySelector('header').after(h); }
+  const R = 44, C = 2 * Math.PI * R, col = pct >= 100 ? 'var(--ok)' : pct >= 60 ? 'var(--brand-2)' : 'var(--warn)';
+  const prox = state.proxRevision ? String(state.proxRevision).slice(0, 10).split('-').reverse().join('/') : '';
+  h.innerHTML = `<div class="anillo" role="img" aria-label="Cumplimiento ${pct}%"><svg viewBox="0 0 104 104" width="104" height="104"><circle cx="52" cy="52" r="${R}" fill="none" stroke="color-mix(in srgb,var(--line) 60%,transparent)" stroke-width="10"/>
+      <circle cx="52" cy="52" r="${R}" fill="none" stroke="${col}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C * pct / 100} ${C}" transform="rotate(-90 52 52)"/></svg><b>${pct}%</b></div>
+    <div><h3>${todo ? 'Todo al día' : pct === 100 ? 'Requisitos acreditados' : 'Sistema de protección en implantación'}</h3>
+      <p>${todo ? 'Todos los requisitos del Protocolo Marco están acreditados y no hay nada pendiente.' : recs ? (recs > 1 ? 'Quedan ' + recs + ' recomendaciones' : 'Queda 1 recomendación') + ' para dejarlo todo al día.' : 'Cumplimiento del Protocolo Marco. Sigue los primeros pasos y la Matriz para completarlo.'}</p>
+      <div class="hero-chips">
+        <button type="button" data-hero="rec" class="${recs ? 'warn' : 'ok'}">${ICO(ICOS.idea, 16)} ${recs == null ? 'Recomendaciones…' : recs ? recs + (recs > 1 ? ' recomendaciones' : ' recomendación') : 'Sin recomendaciones'}</button>
+        <button type="button" data-hero="al" class="${al ? 'bad' : 'ok'}">${ICO(ICOS.alertas, 16)} ${al ? al + ' alerta' + (al > 1 ? 's' : '') : 'Sin alertas'}</button>
+        ${prox ? `<button type="button" data-hero="mat">${ICO(ICOS.cal, 16)} Próxima revisión ${esc(prox)}</button>` : ''}
+      </div></div>`;
+  h.querySelector('[data-hero="rec"]').onclick = () => { const c = $('#rec-card'); if (c && !c.classList.contains('hidden')) { const d = c.querySelector('details'); if (d) d.open = true; c.scrollIntoView({ behavior: 'smooth', block: 'start' }); } else show('matriz'); };
+  h.querySelector('[data-hero="al"]').onclick = () => show('alertas');
+  const bm = h.querySelector('[data-hero="mat"]'); if (bm) bm.onclick = () => show('matriz');
+  // Sin redundancias: lo que ya dice la tarjeta principal no se repite debajo
+  const rc = $('#rec-card'); if (rc) rc.classList.toggle('hidden', recs === 0);
+  const pc = $('#pasos-card'); if (pc && state.panelTodoAlDia) pc.classList.add('hidden');
+  const ac = ($('#panel-alertas') || {}).closest && $('#panel-alertas').closest('.card'); if (ac) ac.classList.toggle('hidden', !al);
+}
+(function () {
+  const base = loadPanel;
+  loadPanel = async function () { await base.apply(this, arguments); try { decorarKpis(); pintarHeroClub(); } catch (e) {} };
+  const bPP = pintarPrimerosPasos; pintarPrimerosPasos = async function () { await bPP.apply(this, arguments); try { pintarHeroClub(); } catch (e) {} };
+  const bRC = pintarRecomendacionesClub; pintarRecomendacionesClub = async function () { await bRC.apply(this, arguments); try { pintarHeroClub(); } catch (e) {} };
+})();
+
+// Fechas dd/mm/aaaa en pantalla (solo texto visible; los valores de formulario y lo que se guarda siguen en ISO)
+(function () {
+  const RE = /\b(\d{4})-(\d{2})-(\d{2})\b/g, NO = /^(TEXTAREA|SCRIPT|STYLE|PRE|CODE|INPUT|SELECT|OPTION)$/;
+  const fmt = root => {
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: n => {
+      for (let p = n.parentNode; p && p !== root.parentNode; p = p.parentNode) { if (p.nodeType === 1 && (NO.test(p.tagName) || p.isContentEditable || p.classList.contains('out'))) return NodeFilter.FILTER_REJECT; }
+      return RE.test(n.nodeValue) ? (RE.lastIndex = 0, NodeFilter.FILTER_ACCEPT) : NodeFilter.FILTER_SKIP; } });
+    const ns = []; while (w.nextNode()) ns.push(w.currentNode);
+    ns.forEach(n => { n.nodeValue = n.nodeValue.replace(RE, (x, y, m, d) => d + '/' + m + '/' + y); });
+  };
+  const main = document.querySelector('main'); if (!main) return;
+  let t = null; const run = () => { t = null; try { fmt(main); } catch (e) {} };
+  new MutationObserver(() => { if (!t) t = setTimeout(run, 60); }).observe(main, { childList: true, subtree: true });
+})();
+
+// v63: IA NEUTRAL · solo la versión maestra conserva «Abrir en Claude». Clubes y ayuntamientos copian el prompt
+// y lo pegan en el asistente de IA que usen (ChatGPT, Gemini, Copilot, Claude…). Las instrucciones no son específicas de ningún asistente.
+const iaNeutral = () => !(typeof esMaestra === 'function' && esMaestra());
+const IA_TXT = [
+  [/Se abrirá Claude con tu cuenta y el prompt preparado\. Si aparece vacío, pulsa "Copiar prompt" y pégalo\./g, 'Pulsa «Copiar prompt», pégalo en el asistente de IA que uses (ChatGPT, Gemini, Copilot, \u0001…) y copia aquí su respuesta.'],
+  [/Al abrirse Claude, ADJUNTA el documento del club \(PDF o Word\) antes de enviar\. Si el prompt no aparece, pulsa "Copiar prompt" y pégalo\./g, 'Pulsa «Copiar prompt», pégalo en tu asistente de IA y ADJUNTA el documento del club (PDF o Word) antes de enviar.'],
+  [/Se abrirá Claude con tu cuenta\. Si aparece vacío, pulsa "Copiar prompt" y pégalo\./g, 'Cópialo con «Copiar prompt» y pégalo en tu asistente de IA.'],
+  [/Abrir en Claude/g, 'Copiar prompt'], [/Enviar a Claude/g, 'Enviar a la IA'], [/Claude con tu cuenta/g, 'tu asistente de IA'],
+  [/informe de Claude/g, 'informe de la IA'], [/sin volver a Claude/g, 'sin volver a la IA'], [/Pide a Claude/g, 'Pide a la IA'],
+  [/(^|[.:]\s+|>\s*)Claude (compara|lo lee|solo recibe)/g, (m, a, v) => a + 'La IA ' + v],
+  [/\bde Claude\b/g, 'de tu asistente de IA'], [/\ben Claude\b/g, 'en tu asistente de IA'], [/\bEn Claude\b/g, 'En tu asistente de IA'], [/\ba Claude\b/g, 'a tu asistente de IA'],
+  [/\bClaude\b/g, 'la IA']
+];
+const iaTexto = t => IA_TXT.reduce((x, [re, r]) => x.replace(re, r), String(t).replace(/Copilot, Claude/g, 'Copilot, \u0001')).replace(/\u0001/g, 'Claude'); // la lista de asistentes se respeta
+(function () {
+  const NO = /^(TEXTAREA|SCRIPT|STYLE|PRE|CODE)$/;
+  const aplicar = root => {
+    if (!iaNeutral()) return;
+    root.querySelectorAll('a[href^="https://claude.ai"]').forEach(a => {
+      const acc = a.parentNode; a.remove();
+      if (acc) acc.querySelectorAll('button').forEach(b => { if (/Copiar prompt/i.test(b.textContent)) { b.classList.remove('ghost'); b.textContent = '📋 Copiar prompt'; } });
+    });
+    root.querySelectorAll('textarea[placeholder*="Claude"],input[placeholder*="Claude"]').forEach(t => { t.placeholder = iaTexto(t.placeholder); });
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: n => {
+      for (let p = n.parentNode; p && p !== root.parentNode; p = p.parentNode) if (p.nodeType === 1 && NO.test(p.tagName)) return NodeFilter.FILTER_REJECT;
+      return /Claude/.test(n.nodeValue.replace(/Copilot, Claude/g, '')) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP; } });
+    const ns = []; while (w.nextNode()) ns.push(w.currentNode);
+    ns.forEach(n => { n.nodeValue = iaTexto(n.nodeValue); });
+  };
+  let t = null; const run = () => { t = null; try { aplicar(document.body); } catch (e) {} };
+  new MutationObserver(() => { if (!t) t = setTimeout(run, 40); }).observe(document.body, { childList: true, subtree: true, characterData: true });
+  const bt = toast; toast = function (msg) { const a = [].slice.call(arguments); if (iaNeutral() && typeof msg === 'string') a[0] = iaTexto(msg); return bt.apply(this, a); };
+})();
+GUIA.forEach(t => t[2].forEach(q => { if (/¿Cómo funciona la IA en la app\?/.test(q[0])) q[1] = '<p>La app prepara el texto de la petición (el <b>prompt</b>) con los datos necesarios y <b>sin datos personales</b>: nombres, teléfonos y correos van como marcadores que la app rellena después en tu equipo. Pulsa <b>📋 Copiar prompt</b>, pégalo en el asistente de IA que uses (ChatGPT, Gemini, Copilot, Claude…) y copia aquí su respuesta. La app no envía nada por su cuenta ni exige ningún asistente concreto.</p><p>Antes de guardar, revisa siempre el resultado: la IA propone y la entidad decide.</p>'; }));
+
+// v67: «TU ENTORNOSEGURO» · con todo al día, el Panel ofrece fichas de repaso de una página (sin IA, con los datos del club)
+// y una publicación del mes para redes (prompt de texto y prompt de imagen, para cualquier asistente).
+const ME_TEMAS = [
+  ['Enero', 'Ciberacoso y grupos de chat del equipo', 'En el grupo también se juega limpio', 'adolescentes de espaldas mirando sus móviles en un vestuario luminoso, ambiente positivo', 'contar cualquier problema a un adulto de confianza'],
+  ['Febrero', 'La afición que suma: comportamiento en la grada', 'Desde la grada, solo ánimos', 'familias aplaudiendo en una grada de un campo deportivo', 'animar sin presionar ni insultar'],
+  ['Marzo', 'Igualdad y respeto en el deporte (8 de marzo)', 'El mismo campo, las mismas oportunidades', 'niñas y niños entrenando juntos, vistos de lejos', 'respetar a todas las personas'],
+  ['Abril', 'Viajes y torneos: cómo protegemos a los menores fuera de casa', 'Viajamos seguros', 'equipo infantil subiendo a un autobús acompañado por dos adultos, de espaldas', 'revisar y firmar la autorización de desplazamiento'],
+  ['Mayo', 'Tu opinión cuenta: la encuesta de seguridad para deportistas', '¿Te sientes bien en tu equipo? Cuéntanoslo', 'cartel con un código QR en el tablón de un pabellón deportivo', 'responder la encuesta anónima'],
+  ['Junio', 'Cierre de temporada: gracias por un año de buen trato', 'Gracias por una temporada segura', 'equipo celebrando de espaldas con los brazos en alto', 'compartir sugerencias para la próxima temporada'],
+  ['Julio', 'Campus y actividades de verano: normas de convivencia y pernocta', 'Verano seguro, verano feliz', 'campamento deportivo al aire libre con tiendas y balones', 'conocer las normas del campus'],
+  ['Agosto', 'Antes de volver: hablar en familia de cómo se sienten en su deporte', '¿Cómo te sientes en tu equipo?', 'madre o padre conversando tranquilamente con su hijo en un banco, de espaldas', 'escuchar a vuestros hijos e hijas'],
+  ['Septiembre', 'Bienvenida a la temporada: así cuidamos de vuestros hijos e hijas', 'Empezamos la temporada en un entorno seguro', 'niños y niñas entrenando en un campo con su entrenador, vistos de lejos', 'conocer al Delegado/a de Protección'],
+  ['Octubre', 'El código de conducta: el compromiso de entrenadores y monitores', 'Nuestro compromiso: buen trato siempre', 'entrenador agachado hablando con respeto a un grupo de deportistas de espaldas', 'conocer el código de conducta'],
+  ['Noviembre', 'Derechos de la infancia (20 de noviembre, Día Universal del Niño)', 'Jugar es un derecho', 'niños y niñas diversos jugando juntos, ilustración amable', 'hablar en familia de sus derechos'],
+  ['Diciembre', 'Fotos y redes en fiestas y torneos: compartir con respeto', 'Antes de publicar, piensa', 'familia mirando un móvil en la grada de un torneo navideño', 'no publicar fotos de otros menores sin permiso']
+];
+const ME_FICHAS = [
+  ['medidas', 'Medidas clave', 'Riesgos altos y sus medidas, para el cuerpo técnico', '<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3z"/><path d="m9 12 2 2 4-4"/>'],
+  ['sospecha', 'Qué hacer ante una sospecha', 'Pasos en orden y a quién comunicar', '<path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17h.01"/>'],
+  ['contactos', 'Contactos de emergencia', 'Delegado/a, recursos locales y teléfonos de ayuda', '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/>'],
+  ['salida', 'Antes de una salida', 'Comprobaciones para viajes y partidos fuera', '<rect x="3" y="6" width="18" height="11" rx="2"/><path d="M3 11h18M7 17v2M17 17v2"/>'],
+  ['imagenes', 'Uso de imágenes', 'Compromisos de publicación y autorizaciones', '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 15-5-5L5 19"/>'],
+  ['calendario', 'Calendario de la temporada', 'Revisiones, renovaciones y caducidades', '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'],
+  ['mes', 'Publicación del mes', 'Texto e imagen para redes sociales', '<path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l2-5.2A8.4 8.4 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/>']
+];
+async function meDatos(entId) {
+  const ok = p => p.then(x => x, () => null);
+  const ents = !entId && state.entidades && state.entidades.length ? state.entidades : (await ok(API.call('listarEntidades'))) || [];
+  const e = (entId ? ents.find(x => x.id === entId) : ents[0]) || {};
+  const q = entId ? { entidad_id: entId } : {}, mia = r => !entId || r.entidad_id === entId;
+  const [rie, dir, aut, mat, ag, form, enc] = await Promise.all([ok(API.call('listarRiesgos', q)), state.dir ? Promise.resolve(state.dir) : ok(API.call('directorio')),
+    ok(API.call('listarAutorizaciones', q)), ok(API.call('matriz', { entidad_id: e.id })), ok(API.call('listarAgentes', q)), ok(API.call('listarFormacion')), ok(API.call('listarEncuestas', q))]);
+  return { e, rie: (rie || []).filter(mia), dir: dir || {}, aut: (aut || []).filter(mia), mat: mat || [], ag: (ag || []).filter(a => a.activo !== 'NO' && mia(a)), form: (form || []).filter(mia), enc: (enc || []).filter(mia) };
+}
+const meF = v => { const s = String(v || '').slice(0, 10); return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s.split('-').reverse().join('/') : s; };
+const meLista = t => String(t || '').split(/(?<=[.;])\s+(?=[A-ZÁÉÍÓÚÑ])/).map(x => x.trim().replace(/[.;]$/, '')).filter(Boolean);
+const ME_RE = { salida: /despla|viaj|pernoc|concentr|campa|transport|torneo/i, imagenes: /imagen|redes|foto|digital|publica/i };
+function meHtml(tipo, d) {
+  const e = d.e, nom = e.nombre || '', del = e.delegado_nombre || 'Delegado/a de Protección', plazo = e.plazo_comunicacion_h || 24;
+  const tel = (n, t, m) => `<tr><td class="k">${esc(n)}</td><td>${esc(t || '—')}${m ? '<br><small>' + esc(m) + '</small>' : ''}</td></tr>`;
+  const pie = `EntornoSeguro · ${esc(nom)} · Ficha de repaso generada con los datos del sistema de protección de la entidad.`;
+  if (tipo === 'medidas') {
+    const r = d.rie.filter(x => x.estado === 'implantada').sort((a, b) => ({ alto: 0, medio: 1, bajo: 2 })[a.nivel] - ({ alto: 0, medio: 1, bajo: 2 })[b.nivel]);
+    const b = r.length ? '<table><thead><tr><th style="width:18%">Ámbito</th><th style="width:30%">Riesgo</th><th>Lo que hacemos</th></tr></thead><tbody>' +
+      r.map(x => `<tr><td><b>${esc(x.ambito)}</b><br><small class="${x.nivel === 'alto' ? 'bad' : 'warn'}">${esc(x.nivel)}</small></td><td>${esc(x.descripcion)}</td><td><ul>${meLista(x.medidas).map(m => '<li>' + esc(m) + '</li>').join('')}</ul></td></tr>`).join('') + '</tbody></table>'
+      : '<p class="muted">Aún no hay medidas implantadas en Riesgos.</p>';
+    return plantillaInforme('Medidas preventivas clave', nom, '<div class="nota">Para entrenadores, monitores y voluntariado: lo que el club hace en cada situación de riesgo. Repasadlo al empezar la temporada y antes de cada salida.</div>' + b, false, pie);
+  }
+  if (tipo === 'sospecha') {
+    const pasos = ['<b>¿Hay riesgo inmediato?</b> Protege al menor y llama al <b>112</b>.', '<b>Escucha con calma</b>, sin interrogar ni pedir detalles. No prometas guardar el secreto; sí discreción.',
+      '<b>No confrontes</b> a la persona señalada ni investigues por tu cuenta.', '<b>Anota</b> las palabras literales del menor, con fecha y hora, sin interpretaciones.',
+      `<b>Comunica</b> al Delegado/a de Protección en un máximo de <b>${esc(plazo)} horas</b>: ${esc(del)}${e.delegado_telefono ? ' · ' + esc(e.delegado_telefono) : ''}${e.delegado_email ? ' · ' + esc(e.delegado_email) : ''}.`,
+      '<b>Conserva</b> mensajes o pruebas sin reenviarlos ni difundirlos.', 'El Delegado/a valora y decide la comunicación a la familia, Servicios Sociales, Fuerzas de Seguridad o Fiscalía (LOPIVI, arts. 15 y 16).'];
+    return plantillaInforme('Qué hacer ante una sospecha o una revelación', nom, '<ol style="font-size:11.5pt;line-height:1.7">' + pasos.map(p => '<li>' + p + '</li>').join('') + '</ol>' +
+      '<div class="nota">Toda persona que conozca una posible situación de violencia contra un menor tiene el deber de comunicarlo (LOPIVI, art. 15). Ante la duda, comunica: valorar no es tu tarea, es la del Delegado/a.</div>' +
+      `<table>${tel('Delegado/a de Protección', del, [e.delegado_telefono, e.delegado_email].filter(Boolean).join(' · '))}${e.suplente_nombre ? tel('Suplente', e.suplente_nombre, [e.suplente_telefono, e.suplente_email].filter(Boolean).join(' · ')) : ''}${tel('Emergencias', '112')}${tel('Línea de ayuda a la infancia', '116 111')}</table>`, false, pie);
+  }
+  if (tipo === 'contactos') {
+    const di = d.dir, otros = String(di.otros || '').split(/\n+/).filter(Boolean);
+    return plantillaInforme('Contactos de emergencia y ayuda', nom, '<h2>Del club</h2><table>' + tel('Delegado/a de Protección', del, [e.delegado_telefono, e.delegado_email].filter(Boolean).join(' · ')) +
+      (e.suplente_nombre ? tel('Suplente', e.suplente_nombre, [e.suplente_telefono, e.suplente_email].filter(Boolean).join(' · ')) : '') +
+      tel('Canal de comunicación', [e.canal_email, e.canal_telefono].filter(Boolean).join(' · ') || '—', [e.canal_buzon, e.canal_presencial].filter(Boolean).join(' · ')) + '</table>' +
+      '<h2>Recursos locales</h2><table>' + tel('Servicios Sociales Comunitarios', di.servicios_sociales) + tel('Policía Local', di.policia_local) + tel('Fiscalía · Sección de Menores', di.fiscalia_menores) +
+      tel('Centro de salud', di.centro_salud) + tel('Delegado/a municipal de Protección', di.delegado_municipal) + otros.map(o => tel('Otros', o)).join('') + '</table>' +
+      '<h2>Teléfonos de ayuda</h2><table>' + tel('Emergencias', '112') + tel('Policía Nacional · Guardia Civil', '091 · 062') + tel('Fundación ANAR (menores y familias)', '900 20 20 10') +
+      tel('Línea de ayuda a la infancia', '116 111') + tel('Junta de Andalucía · notificación de maltrato infantil', '900 851 818') + '</table>', false, pie);
+  }
+  if (tipo === 'salida' || tipo === 'imagenes') {
+    const re = ME_RE[tipo], med = [].concat(...d.rie.filter(x => re.test(x.ambito + ' ' + x.descripcion)).map(x => meLista(x.medidas)));
+    const aut = d.aut.filter(a => tipo === 'salida' ? /despla|viaje|pernoc|campa/i.test(a.tipo) : /imagen/i.test(a.tipo));
+    const tabAut = aut.length ? '<table><thead><tr><th>Grupo</th><th>Temporada</th><th>Recibidas</th><th>Denegadas</th></tr></thead><tbody>' + aut.map(a => `<tr><td>${esc(a.grupo)}</td><td>${esc(a.temporada || '')}</td><td class="${+a.recibidas >= +a.total ? 'ok' : 'warn'}">${esc(a.recibidas)} de ${esc(a.total)}</td><td>${esc(a.denegadas || 0)}</td></tr>`).join('') + '</tbody></table>' : '<p class="muted">Sin recuento en Autorizaciones.</p>';
+    const chk = l => '<ul style="list-style:none;padding-left:0;font-size:11pt;line-height:1.7">' + l.map(x => '<li>☐ ' + x + '</li>').join('') + '</ul>';
+    if (tipo === 'salida') return plantillaInforme('Antes de una salida', nom + ' · viajes, torneos y partidos fuera', chk(['Autorización de desplazamiento firmada de cada menor', 'Al menos dos personas adultas acompañantes', 'Listado del grupo y teléfonos de las familias a mano', 'Recuento al subir y al bajar del vehículo y en cada parada', 'Ningún adulto a solas con un menor en vehículos ni espacios cerrados', 'Teléfono del Delegado/a de Protección: ' + esc(e.delegado_telefono || '—')].concat(med.map(esc))) + '<h2>Autorizaciones de desplazamiento</h2>' + tabAut, false, pie);
+    return plantillaInforme('Uso de imágenes de menores', nom, '<h2>Nuestros compromisos al publicar</h2>' + chk(['Nunca nombre y apellidos junto a la imagen de un menor', 'Sin geolocalización ni horarios o lugares habituales', 'Nunca en vestuarios, duchas ni situaciones que afecten a su dignidad', 'Solo imágenes tomadas en actividades del club y en los canales autorizados', 'Si una familia lo pide, se retira la publicación'].concat(med.map(esc))) +
+      '<h2>Autorizaciones de imagen por grupo</h2>' + tabAut + (aut.some(a => +a.denegadas > 0) ? '<div class="nota">Hay familias que no autorizan algún canal: el cuerpo técnico debe consultar el listado del club antes de publicar.</div>' : ''), false, pie);
+  }
+  if (tipo === 'calendario') {
+    const ev = [], hoy = new Date().toISOString().slice(0, 10), meses = Number((state.cfg || {}).meses_certificado) || 12;
+    const porFecha = {}; d.mat.forEach(r => { if (r.proxima_revision) (porFecha[String(r.proxima_revision).slice(0, 10)] = porFecha[String(r.proxima_revision).slice(0, 10)] || []).push(r); });
+    Object.keys(porFecha).forEach(f => { const l = porFecha[f]; ev.push([f, l.length === 1 ? 'Revisión de ' + l[0].codigo + ' · ' + l[0].requisito : 'Revisión anual de ' + l.length + ' requisitos (' + l.map(r => r.codigo).join(', ') + ')', 'Matriz']); });
+    d.ag.forEach(a => { if (a.cert_fecha) { const f = new Date(String(a.cert_fecha).slice(0, 10)); f.setMonth(f.getMonth() + meses); ev.push([f.toISOString().slice(0, 10), 'Renovar certificado negativo · ' + a.nombre, 'Agentes']); } });
+    d.form.forEach(f => { if (f.fecha_caducidad) ev.push([String(f.fecha_caducidad).slice(0, 10), 'Caduca la formación · ' + (f.persona_nombre || '') + ' (' + (f.curso || '') + ')', 'Formación']); });
+    d.rie.forEach(r => { if (r.fecha_revision) ev.push([String(r.fecha_revision).slice(0, 10), 'Revisión del riesgo · ' + r.ambito, 'Riesgos']); });
+    const ult = d.enc.map(x => String(x.fecha_fin || x.fecha_inicio || x.creado || '').slice(0, 10)).filter(Boolean).sort().pop();
+    if (ult) { const f = new Date(ult); f.setFullYear(f.getFullYear() + 1); ev.push([f.toISOString().slice(0, 10), 'Nueva encuesta anónima a menores (una al año)', 'Encuestas']); }
+    const vistos = {}; const lista = ev.sort((a, b) => a[0].localeCompare(b[0])).filter(x => { const k = x[0] + x[1]; if (vistos[k]) return false; vistos[k] = 1; return true; });
+    return plantillaInforme('Calendario de la temporada', nom, lista.length ? '<table><thead><tr><th style="width:16%">Fecha</th><th>Qué hay que hacer</th><th style="width:16%">Dónde</th></tr></thead><tbody>' +
+      lista.map(x => `<tr><td class="${x[0] < hoy ? 'bad' : ''}"><b>${meF(x[0])}</b></td><td>${esc(x[1])}</td><td>${esc(x[2])}</td></tr>`).join('') + '</tbody></table>' : '<p class="muted">No hay fechas registradas.</p>', false, pie);
+  }
+  return '';
+}
+function mePublicacion(cont, e) {
+  const m = new Date().getMonth();
+  cont.innerHTML = `<div class="card form" id="me-mes"><h3>💬 Publicación del mes</h3><p class="nota" style="margin:0 0 10px">Elige el tema (sale propuesto el del mes) y copia los dos prompts: uno para el texto y otro para la imagen. No llevan datos personales.</p>
+    <label>Tema<select id="me-tema">${ME_TEMAS.map((t, i) => `<option value="${i}"${i === m ? ' selected' : ''}>${esc(t[0])} · ${esc(t[1])}</option>`).join('')}</select></label>
+    <div class="grid2"><div><h3 style="margin-top:6px">✍️ Texto para Instagram</h3><div id="me-p1"></div></div><div><h3 style="margin-top:6px">🖼️ Imagen</h3><div id="me-p2"></div></div></div></div>`;
+  const pinta = () => {
+    const t = ME_TEMAS[+$('#me-tema').value], muni = e.propia === 'SI' || /ayuntamiento/i.test(String(e.tipo || '')), club = e.nombre || (muni ? 'el Ayuntamiento' : 'el club'), mod = e.modalidad ? ' (' + e.modalidad + (e.municipio ? ', ' + e.municipio : '') + ')' : '';
+    const quien = muni ? 'las actividades deportivas municipales' : 'el club', delg = muni ? 'el Delegado/a de Protección municipal' : 'el Delegado/a del club';
+    const p1 = ['Redacta una publicación para Instagram de ' + club + mod + ', dirigida a familias y deportistas, sobre: ' + t[1] + '.',
+      'Contexto: ' + quien + (muni ? ' cuentan con' : ' tiene') + ' Delegado/a de Protección, protocolo de protección frente a la violencia (LOPIVI y Protocolo Marco andaluz) y un canal de comunicación confidencial.',
+      'Incluye: un titular breve; un texto de 80 a 120 palabras, cercano y positivo, sin alarmismo; una llamada a la acción: ' + t[4] + '; y de 5 a 8 hashtags (incluye #DeporteSeguro y #BuenTrato).',
+      'Si el tema lo pide, recuerda que pueden hablar con ' + delg + ' y que existe la línea de ayuda a la infancia 116 111.',
+      'Reglas: no inventes datos, nombres, cifras ni normas; no menciones a ningún menor; español de España; entrega solo la publicación, sin comentarios.'].join('\n');
+    const p2 = ['Crea una imagen cuadrada (1080 × 1080 px) para una publicación de Instagram ' + (muni ? 'de un ayuntamiento (actividades deportivas municipales con menores)' : 'de un club deportivo') + '. Tema: ' + t[1] + '.',
+      'Escena: ' + t[3] + '.', 'Estilo: ilustración plana moderna y amable, con azul marino (#0B3057), azul petróleo (#0D818F) y verde (#2FA37F) sobre fondo claro.',
+      'Personas estilizadas, de espaldas o sin rasgos: ningún rostro reconocible ni ningún menor identificable.', 'Sin logotipos, escudos, marcas ni equipaciones reales.',
+      'Texto en la imagen: solo el titular «' + t[2] + '», grande, legible y bien escrito en español. Deja espacio limpio alrededor del texto.'].join('\n');
+    mostrarPrompt($('#me-p1'), p1, { asunto: 'Publicación del mes · ' + t[0] + ' · ' + t[2], tipo: 'contenido' });
+    mostrarPrompt($('#me-p2'), p2);
+    const c2 = $('#me-p2'); const a = c2.querySelector('a[href^="https://claude.ai"]'); if (a) a.remove();
+    c2.querySelectorAll('button').forEach(b => { if (/Copiar prompt/i.test(b.textContent)) { b.classList.remove('ghost'); b.textContent = '📋 Copiar prompt de imagen'; } });
+    const n = c2.querySelector('.nota'); if (n) n.textContent = 'Pégalo en un generador de imágenes (ChatGPT, Gemini, Copilot Designer…). Revisa que no aparezca ningún menor identificable antes de publicar.';
+  };
+  $('#me-tema').onchange = pinta; pinta();
+  $('#me-mes').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function pintarMiEntorno() {
+  const v = $('#view-panel'), hero = $('#panel-hero');
+  let c = $('#mi-entorno');
+  const todo = state.club && hero && state.panelTodoAlDia && state.recsClub === 0 && /Todo al día/.test(hero.textContent);
+  if (!$('#me-est')) { const st = document.createElement('style'); st.id = 'me-est';
+    st.textContent = '#mi-entorno h3{margin:0 0 4px}#mi-entorno>p{margin:0 0 14px;color:var(--muted)}.me-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}' +
+      '.me-tile{display:flex;gap:12px;align-items:flex-start;text-align:left;padding:14px 16px;border-radius:14px;border:1px solid color-mix(in srgb,var(--line) 60%,transparent);background:var(--panel);color:var(--ink);font:inherit;cursor:pointer;box-shadow:var(--shadow);transition:transform .12s,border-color .12s}' +
+      '.me-tile:hover{transform:translateY(-2px);border-color:var(--brand-2)}.me-tile i{flex:0 0 auto;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:#fff;background:var(--grad)}' +
+      '.me-tile b{display:block;color:var(--brand)}.me-tile small{color:var(--muted);line-height:1.35}';
+    document.head.appendChild(st); }
+  if (!todo) { if (c) c.remove(); return; }
+  if (!c) { c = document.createElement('div'); c.id = 'mi-entorno'; c.className = 'card'; hero.after(c); }
+  c.innerHTML = '<h3>Tu EntornoSeguro</h3><p>Todo está al día. Repasa con un clic lo esencial de tu sistema de protección: cada ficha se abre en una página lista para imprimir o enseñar.</p><div class="me-grid">' +
+    ME_FICHAS.map(f => `<button type="button" class="me-tile" data-me="${f[0]}"><i>${ICO(f[3], 22)}</i><span><b>${esc(f[1])}</b><small>${esc(f[2])}</small></span></button>`).join('') + '</div><div id="me-extra"></div>';
+  meBotones(c);
+}
+function meBotones(c, entId) {
+  c.querySelectorAll('[data-me]').forEach(b => b.onclick = async () => {
+    const d = await run(() => meDatos(entId));
+    if (b.dataset.me === 'mes') { mePublicacion(c.querySelector('#me-extra'), d.e); return; }
+    if (b.dataset.me === 'wa') { waGenerador(c.querySelector('#me-extra'), d.e); return; }
+    meVentana(b.dataset.me, d);
+  });
+}
+(function () {
+  const base = pintarHeroClub;
+  pintarHeroClub = function () { base.apply(this, arguments); try { pintarMiEntorno(); } catch (e) {} };
+})();
+// Ayuntamiento: las actividades municipales propias (entidad «propia») tienen su propio EntornoSeguro cuando están al 100 %
+async function pintarMiEntornoMunicipal() {
+  const v = $('#view-panel'); let c = $('#mi-entorno-muni');
+  const kp = [...$$('#kpis .kpi')].find(k => /Actividades municipales/i.test(k.textContent));
+  const pct = kp ? parseInt((kp.querySelector('strong') || {}).textContent, 10) : NaN;
+  if (state.club || !v || pct !== 100) { if (c) c.remove(); return; }
+  let ents = state.entidades && state.entidades.length ? state.entidades : null;
+  if (!ents) { try { ents = await API.call('listarEntidades'); } catch (e) { return; } }
+  const pr = (ents || []).find(x => x.propia === 'SI'); if (!pr) return;
+  pintarMiEntorno.call(null); // asegura los estilos
+  if (!$('#me-est')) return;
+  if (!c) { c = document.createElement('div'); c.id = 'mi-entorno-muni'; c.className = 'card'; $('#kpis').after(c); }
+  c.innerHTML = `<h3>EntornoSeguro de las actividades municipales</h3><p style="margin:0 0 14px;color:var(--muted)">${esc(pr.nombre)} está al día. Repasa con un clic lo esencial: cada ficha se abre en una página lista para imprimir o entregar a monitores y monitoras.</p><div class="me-grid">` +
+    ME_FICHAS.map(f => `<button type="button" class="me-tile" data-me="${f[0]}"><i>${ICO(f[3], 22)}</i><span><b>${esc(f[1])}</b><small>${esc(f[2])}</small></span></button>`).join('') + '</div><div id="me-extra"></div>';
+  meBotones(c, pr.id);
+}
+(function () {
+  const base = loadPanel;
+  loadPanel = async function () { await base.apply(this, arguments); try { await pintarMiEntornoMunicipal(); } catch (e) {} };
+})();
+GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Qué es «Tu EntornoSeguro» del Panel?', '<p>Cuando todo está al día, el Panel muestra siete accesos de repaso: <b>Medidas clave</b>, <b>Qué hacer ante una sospecha</b>, <b>Contactos de emergencia</b>, <b>Antes de una salida</b>, <b>Uso de imágenes</b>, <b>Calendario de la temporada</b> y <b>Publicación del mes</b>.</p><p>Las seis primeras se generan con los datos del club (riesgos, ficha, directorio, autorizaciones y fechas), sin IA, en una página lista para imprimir o enseñar al cuerpo técnico. La publicación del mes propone un tema según el mes y prepara dos prompts sin datos personales: uno para el texto de Instagram y otro para la imagen, que puedes pegar en el asistente o generador que uses.</p>', '', 'panel']); });
+
+// v68 (tanda A): fichas en ventana superpuesta · imagen de Drive con miniatura · generador de mensajes de WhatsApp · historial en la hoja (Campanas)
+function meResumen(tipo, d) {
+  const e = d.e, del = e.delegado_nombre || 'Delegado/a de Protección', plazo = e.plazo_comunicacion_h || 24;
+  const li = l => (l.every(x => /^☐/.test(x)) ? '<ul class="me-ul" style="list-style:none;padding-left:0">' : '<ul class="me-ul">') + l.map(x => '<li>' + x + '</li>').join('') + '</ul>';
+  if (tipo === 'medidas') {
+    const r = d.rie.filter(x => x.estado === 'implantada').sort((a, b) => ({ alto: 0, medio: 1, bajo: 2 })[a.nivel] - ({ alto: 0, medio: 1, bajo: 2 })[b.nivel]).slice(0, 8);
+    return r.length ? li(r.map(x => `<b>${esc(x.ambito)}</b>${x.nivel === 'alto' ? ' <span class="st bad">alto</span>' : ''}<br><small>${esc(meLista(x.medidas)[0] || x.medidas)}</small>`)) : '<p class="empty">Aún no hay medidas implantadas en Riesgos.</p>';
+  }
+  if (tipo === 'sospecha') return '<ol class="me-ul">' + ['Si hay riesgo inmediato: protege y llama al <b>112</b>.', 'Escucha con calma, <b>sin interrogar</b>. No prometas secreto.', '<b>No confrontes</b> ni investigues por tu cuenta.',
+    '<b>Anota</b> sus palabras literales, fecha y hora.', `<b>Comunica</b> al Delegado/a en <b>${esc(plazo)} h</b>: ${esc(del)}${e.delegado_telefono ? ' · ' + esc(e.delegado_telefono) : ''}.`, '<b>Conserva</b> las pruebas sin reenviarlas.'].map(x => '<li>' + x + '</li>').join('') + '</ol>';
+  if (tipo === 'contactos') { const di = d.dir;
+    return li([`<b>Delegado/a</b>: ${esc(del)}${e.delegado_telefono ? ' · ' + esc(e.delegado_telefono) : ''}`].concat(e.suplente_nombre ? [`<b>Suplente</b>: ${esc(e.suplente_nombre)}${e.suplente_telefono ? ' · ' + esc(e.suplente_telefono) : ''}`] : [])
+      .concat(di.servicios_sociales ? ['<b>Servicios Sociales</b>: ' + esc(di.servicios_sociales)] : []).concat(di.policia_local ? ['<b>Policía Local</b>: ' + esc(di.policia_local)] : [])
+      .concat(['<b>Emergencias</b>: 112', '<b>Ayuda a la infancia</b>: 116 111', '<b>Fundación ANAR</b>: 900 20 20 10', '<b>Maltrato infantil (Junta)</b>: 900 851 818'])); }
+  if (tipo === 'salida') { const med = [].concat(...d.rie.filter(x => ME_RE.salida.test(x.ambito + ' ' + x.descripcion)).map(x => meLista(x.medidas))).slice(0, 3);
+    const au = d.aut.filter(a => /despla|viaje|pernoc|campa/i.test(a.tipo));
+    return li(['☐ Autorización firmada de cada menor', '☐ Al menos dos personas adultas', '☐ Recuento al subir, bajar y en cada parada', '☐ Ningún adulto a solas con un menor'].concat(med.map(m => '☐ ' + esc(m))))
+      + (au.length ? '<p class="me-pie">Autorizaciones: ' + au.map(a => `${esc(a.grupo)} ${esc(a.recibidas)}/${esc(a.total)}`).join(' · ') + '</p>' : ''); }
+  if (tipo === 'imagenes') { const au = d.aut.filter(a => /imagen/i.test(a.tipo)), den = au.filter(a => +a.denegadas > 0);
+    return li(['Nunca nombre y apellidos junto a la imagen', 'Sin geolocalización ni horarios habituales', 'Nunca en vestuarios ni duchas', 'Solo en los canales autorizados', 'Se retira si la familia lo pide'])
+      + (au.length ? '<p class="me-pie">Autorizaciones: ' + au.map(a => `${esc(a.grupo)} ${esc(a.recibidas)}/${esc(a.total)}${+a.denegadas ? ' · <b class="bad-t">' + esc(a.denegadas) + ' no autorizan</b>' : ''}`).join(' · ') + '</p>' : '')
+      + (den.length ? '<p class="aviso-inc" style="margin:8px 0 0">Antes de publicar, consulta el listado de menores sin autorización.</p>' : ''); }
+  if (tipo === 'calendario') {
+    const h = meHtml('calendario', d), filas = [...h.matchAll(/<tr><td class="([^"]*)"><b>([^<]+)<\/b><\/td><td>([^<]+)<\/td>/g)].slice(0, 7);
+    return filas.length ? li(filas.map(f => `<b class="${f[1]}">${f[2]}</b> · ${f[3]}`)) : '<p class="empty">No hay fechas registradas.</p>';
+  }
+  return '';
+}
+function meVentana(tipo, d) {
+  const f = ME_FICHAS.find(x => x[0] === tipo); if (!f) return;
+  let dlg = $('#me-dlg');
+  if (!dlg) { dlg = document.createElement('dialog'); dlg.id = 'me-dlg'; document.body.append(dlg); }
+  dlg.innerHTML = `<div style="display:flex;gap:12px;align-items:center;margin-bottom:10px"><i class="me-ico">${ICO(f[3], 22)}</i><div style="flex:1"><h3 style="margin:0">${esc(f[1])}</h3><small class="muted">${esc(d.e.nombre || '')}</small></div>
+    <button type="button" class="btn ghost" id="me-pdf" title="Abrir la ficha completa para imprimir o guardar en PDF">📄 PDF</button><button type="button" class="btn ghost" id="me-cerrar" aria-label="Cerrar">✕</button></div>
+    <div class="me-cuerpo">${meResumen(tipo, d)}</div>`;
+  dlg.querySelector('#me-cerrar').onclick = () => dlg.close();
+  dlg.querySelector('#me-pdf').onclick = () => abrirInforme(meHtml(tipo, d));
+  dlg.onclick = ev => { if (ev.target === dlg) dlg.close(); };
+  dlg.showModal();
+}
+(function () { if ($('#me-dlg-est')) return; const st = document.createElement('style'); st.id = 'me-dlg-est';
+  st.textContent = '#me-dlg{max-width:560px}.me-ico{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:#fff;background:var(--grad);flex:0 0 auto}' +
+    '.me-ul{margin:0;padding-left:20px;line-height:1.55}.me-ul li{margin:6px 0}.me-pie{margin:10px 0 0;color:var(--muted);font-size:.85rem}' +
+    '.wa-bur{background:#dcf8c6;color:#111b21;border-radius:12px 12px 4px 12px;padding:10px 12px;white-space:pre-wrap;line-height:1.45;max-width:460px;box-shadow:0 1px 1px rgba(0,0,0,.12);font-size:.92rem}' +
+    '@media (prefers-color-scheme:dark){.wa-bur{background:#005c4b;color:#e9edef}}.wa-hist li{display:flex;gap:10px;align-items:flex-start;justify-content:space-between;padding:8px 0;border-top:1px solid var(--line)}' +
+    '.mini-img{width:120px;height:120px;object-fit:cover;border-radius:10px;border:1px solid var(--line);background:var(--bg)}.pub-hist{display:flex;gap:10px;flex-wrap:wrap}.pub-hist figure{margin:0;width:120px}.pub-hist figcaption{font-size:.72rem;color:var(--muted);line-height:1.3}';
+  document.head.appendChild(st); })();
+// La publicación del mes y WhatsApp también están disponibles siempre, aunque el sistema no esté al 100 %
+ME_FICHAS.push(['wa', 'Mensaje de WhatsApp', 'Borrador → mensaje claro, con emojis, listo para enviar', '<path d="M3 21l1.7-5A8.5 8.5 0 1 1 8 19.3L3 21z"/><path d="M9 10c.5 2 2 3.5 4 4l1.2-1.2 2 .8c-.3 1.2-1.3 2-2.5 1.9C10.6 15.2 8 12.6 7.7 9.5 7.6 8.3 8.4 7.3 9.6 7l.8 2L9 10z"/>']);
+
+// ---- Imagen de Drive: miniatura ----
+function driveId(u) { const m = String(u || '').match(/\/d\/([\w-]{20,})|[?&]id=([\w-]{20,})/); return m ? (m[1] || m[2]) : ''; }
+function driveMini(u, w) { const id = driveId(u); return id ? 'https://drive.google.com/thumbnail?id=' + id + '&sz=w' + (w || 400) : (/^https:\/\/\S+\.(png|jpe?g|webp|gif)(\?|$)/i.test(u) ? u : ''); }
+function imgMini(u, alt) { const src = driveMini(u); return src ? `<a href="${esc(u)}" target="_blank" rel="noopener"><img class="mini-img" src="${esc(src)}" alt="${esc(alt || 'Imagen de la campaña')}" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('small'),{className:'aviso-inc',textContent:'No se puede mostrar la miniatura: en Drive, comparte la imagen con «Cualquier persona con el enlace».'}))"></a>` : ''; }
+
+// ---- Publicación del mes: guardar texto + imagen en la hoja ----
+(function () {
+  const base = mePublicacion;
+  mePublicacion = function (cont, e) {
+    base(cont, e);
+    const zona = document.createElement('div'); zona.className = 'form'; zona.id = 'pub-guardar';
+    zona.innerHTML = `<h3 style="margin-top:14px">💾 Guardar la publicación</h3><div class="grid2"><label>Texto de la publicación (respuesta de la IA)<textarea id="pub-texto" rows="7" placeholder="Pega aquí el texto final"></textarea></label>
+      <div><label>Enlace de Drive de la imagen<input id="pub-img" type="url" placeholder="https://drive.google.com/file/d/…"></label><div id="pub-prev"></div>
+      <p class="nota" style="margin:6px 0 0">Sube a Drive la imagen generada y compártela con «Cualquier persona con el enlace»: es una imagen para publicar y no debe mostrar a ningún menor identificable.</p></div></div>
+      <div class="ia-acciones"><button type="button" class="btn" id="pub-ok">Guardar publicación</button></div><h3 style="margin-top:14px">Publicaciones guardadas</h3><div id="pub-hist" class="pub-hist"><small class="muted">Cargando…</small></div>`;
+    cont.querySelector('#me-mes').append(zona);
+    const prev = () => { $('#pub-prev').innerHTML = imgMini($('#pub-img').value.trim()); };
+    $('#pub-img').oninput = prev;
+    const hist = async () => { let l = []; try { l = await API.call('listarCampanas', { tipo: 'publicacion', max: 12 }); } catch (er) { $('#pub-hist').innerHTML = '<small class="muted">Actualiza Ampliacion.gs a la v1.22 para guardar publicaciones.</small>'; return; }
+      $('#pub-hist').innerHTML = l.length ? l.map(x => `<figure>${imgMini(x.imagen_url, x.tema) || '<div class="mini-img" style="display:grid;place-items:center">💬</div>'}<figcaption>${esc(meF(x.fecha))} · ${esc(x.tema)}</figcaption></figure>`).join('') : '<small class="muted">Aún no hay publicaciones guardadas.</small>'; };
+    $('#pub-ok').onclick = async () => {
+      const texto = $('#pub-texto').value.trim(); if (!texto) { toast('Pega primero el texto de la publicación', true); return; }
+      const t = ME_TEMAS[+$('#me-tema').value];
+      try { await run(() => API.call('guardarCampana', { tipo: 'publicacion', tema: t[0] + ' · ' + t[2], texto, imagen_url: $('#pub-img').value.trim(), entidad_id: e.id || '' })); } catch (er) { return; }
+      toast('Publicación guardada'); $('#pub-texto').value = ''; $('#pub-img').value = ''; prev(); hist();
+    };
+    hist();
+  };
+})();
+
+// ---- Generador de mensajes de WhatsApp ----
+const WA_DEST = ['Familias', 'Cuerpo técnico (entrenadores y monitores)', 'Deportistas adolescentes', 'Junta Directiva', 'Voluntariado'];
+const WA_TONO = ['Informativo', 'Recordatorio', 'Urgente', 'Convocatoria', 'Felicitación o agradecimiento'];
+function waOcultar(t) { const m = []; const sust = (re, k) => { t = t.replace(re, x => { m.push(x); return '[' + k + m.length + ']'; }); };
+  sust(/\b\d{8}[A-Za-z]\b|\b[XYZxyz]\d{7}[A-Za-z]\b/g, 'DNI'); sust(/[\w.+-]+@[\w-]+\.[\w.]+/g, 'CORREO'); sust(/(\+34\s?)?\b[6789]\d{2}[\s.-]?\d{3}[\s.-]?\d{3}\b/g, 'TEL'); return { t, m }; }
+function waRestaurar(t, m) { return String(t).replace(/\[(DNI|CORREO|TEL)(\d+)\]/g, (x, k, n) => m[+n - 1] || x); }
+function waFormato(t) { return esc(t).replace(/\*([^*\n]+)\*/g, '<b>$1</b>').replace(/(^|\s)_([^_\n]+)_/g, '$1<i>$2</i>').replace(/~([^~\n]+)~/g, '<s>$1</s>'); }
+function waGenerador(cont, e) {
+  const quien = e.propia === 'SI' ? 'del Delegado/a de Protección municipal' : 'del Delegado/a de Protección de ' + (e.nombre || 'la entidad');
+  cont.innerHTML = `<div class="card form" id="wa-card"><h3>📲 Mensaje de WhatsApp</h3><p class="nota" style="margin:0 0 10px">Escribe lo que quieres decir, tal cual. La app prepara el prompt para tu asistente de IA y después abre WhatsApp con el mensaje listo. Los teléfonos, correos y DNI se ocultan antes de pasar por la IA y se vuelven a poner solos al final.</p>
+    <label>Borrador<textarea id="wa-borr" rows="4" placeholder="Ej.: el sábado salimos a las 9 desde el estadio al torneo de Dos Hermanas, traer autorización firmada, volvemos a las 14"></textarea></label>
+    <div class="grid2"><label>Para<select id="wa-dest">${WA_DEST.map(x => `<option>${esc(x)}</option>`).join('')}</select></label><label>Tono<select id="wa-tono">${WA_TONO.map(x => `<option>${esc(x)}</option>`).join('')}</select></label></div>
+    <div class="ia-acciones"><button type="button" class="btn" id="wa-prep">Preparar prompt</button></div><div id="wa-prompt"></div>
+    <div id="wa-res" class="hidden"><label>Mensaje generado (pégalo aquí)<textarea id="wa-txt" rows="7"></textarea></label><div id="wa-prev"></div>
+      <div class="ia-acciones"><a class="btn" id="wa-abrir" target="_blank" rel="noopener" href="#">📲 Abrir en WhatsApp</a><button type="button" class="btn ghost" id="wa-copiar">Copiar</button><button type="button" class="btn ghost" id="wa-guardar">💾 Guardar</button></div></div>
+    <h3 style="margin-top:14px">Mensajes guardados</h3><ul id="wa-hist" class="wa-hist" style="list-style:none;padding:0;margin:0"><li><small class="muted">Cargando…</small></li></ul></div>`;
+  let ocultos = [];
+  const final = () => waRestaurar($('#wa-txt').value.trim(), ocultos);
+  const pinta = () => { const t = final(); $('#wa-prev').innerHTML = t ? '<div class="wa-bur">' + waFormato(t) + '</div>' : ''; $('#wa-abrir').href = 'https://wa.me/?text=' + encodeURIComponent(t); };
+  $('#wa-prep').onclick = () => {
+    const b = $('#wa-borr').value.trim(); if (!b) { toast('Escribe primero el borrador', true); return; }
+    const o = waOcultar(b); ocultos = o.m;
+    const p = ['Redacta un mensaje de WhatsApp ' + quien + ' para: ' + $('#wa-dest').value + '. Tono: ' + $('#wa-tono').value + '.',
+      'Parte de este borrador y conserva exactamente fechas, horas, lugares y los marcadores entre corchetes como [TEL1] o [CORREO1]:', '«' + o.t + '»',
+      'Requisitos: mensaje claro y breve (máximo 120 palabras); formato de WhatsApp con *negrita* para lo importante, saltos de línea y, si ayuda, una lista con emojis; entre 3 y 6 emojis adecuados al tono, sin exagerar; un saludo inicial y una despedida cordial.',
+      'No añadas datos que no estén en el borrador; no incluyas nombres de menores; si el borrador menciona a una persona menor, sustitúyelo por una referencia genérica (el grupo, el equipo).',
+      'Firma al final: «' + (e.propia === 'SI' ? 'Delegado/a de Protección · ' + (e.nombre || 'Ayuntamiento') : 'Delegado/a de Protección · ' + (e.nombre || 'el club')) + '». Entrega solo el mensaje, sin comentarios.'].join('\n');
+    mostrarPrompt($('#wa-prompt'), p);
+    $('#wa-res').classList.remove('hidden');
+  };
+  $('#wa-txt').oninput = pinta;
+  $('#wa-copiar').onclick = () => copiarTexto(final());
+  $('#wa-abrir').onclick = ev => { if (!final()) { ev.preventDefault(); toast('Pega primero el mensaje generado', true); } };
+  const hist = async () => { let l = []; try { l = await API.call('listarCampanas', { tipo: 'whatsapp', max: 10 }); } catch (er) { $('#wa-hist').innerHTML = '<li><small class="muted">Actualiza Ampliacion.gs a la v1.22 para guardar los mensajes.</small></li>'; return; }
+    $('#wa-hist').innerHTML = l.length ? l.map((x, i) => `<li><div style="flex:1"><small class="muted">${esc(meF(x.fecha))} · ${esc(x.destinatario)} · ${esc(x.tono)}</small><div class="wa-bur" style="margin-top:4px;max-height:7.5em;overflow:hidden">${waFormato(x.texto)}</div></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><a class="btn ghost" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(x.texto)}">📲</a><button type="button" class="btn ghost" data-wa-re="${i}" title="Usar como base">↺</button><button type="button" class="ev-x" data-wa-del="${esc(x.id)}" title="Borrar">✕</button></div></li>`).join('') : '<li><small class="muted">Aún no hay mensajes guardados.</small></li>';
+    $$('[data-wa-re]').forEach(bb => bb.onclick = () => { $('#wa-res').classList.remove('hidden'); $('#wa-txt').value = l[+bb.dataset.waRe].texto; ocultos = []; pinta(); $('#wa-txt').focus(); });
+    $$('[data-wa-del]').forEach(bb => bb.onclick = async () => { if (!confirm('¿Borrar este mensaje guardado?')) return; try { await run(() => API.call('eliminarCampana', { id: bb.dataset.waDel })); } catch (er) { return; } hist(); });
+  };
+  $('#wa-guardar').onclick = async () => {
+    const t = final(); if (!t) { toast('Pega primero el mensaje generado', true); return; }
+    try { await run(() => API.call('guardarCampana', { tipo: 'whatsapp', tema: $('#wa-borr').value.trim().slice(0, 120), destinatario: $('#wa-dest').value, tono: $('#wa-tono').value, texto: t, entidad_id: e.id || '' })); } catch (er) { return; }
+    toast('Mensaje guardado'); hist();
+  };
+  hist();
+  $('#wa-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+// WhatsApp y publicaciones también en «Contenidos RRSS», sin esperar al 100 %
+(function () {
+  const v = $('#view-contenidos'); if (!v) return;
+  const caja = document.createElement('div'); caja.id = 'cont-campanas'; caja.className = 'card';
+  caja.innerHTML = '<h3>Campañas rápidas</h3><p class="nota" style="margin:0 0 10px">Mensajes de WhatsApp y publicación del mes con imagen. Se guardan en la hoja.</p><div class="ia-acciones"><button type="button" class="btn" id="cc-wa">📲 Mensaje de WhatsApp</button><button type="button" class="btn ghost" id="cc-pub">💬 Publicación del mes</button></div><div id="cc-extra"></div>';
+  v.querySelector('header').after(caja);
+  const ent = async () => { let ents = state.entidades && state.entidades.length ? state.entidades : null; if (!ents) { try { ents = await API.call('listarEntidades'); } catch (er) { ents = []; } }
+    return (state.club ? ents[0] : ents.find(x => x.propia === 'SI')) || ents[0] || {}; };
+  $('#cc-wa').onclick = async () => waGenerador($('#cc-extra'), await ent());
+  $('#cc-pub').onclick = async () => mePublicacion($('#cc-extra'), await ent());
+})();
+GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Cómo preparo un mensaje de WhatsApp o una publicación con imagen?', '<p>En <b>Contenidos RRSS → Campañas rápidas</b> (y en «Tu EntornoSeguro» del Panel):</p><ul><li><b>📲 Mensaje de WhatsApp</b>: escribe el borrador, elige destinatario y tono, copia el prompt en tu asistente de IA, pega la respuesta y pulsa <b>Abrir en WhatsApp</b>: se abre con el texto listo para elegir grupo o contacto. Los teléfonos, correos y DNI se ocultan a la IA y se reponen solos. Con <b>Guardar</b> queda en el historial.</li><li><b>💬 Publicación del mes</b>: tema según el mes, o uno tuyo con <b>✏️ Escribir un tema propio</b>, o ideas nuevas con <b>💡 Pedir ideas a la IA</b> (pegas la respuesta y eliges). Tus temas quedan guardados en «Mis temas». Después, prompt de texto y prompt de imagen. Sube la imagen a Drive, pega el enlace y verás la miniatura. Con <b>Guardar publicación</b> queda en la hoja con su imagen.</li></ul>', '', 'contenidos']); });
+
+// v69 (tanda B): «MI ESPACIO» del Delegado/a · Agenda (calendario, recordatorios, .ics), Campañas (publicaciones con miniatura y WhatsApp) y Documentos
+const AG_TIPOS = [['cita', 'Cita', '#0d818f'], ['reunion', 'Reunión', '#12406e'], ['recordatorio', 'Recordatorio', '#b7791f'], ['tarea', 'Tarea', '#2fa37f'], ['formacion', 'Formación', '#7a4fb3'], ['campana', 'Campaña', '#c2185b'], ['otro', 'Otro', '#6b7a82']];
+const AG_COL = Object.fromEntries(AG_TIPOS.map(t => [t[0], t[2]])), AG_NOM = Object.fromEntries(AG_TIPOS.map(t => [t[0], t[1]]));
+const hoyISOx = () => { const d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); };
+const isoDe = d => d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+function meEventos(d) {
+  const ev = [], meses = Number((state.cfg || {}).meses_certificado) || 12, porFecha = {};
+  d.mat.forEach(r => { if (r.proxima_revision) (porFecha[String(r.proxima_revision).slice(0, 10)] = porFecha[String(r.proxima_revision).slice(0, 10)] || []).push(r.codigo); });
+  Object.keys(porFecha).forEach(f => ev.push({ fecha: f, titulo: 'Revisión de ' + (porFecha[f].length > 3 ? porFecha[f].length + ' requisitos de la Matriz' : porFecha[f].join(', ')), origen: 'Matriz', ir: 'matriz' }));
+  d.ag.forEach(a => { if (a.cert_fecha) { const f = new Date(String(a.cert_fecha).slice(0, 10)); f.setMonth(f.getMonth() + meses); ev.push({ fecha: isoDe(f), titulo: 'Renovar certificado negativo · ' + a.nombre, origen: 'Agentes', ir: 'agentes' }); } });
+  d.form.forEach(f => { if (f.fecha_caducidad) ev.push({ fecha: String(f.fecha_caducidad).slice(0, 10), titulo: 'Caduca la formación · ' + (f.persona_nombre || ''), origen: 'Formación', ir: 'formacion' }); });
+  d.rie.forEach(r => { if (r.fecha_revision) ev.push({ fecha: String(r.fecha_revision).slice(0, 10), titulo: 'Revisión del riesgo · ' + r.ambito, origen: 'Riesgos', ir: 'riesgos' }); });
+  const ult = d.enc.map(x => String(x.fecha_fin || x.fecha_inicio || x.creado || '').slice(0, 10)).filter(Boolean).sort().pop();
+  if (ult) { const f = new Date(ult); f.setFullYear(f.getFullYear() + 1); ev.push({ fecha: isoDe(f), titulo: 'Nueva encuesta anónima a menores', origen: 'Encuestas', ir: 'encuestas' }); }
+  return ev;
+}
+async function espEntidad() {
+  let ents = state.entidades && state.entidades.length ? state.entidades : null;
+  if (!ents) { try { ents = await API.call('listarEntidades'); state.entidades = ents; } catch (e) { ents = []; } }
+  return (state.club ? ents[0] : ents.find(x => x.propia === 'SI')) || (state.club ? ents[0] : null) || {};
+}
+(function () {
+  const main = document.querySelector('main'), nav = document.querySelector('#menu-principal') || document.querySelector('nav');
+  if (!main || !nav || $('#view-espacio')) return;
+  const st = document.createElement('style'); st.id = 'esp-est';
+  st.textContent = '.esp-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}.esp-tabs button{min-height:40px;padding:6px 16px;border-radius:999px;border:1px solid color-mix(in srgb,var(--line) 70%,transparent);background:var(--panel);color:var(--ink);font:inherit;font-weight:600;cursor:pointer}' +
+    '.esp-tabs button[aria-selected="true"]{background:var(--grad);color:#fff;border-color:transparent}' +
+    '.cal-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}.cal-head h3{margin:0 8px;min-width:170px;text-align:center}' +
+    '.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.cal .dow{font-size:.72rem;font-weight:700;color:var(--muted);text-align:center;padding:4px 0;text-transform:uppercase}' +
+    '.cal .dia{min-height:86px;border:1px solid color-mix(in srgb,var(--line) 55%,transparent);border-radius:10px;padding:4px 5px;background:var(--panel);cursor:pointer;text-align:left;font:inherit;color:var(--ink);display:flex;flex-direction:column;gap:2px;overflow:hidden}' +
+    '.cal .dia:hover{border-color:var(--brand-2)}.cal .dia.fuera{opacity:.45}.cal .dia.hoy{box-shadow:inset 0 0 0 2px var(--brand-2)}.cal .dia.sel{background:color-mix(in srgb,var(--brand-2) 9%,var(--panel))}.cal .num{font-size:.78rem;font-weight:700}' +
+    '.cal .ev{font-size:.68rem;line-height:1.25;padding:1px 5px;border-radius:5px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cal .ev.auto{background:color-mix(in srgb,var(--muted) 18%,transparent);color:var(--ink)}.cal .ev.hecho{opacity:.5;text-decoration:line-through}.cal .mas{font-size:.66rem;color:var(--muted)}' +
+    '.ag-lista{list-style:none;margin:0;padding:0}.ag-lista li{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent)}.ag-lista li:first-child{border-top:0}' +
+    '.ag-f{min-width:74px;font-weight:700;color:var(--brand);font-size:.85rem}.ag-t{flex:1}.ag-t small{color:var(--muted)}.ag-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}.ag-acc{display:flex;gap:4px;align-items:center}' +
+    '.ag-clic{cursor:pointer;border-radius:10px;transition:background .12s}.ag-clic:hover,.ag-clic:focus-visible{background:color-mix(in srgb,var(--brand-2) 6%,transparent);outline:none}.ag-chev{font-size:1.4rem;color:var(--muted);align-self:center}.ag-det p{margin:0 0 10px;font-size:1rem}.ag-bots{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}.ag-bots .btn{min-height:44px;flex:1 1 auto}.cal .ev[data-ag-ver]{cursor:pointer}' +
+    '.ag-lista li.hecho .ag-t b{text-decoration:line-through;opacity:.6}.ag-ley{display:flex;gap:10px;flex-wrap:wrap;font-size:.75rem;color:var(--muted);margin:8px 0 0}' +
+    '.camp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}.camp-card{border:1px solid color-mix(in srgb,var(--line) 60%,transparent);border-radius:14px;padding:12px;background:var(--panel);box-shadow:var(--shadow)}' +
+    '.camp-card .mini-img{width:100%;height:auto;aspect-ratio:1/1}.camp-card details{margin-top:6px;font-size:.85rem}.doc-col h4{margin:0 0 6px;color:var(--brand)}.doc-l{list-style:none;margin:0;padding:0}.doc-l li{padding:7px 0;border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent)}' +
+    '.esp-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px}@media (max-width:980px){.esp-grid{grid-template-columns:minmax(0,1fr)}}' +
+    '@media (max-width:700px){.ag-lista li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;align-items:center}.ag-lista .ag-f{grid-column:1;grid-row:1;min-width:0}.ag-lista .ag-f br{display:none}.ag-lista .ag-f small{margin-left:8px}.ag-lista .ag-acc{grid-column:2;grid-row:1}.ag-lista .ag-t{grid-column:1/-1;grid-row:2}.ag-lista .ag-acc .ev-x{min-width:36px;min-height:36px}}' +
+    '@media (max-width:700px){.cal-head h3{order:-1;flex-basis:100%;margin:0 0 4px}.cal .dia{min-height:54px}.cal .ev{font-size:0;height:6px;padding:0}.cal .mas{display:none}}';
+  document.head.appendChild(st);
+  const sec = document.createElement('section'); sec.id = 'view-espacio'; sec.className = 'view hidden';
+  sec.innerHTML = `<header><h2>Mi espacio</h2></header><p class="nota">Tu agenda de trabajo, las campañas y los documentos del sistema de protección, en un solo lugar.</p>
+    <div class="esp-tabs" role="tablist"><button type="button" role="tab" data-esp="agenda" aria-selected="true">📅 Agenda</button><button type="button" role="tab" data-esp="campanas" aria-selected="false">📣 Campañas</button><button type="button" role="tab" data-esp="docs" aria-selected="false">📄 Documentos</button></div>
+    <div id="esp-cuerpo"></div>`;
+  main.appendChild(sec);
+  const b = document.createElement('button'); b.dataset.view = 'espacio'; b.innerHTML = '<span class="l-long">Mi espacio</span><span class="l-short">Mi espacio</span> <span id="badge-agenda" class="badge"></span>';
+  b.onclick = () => { show('espacio'); pintarEspacio(); };
+  const al = nav.querySelector('button[data-view="alertas"]'); if (al) al.after(b); else nav.prepend(b);
+  sec.querySelectorAll('[data-esp]').forEach(t => t.onclick = () => { state.espTab = t.dataset.esp; pintarEspacio(); });
+})();
+state.espTab = state.espTab || 'agenda';
+async function pintarEspacio() {
+  $$('#view-espacio [data-esp]').forEach(t => t.setAttribute('aria-selected', String(t.dataset.esp === state.espTab)));
+  const c = $('#esp-cuerpo'); if (!c) return;
+  if (state.espTab === 'agenda') return pintarAgenda(c);
+  if (state.espTab === 'campanas') return pintarCampanas(c);
+  return pintarDocsEsp(c);
+}
+// ---- Agenda ----
+async function pintarAgenda(c) {
+  const e = await espEntidad();
+  if (!state.agMes) { const h = new Date(); state.agMes = new Date(h.getFullYear(), h.getMonth(), 1); }
+  if (state.agAuto === undefined) state.agAuto = true;
+  c.innerHTML = '<div class="card"><p class="empty">Cargando la agenda…</p></div>';
+  let propias = [], auto = [];
+  try { propias = await API.call('listarAgenda', {}); } catch (er) { c.innerHTML = '<div class="card"><p class="aviso-inc">Actualiza Ampliacion.gs a la v1.23 para usar la agenda.</p></div>'; return; }
+  if (e.id) { try { auto = meEventos(await meDatos(e.id)); } catch (er) { auto = []; } }
+  state.agPropias = propias; state.agAutoEv = auto; state.agVista = [];
+  const m = state.agMes, y = m.getFullYear(), mo = m.getMonth(), hoy = hoyISOx();
+  const primero = new Date(y, mo, 1), ini = new Date(primero); ini.setDate(1 - ((primero.getDay() + 6) % 7));
+  const delDia = f => propias.filter(x => String(x.fecha).slice(0, 10) === f).concat(state.agAuto ? auto.filter(x => x.fecha === f).map(x => Object.assign({ auto: true }, x)) : []);
+  let cel = ['L', 'M', 'X', 'J', 'V', 'S', 'D'].map(d => `<div class="dow">${d}</div>`).join('');
+  for (let i = 0; i < 42; i++) {
+    const dt = new Date(ini); dt.setDate(ini.getDate() + i); const f = isoDe(dt), l = delDia(f);
+    cel += `<button type="button" class="dia${dt.getMonth() !== mo ? ' fuera' : ''}${f === hoy ? ' hoy' : ''}${f === state.agSel ? ' sel' : ''}" data-dia="${f}"><span class="num">${dt.getDate()}</span>` +
+      l.slice(0, 3).map(x => { const i = state.agVista.push(x) - 1; return x.auto ? `<span class="ev auto" data-ag-ver="${i}" title="${esc(x.titulo)}">${esc(x.titulo)}</span>` : `<span class="ev${x.hecho === 'SI' ? ' hecho' : ''}" data-ag-ver="${i}" style="background:${AG_COL[x.tipo] || '#6b7a82'}" title="${esc(x.titulo)}">${x.hora ? esc(x.hora) + ' ' : ''}${esc(x.titulo)}</span>`; }).join('') +
+      (l.length > 3 ? `<span class="mas">+${l.length - 3} más</span>` : '') + '</button>';
+    if (i === 34 && new Date(ini.getTime() + 35 * 864e5).getMonth() !== mo) break;
+  }
+  const lim = new Date(); lim.setDate(lim.getDate() + 30); const limS = isoDe(lim);
+  const sel = state.agSel;
+  const lista = sel ? delDia(sel) : propias.filter(x => String(x.fecha).slice(0, 10) >= hoy && String(x.fecha).slice(0, 10) <= limS).concat(state.agAuto ? auto.filter(x => x.fecha >= hoy && x.fecha <= limS).map(x => Object.assign({ auto: true }, x)) : [])
+    .sort((a, b) => (String(a.fecha) + (a.hora || '')).localeCompare(String(b.fecha) + (b.hora || '')));
+  const pend = propias.filter(x => x.hecho !== 'SI' && String(x.fecha).slice(0, 10) < hoy);
+  c.innerHTML = `<div class="esp-grid">
+    <div class="card"><div class="cal-head"><button type="button" class="btn ghost" id="ag-prev" aria-label="Mes anterior">‹</button><h3>${esc((t => t.charAt(0).toUpperCase() + t.slice(1))(m.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })))}</h3><button type="button" class="btn ghost" id="ag-next" aria-label="Mes siguiente">›</button>
+      <button type="button" class="btn ghost" id="ag-hoy">Hoy</button><span style="flex:1"></span><button type="button" class="btn" id="ag-nueva">+ Nueva entrada</button></div>
+      <div class="cal">${cel}</div>
+      <div class="ag-ley">${AG_TIPOS.map(t => `<span><i class="ag-dot" style="background:${t[2]}"></i>${t[1]}</span>`).join('')}<label style="display:inline-flex;gap:6px;align-items:center;font-weight:400;margin:0"><input type="checkbox" id="ag-auto" ${state.agAuto ? 'checked' : ''} style="width:auto;min-height:0"> Fechas automáticas del sistema (en gris)</label></div></div>
+    <div class="card"><h3>${sel ? 'Día ' + esc(meF(sel)) : 'Próximos 30 días'}${sel ? ' <button type="button" class="link" id="ag-quitar">ver próximos 30 días</button>' : ''}</h3>
+      ${pend.length && !sel ? `<p class="aviso-inc" style="margin:0 0 8px">⏰ ${pend.length} pendiente(s) de días anteriores sin marcar como hecho.</p>` : ''}
+      <ul class="ag-lista">${(sel ? lista : pend.concat(lista)).map(x => agFila(x)).join('') || '<li><small class="muted">Nada previsto.</small></li>'}</ul>
+      ${sel ? `<div class="ia-acciones"><button type="button" class="btn ghost" id="ag-en-dia">+ Añadir el ${esc(meF(sel))}</button></div>` : ''}
+      <p class="nota" style="margin:10px 0 0">No anotes aquí datos de menores ni detalles de casos: para eso está <b>Incidencias</b>, con su protección.</p></div></div>`;
+  const mover = n => { state.agMes = new Date(y, mo + n, 1); state.agSel = ''; pintarAgenda(c); };
+  $('#ag-prev').onclick = () => mover(-1); $('#ag-next').onclick = () => mover(1);
+  $('#ag-hoy').onclick = () => { const h = new Date(); state.agMes = new Date(h.getFullYear(), h.getMonth(), 1); state.agSel = hoy; pintarAgenda(c); };
+  $('#ag-nueva').onclick = () => agForm({ fecha: state.agSel || hoy, tipo: 'cita' }, e);
+  $('#ag-auto').onchange = ev => { state.agAuto = ev.target.checked; pintarAgenda(c); };
+  $$('#esp-cuerpo [data-dia]').forEach(d => d.onclick = () => { state.agSel = d.dataset.dia === state.agSel ? '' : d.dataset.dia; pintarAgenda(c); });
+  if ($('#ag-quitar')) $('#ag-quitar').onclick = () => { state.agSel = ''; pintarAgenda(c); };
+  if ($('#ag-en-dia')) $('#ag-en-dia').onclick = () => agForm({ fecha: sel, tipo: 'cita' }, e);
+  agEventosFila(c, e);
+}
+function agFila(x) {
+  state.agVista = state.agVista || []; const i = state.agVista.push(x) - 1;
+  if (x.auto) return `<li class="ag-clic" data-ag-ver="${i}" tabindex="0" role="button"><span class="ag-f">${esc(meF(x.fecha))}</span><span class="ag-t"><b>${esc(x.titulo)}</b><br><small>Automático · ${esc(x.origen)}</small></span><span class="ag-acc ag-chev" aria-hidden="true">›</span></li>`;
+  return `<li class="ag-clic${x.hecho === 'SI' ? ' hecho' : ''}" data-ag-ver="${i}" tabindex="0" role="button"><span class="ag-f">${esc(meF(x.fecha))}${x.hora ? '<br><small>' + esc(x.hora) + '</small>' : ''}</span><span class="ag-t"><i class="ag-dot" style="background:${AG_COL[x.tipo] || '#6b7a82'}"></i><b>${esc(x.titulo)}</b>${x.hecho === 'SI' ? ' <span class="st ok">hecho</span>' : ''}<br><small>${esc(AG_NOM[x.tipo] || '')}${x.lugar ? ' · ' + esc(x.lugar) : ''}${x.notas ? ' · ' + esc(String(x.notas).length > 90 ? String(x.notas).slice(0, 88) + '…' : String(x.notas)) : ''}</small></span><span class="ag-acc ag-chev" aria-hidden="true">›</span></li>`;
+}
+function agVer(x, e) {
+  let dlg = $('#me-dlg'); if (!dlg) { dlg = document.createElement('dialog'); dlg.id = 'me-dlg'; document.body.append(dlg); }
+  const col = x.auto ? '#6b7a82' : (AG_COL[x.tipo] || '#6b7a82');
+  const fl = new Date(String(x.fecha).slice(0, 10) + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  dlg.innerHTML = `<div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px"><i class="me-ico" style="background:${col}">${ICO(ICOS.cal, 22)}</i><div style="flex:1;min-width:0"><h3 style="margin:0;font-size:1.25rem;${x.hecho === 'SI' ? 'text-decoration:line-through;opacity:.7' : ''}">${esc(x.titulo)}</h3>
+      <small class="muted">${x.auto ? 'Fecha automática · ' + esc(x.origen) : esc(AG_NOM[x.tipo] || '')}${x.hecho === 'SI' ? ' · <b class="ok" style="color:var(--ok)">Hecho</b>' : ''}</small></div><button type="button" class="btn ghost" id="agv-x" aria-label="Cerrar">✕</button></div>
+    <div class="ag-det"><p>📅 <b>${esc(fl.charAt(0).toUpperCase() + fl.slice(1))}</b>${x.hora ? ' · 🕒 <b>' + esc(x.hora) + '</b>' : ''}</p>${x.lugar ? `<p>📍 ${esc(x.lugar)}</p>` : ''}${x.notas ? `<p style="white-space:pre-wrap;background:var(--bg);border-radius:10px;padding:10px 12px">${esc(x.notas)}</p>` : ''}${x.autor ? `<p><small class="muted">Anotado por ${esc(x.autor)}</small></p>` : ''}</div>
+    <div class="ag-bots">${x.auto ? `<button type="button" class="btn" id="agv-ir">Ir a ${esc(x.origen)}</button>` :
+      `<button type="button" class="btn" id="agv-ed">✏️ Editar</button><button type="button" class="btn ghost" id="agv-ok">${x.hecho === 'SI' ? '↺ Marcar pendiente' : '✓ Marcar hecho'}</button><button type="button" class="btn ghost" id="agv-ics">📆 A mi calendario</button><button type="button" class="btn ghost" id="agv-del" style="color:var(--bad);border-color:color-mix(in srgb,var(--bad) 50%,transparent)">✕ Borrar</button>`}</div>`;
+  const cerrar = () => dlg.close(), rep = () => { pintarAgenda($('#esp-cuerpo')); agBadge(); };
+  dlg.querySelector('#agv-x').onclick = cerrar; dlg.onclick = ev => { if (ev.target === dlg) cerrar(); };
+  if (x.auto) dlg.querySelector('#agv-ir').onclick = () => { cerrar(); show(x.ir); };
+  else {
+    dlg.querySelector('#agv-ed').onclick = () => { cerrar(); agForm(Object.assign({}, x, { fecha: String(x.fecha).slice(0, 10) }), e); };
+    dlg.querySelector('#agv-ok').onclick = async () => { try { await run(() => API.call('guardarAgenda', Object.assign({}, x, { fecha: String(x.fecha).slice(0, 10), hecho: x.hecho === 'SI' ? 'NO' : 'SI' }))); } catch (er) { return; } cerrar(); toast(x.hecho === 'SI' ? 'Marcada como pendiente' : '¡Hecho!'); rep(); };
+    dlg.querySelector('#agv-ics').onclick = () => agIcs(x, e);
+    dlg.querySelector('#agv-del').onclick = async () => { if (!confirm('¿Borrar «' + x.titulo + '» de la agenda?')) return; try { await run(() => API.call('eliminarAgenda', { id: x.id })); } catch (er) { return; } cerrar(); toast('Entrada borrada'); rep(); };
+  }
+  dlg.showModal();
+}
+function agEventosFila(c, e) {
+  $$('#esp-cuerpo [data-ag-ver]').forEach(li => { const abrir = () => agVer(state.agVista[+li.dataset.agVer], e); li.onclick = abrir; li.onkeydown = ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); abrir(); } }; });
+  $$('#esp-cuerpo .cal .ev[data-ag-ver]').forEach(ch => ch.onclick = ev => { ev.stopPropagation(); agVer(state.agVista[+ch.dataset.agVer], e); });
+}
+function agForm(x, e) {
+  modal(x.id ? 'Editar entrada de la agenda' : 'Nueva entrada de la agenda', [
+    ['fecha', 'Fecha', 'date', true], ['hora', 'Hora (opcional)', 'time'], ['titulo', 'Título', 'text', true], ['tipo', 'Tipo', AG_TIPOS.map(t => [t[0], t[1]])],
+    ['lugar', 'Lugar (opcional)'], ['notas', 'Notas (sin datos de menores ni de casos)', 'textarea'], ['hecho', 'Estado', [['NO', 'Pendiente'], ['SI', 'Hecho']]]
+  ], Object.assign({ hecho: 'NO' }, x), async d => {
+    try { await run(() => API.call('guardarAgenda', Object.assign(d, { id: x.id, entidad_id: x.entidad_id || e.id || '' }))); } catch (er) { return; }
+    toast('Agenda actualizada'); state.agSel = d.fecha; const f = new Date(d.fecha); state.agMes = new Date(f.getFullYear(), f.getMonth(), 1); pintarAgenda($('#esp-cuerpo')); agBadge();
+  });
+}
+function agIcs(x, e) {
+  const f = String(x.fecha).slice(0, 10).replace(/-/g, ''), h = x.hora ? x.hora.replace(':', '') + '00' : '';
+  const esc2 = t => String(t || '').replace(/[\;,]/g, m => '\\' + m).replace(/\n/g, '\\n');
+  let fin = '';
+  if (h) { const d = new Date(String(x.fecha).slice(0, 10) + 'T' + x.hora + ':00'); d.setHours(d.getHours() + 1); fin = 'DTEND;TZID=Europe/Madrid:' + isoDe(d).replace(/-/g, '') + 'T' + ('0' + d.getHours()).slice(-2) + ('0' + d.getMinutes()).slice(-2) + '00'; }
+  else { const d = new Date(String(x.fecha).slice(0, 10)); d.setDate(d.getDate() + 1); fin = 'DTEND;VALUE=DATE:' + isoDe(d).replace(/-/g, ''); }
+  const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//EntornoSeguro//Agenda//ES', 'BEGIN:VEVENT', 'UID:' + x.id + '@entornoseguro', 'DTSTAMP:' + new Date().toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z',
+    h ? 'DTSTART;TZID=Europe/Madrid:' + f + 'T' + h : 'DTSTART;VALUE=DATE:' + f, fin, 'SUMMARY:' + esc2(x.titulo), x.lugar ? 'LOCATION:' + esc2(x.lugar) : '', x.notas ? 'DESCRIPTION:' + esc2(x.notas) : '',
+    'BEGIN:VALARM', 'TRIGGER:-PT' + (h ? '1H' : '9H') , 'ACTION:DISPLAY', 'DESCRIPTION:' + esc2(x.titulo), 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR'].filter(Boolean).join('\r\n');
+  descargar(ics, 'text/calendar', 'agenda-' + f + '.ics');
+  toast('Abre el archivo para añadirlo a tu calendario (Google, Outlook o el móvil)');
+}
+async function agBadge() {
+  const bd = $('#badge-agenda'); let l = [];
+  try { l = await API.call('listarAgenda', {}); } catch (e) { if (bd) bd.textContent = ''; return; }
+  const hoy = hoyISOx(), l7 = new Date(); l7.setDate(l7.getDate() + 7); const s7 = isoDe(l7);
+  const sem = l.filter(x => x.hecho !== 'SI' && String(x.fecha).slice(0, 10) <= s7);
+  if (bd) bd.textContent = sem.length || '';
+  state.agSemana = sem;
+  const h = $('#panel-hero .hero-chips');
+  if (h) { let ch = h.querySelector('[data-hero="ag"]'); if (!ch) { ch = document.createElement('button'); ch.type = 'button'; ch.dataset.hero = 'ag'; h.append(ch); ch.onclick = () => { state.espTab = 'agenda'; state.agSel = ''; show('espacio'); pintarEspacio(); }; }
+    ch.className = sem.length ? 'warn' : 'ok'; ch.innerHTML = ICO(ICOS.cal, 16) + ' ' + (sem.length ? sem.length + ' en tu agenda esta semana' : 'Agenda despejada esta semana'); }
+  if (!state.club) { const v = $('#view-panel'); let card = $('#agenda-semana');
+    if (!sem.length) { if (card) card.remove(); return; }
+    if (!card) { card = document.createElement('div'); card.id = 'agenda-semana'; card.className = 'card'; $('#kpis').after(card); }
+    card.innerHTML = '<h3>📅 Esta semana en tu agenda</h3><ul class="ag-lista">' + sem.slice(0, 6).map(x => `<li><span class="ag-f">${esc(meF(x.fecha))}${x.hora ? '<br><small>' + esc(x.hora) + '</small>' : ''}</span><span class="ag-t"><i class="ag-dot" style="background:${AG_COL[x.tipo] || '#6b7a82'}"></i><b>${esc(x.titulo)}</b>${String(x.fecha).slice(0, 10) < hoy ? ' <small class="bad-t">atrasado</small>' : ''}</span></li>`).join('') + '</ul><div class="ia-acciones"><button type="button" class="btn ghost" id="ag-ver">Abrir Mi espacio</button></div>';
+    $('#ag-ver').onclick = () => { state.espTab = 'agenda'; show('espacio'); pintarEspacio(); }; }
+}
+(function () {
+  const base = loadPanel;
+  loadPanel = async function () { await base.apply(this, arguments); try { await agBadge(); } catch (e) {} };
+})();
+// ---- Campañas ----
+async function pintarCampanas(c) {
+  const e = await espEntidad();
+  c.innerHTML = '<div class="card"><p class="empty">Cargando…</p></div>';
+  let l = [];
+  try { l = await API.call('listarCampanas', {}); } catch (er) { c.innerHTML = '<div class="card"><p class="aviso-inc">Actualiza Ampliacion.gs a la v1.22 o posterior.</p></div>'; return; }
+  const pubs = l.filter(x => x.tipo === 'publicacion'), was = l.filter(x => x.tipo === 'whatsapp');
+  c.innerHTML = `<div class="card"><div class="ia-acciones" style="margin:0"><button type="button" class="btn" id="cp-pub">💬 Nueva publicación del mes</button><button type="button" class="btn ghost" id="cp-wa">📲 Nuevo mensaje de WhatsApp</button></div><div id="cp-extra"></div></div>
+    <div class="card"><h3>Publicaciones (${pubs.length})</h3>${pubs.length ? '<div class="camp-grid">' + pubs.map((x, i) => `<div class="camp-card">${imgMini(x.imagen_url, x.tema) || '<div class="mini-img" style="width:100%;aspect-ratio:1/1;display:grid;place-items:center;font-size:2rem">💬</div>'}
+      <b style="display:block;margin-top:8px;color:var(--brand)">${esc(x.tema)}</b><small class="muted">${esc(meF(x.fecha))}</small><details><summary>Ver texto</summary><p style="white-space:pre-wrap;margin:6px 0">${esc(x.texto)}</p></details>
+      <div class="ia-acciones"><button type="button" class="btn ghost" data-cp-copy="${i}">Copiar texto</button><button type="button" class="ev-x" data-cp-del="${esc(x.id)}" title="Borrar">✕</button></div></div>`).join('') + '</div>' : '<p class="empty">Aún no hay publicaciones guardadas.</p>'}</div>
+    <div class="card"><h3>Mensajes de WhatsApp (${was.length})</h3>${was.length ? '<ul class="wa-hist" style="list-style:none;padding:0;margin:0">' + was.map(x => `<li><div style="flex:1"><small class="muted">${esc(meF(x.fecha))} · ${esc(x.destinatario)} · ${esc(x.tono)}</small><div class="wa-bur" style="margin-top:4px">${waFormato(x.texto)}</div></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><a class="btn ghost" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(x.texto)}" title="Abrir en WhatsApp">📲</a><button type="button" class="ev-x" data-cp-del="${esc(x.id)}" title="Borrar">✕</button></div></li>`).join('') + '</ul>' : '<p class="empty">Aún no hay mensajes guardados.</p>'}</div>`;
+  $('#cp-pub').onclick = () => mePublicacion($('#cp-extra'), e);
+  $('#cp-wa').onclick = () => waGenerador($('#cp-extra'), e);
+  $$('[data-cp-copy]').forEach(b => b.onclick = () => copiarTexto(pubs[+b.dataset.cpCopy].texto));
+  $$('[data-cp-del]').forEach(b => b.onclick = async () => { if (!confirm('¿Borrar este elemento de Campañas?')) return; try { await run(() => API.call('eliminarCampana', { id: b.dataset.cpDel })); } catch (er) { return; } pintarCampanas(c); });
+}
+// ---- Documentos: los generados en la app y las evidencias de la Matriz (enlaces a Drive) ----
+async function pintarDocsEsp(c) {
+  const e = await espEntidad();
+  c.innerHTML = '<div class="card"><p class="empty">Cargando…</p></div>';
+  const ok = p => p.then(x => x, () => []);
+  const [docs, mat] = await Promise.all([can('ia') || can('leer') ? ok(API.call('listarDocumentos')) : Promise.resolve([]), e.id ? ok(API.call('matriz', { entidad_id: e.id })) : Promise.resolve([])]);
+  const ev = [].concat(...(mat || []).map(r => (r.evidencias || []).map(v => Object.assign({ codigo: r.codigo, requisito: r.requisito }, v))));
+  state.espDocs = docs || [];
+  c.innerHTML = `<div class="card form"><label>Buscar<input id="dc-q" type="search" placeholder="Protocolo, autorización, cartel, carta…"></label></div>
+    <div class="grid2"><div class="card doc-col"><h4>📝 Generados en la app</h4><p class="nota" style="margin:0 0 6px">Plantillas, publicaciones e informes guardados en Documentos.</p><ul class="doc-l" id="dc-app"></ul></div>
+    <div class="card doc-col"><h4>🔗 Evidencias en tu nube</h4><p class="nota" style="margin:0 0 6px">Los documentos enlazados en la Matriz (acceso restringido).</p><ul class="doc-l" id="dc-ev"></ul></div></div>`;
+  const pinta = () => {
+    const q = norm($('#dc-q').value || '');
+    const d1 = state.espDocs.filter(x => !q || norm(x.asunto + ' ' + x.tipo).includes(q)).slice(0, 60);
+    $('#dc-app').innerHTML = d1.map(x => `<li><button type="button" class="link" data-dc="${esc(x.id)}">${esc(x.asunto)}</button><br><small class="muted">${esc((typeof TIPOS_DOC !== 'undefined' && TIPOS_DOC[x.tipo]) || x.tipo)} · ${esc(meF(x.actualizado || x.creado))}</small></li>`).join('') || '<li><small class="muted">Sin resultados.</small></li>';
+    const d2 = ev.filter(x => !q || norm(x.titulo + ' ' + x.codigo + ' ' + x.requisito).includes(q));
+    $('#dc-ev').innerHTML = d2.map(x => `<li>${x.url_drive ? `<a href="${esc(x.url_drive)}" target="_blank" rel="noopener">${esc(x.titulo)}</a>` : esc(x.titulo)}<br><small class="muted">${esc(x.codigo)} · ${esc(x.requisito)}</small></li>`).join('') || '<li><small class="muted">Sin resultados.</small></li>';
+    $$('[data-dc]').forEach(b => b.onclick = () => { show('documentos'); setTimeout(() => { try { state.docs = state.docs && state.docs.length ? state.docs : state.espDocs; abrirDoc(b.dataset.dc); } catch (er) {} }, 400); });
+  };
+  $('#dc-q').oninput = pinta; pinta();
+}
+GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Qué hay en «Mi espacio»?', '<p>Es tu mesa de trabajo como Delegado/a. Tiene tres pestañas:</p><ul><li><b>📅 Agenda</b>: calendario mensual con tus citas, reuniones, recordatorios y tareas (con hora, lugar y notas). Puedes marcarlas como hechas, editarlas y añadirlas a tu calendario del móvil, Google u Outlook con <b>📆</b> (archivo .ics). En gris aparecen las <b>fechas automáticas</b> del sistema: revisiones de la Matriz, certificados por renovar, formación que caduca y la próxima encuesta. Lo de los próximos 7 días se avisa en el menú y en el Panel.</li><li><b>📣 Campañas</b>: tus publicaciones del mes (con miniatura de la imagen) y tus mensajes de WhatsApp guardados.</li><li><b>📄 Documentos</b>: buscador de lo generado en la app y de las evidencias enlazadas en la Matriz.</li></ul><p>No anotes en la agenda datos de menores ni detalles de casos: para eso está Incidencias.</p>', '', 'espacio']); });
+
+// v70: Publicación del mes · temas propios (escritos a mano o sugeridos por la IA) que se guardan en la hoja y aparecen en el selector
+const ME_BASE = ME_TEMAS.length;
+async function meCargarTemas() {
+  let l = []; try { l = await API.call('listarCampanas', { tipo: 'tema' }); } catch (e) { return; }
+  l.slice().reverse().forEach(x => { let a = []; try { a = JSON.parse(x.texto || '[]'); } catch (e) {}
+    if (!ME_TEMAS.some((t, i) => i >= ME_BASE && t[1] === x.tema)) ME_TEMAS.push([x.tema_mes || 'Mi tema', x.tema, a[0] || x.tema, a[1] || 'escena deportiva amable relacionada con el tema', a[2] || 'hablar con el Delegado/a de Protección', x.id]); });
+}
+function meOpciones(sel, valor) {
+  sel.innerHTML = '<optgroup label="Temas del mes">' + ME_TEMAS.slice(0, ME_BASE).map((t, i) => `<option value="${i}">${esc(t[0])} · ${esc(t[1])}</option>`).join('') + '</optgroup>' +
+    (ME_TEMAS.length > ME_BASE ? '<optgroup label="Mis temas">' + ME_TEMAS.slice(ME_BASE).map((t, i) => `<option value="${ME_BASE + i}">${esc(t[1])}</option>`).join('') + '</optgroup>' : '');
+  if (valor != null) sel.value = String(valor);
+}
+async function meGuardarTema(t) {
+  ME_TEMAS.push(['Mi tema', t[0], t[1], t[2], t[3]]);
+  try { const r = await API.call('guardarCampana', { tipo: 'tema', tema: t[0], texto: JSON.stringify([t[1], t[2], t[3]]) }); ME_TEMAS[ME_TEMAS.length - 1][5] = r.id; } catch (e) { toast('El tema se usa ahora; para guardarlo actualiza Ampliacion.gs a la v1.24', true); }
+  return ME_TEMAS.length - 1;
+}
+function meParsearTemas(txt) {
+  const lineas = String(txt || '').replace(/\*\*|__|#+\s*/g, '').split(/\n/).map(l => l.trim());
+  // Formato estructurado: «1. Tema: … / Titular: … / Escena: … / Llamada a la acción: …»
+  const out = []; let cur = null;
+  const campo = (l, re) => { const m = l.match(re); return m ? m[1].trim() : null; };
+  lineas.forEach(l => {
+    const sin = l.replace(/^\s*(\d+\s*[.)-]|[-*•])\s*/, '');
+    const t = campo(sin, /^tema\s*[:.-]\s*(.+)$/i);
+    if (t !== null) { cur = [t, '', '', '']; out.push(cur); return; }
+    if (!cur) return;
+    const ti = campo(sin, /^titular\s*[:.-]\s*(.+)$/i), es = campo(sin, /^escena\s*[:.-]\s*(.+)$/i), ll = campo(sin, /^llamada\s+a\s+la\s+acci[oó]n\s*[:.-]\s*(.+)$/i);
+    if (ti !== null) cur[1] = ti; else if (es !== null) cur[2] = es; else if (ll !== null) cur[3] = ll;
+  });
+  let res = out.filter(p => p[0]);
+  // Formato antiguo con barras: TEMA | TITULAR | ESCENA | LLAMADA
+  if (!res.length) res = lineas.map(l => l.replace(/^\s*(\d+[.)-]|[-*•])\s*/, '')).filter(l => l.split('|').length >= 3).map(l => { const p = l.split('|').map(x => x.trim()); return [p[0], p[1], p[2], p[3] || '']; });
+  return res.map(p => [p[0], p[1] || p[0], p[2] || 'escena deportiva amable relacionada con el tema, personas sin rostros reconocibles', p[3] || 'hablar con el Delegado/a de Protección']).slice(0, 10);
+}
+(function () {
+  const base = mePublicacion;
+  mePublicacion = async function (cont, e) {
+    await meCargarTemas();
+    base(cont, e);
+    const sel = $('#me-tema'); if (!sel) return;
+    const actual = sel.value; meOpciones(sel, actual);
+    const lab = sel.closest('label');
+    lab.insertAdjacentHTML('afterend', `<div class="ia-acciones" style="margin:-4px 0 10px"><button type="button" class="btn ghost" id="me-propio">✏️ Escribir un tema propio</button><button type="button" class="btn ghost" id="me-sug">💡 Pedir ideas a la IA</button>${ME_TEMAS.length > ME_BASE ? '<button type="button" class="link" id="me-mis">Gestionar mis temas</button>' : ''}</div><div id="me-temas-extra"></div>`);
+    const zona = $('#me-temas-extra');
+    const usar = i => { meOpciones(sel, i); sel.dispatchEvent(new Event('change')); zona.innerHTML = ''; toast('Tema listo: copia los prompts'); };
+    $('#me-propio').onclick = () => {
+      zona.innerHTML = `<div class="card form" style="background:var(--bg)"><h3>✏️ Tema propio</h3><div class="fields"><label class="full">Tema (de qué trata)<input id="tp-tema" placeholder="Ej.: El valor del compañerismo en el vestuario"></label>
+        <label>Titular para la imagen (máx. 7 palabras)<input id="tp-tit" placeholder="Ej.: Juntos ganamos todos"></label><label>Llamada a la acción<input id="tp-cta" placeholder="Ej.: felicitar a un compañero esta semana"></label>
+        <label class="full">Escena para la imagen (opcional)<input id="tp-esc" placeholder="Ej.: equipo de espaldas abrazado en el centro del campo"></label></div>
+        <div class="ia-acciones"><button type="button" class="btn" id="tp-ok">Usar y guardar en mis temas</button><button type="button" class="btn ghost" id="tp-x">Cancelar</button></div></div>`;
+      $('#tp-x').onclick = () => { zona.innerHTML = ''; };
+      $('#tp-ok').onclick = async () => { const t = $('#tp-tema').value.trim(); if (!t) { toast('Escribe el tema', true); return; }
+        usar(await meGuardarTema([t, $('#tp-tit').value.trim() || t, $('#tp-esc').value.trim() || 'escena deportiva amable relacionada con el tema, personas sin rostros reconocibles', $('#tp-cta').value.trim() || 'hablar con el Delegado/a de Protección'])); };
+    };
+    $('#me-sug').onclick = () => {
+      const mes = new Date().toLocaleDateString('es-ES', { month: 'long' }), usados = ME_TEMAS.map(t => t[1]).slice(0, 30).join('; ');
+      const quien = e.propia === 'SI' ? 'las actividades deportivas municipales de un ayuntamiento' : 'un club deportivo' + (e.modalidad ? ' de ' + e.modalidad : '');
+      const p = ['Propón 6 temas para publicaciones de Instagram de ' + quien + ', dirigidas a familias y deportistas, sobre protección de la infancia, buen trato y valores en el deporte.',
+        'Ten en cuenta el mes de ' + mes + ' (fechas señaladas, momento de la temporada) y evita repetir estos temas ya usados: ' + usados + '.',
+        'Formato EXACTO para cada tema, numerados del 1 al 6, con estas cuatro líneas y una línea en blanco entre temas, sin introducción ni comentarios:',
+        '1. Tema: (de qué trata, una frase)', 'Titular: (para la imagen, máximo 7 palabras)', 'Escena: (para la imagen; personas de espaldas o estilizadas, sin rostros reconocibles ni menores identificables)', 'Llamada a la acción: (en infinitivo, una frase corta)',
+        'Tono positivo y preventivo, sin alarmismo. Español de España.'].join('\n');
+      zona.innerHTML = '<div class="card form" style="background:var(--bg)"><h3>💡 Ideas de temas con IA</h3><div id="ts-prompt"></div><label>Pega aquí la respuesta<textarea id="ts-res" rows="8" placeholder="Pega aquí la respuesta completa: 1. Tema… Titular… Escena… Llamada a la acción…"></textarea></label><div id="ts-lista"></div><div class="ia-acciones"><button type="button" class="btn ghost" id="ts-x">Cerrar</button></div></div>';
+      mostrarPrompt($('#ts-prompt'), p);
+      $('#ts-x').onclick = () => { zona.innerHTML = ''; };
+      $('#ts-res').oninput = () => {
+        const l = meParsearTemas($('#ts-res').value);
+        $('#ts-lista').innerHTML = l.length ? '<p class="nota" style="margin:6px 0">Elige uno (se guarda en «Mis temas»):</p><ul class="ag-lista">' + l.map((t, i) => `<li><span class="ag-f" style="min-width:28px">${i + 1}.</span><span class="ag-t"><b>${esc(t[0])}</b><br><small>🖼️ «${esc(t[1])}»<br>🎬 ${esc(t[2])}<br>👉 ${esc(t[3])}</small></span><span class="ag-acc"><button type="button" class="btn" data-ts="${i}">Usar</button></span></li>`).join('') + '</ul>'
+          : ($('#ts-res').value.trim() ? '<p class="aviso-inc">No reconozco el formato. Cada tema debe empezar por «Tema:» y seguir con «Titular:», «Escena:» y «Llamada a la acción:».</p>' : '');
+        $$('[data-ts]').forEach(b => b.onclick = async () => usar(await meGuardarTema(l[+b.dataset.ts])));
+      };
+    };
+    const mis = $('#me-mis'); if (mis) mis.onclick = () => {
+      zona.innerHTML = '<div class="card form" style="background:var(--bg)"><h3>Mis temas</h3><ul class="ag-lista">' + ME_TEMAS.slice(ME_BASE).map((t, i) => `<li><span class="ag-t"><b>${esc(t[1])}</b><br><small>«${esc(t[2])}»</small></span><span class="ag-acc">${t[5] ? `<button type="button" class="ev-x" data-tdel="${ME_BASE + i}" title="Borrar">✕</button>` : ''}</span></li>`).join('') + '</ul><div class="ia-acciones"><button type="button" class="btn ghost" id="tm-x">Cerrar</button></div></div>';
+      $('#tm-x').onclick = () => { zona.innerHTML = ''; };
+      $$('[data-tdel]').forEach(b => b.onclick = async () => { const i = +b.dataset.tdel, t = ME_TEMAS[i]; if (!confirm('¿Borrar el tema «' + t[1] + '»?')) return;
+        try { await run(() => API.call('eliminarCampana', { id: t[5] })); } catch (er) { return; } ME_TEMAS.splice(i, 1); meOpciones(sel, new Date().getMonth()); sel.dispatchEvent(new Event('change')); mis.click(); });
+    };
+  };
+})();
+
+// v72: ENTIDADES · botones visibles para desactivar/reactivar y eliminar (como en Mis clubes)
+function entAcciones() {
+  if (state.club || !can('escribir')) return;
+  $$('#tabla-entidades tbody tr').forEach(tr => {
+    const b = tr.querySelector('[data-edit]'); if (!b || tr.querySelector('[data-ent-est]')) return;
+    const e = (state.entidades || []).find(x => x.id === b.dataset.edit); if (!e || e.propia === 'SI') return;
+    const inact = e.activo === 'NO';
+    b.insertAdjacentHTML('afterend', ` · <button type="button" class="link" data-ent-est="${esc(e.id)}">${inact ? 'Reactivar' : 'Desactivar'}</button>` +
+      (can('admin') ? ` · <button type="button" class="link" style="color:var(--bad)" data-ent-del="${esc(e.id)}">Eliminar</button>` : ''));
+  });
+  $$('[data-ent-est]').forEach(x => x.onclick = async () => {
+    const e = state.entidades.find(y => y.id === x.dataset.entEst); if (!e) return;
+    const off = e.activo !== 'NO';
+    if (off && !confirm(`¿Desactivar «${e.nombre}»?\n\nDeja de contar en el Panel, las alertas y los informes. Sus datos se conservan y puedes reactivarla cuando quieras.`)) return;
+    try { await run(() => API.call('estadoEntidad', { id: e.id, activo: off ? 'NO' : 'SI' })); } catch (er) { if (/desconocida/i.test(er.message)) toast('Actualiza Ampliacion.gs a la v1.25', true); return; }
+    toast(off ? 'Entidad desactivada' : 'Entidad reactivada'); state.entidades = []; loadEntidades();
+  });
+  $$('[data-ent-del]').forEach(x => x.onclick = () => {
+    const e = state.entidades.find(y => y.id === x.dataset.entDel); if (!e) return;
+    modal(`Eliminar «${e.nombre}»`, [['confirmar', 'Escribe el nombre de la entidad para confirmar', 'text', true]], {}, async d => {
+      let r; try { r = await run(() => API.call('eliminarEntidad', { id: e.id, confirmar: d.confirmar })); } catch (er) { if (/desconocida/i.test(er.message)) toast('Actualiza Ampliacion.gs a la v1.25', true); return; }
+      const n = Object.entries(r.borrados || {}).filter(([k, v]) => v && k !== 'usuarios_desactivados').reduce((s2, [, v]) => s2 + v, 0);
+      toast(`«${r.nombre}» eliminada${n ? ' con ' + n + ' registro(s)' : ''}${r.borrados && r.borrados.usuarios_desactivados ? ' · ' + r.borrados.usuarios_desactivados + ' usuario(s) desactivado(s)' : ''}`);
+      state.entidades = []; loadEntidades();
+    });
+    $('#modal-form h3').insertAdjacentHTML('afterend', `<p class="aviso-inc" style="margin:0 0 10px"><b>Es definitivo.</b> Se borran la entidad y todos sus registros: Matriz, evidencias, riesgos, agentes, formación, autorizaciones, encuestas y sus respuestas, alertas, campañas y agenda. Sus usuarios «Entidad» quedan desactivados.</p>
+      <p class="nota" style="margin:0 0 10px">Si solo deja de trabajar con menores o de colaborar, mejor <b>Desactivar</b>: conserva el historial. Las entidades con incidencias registradas no se pueden eliminar.</p>`);
+    const okb = $('#modal-form .actions button[value="ok"]'); if (okb) { okb.textContent = 'Eliminar definitivamente'; okb.style.background = 'var(--bad)'; }
+  });
+}
+(function () {
+  const base = loadEntidades;
+  loadEntidades = async function () { await base.apply(this, arguments); try { entAcciones(); } catch (e) {} };
+})();
+GUIA.forEach(t => { if (t[1] === 'Entidades y coordinación con clubes') t[2].push(['¿Cómo doy de baja o elimino una entidad?', '<ul><li><b>Desactivar</b> (en su fila): deja de contar en el Panel, las alertas y los informes, pasa al final de la lista en gris y conserva todo su historial. Se puede <b>Reactivar</b> en cualquier momento. Es lo recomendable cuando una entidad deja de colaborar o de trabajar con menores.</li><li><b>Eliminar</b> (solo administración): borra la entidad y todos sus registros. Hay que escribir su nombre para confirmar. No es posible si tiene incidencias registradas: en ese caso, desactívala.</li><li>Las <b>Actividades municipales</b> propias no se pueden desactivar ni eliminar.</li></ul>', '', 'entidades']); });
+
+// ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
+
+</script>
+</body>
+</html>
