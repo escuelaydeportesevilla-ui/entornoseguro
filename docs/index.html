@@ -6271,6 +6271,7 @@ async function segCargar(e) {
   caja.querySelectorAll('[data-seg]').forEach(b => b.onclick = ({
     ficha: () => formEntidad(e),
     usuarios: fuera(() => { show('usuarios'); toast('Pulsa «Nuevo usuario», rol «Entidad deportiva» y elige ' + e.nombre); }),
+    'ficha-ej': () => abrirInforme(htmlFichaEjemplo()),
     'gen-decl': () => segCoordDoc(e.id, 'declaracion'),
     'gen-ficha': () => segCoordDoc(e.id, 'ficha'),
     'reg-decl': () => abrirDeclaracion(e.id),
@@ -6346,6 +6347,101 @@ function segFilas() {
 })();
 GUIA.forEach(t => { if (t[1] === 'Entidades y coordinación con clubes') t[2].push(['¿Cómo sigo a una entidad paso a paso?', '<p>En <b>Entidades</b>, pulsa <b>🧭 Seguimiento</b> en la fila de la entidad. Se abre su ventana (cabecera verde con su nombre) con el progreso y los pasos, cada uno con su estado (✅ hecho · 👉 siguiente · 🟠 en curso · ⬜ más adelante · ➖ opcional) y el botón que lo resuelve:</p><ol><li><b>Ficha básica</b>: CIF, Delegado/a y su contacto.</li><li><b>Acceso propio</b> (opcional): usuario «Entidad» para que suba su documentación.</li><li><b>Declaración responsable (I)</b>: genérala, envíala y, cuando vuelva firmada, regístrala.</li><li><b>Verificación (II)</b>: comprueba que lo declarado tiene documento.</li><li><b>Requerimiento (III)</b>: lista sola lo que falta y anota el plazo.</li><li><b>Seguimiento</b>: alertas abiertas y próxima revisión.</li><li><b>Informe de la entidad</b>.</li></ol><ul><li>Si un paso te lleva a otra pantalla (Matriz, Informes, Alertas), arriba aparece la banda verde <b>«Siguiendo a: … · ← Volver al seguimiento»</b>: así sabes que estás con esa entidad y no en tu tutorial municipal.</li><li>Al guardar algo, la ventana se actualiza sola.</li><li>Cierra con <b>✕</b>, la tecla Esc o pulsando fuera.</li></ul><p>No necesitas IA para saber cómo seguir: el paso marcado como <b>siguiente</b> es el que toca.</p>', 'mun', 'entidades']); });
 
+// v76: ficha de ejemplo (datos ficticios, ejemplo y para qué sirve cada casilla) + paso 1 del seguimiento con los datos clave de cada bloque
+const FICHA_EJEMPLO = {
+  nombre: ['Club Deportivo Demo Guadalquivir', 'Todos los documentos e informes.'],
+  cif: ['G41123456', 'Declaración responsable, contrato, informes. La app comprueba su formato y dígito de control.'],
+  tipo: ['Club', 'Textos de las plantillas y comprobación del CIF (letra según el tipo).'],
+  n_registro: ['RAED 012345', 'Declaraciones (A1 y responsable): acredita la inscripción en el Registro Andaluz de Entidades Deportivas.'],
+  domicilio: ['Calle del Deporte, 10', 'Protocolo y autorizaciones (identifica al responsable del tratamiento de datos).'],
+  municipio: ['Sanlúcar la Mayor', 'Lugar de firma de los documentos.'],
+  provincia: ['Sevilla', 'Identificación de la entidad en los documentos.'],
+  web: ['www.cddemoguadalquivir.es', 'Carta a familias y cartel del canal.'],
+  modalidad: ['Fútbol', 'Análisis de riesgos y publicaciones.'],
+  actividades: ['Escuela de fútbol base y competición federada', 'Análisis de riesgos (C1) y protocolo: la IA solo propone riesgos de lo que haces.'],
+  trabaja_menores: ['SI', 'Si es SI, la entidad entra en la Matriz, las alertas y el seguimiento.'],
+  n_menores: ['120', 'Análisis de riesgos e informes.'],
+  edades: ['de 6 a 16 años', 'Análisis de riesgos, cartel infantil (desde la edad mínima hasta 11 años) y encuestas por franja.'],
+  lugar_actividad: ['Campo municipal de fútbol', 'Análisis de riesgos (vestuarios, accesos) y protocolo.'],
+  competicion: ['SI', 'Análisis de riesgos: añade el ámbito de competiciones.'],
+  desplazamientos: ['SI', 'Riesgos y autorizaciones de desplazamiento (F1). Si es NO, F1 y F2 pueden ir a «No aplica».'],
+  pernocta: ['NO', 'Riesgos y autorización de desplazamiento (pernocta).'],
+  ratio: ['1 por cada 12', 'Protocolo y análisis de riesgos (supervisión).'],
+  direccion_nombre: ['Andrés Demo Ruiz', 'Protocolo y guía de actuación (coordinación de actividades).'],
+  direccion_telefono: ['600 000 001', 'Protocolo y guía de actuación.'],
+  organo_gobierno: ['Junta Directiva', 'Designación (B1), declaración institucional (A1) y aprobación de documentos.'],
+  presidencia_nombre: ['Manuel Demo Pérez', 'Firmas (Vº Bº) e informe del club.'],
+  secretaria_nombre: ['Carmen Demo López', 'Certificaciones de acuerdos (A1, B1).'],
+  regimen_disciplinario: ['Estatutos del club', 'Código de conducta y hojas de aceptación (cómo se tramita un incumplimiento).'],
+  delegado_nombre: ['Lucía Demo García', 'Cartel del canal, protocolo, carta a familias, guía de actuación y hojas de aceptación.'],
+  delegado_email: ['delegada@cddemo.es', 'Cartel del canal, protocolo y carta a familias.'],
+  delegado_telefono: ['600 000 002', 'Cartel del canal, protocolo y guía de actuación.'],
+  fecha_designacion: ['01/09/2026', 'Documento de designación (B1) y sugerencia de B1 en la Matriz.'],
+  designacion_vigencia: ['dos temporadas', 'Documento de designación (B1).'],
+  suplente_nombre: ['Javier Demo Martín', 'Protocolo y designación: quién actúa si el Delegado/a no está.'],
+  suplente_telefono: ['600 000 003', 'Protocolo y cartel del canal.'],
+  suplente_email: ['suplente@cddemo.es', 'Protocolo.'],
+  acepta_protocolo_marco: ['SI', 'Aceptación del Protocolo Marco (A2), declaración responsable e indicadores municipales.'],
+  declaracion_fecha: ['15/09/2026', 'Declaración institucional (A1).'],
+  fecha_aceptacion: ['01/09/2026', 'Aceptación del Protocolo Marco (A2).'],
+  protocolo_fecha: ['15/09/2026', 'Protocolo (G1), código de conducta y hojas de aceptación.'],
+  protocolo_version: ['1.0', 'Protocolo (G1) y hojas de aceptación.'],
+  canal_email: ['proteccion@cddemo.es', 'Cartel del canal (I1), protocolo y carta a familias.'],
+  canal_telefono: ['600 000 002', 'Cartel del canal (I1).'],
+  canal_buzon: ['Oficina del club, junto a la entrada del campo', 'Cartel del canal (I1).'],
+  canal_presencial: ['Oficina del club, martes y jueves de 18:00 a 20:00', 'Cartel del canal (I1).'],
+  canal_enlace: ['Enlace a un formulario del club (Google Forms u otro)', 'Cartel del canal y código QR (Plantillas → Cartel del canal).'],
+  datos_email: ['datos@cddemo.es', 'Autorizaciones de imagen y desplazamiento: dónde ejercer los derechos de protección de datos.'],
+  redes_oficiales: ['Instagram @cddemoguadalquivir', 'Autorización de imagen (canales de publicación).'],
+  conservacion_imagenes: ['dos temporadas', 'Autorización de imagen.'],
+  plazo_comunicacion_h: ['24', 'Protocolo, hojas de aceptación y guía de actuación.'],
+  revision_meses: ['12', 'Protocolo y fechas de revisión.'],
+  observaciones: ['—', 'Uso interno. No sale en los documentos.'],
+  activo: ['SI', 'Si es NO, deja de contar en el Panel, las alertas y los informes.']
+};
+// Datos clave que comprueba el paso 1 del seguimiento (un par «a|b» vale con uno de los dos)
+const SEG_FICHA_CLAVE = ['cif', 'n_registro', 'domicilio', 'municipio', 'actividades', 'n_menores', 'edades', 'lugar_actividad', 'organo_gobierno', 'presidencia_nombre',
+  'secretaria_nombre', 'delegado_nombre', 'delegado_email|delegado_telefono', 'fecha_designacion', 'suplente_nombre', 'canal_email|canal_telefono', 'datos_email'];
+function htmlFichaEjemplo() {
+  const clave = new Set(SEG_FICHA_CLAVE.join('|').split('|'));
+  const cuerpo = '<p class="nota"><b>Todos los datos son ficticios.</b> Sirven para saber qué poner en cada casilla y en qué documentos se usa. Los marcados con ★ son los datos clave: conviene completarlos primero. Nunca escribas en la ficha datos de menores.</p>' +
+    FICHA_SECCIONES.map(([tit, campos]) => `<h2>${esc(tit.replace(/^\S+\s/, ''))}</h2><table><thead><tr><th style="width:30%">Casilla</th><th style="width:28%">Ejemplo (ficticio)</th><th>Para qué sirve</th></tr></thead><tbody>` +
+      campos.map(c => { const x = FICHA_EJEMPLO[c[0]] || ['', '']; return `<tr><td>${clave.has(c[0]) ? '★ ' : ''}${esc(c[1])}</td><td>${esc(x[0])}</td><td>${esc(x[1])}</td></tr>`; }).join('') + '</tbody></table>').join('') +
+    '<h2>Consejos</h2><ul><li>Da igual escribir en mayúsculas o minúsculas: la app lo normaliza al guardar.</li><li>Las fechas se eligen en el calendario de la casilla.</li><li>Si un dato aún no existe (por ejemplo, el protocolo propio), déjalo vacío: la app te avisará cuando un documento lo necesite.</li><li>Cuantos más datos completes, más completos saldrán los documentos de Plantillas y la declaración responsable.</li></ul>';
+  return plantillaInforme('Ficha de la entidad · ejemplo', 'Qué poner en cada casilla y para qué sirve', cuerpo, false, 'EntornoSeguro · Ficha de ejemplo con datos ficticios.');
+}
+(function () {
+  const base = formEntidad;
+  formEntidad = async function () {
+    const r = await base.apply(this, arguments);
+    const f = $('#modal-form'), nota = f && f.querySelector('p.nota');
+    if (nota && !f.querySelector('#ficha-ej')) nota.insertAdjacentHTML('beforeend', ' <button type="button" class="link" id="ficha-ej">¿Qué pongo en cada casilla? Ver ejemplo</button>');
+    const b = f && f.querySelector('#ficha-ej'); if (b) b.onclick = () => abrirInforme(htmlFichaEjemplo());
+    return r;
+  };
+  const baseG = pintarGuia;
+  pintarGuia = function () {
+    baseG.apply(this, arguments);
+    const h = document.querySelector('#view-guia header');
+    if (h && !$('#guia-ficha-ej')) { const b = document.createElement('button'); b.type = 'button'; b.id = 'guia-ficha-ej'; b.className = 'btn ghost'; b.textContent = '📄 Ficha de ejemplo (PDF)'; b.onclick = () => abrirInforme(htmlFichaEjemplo()); h.appendChild(b); }
+  };
+})();
+GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Qué pongo en cada casilla de la ficha?', '<p>Abre la <b>Ficha de ejemplo</b>: botón <b>📄 Ficha de ejemplo (PDF)</b> arriba en esta Guía, o el enlace <b>«¿Qué pongo en cada casilla? Ver ejemplo»</b> dentro de la propia ficha. Para cada casilla muestra un ejemplo con datos ficticios y en qué documentos se usa. Las marcadas con ★ son los datos clave: conviene completarlas primero.</p>', '', 'entidades']); });
+// Paso 1 del seguimiento: datos clave de todos los bloques
+(function () {
+  const base = segPasos;
+  segPasos = function (e, mat, us, al) {
+    const P = base.apply(this, arguments), p = P.find(x => x.k === 'ficha'); if (!p) return P;
+    const lleno = k => k.split('|').some(c => String(e[c] ?? '').trim() !== '');
+    const falta = SEG_FICHA_CLAVE.filter(k => !lleno(k));
+    const et = k => k.split('|').map(c => (ETIQ_DATO[c] || c).replace(/ \(.*\)$/, '')).join(' o ');
+    p.est = falta.length ? 'act' : 'ok';
+    p.txt = falta.length ? `Faltan ${falta.length} de ${SEG_FICHA_CLAVE.length} datos clave: ${falta.slice(0, 6).map(et).join(', ')}${falta.length > 6 ? '…' : '.'}` : `Los ${SEG_FICHA_CLAVE.length} datos clave están completos.`;
+    p.bot = can('escribir') ? [[falta.length ? '✏️ Completar ficha' : '✏️ Editar ficha', 'ficha'], ['📄 Ver ejemplo', 'ficha-ej']] : [['📄 Ver ejemplo', 'ficha-ej']];
+    P.forEach(x => delete x.sig); const sig = P.find(x => x.est === 'act'); if (sig) sig.sig = true;
+    return P;
+  };
+})();
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
