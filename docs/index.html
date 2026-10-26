@@ -6670,6 +6670,19 @@ GUIA.forEach(t => { if (t[1] === 'Entidades y coordinación con clubes') t[2].pu
   };
 })();
 GUIA.forEach(t => { if (t[1] === 'Entidades y coordinación con clubes') t[2].push(['¿Para qué sirve «Modelos y procedimiento de coordinación»?', '<p>Es la tarjeta de la parte inferior de <b>Entidades</b>. Sirve para lo general, no para una entidad concreta:</p><ul><li><b>Procedimiento completo</b>: el documento del sistema de coordinación con todos sus anexos, para aprobarlo o publicarlo.</li><li><b>Modelos en blanco</b> (Entidad = «Modelo en blanco»): declaración, ficha de verificación, solicitud, requerimiento.</li><li><b>IV · Traslado de comunicaciones</b>: qué hace el Delegado/a municipal si recibe un posible caso de una entidad.</li><li><b>V · Cláusula tipo</b>: texto para autorizaciones de uso de instalaciones y bases de subvenciones.</li></ul><p>Para trabajar con una entidad (declaración, solicitud, verificación, requerimiento e informe con sus datos), usa <b>🧭 Seguimiento</b> en su fila.</p>', 'mun', 'entidades']); });
+// v86: paso 5 · tras el requerimiento, la acción principal es registrar lo subsanado
+(function () {
+  const baseP = segPasos;
+  segPasos = function () {
+    const P = baseP.apply(this, arguments), p = P.find(x => x.k === 'req');
+    if (!p || p.est !== 'act' || !can('escribir')) return P;
+    if (/^Requerimiento enviado/.test(p.txt)) {
+      p.txt = p.txt.replace('al recibir lo que falte, actualízalos en la Matriz.', 'cuando la entidad aporte algo, regístralo aquí.');
+      p.bot = [['📂 Registrar lo subsanado', 'doc'], ['📨 Nuevo requerimiento', 'req']];
+    }
+    return P;
+  };
+})();
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
