@@ -6232,9 +6232,10 @@ function segPasos(e, mat, us, alertas) {
     [['📄 Generar declaración', 'gen-decl']].concat(esc2 ? [['📥 Registrar la recibida', 'reg-decl']] : []));
   const declarados = mat.filter(r => r.estado === 'cumple' || r.estado === 'parcial');
   // v80: la propia declaración no acredita el requisito: cuenta solo la documentación aportada
-  const sinEv = declarados.filter(r => !(r.evidencias || []).some(v => !/^Declaraci[oó]n responsable/i.test(String(v.titulo || ''))));
+  const sinEv = declarados.filter(r => !(r.evidencias || []).some(v => !/^Declaraci[oó]n responsable/i.test(String(v.titulo || ''))) &&
+    !/^(Falta documentación|Requerido el)/.test(String(r.accion_pendiente || ''))); // v81: lo que ya pasó a subsanación no cuenta aquí
   pon('verif', 'Verificación documental (II)', !decl ? 'pend' : sinEv.length ? 'act' : 'ok',
-    !decl ? 'Tras registrar la declaración.' : sinEv.length ? sinEv.length + ' requisito(s) declarados sin más documento que la declaración (' + sinEv.map(r => r.codigo).join(', ') + '). Comprueba la documentación con la ficha de verificación y adjúntala en su Matriz.' : 'Todo lo declarado tiene documento. La verificación es formal: no valida el contenido.',
+    !decl ? 'Tras registrar la declaración.' : sinEv.length ? sinEv.length + ' requisito(s) declarados sin más documento que la declaración (' + sinEv.map(r => r.codigo).join(', ') + '). Comprueba la documentación con la ficha de verificación y adjúntala en su Matriz.' : 'Verificación hecha: lo comprobado está en «Cumple» y lo que falta pasa a la subsanación. Es formal: no valida el contenido.',
     decl ? [['🔎 Verificar en su Matriz', 'matriz'], ['📄 Ficha de verificación', 'gen-ficha']] : []);
   const pend = mat.filter(r => ['no_cumple', 'parcial', 'pendiente'].includes(r.estado || 'pendiente'));
   const req = mat.find(r => /^Requerido el /.test(r.accion_pendiente || ''));
@@ -6278,6 +6279,7 @@ async function segCargar(e) {
     'gen-decl': () => segCoordDoc(e.id, 'declaracion'),
     'gen-ficha': () => segCoordDoc(e.id, 'ficha'),
     'reg-decl': () => abrirDeclaracion(e.id),
+    doc: () => abrirDocumentacion(e.id),
     matriz: fuera(() => segMatriz(e.id)),
     req: () => abrirRequerimiento(e.id),
     alertas: fuera(() => show('alertas')),
@@ -6455,6 +6457,72 @@ function fichaFaltan(e) {
   const cl = fichaClave(e);
   return { falta: cl.filter(k => !lleno(k)), rec: SEG_FICHA_RECOM.filter(k => !lleno(k)), total: cl.length };
 }
+// v81: 📂 Registrar documentación recibida (verificación II) · varios requisitos de una vez, con un solo enlace a la carpeta del expediente
+const esSoloDecl = r => !(r.evidencias || []).some(v => !/^Declaraci[oó]n responsable/i.test(String(v.titulo || '')));
+async function abrirDocumentacion(entidadId) {
+  if (!entidadId) { toast('Elige primero la entidad', true); return; }
+  const e = (state.entidades || []).find(x => x.id === entidadId) || {};
+  const mat = await run(() => API.call('matriz', { entidad_id: entidadId }));
+  const temp = coordTemporada();
+  const decl = mat.filter(r => (r.estado === 'cumple' || r.estado === 'parcial') && esSoloDecl(r));
+  const otros = mat.filter(r => r.estado === 'no_cumple' || r.estado === 'pendiente' || !r.estado);
+  if (!decl.length && !otros.length) { toast('No hay requisitos pendientes de documentación'); return; }
+  const fila = (r, on) => `<label class="check"><input type="checkbox" name="r_${esc(r.codigo)}" ${on ? 'checked' : ''} style="flex:0 0 22px"> <span><b>${esc(r.codigo)}</b> ${esc(r.requisito || '')}${COORD_FALTA[r.codigo] ? `<br><small>${esc(COORD_FALTA[r.codigo])}</small>` : ''}</span></label>`;
+  const f = $('#modal-form');
+  f.innerHTML = `<h3>📂 Registrar documentación recibida</h3>
+    <p class="nota" style="margin:0 0 12px"><b>${esc(e.nombre || '')}</b>. Marca los requisitos cuya documentación has comprobado. Se adjunta a todos el mismo enlace (la carpeta del expediente) y pasan a «Cumple».</p>
+    <div class="fields"><label>Fecha de recepción<input type="date" name="fecha" value="${hoyISO()}"></label>
+      <label>Título de la evidencia<input name="titulo" value="${esc('Documentación aportada · temporada ' + temp)}"></label>
+      <label class="full">Enlace a la carpeta del expediente (Drive, acceso restringido)<input type="url" name="url" placeholder="https://drive.google.com/…"></label></div>
+    ${decl.length ? `<p style="margin:10px 0 4px"><b>Declarados, pendientes de documento (${decl.length})</b> <button type="button" class="link" data-todos="1">Marcar todos</button> · <button type="button" class="link" data-todos="0">Ninguno</button></p><div class="rev-reqs doc-decl" style="grid-template-columns:1fr">${decl.map(r => fila(r, true)).join('')}</div>
+      <label class="check"><input type="checkbox" name="parcial" checked> Los declarados que <b>no</b> marques pasan a «Parcial» con «Falta documentación» (entrarán en el requerimiento)</label>` : ''}
+    ${otros.length ? `<details style="margin-top:8px"><summary style="cursor:pointer;font-weight:600;min-height:40px;display:flex;align-items:center">No declarados o sin empezar (${otros.length}) · márcalos solo si también has recibido su documentación</summary><div class="rev-reqs" style="grid-template-columns:1fr">${otros.map(r => fila(r, false)).join('')}</div></details>` : ''}
+    <p class="nota">🔒 La carpeta debe estar en la nube de la entidad o del ayuntamiento con acceso restringido. Los documentos con datos personales (certificados negativos, hojas firmadas, autorizaciones) no se envían al ayuntamiento: basta con comprobarlos y anotarlo. Registro formal y documental: no valida el contenido.</p>
+    <div class="actions"><button value="cancel" class="btn ghost" formnovalidate>Cancelar</button><button type="button" class="btn" id="doc-aplicar">Aplicar a la matriz</button></div>`;
+  f.querySelectorAll('[data-todos]').forEach(b => b.onclick = () => f.querySelectorAll('.doc-decl input[type=checkbox]').forEach(c => { c.checked = b.dataset.todos === '1'; }));
+  $('#modal').onclose = null; $('#modal').oncancel = null;
+  if (!$('#modal').open) $('#modal').showModal();
+  $('#doc-aplicar').onclick = async () => {
+    const fecha = f.fecha.value, url = f.url.value.trim(), titulo = f.titulo.value.trim() || 'Documentación aportada', parcial = f.parcial ? f.parcial.checked : false;
+    if (!fecha) { toast('Indica la fecha de recepción', true); return; }
+    if (url && !/^https:\/\//i.test(url)) { toast('El enlace debe empezar por https://', true); return; }
+    const marcado = r => f['r_' + r.codigo] && f['r_' + r.codigo].checked;
+    const ok = decl.concat(otros).filter(marcado), sinDoc = parcial ? decl.filter(r => !marcado(r)) : [];
+    if (!ok.length && !sinDoc.length) { toast('Marca al menos un requisito', true); return; }
+    $('#modal').close('cancel');
+    await run(async () => {
+      const t = ok.map(r => async () => {
+        await API.call('guardarCumplimiento', { id: r.cumplimiento_id, entidad_id: entidadId, requisito_codigo: r.codigo, estado: 'cumple', fecha_revision: fecha, proxima_revision: '',
+          responsable: r.responsable || 'Entidad · verificación municipal', accion_pendiente: '' });
+        await API.call('guardarEvidencia', { entidad_id: entidadId, requisito_codigo: r.codigo, titulo, url_drive: url, fecha_documento: fecha });
+      }).concat(sinDoc.map(r => () => API.call('guardarCumplimiento', { id: r.cumplimiento_id, entidad_id: entidadId, requisito_codigo: r.codigo, estado: 'parcial', fecha_revision: fecha,
+        proxima_revision: r.proxima_revision || '', responsable: r.responsable || 'Entidad · verificación municipal',
+        accion_pendiente: ('Falta documentación: ' + (COORD_FALTA[r.codigo] || 'aportar el documento que acredite el requisito')).slice(0, 300) })));
+      for (let k = 0; k < t.length; k += 4) await Promise.all(t.slice(k, k + 4).map(x => x()));
+      try { await API.call('regenerarAlertas'); } catch (er) { /* se recalculan en el aviso diario */ }
+    });
+    toast(ok.length + ' requisito(s) verificados' + (sinDoc.length ? ' · ' + sinDoc.length + ' a «Parcial» por falta de documentación' : ''));
+    if ($('#seg-dlg') && $('#seg-dlg').open) return;
+    if (!$('#view-matriz').classList.contains('hidden')) loadMatriz();
+  };
+}
+// Botón en la Matriz (modo municipal) y en el paso 4 del seguimiento
+(function () {
+  const base = loadMatriz;
+  loadMatriz = async function () {
+    await base.apply(this, arguments);
+    const d = $('#matriz-decl'); if (!d || $('#matriz-doc')) return;
+    d.insertAdjacentHTML('afterend', '<button class="btn ghost" type="button" id="matriz-doc">📂 Registrar documentación recibida</button>');
+    $('#matriz-doc').onclick = () => abrirDocumentacion($('#matriz-entidad').value);
+  };
+  const baseP = segPasos;
+  segPasos = function () {
+    const P = baseP.apply(this, arguments), p = P.find(x => x.k === 'verif');
+    if (p && p.bot.length && can('escribir')) p.bot.unshift(['📂 Registrar documentación recibida', 'doc']);
+    return P;
+  };
+})();
+GUIA.forEach(t => { if (t[1] === 'Entidades y coordinación con clubes') t[2].push(['¿Cómo registro la documentación que me entrega una entidad?', '<p>En <b>🧭 Seguimiento → Verificación (II)</b> o en la <b>Matriz</b> de la entidad, pulsa <b>📂 Registrar documentación recibida</b>:</p><ol><li>Pon la fecha de recepción y, si quieres, el enlace a la carpeta del expediente (acceso restringido).</li><li>Aparecen marcados los requisitos declarados que solo tienen como prueba la declaración responsable. Desmarca los que no hayas podido comprobar.</li><li>Pulsa <b>Aplicar a la matriz</b>: los marcados pasan a «Cumple» con la evidencia; los desmarcados, a «Parcial» con «Falta documentación…», y entrarán en el requerimiento.</li></ol><p>Los documentos con datos personales (certificados negativos, hojas firmadas, autorizaciones de familias) los custodia la entidad: compruébalos y anótalo, sin pedir copia.</p>', 'mun', 'entidades']); });
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
