@@ -3286,8 +3286,11 @@ async function abrirRequerimiento(entidadId) {
   const pend = mat.filter(r => ['no_cumple', 'parcial', 'pendiente'].indexOf(r.estado) >= 0);
   if (!pend.length) { toast('Esta entidad no tiene requisitos pendientes: no hace falta requerimiento'); return; }
   const sit = r => COORD_SIT[r.estado] || 'No acreditado';
-  const falta = r => String(r.accion_pendiente || '').replace(/^Requerido el [^·]*·\s*(plazo hasta [^·]*·\s*)?/, '').trim() ||
-    COORD_FALTA[r.codigo] || 'Aportar la documentación que acredite este requisito.';
+  // v83: la acción anotada solo sirve si dice qué aportar; «No declarado…» no lo dice → texto del requisito
+  const falta = r => { let t = String(r.accion_pendiente || '').replace(/^Requerido el [^·]*·\s*(plazo hasta [^·]*·\s*)?/, '')
+      .replace(/^Documentación solicitada el [^·]*·\s*(plazo hasta [^·]*·\s*)?/, '').replace(/^Falta documentación:\s*/, '').trim();
+    if (/^No declarado en la declaración/i.test(t)) t = '';
+    return t || COORD_FALTA[r.codigo] || 'Aportar la documentación que acredite este requisito.'; };
   const temp0 = ($('#coord-temp') && $('#coord-temp').value.trim()) || coordTemporada();
   const f = $('#modal-form');
   f.innerHTML = `<h3>📨 Requerimiento de subsanación</h3>
@@ -6489,8 +6492,8 @@ async function abrirDocumentacion(entidadId) {
       <label>Título de la evidencia<input name="titulo" value="${esc('Documentación aportada · temporada ' + temp)}"></label>
       <label class="full">Enlace a la carpeta del expediente (Drive, acceso restringido)<input type="url" name="url" placeholder="https://drive.google.com/…"></label></div>
     ${decl.length ? `<p style="margin:10px 0 4px"><b>Declarados, pendientes de documento (${decl.length})</b> <button type="button" class="link" data-todos="1">Marcar todos</button> · <button type="button" class="link" data-todos="0">Ninguno</button></p><div class="rev-reqs doc-decl" style="grid-template-columns:1fr">${decl.map(r => fila(r, true)).join('')}</div>
-      <label class="check"><input type="checkbox" name="parcial" checked> Los declarados que <b>no</b> marques pasan a «Parcial» con «Falta documentación» (entrarán en el requerimiento)</label>` : ''}
-    ${otros.length ? `<details style="margin-top:8px"><summary style="cursor:pointer;font-weight:600;min-height:40px;display:flex;align-items:center">No declarados o en subsanación (${otros.length}) · márcalos si también has recibido su documentación</summary><div class="rev-reqs" style="grid-template-columns:1fr">${otros.map(r => fila(r, false)).join('')}</div></details>` : ''}
+      <label class="check"><input type="checkbox" name="parcial" checked style="flex:0 0 22px"> <span>Los declarados que <b>no</b> marques pasan a «Parcial» con «Falta documentación» (entrarán en el requerimiento)</span></label>` : ''}
+    ${otros.length ? `<details style="margin:8px 0 10px"><summary style="cursor:pointer;font-weight:600;min-height:40px;display:flex;align-items:center">No declarados o en subsanación (${otros.length}) · márcalos si también has recibido su documentación</summary><div class="rev-reqs" style="grid-template-columns:1fr">${otros.map(r => fila(r, false)).join('')}</div></details>` : ''}
     <p class="nota">🔒 La carpeta debe estar en la nube de la entidad o del ayuntamiento con acceso restringido. Los documentos con datos personales (certificados negativos, hojas firmadas, autorizaciones) no se envían al ayuntamiento: basta con comprobarlos y anotarlo. Registro formal y documental: no valida el contenido.</p>
     <div class="actions"><button value="cancel" class="btn ghost" formnovalidate>Cancelar</button><button type="button" class="btn" id="doc-aplicar">Aplicar a la matriz</button></div>`;
   f.querySelectorAll('[data-todos]').forEach(b => b.onclick = () => f.querySelectorAll('.doc-decl input[type=checkbox]').forEach(c => { c.checked = b.dataset.todos === '1'; }));
