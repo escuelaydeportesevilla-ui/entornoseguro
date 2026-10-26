@@ -6234,37 +6234,48 @@ function segCoordDoc(entId, doc) {
 }
 function segMatriz(entId) { show('matriz'); setTimeout(() => { const s = $('#matriz-entidad'); if (s) { s.value = entId; loadMatriz(); } }, 60); }
 function segInforme(entId) { show('informes'); setTimeout(() => { const s = $('#inf-entidad'); if (s) { s.value = entId; s.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }, 120); }
+// v87 (consolidación): todos los pasos del seguimiento en una sola función, numerados (antes, capas v74, v76, v81, v82 y v86)
 function segPasos(e, mat, us, alertas) {
   const P = [], pon = (k, t, est, txt, bot) => P.push({ k, t, est, txt, bot: bot || [] });
-  const esc2 = can('escribir');
-  const falta = [!e.cif && 'CIF', !e.delegado_nombre && 'Delegado/a de Protección', !(e.delegado_email || e.delegado_telefono) && 'contacto del Delegado/a'].filter(Boolean);
-  pon('ficha', 'Ficha básica', falta.length ? 'act' : 'ok', falta.length ? 'Falta: ' + falta.join(', ') + '.' + (e.delegado_nombre && (e.delegado_email || e.delegado_telefono) ? '' : ' Sin el Delegado/a y su contacto no sabrás a quién enviar los documentos.') : 'Datos de la entidad y de su Delegado/a completos.',
-    esc2 ? [[falta.length ? '✏️ Completar ficha' : '✏️ Editar ficha', 'ficha']] : []);
+  const W = can('escribir'), plazoDe = r => r ? ((String(r.accion_pendiente || '').match(/plazo hasta ([^·]+)/) || [])[1] || '').trim() : '';
+  // 1 · Ficha: 16 datos clave (fichaFaltan, mismo criterio que el tutorial y las recomendaciones)
+  const ff = fichaFaltan(e);
+  pon('ficha', 'Ficha básica', ff.falta.length ? 'act' : 'ok',
+    (ff.falta.length ? `Faltan ${ff.falta.length} de ${ff.total} datos clave: ${ff.falta.slice(0, 6).map(fichaEtiq).join(', ')}${ff.falta.length > 6 ? '…' : '.'}` : `Los ${ff.total} datos clave están completos.`) +
+      (ff.rec.length ? ' Recomendable: ' + ff.rec.map(fichaEtiq).join(', ') + '.' : ''),
+    (W ? [[ff.falta.length ? '✏️ Completar ficha' : '✏️ Editar ficha', 'ficha']] : []).concat([['📄 Ver ejemplo', 'ficha-ej']]));
+  // 2 · Acceso propio (opcional)
   const acc = us ? us.filter(u => u.rol === 'entidad' && u.entidad_id === e.id && u.activo !== 'NO') : null;
   pon('acceso', 'Acceso propio (opcional)', acc && acc.length ? 'ok' : 'opc', acc && acc.length ? 'Tiene usuario «Entidad» (' + acc.map(u => u.usuario).join(', ') + '): sube su documentación y tú verificas.'
     : 'Opcional. Con un usuario «Entidad» la propia entidad completa su Matriz y sube sus documentos; sin él, registras tú lo que te entregue.', can('admin') && !(acc && acc.length) ? [['👤 Crear usuario', 'usuarios']] : []);
+  // 3 · Declaración responsable
   const decl = mat.some(r => r.estado && r.estado !== 'pendiente');
-  pon('decl', 'Declaración responsable (I)', decl ? 'ok' : 'act', decl ? 'Registrada en la Matriz.' : 'Envíale la declaración responsable anual. Cuando la devuelva firmada, regístrala: la Matriz se rellena de una vez.',
-    [['📄 Generar declaración', 'gen-decl']].concat(esc2 ? [['📥 Registrar la recibida', 'reg-decl']] : []));
-  const declarados = mat.filter(r => r.estado === 'cumple' || r.estado === 'parcial');
-  // v80: la propia declaración no acredita el requisito: cuenta solo la documentación aportada
-  const sinEv = declarados.filter(r => !(r.evidencias || []).some(v => !/^Declaraci[oó]n responsable/i.test(String(v.titulo || ''))) &&
-    !/^(Falta documentación|Requerido el)/.test(String(r.accion_pendiente || ''))); // v81: lo que ya pasó a subsanación no cuenta aquí
-  pon('verif', 'Verificación documental (II)', !decl ? 'pend' : sinEv.length ? 'act' : 'ok',
-    !decl ? 'Tras registrar la declaración.' : sinEv.length ? sinEv.length + ' requisito(s) declarados sin más documento que la declaración (' + sinEv.map(r => r.codigo).join(', ') + '). Comprueba la documentación con la ficha de verificación y adjúntala en su Matriz.' : 'Verificación hecha: lo comprobado está en «Cumple» y lo que falta pasa a la subsanación. Es formal: no valida el contenido.',
-    decl ? [['🔎 Verificar en su Matriz', 'matriz'], ['📄 Ficha de verificación', 'gen-ficha']] : []);
-  const pend = mat.filter(r => ['no_cumple', 'parcial', 'pendiente'].includes(r.estado || 'pendiente'));
+  pon('decl', 'Declaración responsable (I)', decl ? 'ok' : 'act', decl ? 'Registrada en la Matriz.' : 'Envíale la declaración responsable anual: indica qué documentación acompañar. Cuando la devuelva firmada, regístrala y la Matriz se rellena de una vez.',
+    [['📄 Generar declaración', 'gen-decl']].concat(W ? [['📥 Registrar la recibida', 'reg-decl']] : []));
+  // 4 · Verificación: lo declarado cuya única prueba es la declaración (segPorAcreditar), solicitud y registro de lo recibido
+  const pa = decl ? segPorAcreditar(mat) : [], sol = pa.filter(segSolicitada), sin = pa.length - sol.length;
+  pon('verif', 'Verificación documental (II)', !decl ? 'pend' : pa.length ? 'act' : 'ok',
+    !decl ? 'Tras registrar la declaración.' : !pa.length ? 'Verificación hecha: lo comprobado está en «Cumple» y lo que falta pasa a la subsanación. Es formal: no valida el contenido.'
+      : [sin ? sin + ' punto(s) declarados sin más documento que la declaración: pide la documentación con la solicitud.' : '',
+        sol.length ? 'Documentación solicitada para ' + sol.length + ' punto(s)' + (plazoDe(sol[0]) ? ', plazo hasta ' + plazoDe(sol[0]) : '') + '. Cuando llegue, regístrala.' : '',
+        'Lo que no acredite pasará al requerimiento.'].filter(Boolean).join(' '),
+    !decl ? [] : (W ? (pa.length && sin ? [['📄 Solicitar documentación', 'sol']] : []).concat([['📂 Registrar documentación recibida', 'doc']]) : [])
+      .concat([['🔎 Verificar en su Matriz', 'matriz'], ['📄 Ficha de verificación', 'gen-ficha']]));
+  // 5 · Subsanación: lo que no se cumple (sin contar lo que aún está en verificación)
+  const pend = mat.filter(r => ['no_cumple', 'parcial', 'pendiente'].includes(r.estado || 'pendiente') && pa.indexOf(r) < 0);
   const req = mat.find(r => /^Requerido el /.test(r.accion_pendiente || ''));
-  const plazo = req && (String(req.accion_pendiente).match(/plazo hasta ([^·]+)/) || [])[1];
   pon('req', 'Subsanación · requerimiento (III)', !decl ? 'pend' : !pend.length ? 'ok' : 'act',
-    !decl ? 'Tras la verificación.' : !pend.length ? 'Sin requisitos pendientes.' : req ? 'Requerimiento enviado' + (plazo ? ', plazo hasta ' + plazo.trim() : '') + '. ' + pend.length + ' requisito(s) aún pendientes: al recibir lo que falte, actualízalos en la Matriz.'
+    !decl ? 'Tras la verificación.' : !pend.length ? 'Sin requisitos pendientes.'
+      : req ? 'Requerimiento enviado' + (plazoDe(req) ? ', plazo hasta ' + plazoDe(req) : '') + '. ' + pend.length + ' requisito(s) aún pendientes: cuando la entidad aporte algo, regístralo aquí.'
       : pend.length + ' requisito(s) sin cumplir. El requerimiento los lista solo y anota el plazo en la Matriz.',
-    decl && pend.length && esc2 ? [[req ? '📨 Nuevo requerimiento' : '📨 Generar requerimiento', 'req']] : []);
+    !decl || !pend.length || !W ? [] : req ? [['📂 Registrar lo subsanado', 'doc'], ['📨 Nuevo requerimiento', 'req']] : [['📨 Generar requerimiento', 'req']]);
+  // 6 · Seguimiento · 7 · Informe
   const prox = mat.map(r => r.proxima_revision).filter(Boolean).sort()[0];
   pon('seg', 'Seguimiento', !decl ? 'pend' : alertas.length ? 'act' : 'ok',
     (alertas.length ? alertas.length + ' alerta(s) abierta(s). ' : 'Sin alertas abiertas. ') + (prox ? 'Próxima revisión: ' + segFecha(prox) + '.' : 'Las revisiones se programan al actualizar cada requisito.'),
     alertas.length ? [['🔔 Ver alertas', 'alertas']] : []);
   pon('inf', 'Informe de la entidad', !decl ? 'pend' : pend.length ? 'opc' : 'act', 'Estado de implantación para el expediente o la Junta de Gobierno; hay versión sin nombres de personas.', decl ? [['📊 Abrir informe', 'informe']] : []);
+  P.forEach((p, i) => { p.n = i + 1; });
   const sig = P.find(p => p.est === 'act'); if (sig) sig.sig = true;
   return P;
 }
@@ -6281,10 +6292,12 @@ async function segCargar(e) {
   } catch (er) { caja.innerHTML = '<p class="bad-t">No se pudo cargar: ' + esc(er.message) + '</p>'; return; }
   e = (state.entidades || []).find(x => x.id === e.id) || e;
   const P = segPasos(e, mat, can('admin') ? segUsuarios : null, al);
-  const hechos = P.filter(p => p.est === 'ok').length, sig = P.find(p => p.sig), pct = Math.round(hechos * 100 / P.length);
-  dlg.querySelector('.seg-prog').innerHTML = `<div class="seg-barra"><i style="width:${pct}%"></i></div><small><b>${hechos} de ${P.length}</b> pasos al día${sig ? ' · Siguiente: <b>' + esc(sig.t) + '</b>' : ' · <b>Al día</b>'}</small>`;
+  // v87: barra por tramos (un tramo por paso, numerado) en lugar de un porcentaje que no coincidía con los pasos
+  const sig = P.find(p => p.sig), TIT = { ok: 'hecho', act: 'en curso', pend: 'más adelante', opc: 'opcional' };
+  dlg.querySelector('.seg-prog').innerHTML = `<div class="seg-tramos" role="list">${P.map(p => `<span role="listitem" class="seg-t seg-t-${p.sig ? 'sig' : p.est}" title="Paso ${p.n} · ${esc(p.t)}: ${p.sig ? 'siguiente' : TIT[p.est]}">${p.n}</span>`).join('')}</div>
+    <small>${sig ? `<b>Siguiente: paso ${sig.n} de ${P.length}</b> · ${esc(sig.t)}` : '<b>Seguimiento al día</b>'} · ${P.filter(p => p.est === 'ok').length} hechos${P.some(p => p.est === 'opc') ? ' · ➖ opcional' : ''}</small>`;
   caja.innerHTML = `<ol class="seg-pasos">${P.map(p => `<li class="seg-${p.est}${p.sig ? ' seg-actual' : ''}"><span class="ico" aria-hidden="true">${p.sig ? SEG_ICO.act : p.est === 'act' ? '🟠' : SEG_ICO[p.est]}</span>
-      <div><b>${esc(p.t)}</b>${p.sig ? ' <span class="chip">siguiente paso</span>' : ''}<br><small>${esc(p.txt)}</small>
+      <div><b><span class="seg-num">${p.n}</span> ${esc(p.t)}</b>${p.sig ? ' <span class="chip">siguiente paso</span>' : ''}<br><small>${esc(p.txt)}</small>
       ${p.bot.length ? `<div class="seg-bot">${p.bot.map(([l, a]) => (p.est === 'ok' ? `<button type="button" class="link" data-seg="${a}">${esc(l)}</button>` : `<button type="button" class="btn ${p.sig ? '' : 'ghost'}" data-seg="${a}">${esc(l)}</button>`)).join('')}</div>` : ''}</div></li>`).join('')}</ol>
     <p class="nota" style="margin:8px 0 0">El orden sigue el Protocolo Marco: declaración → verificación → subsanación → seguimiento. La verificación municipal es formal y documental.</p>`;
   const fuera = fn => () => { dlg.close(); segBanda(e); fn(); };
@@ -6342,6 +6355,9 @@ function segEstilo() {
     '.seg-ico{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:rgba(255,255,255,.18);font-size:1.3rem;flex:0 0 auto}' +
     '.seg-x{width:40px;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.5);background:transparent;color:inherit;font-size:1.1rem;cursor:pointer;flex:0 0 auto}.seg-x:hover{background:rgba(255,255,255,.15)}' +
     '.seg-prog{padding:12px 16px 0}.seg-barra{height:8px;border-radius:99px;background:var(--line,#dde);overflow:hidden;margin-bottom:6px}.seg-barra i{display:block;height:100%;background:var(--seg)}' +
+    '.seg-tramos{display:flex;gap:4px;margin-bottom:6px}.seg-t{flex:1;height:22px;border-radius:6px;display:grid;place-items:center;font-size:.75rem;font-weight:700;background:var(--line,#dde);color:#56656d}' +
+    '.seg-t-ok{background:var(--seg);color:#fff}.seg-t-sig{background:#fff;color:var(--seg);box-shadow:inset 0 0 0 2px var(--seg)}.seg-t-act{background:#f6c26b;color:#5a3a00}.seg-t-opc{background:transparent;color:#8a979e;box-shadow:inset 0 0 0 1px #c5ced3;border-style:dashed}' +
+    '.seg-num{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--seg);color:#fff;font-size:.75rem;margin-right:4px;vertical-align:1px}.seg-pend .seg-num,.seg-opc .seg-num{background:#c5ced3}' +
     '.seg-cuerpo{padding:8px 16px 16px;max-height:calc(100vh - 220px);overflow:auto}' +
     '.seg-pasos{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:6px}.seg-pasos li{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line,#dde);border-radius:10px;background:var(--card,#fff)}' +
     '.seg-pasos li .ico{font-size:1.1em;line-height:1.4}.seg-pasos li.seg-pend,.seg-pasos li.seg-opc{opacity:.72}.seg-pasos li.seg-actual{border-color:var(--seg);box-shadow:0 0 0 2px rgba(15,118,110,.2)}' +
@@ -6451,21 +6467,6 @@ function htmlFichaEjemplo() {
   };
 })();
 GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Qué pongo en cada casilla de la ficha?', '<p>Abre la <b>Ficha de ejemplo</b>: botón <b>📄 Ficha de ejemplo (PDF)</b> arriba en esta Guía, o el enlace <b>«¿Qué pongo en cada casilla? Ver ejemplo»</b> dentro de la propia ficha. Para cada casilla muestra un ejemplo con datos ficticios y en qué documentos se usa. Las marcadas con ★ son los datos clave: conviene completarlas primero.</p>', '', 'entidades']); });
-// Paso 1 del seguimiento: datos clave de todos los bloques
-(function () {
-  const base = segPasos;
-  segPasos = function (e, mat, us, al) {
-    const P = base.apply(this, arguments), p = P.find(x => x.k === 'ficha'); if (!p) return P;
-    const ff = fichaFaltan(e), falta = ff.falta, et = fichaEtiq;
-    p.est = falta.length ? 'act' : 'ok';
-    const rec = ff.rec;
-    p.txt = (falta.length ? `Faltan ${falta.length} de ${ff.total} datos clave: ${falta.slice(0, 6).map(et).join(', ')}${falta.length > 6 ? '…' : '.'}` : `Los ${ff.total} datos clave están completos.`) +
-      (rec.length ? ' Recomendable: ' + rec.map(et).join(', ') + '.' : '');
-    p.bot = can('escribir') ? [[falta.length ? '✏️ Completar ficha' : '✏️ Editar ficha', 'ficha'], ['📄 Ver ejemplo', 'ficha-ej']] : [['📄 Ver ejemplo', 'ficha-ej']];
-    P.forEach(x => delete x.sig); const sig = P.find(x => x.est === 'act'); if (sig) sig.sig = true;
-    return P;
-  };
-})();
 // v78: un único criterio de «ficha completa» (tutorial del club y de la entidad, seguimiento municipal; el servidor aplica el mismo en las recomendaciones)
 function fichaClave(e) { const t = String((e && e.tipo) || ''); return SEG_FICHA_CLAVE.filter(k => k !== 'n_registro' || !t || /club|asociaci/i.test(t)); }
 function fichaEtiq(k) { return k.split('|').map(c => (ETIQ_DATO[c] || c).replace(/ \(.*\)$/, '')).join(' o '); }
@@ -6531,12 +6532,6 @@ async function abrirDocumentacion(entidadId) {
     const d = $('#matriz-decl'); if (!d || $('#matriz-doc')) return;
     d.insertAdjacentHTML('afterend', '<button class="btn ghost" type="button" id="matriz-doc">📂 Registrar documentación recibida</button>');
     $('#matriz-doc').onclick = () => abrirDocumentacion($('#matriz-entidad').value);
-  };
-  const baseP = segPasos;
-  segPasos = function () {
-    const P = baseP.apply(this, arguments), p = P.find(x => x.k === 'verif');
-    if (p && p.bot.length && can('escribir')) p.bot.unshift(['📂 Registrar documentación recibida', 'doc']);
-    return P;
   };
 })();
 GUIA.forEach(t => { if (t[1] === 'Entidades y coordinación con clubes') t[2].push(['¿Cómo registro la documentación que me entrega una entidad?', '<p>En <b>🧭 Seguimiento → Verificación (II)</b> o en la <b>Matriz</b> de la entidad, pulsa <b>📂 Registrar documentación recibida</b>:</p><ol><li>Pon la fecha de recepción y, si quieres, el enlace a la carpeta del expediente (acceso restringido).</li><li>Aparecen marcados los requisitos declarados que solo tienen como prueba la declaración responsable. Desmarca los que no hayas podido comprobar.</li><li>Pulsa <b>Aplicar a la matriz</b>: los marcados pasan a «Cumple» con la evidencia; los desmarcados, a «Parcial» con «Falta documentación…», y entrarán en el requerimiento.</li></ol><p>Los documentos con datos personales (certificados negativos, hojas firmadas, autorizaciones de familias) los custodia la entidad: compruébalos y anótalo, sin pedir copia.</p>', 'mun', 'entidades']); });
@@ -6625,25 +6620,6 @@ async function abrirSolicitud(entidadId) {
   $('#sol-pdf').onclick = () => generar('pdf');
   $('#sol-word').onclick = () => generar('word');
 }
-// Paso 4 del seguimiento: solicitar → registrar lo recibido
-(function () {
-  const baseP = segPasos;
-  segPasos = function (e, mat) {
-    const P = baseP.apply(this, arguments), p = P.find(x => x.k === 'verif');
-    if (!p || p.est !== 'act') return P;
-    const pa = segPorAcreditar(mat), sol = pa.filter(segSolicitada), sin = pa.length - sol.length;
-    const plazo = sol.length ? (String(sol[0].accion_pendiente).match(/plazo hasta ([^·]+)/) || [])[1] : '';
-    p.txt = (sin ? sin + ' punto(s) declarados sin documento: pide la documentación con la solicitud.' : '') +
-      (sol.length ? (sin ? ' ' : '') + 'Documentación solicitada para ' + sol.length + ' punto(s)' + (plazo ? ', plazo hasta ' + plazo.trim() : '') + '. Cuando llegue, regístrala.' : '') +
-      ' Lo que no acredite pasará al requerimiento.';
-    if (can('escribir')) {
-      p.bot = p.bot.filter(b => b[1] !== 'doc' && b[1] !== 'sol');
-      if (sin) p.bot.unshift(['📄 Solicitar documentación', 'sol']);
-      p.bot.splice(sin ? 1 : 0, 0, ['📂 Registrar documentación recibida', 'doc']);
-    }
-    return P;
-  };
-})();
 GUIA.forEach(t => { if (t[1] === 'Entidades y coordinación con clubes') t[2].push(['¿Cómo pido a una entidad que acredite lo que ha declarado?', '<p>La <b>declaración responsable</b> ya indica, en cada punto, qué documentación se acompaña. Si la entidad la devuelve sin documentos:</p><ol><li><b>🧭 Seguimiento → Verificación (II) → 📄 Solicitar documentación</b>. La app lista los puntos declarados sin documento y lo que debe aportar en cada uno; calcula el plazo en días hábiles (10 por defecto).</li><li>Se anota en la Matriz «Documentación solicitada… plazo hasta…» y el vencimiento genera alerta.</li><li>Cuando llegue: <b>📂 Registrar documentación recibida</b>. Lo que no se acredite pasa a «Parcial» y entra en el requerimiento de subsanación.</li></ol><p>Diferencia: la <b>solicitud</b> pide acreditar lo declarado; el <b>requerimiento</b> pide subsanar lo que no se cumple. Los documentos con datos personales no se piden: los custodia la entidad.</p>', 'mun', 'entidades']); });
 // v84: la tarjeta de coordinación queda para modelos y procedimiento; el trabajo con cada entidad, en 🧭 Seguimiento
 (function () {
@@ -6670,17 +6646,55 @@ GUIA.forEach(t => { if (t[1] === 'Entidades y coordinación con clubes') t[2].pu
   };
 })();
 GUIA.forEach(t => { if (t[1] === 'Entidades y coordinación con clubes') t[2].push(['¿Para qué sirve «Modelos y procedimiento de coordinación»?', '<p>Es la tarjeta de la parte inferior de <b>Entidades</b>. Sirve para lo general, no para una entidad concreta:</p><ul><li><b>Procedimiento completo</b>: el documento del sistema de coordinación con todos sus anexos, para aprobarlo o publicarlo.</li><li><b>Modelos en blanco</b> (Entidad = «Modelo en blanco»): declaración, ficha de verificación, solicitud, requerimiento.</li><li><b>IV · Traslado de comunicaciones</b>: qué hace el Delegado/a municipal si recibe un posible caso de una entidad.</li><li><b>V · Cláusula tipo</b>: texto para autorizaciones de uso de instalaciones y bases de subvenciones.</li></ul><p>Para trabajar con una entidad (declaración, solicitud, verificación, requerimiento e informe con sus datos), usa <b>🧭 Seguimiento</b> en su fila.</p>', 'mun', 'entidades']); });
-// v86: paso 5 · tras el requerimiento, la acción principal es registrar lo subsanado
+// v87: informe de una entidad seguida por verificación documental (sin registros propios en la app):
+// las secciones 4-7 remiten a la Matriz en lugar de decir «No hay…», y se quitan los indicadores a 0 que no aplican
 (function () {
-  const baseP = segPasos;
-  segPasos = function () {
-    const P = baseP.apply(this, arguments), p = P.find(x => x.k === 'req');
-    if (!p || p.est !== 'act' || !can('escribir')) return P;
-    if (/^Requerimiento enviado/.test(p.txt)) {
-      p.txt = p.txt.replace('al recibir lo que falte, actualízalos en la Matriz.', 'cuando la entidad aporte algo, regístralo aquí.');
-      p.bot = [['📂 Registrar lo subsanado', 'doc'], ['📨 Nuevo requerimiento', 'req']];
-    }
-    return P;
+  const base = construirInformeEntidad;
+  construirInformeEntidad = function (d) {
+    let h = base.apply(this, arguments);
+    try {
+      const e = (d && d.entidad) || {};
+      const vacio = k => !((d && d[k]) || []).length;
+      if (state.club || (state.me && state.me.rol === 'entidad') || e.propia === 'SI' || !['riesgos', 'formacion', 'agentes', 'autorizaciones'].every(vacio)) return h;
+      const est = {}; ((d && d.matriz) || []).forEach(r => { est[r.codigo] = (ESTADOS[r.estado] || ESTADOS.pendiente)[2]; });
+      const ac = cods => cods.map(c => `<b>${c}</b> ${esc(est[c] || 'Pendiente')}`).join(' · ');
+      const nota = (que, cods) => `<p class="muted">La entidad lleva ${que} en su propia documentación; el Ayuntamiento lo verifica de forma documental. Situación en la Matriz: ${ac(cods)}.</p>`;
+      h = h.replace('<p class="muted">No hay riesgos registrados.</p>', nota('el análisis de riesgos y sus medidas', ['C1', 'C2']))
+        .replace('<p class="muted">No hay formación registrada.</p>', nota('el registro de formación', ['B2', 'J1']))
+        .replace('<p class="muted">No hay agentes deportivos registrados.</p>', nota('la relación de agentes, sus certificados negativos y la aceptación del código', ['K1', 'K2', 'D2']))
+        .replace('<p class="muted">No hay registros de autorizaciones.</p>', nota('las autorizaciones de las familias', ['E1', 'F1']))
+        .replace(/<div class="kpi"><span>(Riesgos identificados|Riesgos altos pendientes|Personas formadas)<\/span><b>0<\/b><\/div>/g, '');
+    } catch (er) { /* si algo falla, se deja el informe tal cual */ }
+    return h;
+  };
+})();
+// v87: los clubes con espacio propio (Mis clubes) aparecen en el Panel y en el informe municipal, separados de Entidades (no se suman)
+async function clubesPropios() {
+  if (state.club || !can('admin')) return [];
+  try { return ((await API.call('listarClubes')) || []).filter(c => c.estado === 'activo' && !c.error); } catch (e) { return []; }
+}
+(function () {
+  const baseP = loadPanel;
+  loadPanel = async function () {
+    await baseP.apply(this, arguments);
+    const cont = $('#panel-entidades'); if (!cont || state.club) return;
+    const cs = await clubesPropios(); if (!cs.length || $('#panel-clubes-propios')) return;
+    cont.insertAdjacentHTML('beforeend', `<div id="panel-clubes-propios"><p class="nota" style="margin:12px 0 6px"><b>🏠 Clubes con espacio propio</b> · gestionan su sistema en la app (Mis clubes). No se suman a las entidades.</p>` +
+      cs.map(c => `<div class="bar-row club-propio" data-club="${esc(c.id)}" title="Abrir Mis clubes"><span>🏠 ${esc(c.nombre)}</span>
+        <div class="bar"><i style="width:${c.pct || 0}%" class="${(c.pct || 0) < 40 ? 'bad' : (c.pct || 0) < 80 ? 'warn' : 'ok'}"></i></div><b>${c.pct || 0}%</b></div>`).join('') + '</div>');
+    $$('#panel-clubes-propios .bar-row').forEach(r => r.onclick = () => show('clubes'));
+  };
+  const baseM = htmlInformeMunicipal;
+  htmlInformeMunicipal = async function () {
+    const h = await baseM.apply(this, arguments);
+    const cs = await clubesPropios(); if (!cs.length || typeof h !== 'string') return h;
+    const anon = ($('#inf-anon') || {}).checked;
+    const sn = v => v ? '<span class="st ok">Sí</span>' : '<span class="st bad">No</span>';
+    const tabla = `<h3>Clubes con espacio propio en la aplicación</h3><p>Gestionan su sistema de protección directamente en EntornoSeguro. Se muestran aparte y no se suman a los indicadores de las entidades.</p>
+      <table><thead><tr><th>Club</th><th>Delegado/a</th><th>Protocolo Marco</th><th colspan="2">Cumplimiento</th><th>Alertas altas</th></tr></thead><tbody>` +
+      cs.map((c, i) => `<tr><td>${anon ? 'Club ' + (i + 1) : esc(c.nombre)}</td><td>${sn(c.delegado)}</td><td>${sn(c.protocolo)}</td><td>${barra(c.pct || 0)}</td><td>${c.pct || 0}%</td><td>${c.alertas_altas || 0}</td></tr>`).join('') + '</tbody></table>';
+    const i = h.indexOf('<h2>3. Implantación por bloque');
+    return i >= 0 ? h.slice(0, i) + tabla + h.slice(i) : h.replace('<div class="pie">', tabla + '<div class="pie">');
   };
 })();
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
