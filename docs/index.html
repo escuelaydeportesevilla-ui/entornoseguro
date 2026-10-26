@@ -6205,6 +6205,147 @@ function entAcciones() {
 })();
 GUIA.forEach(t => { if (t[1] === 'Entidades y coordinación con clubes') t[2].push(['¿Cómo doy de baja o elimino una entidad?', '<ul><li><b>Desactivar</b> (en su fila): deja de contar en el Panel, las alertas y los informes, pasa al final de la lista en gris y conserva todo su historial. Se puede <b>Reactivar</b> en cualquier momento. Es lo recomendable cuando una entidad deja de colaborar o de trabajar con menores.</li><li><b>Eliminar</b> (solo administración): borra la entidad y todos sus registros. Hay que escribir su nombre para confirmar. No es posible si tiene incidencias registradas: en ese caso, desactívala.</li><li>Las <b>Actividades municipales</b> propias no se pueden desactivar ni eliminar.</li></ul>', '', 'entidades']); });
 
+// v74: 🧭 Seguimiento de cada entidad (modo municipal) · hoja de ruta con el estado de cada paso y el botón que lo resuelve, sin IA
+const SEG_ICO = { ok: '✅', act: '👉', pend: '⬜', opc: '➖' };
+let segUsuarios = null;
+function segFecha(v) { const d = v ? new Date(v) : null; return d && !isNaN(d) ? d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''; }
+function segCoordDoc(entId, doc) {
+  if (typeof pintarCoord === 'function') pintarCoord();
+  const s = $('#coord-entidad'), d = $('#coord-doc'); if (!s || !d) return;
+  s.value = entId; d.value = doc; abrirInforme(htmlCoord());
+}
+function segMatriz(entId) { show('matriz'); setTimeout(() => { const s = $('#matriz-entidad'); if (s) { s.value = entId; loadMatriz(); } }, 60); }
+function segInforme(entId) { show('informes'); setTimeout(() => { const s = $('#inf-entidad'); if (s) { s.value = entId; s.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }, 120); }
+function segPasos(e, mat, us, alertas) {
+  const P = [], pon = (k, t, est, txt, bot) => P.push({ k, t, est, txt, bot: bot || [] });
+  const esc2 = can('escribir');
+  const falta = [!e.cif && 'CIF', !e.delegado_nombre && 'Delegado/a de Protección', !(e.delegado_email || e.delegado_telefono) && 'contacto del Delegado/a'].filter(Boolean);
+  pon('ficha', 'Ficha básica', falta.length ? 'act' : 'ok', falta.length ? 'Falta: ' + falta.join(', ') + '.' + (e.delegado_nombre && (e.delegado_email || e.delegado_telefono) ? '' : ' Sin el Delegado/a y su contacto no sabrás a quién enviar los documentos.') : 'Datos de la entidad y de su Delegado/a completos.',
+    esc2 ? [[falta.length ? '✏️ Completar ficha' : '✏️ Editar ficha', 'ficha']] : []);
+  const acc = us ? us.filter(u => u.rol === 'entidad' && u.entidad_id === e.id && u.activo !== 'NO') : null;
+  pon('acceso', 'Acceso propio (opcional)', acc && acc.length ? 'ok' : 'opc', acc && acc.length ? 'Tiene usuario «Entidad» (' + acc.map(u => u.usuario).join(', ') + '): sube su documentación y tú verificas.'
+    : 'Opcional. Con un usuario «Entidad» la propia entidad completa su Matriz y sube sus documentos; sin él, registras tú lo que te entregue.', can('admin') && !(acc && acc.length) ? [['👤 Crear usuario', 'usuarios']] : []);
+  const decl = mat.some(r => r.estado && r.estado !== 'pendiente');
+  pon('decl', 'Declaración responsable (I)', decl ? 'ok' : 'act', decl ? 'Registrada en la Matriz.' : 'Envíale la declaración responsable anual. Cuando la devuelva firmada, regístrala: la Matriz se rellena de una vez.',
+    [['📄 Generar declaración', 'gen-decl']].concat(esc2 ? [['📥 Registrar la recibida', 'reg-decl']] : []));
+  const declarados = mat.filter(r => r.estado === 'cumple' || r.estado === 'parcial');
+  const sinEv = declarados.filter(r => !(r.evidencias || []).length);
+  pon('verif', 'Verificación documental (II)', !decl ? 'pend' : sinEv.length ? 'act' : 'ok',
+    !decl ? 'Tras registrar la declaración.' : sinEv.length ? sinEv.length + ' requisito(s) declarados sin documento que lo acredite (' + sinEv.map(r => r.codigo).join(', ') + '). Pide o adjunta la evidencia en su Matriz.' : 'Todo lo declarado tiene documento. La verificación es formal: no valida el contenido.',
+    decl ? [['🔎 Verificar en su Matriz', 'matriz'], ['📄 Ficha de verificación', 'gen-ficha']] : []);
+  const pend = mat.filter(r => ['no_cumple', 'parcial', 'pendiente'].includes(r.estado || 'pendiente'));
+  const req = mat.find(r => /^Requerido el /.test(r.accion_pendiente || ''));
+  const plazo = req && (String(req.accion_pendiente).match(/plazo hasta ([^·]+)/) || [])[1];
+  pon('req', 'Subsanación · requerimiento (III)', !decl ? 'pend' : !pend.length ? 'ok' : 'act',
+    !decl ? 'Tras la verificación.' : !pend.length ? 'Sin requisitos pendientes.' : req ? 'Requerimiento enviado' + (plazo ? ', plazo hasta ' + plazo.trim() : '') + '. ' + pend.length + ' requisito(s) aún pendientes: al recibir lo que falte, actualízalos en la Matriz.'
+      : pend.length + ' requisito(s) sin cumplir. El requerimiento los lista solo y anota el plazo en la Matriz.',
+    decl && pend.length && esc2 ? [[req ? '📨 Nuevo requerimiento' : '📨 Generar requerimiento', 'req']] : []);
+  const prox = mat.map(r => r.proxima_revision).filter(Boolean).sort()[0];
+  pon('seg', 'Seguimiento', !decl ? 'pend' : alertas.length ? 'act' : 'ok',
+    (alertas.length ? alertas.length + ' alerta(s) abierta(s). ' : 'Sin alertas abiertas. ') + (prox ? 'Próxima revisión: ' + segFecha(prox) + '.' : 'Las revisiones se programan al actualizar cada requisito.'),
+    alertas.length ? [['🔔 Ver alertas', 'alertas']] : []);
+  pon('inf', 'Informe de la entidad', !decl ? 'pend' : pend.length ? 'opc' : 'act', 'Estado de implantación para el expediente o la Junta de Gobierno; hay versión sin nombres de personas.', decl ? [['📊 Abrir informe', 'informe']] : []);
+  const sig = P.find(p => p.est === 'act'); if (sig) sig.sig = true;
+  return P;
+}
+// v75: el seguimiento se abre en una ventana superpuesta de la entidad (fondo sombreado, ✕) y, al ir a otra pantalla, banda «Siguiendo a … · ← Volver al seguimiento»
+let segActual = null, segRefT = 0;
+async function segCargar(e) {
+  const dlg = $('#seg-dlg'); if (!dlg || !dlg.open) return;
+  const caja = dlg.querySelector('.seg-cuerpo'); if (!caja.innerHTML) caja.innerHTML = '<p class="muted">Comprobando los datos de la entidad…</p>';
+  let mat = [], al = [];
+  try {
+    const [m, a, u] = await Promise.all([API.call('matriz', { entidad_id: e.id }), API.call('listarAlertas').catch(() => []),
+      can('admin') ? (segUsuarios || API.call('listarUsuarios').catch(() => null)) : null]);
+    mat = m || []; al = (a || []).filter(x => x.entidad_id === e.id && x.estado !== 'cerrada'); if (u) segUsuarios = u;
+  } catch (er) { caja.innerHTML = '<p class="bad-t">No se pudo cargar: ' + esc(er.message) + '</p>'; return; }
+  e = (state.entidades || []).find(x => x.id === e.id) || e;
+  const P = segPasos(e, mat, can('admin') ? segUsuarios : null, al);
+  const hechos = P.filter(p => p.est === 'ok').length, sig = P.find(p => p.sig), pct = Math.round(hechos * 100 / P.length);
+  dlg.querySelector('.seg-prog').innerHTML = `<div class="seg-barra"><i style="width:${pct}%"></i></div><small><b>${hechos} de ${P.length}</b> pasos al día${sig ? ' · Siguiente: <b>' + esc(sig.t) + '</b>' : ' · <b>Al día</b>'}</small>`;
+  caja.innerHTML = `<ol class="seg-pasos">${P.map(p => `<li class="seg-${p.est}${p.sig ? ' seg-actual' : ''}"><span class="ico" aria-hidden="true">${p.sig ? SEG_ICO.act : p.est === 'act' ? '🟠' : SEG_ICO[p.est]}</span>
+      <div><b>${esc(p.t)}</b>${p.sig ? ' <span class="chip">siguiente paso</span>' : ''}<br><small>${esc(p.txt)}</small>
+      ${p.bot.length ? `<div class="seg-bot">${p.bot.map(([l, a]) => (p.est === 'ok' ? `<button type="button" class="link" data-seg="${a}">${esc(l)}</button>` : `<button type="button" class="btn ${p.sig ? '' : 'ghost'}" data-seg="${a}">${esc(l)}</button>`)).join('')}</div>` : ''}</div></li>`).join('')}</ol>
+    <p class="nota" style="margin:8px 0 0">El orden sigue el Protocolo Marco: declaración → verificación → subsanación → seguimiento. La verificación municipal es formal y documental.</p>`;
+  const fuera = fn => () => { dlg.close(); segBanda(e); fn(); };
+  caja.querySelectorAll('[data-seg]').forEach(b => b.onclick = ({
+    ficha: () => formEntidad(e),
+    usuarios: fuera(() => { show('usuarios'); toast('Pulsa «Nuevo usuario», rol «Entidad deportiva» y elige ' + e.nombre); }),
+    'gen-decl': () => segCoordDoc(e.id, 'declaracion'),
+    'gen-ficha': () => segCoordDoc(e.id, 'ficha'),
+    'reg-decl': () => abrirDeclaracion(e.id),
+    matriz: fuera(() => segMatriz(e.id)),
+    req: () => abrirRequerimiento(e.id),
+    alertas: fuera(() => show('alertas')),
+    informe: fuera(() => segInforme(e.id))
+  })[b.dataset.seg] || (() => {}));
+}
+function segRefrescar() { clearTimeout(segRefT); segRefT = setTimeout(() => { if (segActual && $('#seg-dlg') && $('#seg-dlg').open) segCargar(segActual); }, 400); }
+function segEnganchar() {
+  if (!API.call || API.call.__seg) return;
+  const base = API.call;
+  const w = async function (a, d) { const r = await base.apply(this, arguments); if (!/^(listar|matriz|dashboard|directorio|recomend|mis|informe|leer|resumen|ver)/i.test(a)) segRefrescar(); return r; };
+  w.__seg = true; API.call = w;
+}
+function segAbrir(e) {
+  segEstilo(); segEnganchar(); segActual = e; segQuitarBanda();
+  let dlg = $('#seg-dlg');
+  if (!dlg) {
+    dlg = document.createElement('dialog'); dlg.id = 'seg-dlg'; document.body.append(dlg);
+    dlg.addEventListener('cancel', () => { segActual = null; });
+    dlg.onclick = ev => { if (ev.target === dlg) { dlg.close(); segActual = null; } };
+  }
+  const temp = typeof coordTemporada === 'function' ? coordTemporada() : '';
+  dlg.innerHTML = `<header class="seg-cab"><span class="seg-ico" aria-hidden="true">🧭</span><div style="flex:1;min-width:0"><small>Seguimiento de la entidad${temp ? ' · Temporada ' + esc(temp) : ''}</small><h3>${esc(e.nombre)}</h3></div>
+      <button type="button" class="seg-x" aria-label="Cerrar el seguimiento" title="Cerrar y volver a Entidades">✕</button></header>
+    <div class="seg-prog"></div><div class="seg-cuerpo"></div>`;
+  dlg.querySelector('.seg-x').onclick = () => { dlg.close(); segActual = null; };
+  dlg.showModal(); segCargar(e);
+}
+function segBanda(e) {
+  segQuitarBanda();
+  const b = document.createElement('div'); b.id = 'seg-banda'; b.setAttribute('role', 'status');
+  b.innerHTML = `<span>🧭 Siguiendo a: <b>${esc(e.nombre)}</b></span><button type="button" class="btn" id="seg-volver">← Volver al seguimiento</button><button type="button" class="seg-x" id="seg-banda-x" aria-label="Terminar el seguimiento" title="Terminar el seguimiento">✕</button>`;
+  document.body.append(b); document.body.classList.add('con-seg-banda');
+  b.querySelector('#seg-volver').onclick = () => { show('entidades'); setTimeout(() => segAbrir(e), 150); };
+  b.querySelector('#seg-banda-x').onclick = () => { segQuitarBanda(); segActual = null; };
+}
+function segQuitarBanda() { const b = $('#seg-banda'); if (b) b.remove(); document.body.classList.remove('con-seg-banda'); }
+function segEstilo() {
+  if ($('#seg-estilo')) return;
+  const st = document.createElement('style'); st.id = 'seg-estilo';
+  st.textContent = ':root{--seg:#0f766e}#seg-dlg{max-width:680px;width:calc(100% - 24px);padding:0;border:0;border-radius:16px;overflow:hidden}#seg-dlg::backdrop{background:rgba(10,25,40,.55);backdrop-filter:blur(2px)}' +
+    '.seg-cab{display:flex;gap:12px;align-items:center;padding:14px 16px;background:var(--seg);color:#fff}.seg-cab h3{margin:0;color:#fff;font-size:1.15rem;overflow-wrap:anywhere}.seg-cab small{opacity:.85}' +
+    '.seg-ico{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:rgba(255,255,255,.18);font-size:1.3rem;flex:0 0 auto}' +
+    '.seg-x{width:40px;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.5);background:transparent;color:inherit;font-size:1.1rem;cursor:pointer;flex:0 0 auto}.seg-x:hover{background:rgba(255,255,255,.15)}' +
+    '.seg-prog{padding:12px 16px 0}.seg-barra{height:8px;border-radius:99px;background:var(--line,#dde);overflow:hidden;margin-bottom:6px}.seg-barra i{display:block;height:100%;background:var(--seg)}' +
+    '.seg-cuerpo{padding:8px 16px 16px;max-height:calc(100vh - 220px);overflow:auto}' +
+    '.seg-pasos{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:6px}.seg-pasos li{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line,#dde);border-radius:10px;background:var(--card,#fff)}' +
+    '.seg-pasos li .ico{font-size:1.1em;line-height:1.4}.seg-pasos li.seg-pend,.seg-pasos li.seg-opc{opacity:.72}.seg-pasos li.seg-actual{border-color:var(--seg);box-shadow:0 0 0 2px rgba(15,118,110,.2)}' +
+    '#seg-dlg .seg-actual .btn:not(.ghost){background:var(--seg);border-color:var(--seg)}.seg-bot{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.seg-bot .btn{min-height:36px;padding:6px 12px}' +
+    '#seg-banda{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;padding:8px 12px;background:var(--seg);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.2)}' +
+    '#seg-banda .btn{background:#fff;color:var(--seg);border-color:#fff;min-height:36px;padding:6px 12px}#seg-banda .seg-x{width:36px;height:36px}body.con-seg-banda{padding-top:56px}' +
+    '.seg-btn-fila{white-space:nowrap;font-weight:600;color:var(--seg)}@media (max-width:640px){.seg-bot .btn{width:100%}#seg-banda span{width:100%;text-align:center}body.con-seg-banda{padding-top:96px}}';
+  document.head.appendChild(st);
+}
+function segFilas() {
+  if (state.club || !can('leer') || (state.me && state.me.rol === 'entidad')) return;
+  segEstilo(); segUsuarios = null;
+  $$('#tabla-entidades tbody tr').forEach(tr => {
+    if (tr.classList.contains('rec-fila')) return;
+    const b = tr.querySelector('[data-edit]'); if (!b || tr.querySelector('[data-seg-ent]')) return;
+    const e = (state.entidades || []).find(x => x.id === b.dataset.edit);
+    if (!e || e.propia === 'SI' || e.trabaja_menores !== 'SI' || e.activo === 'NO') return;
+    b.insertAdjacentHTML('beforebegin', `<button type="button" class="link seg-btn-fila" data-seg-ent="${esc(e.id)}" title="Pasos para seguir a esta entidad">🧭 Seguimiento</button> · `);
+  });
+  $$('[data-seg-ent]').forEach(x => x.onclick = () => { const e = state.entidades.find(y => y.id === x.dataset.segEnt); if (e) segAbrir(e); });
+}
+(function () {
+  const base = loadEntidades;
+  loadEntidades = async function () { await base.apply(this, arguments); try { segFilas(); } catch (er) { console.warn(er); } };
+})();
+GUIA.forEach(t => { if (t[1] === 'Entidades y coordinación con clubes') t[2].push(['¿Cómo sigo a una entidad paso a paso?', '<p>En <b>Entidades</b>, pulsa <b>🧭 Seguimiento</b> en la fila de la entidad. Se abre su ventana (cabecera verde con su nombre) con el progreso y los pasos, cada uno con su estado (✅ hecho · 👉 siguiente · 🟠 en curso · ⬜ más adelante · ➖ opcional) y el botón que lo resuelve:</p><ol><li><b>Ficha básica</b>: CIF, Delegado/a y su contacto.</li><li><b>Acceso propio</b> (opcional): usuario «Entidad» para que suba su documentación.</li><li><b>Declaración responsable (I)</b>: genérala, envíala y, cuando vuelva firmada, regístrala.</li><li><b>Verificación (II)</b>: comprueba que lo declarado tiene documento.</li><li><b>Requerimiento (III)</b>: lista sola lo que falta y anota el plazo.</li><li><b>Seguimiento</b>: alertas abiertas y próxima revisión.</li><li><b>Informe de la entidad</b>.</li></ol><ul><li>Si un paso te lleva a otra pantalla (Matriz, Informes, Alertas), arriba aparece la banda verde <b>«Siguiendo a: … · ← Volver al seguimiento»</b>: así sabes que estás con esa entidad y no en tu tutorial municipal.</li><li>Al guardar algo, la ventana se actualiza sola.</li><li>Cierra con <b>✕</b>, la tecla Esc o pulsando fuera.</li></ul><p>No necesitas IA para saber cómo seguir: el paso marcado como <b>siguiente</b> es el que toca.</p>', 'mun', 'entidades']); });
+
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
