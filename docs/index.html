@@ -4507,7 +4507,7 @@ loadMatriz = async function () {
 
 // v23: TUTORIAL GUIADO DEL CLUB · misma ruta que la demo; cada paso se marca solo con los datos de la app
 const TUT_PASOS = [
-  { id: 'ficha', t: 'Completa la ficha del club', d: 'Identificación, actividad, gobierno, Delegado/a y canal: con la ficha completa, todos los documentos salen sin huecos.', ir: [['Abrir la ficha', 'ficha']] },
+  { id: 'ficha', t: 'Completa la ficha del club', d: 'Identificación, actividad, gobierno, Delegado/a y canal: con la ficha completa, todos los documentos salen sin huecos. El ejemplo muestra qué poner en cada casilla.', ir: [['Abrir la ficha', 'ficha'], ['📄 Ver ejemplo', 'ejemplo']] },
   { id: 'B2', t: 'Formación del Delegado/a (B2)', d: 'Registra el curso del Delegado/a en Formación (colectivo Delegado/a). Después, Matriz → B2 → Actualizar: Cumple y enlace al certificado.', ir: [['Ir a Formación', 'v:formacion'], ['Ir a la Matriz', 'm:B2']] },
   { id: 'B1', t: 'Designación del Delegado/a (B1)', d: 'Genera el acuerdo de designación, fírmalo y súbelo a Drive. En la Matriz: Parcial hasta presentar el Anexo II en el Registro de la Junta; después, Cumple.', ir: [['Ir a la plantilla', 'p:designacion'], ['Ir a la Matriz', 'm:B1']] },
   { id: 'A1', t: 'Declaración institucional (A1)', d: 'Genera la declaración, apruébala en la Junta y regístrala en la Matriz con su evidencia.', ir: [['Ir a la plantilla', 'p:declaracion'], ['Ir a la Matriz', 'm:A1']] },
@@ -4524,7 +4524,7 @@ const TUT_PASOS = [
 // v73: tres tutoriales · club (MI CLUB) · entidad (usuario «Entidad» de un ayuntamiento) · municipal (gestor del ayuntamiento)
 const tutModo = () => state.club ? 'club' : (state.me && state.me.rol === 'entidad') ? 'entidad' : (state.me && ['admin', 'delegado', 'tecnico'].includes(state.me.rol) && !(typeof esMaestra === 'function' && esMaestra())) ? 'municipal' : '';
 const TUT_PASOS_ENT = [
-  { id: 'ficha', t: 'Completa la ficha de tu entidad', d: 'Identificación, actividad, gobierno, Delegado/a y canal de comunicación. Es la base de todo lo demás.', ir: [['Abrir la ficha', 'ficha']] },
+  { id: 'ficha', t: 'Completa la ficha de tu entidad', d: 'Identificación, actividad, gobierno, Delegado/a y canal de comunicación. Es la base de todo lo demás. El ejemplo muestra qué poner en cada casilla.', ir: [['Abrir la ficha', 'ficha'], ['📄 Ver ejemplo', 'ejemplo']] },
   { id: 'B2', t: 'Formación del Delegado/a (B2)', d: 'Registra en Formación el curso del Delegado/a (colectivo Delegado/a). En la Matriz, B2: Cumple, con el enlace al certificado.', ir: [['Ir a Formación', 'v:formacion'], ['Ir a la Matriz', 'm:B2']] },
   { id: 'B1', t: 'Designación del Delegado/a (B1)', d: 'Sube a tu Drive el acuerdo de designación firmado y el justificante del Anexo II, y regístralos en B1. Abre B1 y mira «Cómo cumplir».', ir: [['Ir a la Matriz', 'm:B1']] },
   { id: 'A1', t: 'Declaración institucional (A1)', d: 'Registra en A1 la declaración aprobada por tu órgano de gobierno, con su enlace.', ir: [['Ir a la Matriz', 'm:A1']] },
@@ -4580,8 +4580,7 @@ async function tutEvaluar() {
   const antes = tutCuenta();
   const h = state.tut.hechos = {};
   const lleno = k => String(e[k] ?? '').trim();
-  h.ficha = ['nombre', 'cif', 'municipio', 'actividades', 'organo_gobierno', 'presidencia_nombre', 'delegado_nombre', 'delegado_telefono'].every(lleno) &&
-    ['canal_email', 'canal_telefono', 'canal_buzon'].some(lleno);
+  h.ficha = !fichaFaltan(e).falta.length; // v78: mismo criterio que el seguimiento municipal y las recomendaciones
   tutEvaluarMatriz(mat);
   h.K = h.K || !!(ag && ag.length && ag.every(a => a.cert_fecha));
   h.C = h.C || !!(rie && rie.length);
@@ -4618,6 +4617,7 @@ function tutIr(dest) {
   const [tipo, val] = dest.includes(':') ? dest.split(':') : [dest, ''];
   const propia = () => (state.entidades || []).find(x => x.propia === 'SI');
   const fijar = (sel, cargar) => { const pr = propia(); if (!pr || tutModo() !== 'municipal') return; let n = 0; const t = setInterval(() => { const s = $(sel); if ((s && s.querySelector('option[value="' + pr.id + '"]')) || ++n > 25) { clearInterval(t); if (s && s.value !== pr.id && s.querySelector('option[value="' + pr.id + '"]')) { s.value = pr.id; cargar(); } } }, 150); };
+  if (tipo === 'ejemplo') { abrirInforme(htmlFichaEjemplo()); return; }
   if (tipo === 'ficha') { const e = val === 'propia' ? propia() : state.entidades[0]; if (e) formEntidad(e, () => { state.entidades = []; tutRefrescar(true); }); else toast('Abre Entidades para ver la ficha', true); return; }
   if (tipo === 'dir') { if (!can('ia')) return; show('plantillas'); let n = 0; const t = setInterval(() => { const c = $('#dir-card'); if (c || ++n > 30) { clearInterval(t); if (c) { c.open = true; c.scrollIntoView({ behavior: 'smooth', block: 'start' }); } } }, 200); return; }
   if (tipo === 'v') { show(val); if (val === 'agentes') fijar('#agentes-entidad', () => loadAgentes()); if (val === 'riesgos') fijar('#riesgos-entidad', () => loadRiesgos()); return; }
@@ -4984,7 +4984,7 @@ async function pintarRecomendacionesClub() {
   let recs; try { recs = await API.call('misRecomendaciones', {}); } catch (e) { return; }
   let card = $('#rec-card');
   if (!card) { card = document.createElement('div'); card.id = 'rec-card'; card.className = 'card rec-card'; const ref = $('#pasos-card') || v.querySelector('header'); ref.after(card); }
-  state.recsClub = recs.length;
+  state.recsClub = recs.filter(r => !/^Recomendable:/.test(r.t)).length; // v78: lo recomendable (p. ej. suplente) no impide «todo al día»
   if (!recs.length) { card.innerHTML = '<h3>💡 Recomendaciones</h3><p class="st ok">✓ No hay recomendaciones pendientes. ¡Buen trabajo!</p>'; return; }
   const DEST = { matriz: ['Ir a la Matriz', r => { const m = /\b([A-K][12])\b/.exec(r.t); state.filtroMatriz = ''; if (m) state.tutResaltar = m[1]; const c = $('#revision-ia'); if (c) c.innerHTML = ''; show('matriz'); }], ficha: ['Abrir la ficha', () => state.entidades[0] && formEntidad(state.entidades[0], () => { state.entidades = []; loadPanel(); })],
     agentes: ['Ir a Agentes', () => show('agentes')], formacion: ['Ir a Formación', () => show('formacion')], riesgos: ['Ir a Riesgos', () => show('riesgos')],
@@ -6401,12 +6401,14 @@ const FICHA_EJEMPLO = {
 };
 // Datos clave que comprueba el paso 1 del seguimiento (un par «a|b» vale con uno de los dos)
 const SEG_FICHA_CLAVE = ['cif', 'n_registro', 'domicilio', 'municipio', 'actividades', 'n_menores', 'edades', 'lugar_actividad', 'organo_gobierno', 'presidencia_nombre',
-  'secretaria_nombre', 'delegado_nombre', 'delegado_email|delegado_telefono', 'fecha_designacion', 'suplente_nombre', 'canal_email|canal_telefono', 'datos_email'];
+  'secretaria_nombre', 'delegado_nombre', 'delegado_email|delegado_telefono', 'fecha_designacion', 'canal_email|canal_telefono|canal_buzon', 'datos_email'];
+// Recomendables: avisan pero no impiden el ✅ (una entidad pequeña puede no tener suplente)
+const SEG_FICHA_RECOM = ['suplente_nombre'];
 function htmlFichaEjemplo() {
   const clave = new Set(SEG_FICHA_CLAVE.join('|').split('|'));
-  const cuerpo = '<p class="nota"><b>Todos los datos son ficticios.</b> Sirven para saber qué poner en cada casilla y en qué documentos se usa. Los marcados con ★ son los datos clave: conviene completarlos primero. Nunca escribas en la ficha datos de menores.</p>' +
+  const cuerpo = '<p class="nota"><b>Todos los datos son ficticios.</b> Sirven para saber qué poner en cada casilla y en qué documentos se usa. Los marcados con ★ son los datos clave: conviene completarlos primero; con ☆, recomendables. Nunca escribas en la ficha datos de menores.</p>' +
     FICHA_SECCIONES.map(([tit, campos]) => `<h2>${esc(tit.replace(/^\S+\s/, ''))}</h2><table><thead><tr><th style="width:30%">Casilla</th><th style="width:28%">Ejemplo (ficticio)</th><th>Para qué sirve</th></tr></thead><tbody>` +
-      campos.map(c => { const x = FICHA_EJEMPLO[c[0]] || ['', '']; return `<tr><td>${clave.has(c[0]) ? '★ ' : ''}${esc(c[1])}</td><td>${esc(x[0])}</td><td>${esc(x[1])}</td></tr>`; }).join('') + '</tbody></table>').join('') +
+      campos.map(c => { const x = FICHA_EJEMPLO[c[0]] || ['', '']; return `<tr><td>${clave.has(c[0]) ? '★ ' : SEG_FICHA_RECOM.includes(c[0]) ? '☆ ' : ''}${esc(c[1])}${SEG_FICHA_RECOM.includes(c[0]) ? ' <i>(recomendable)</i>' : ''}</td><td>${esc(x[0])}</td><td>${esc(x[1])}</td></tr>`; }).join('') + '</tbody></table>').join('') +
     '<h2>Consejos</h2><ul><li>Da igual escribir en mayúsculas o minúsculas: la app lo normaliza al guardar.</li><li>Las fechas se eligen en el calendario de la casilla.</li><li>Si un dato aún no existe (por ejemplo, el protocolo propio), déjalo vacío: la app te avisará cuando un documento lo necesite.</li><li>Cuantos más datos completes, más completos saldrán los documentos de Plantillas y la declaración responsable.</li></ul>';
   return plantillaInforme('Ficha de la entidad · ejemplo', 'Qué poner en cada casilla y para qué sirve', cuerpo, false, 'EntornoSeguro · Ficha de ejemplo con datos ficticios.');
 }
@@ -6432,16 +6434,24 @@ GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Qué pongo en c
   const base = segPasos;
   segPasos = function (e, mat, us, al) {
     const P = base.apply(this, arguments), p = P.find(x => x.k === 'ficha'); if (!p) return P;
-    const lleno = k => k.split('|').some(c => String(e[c] ?? '').trim() !== '');
-    const falta = SEG_FICHA_CLAVE.filter(k => !lleno(k));
-    const et = k => k.split('|').map(c => (ETIQ_DATO[c] || c).replace(/ \(.*\)$/, '')).join(' o ');
+    const ff = fichaFaltan(e), falta = ff.falta, et = fichaEtiq;
     p.est = falta.length ? 'act' : 'ok';
-    p.txt = falta.length ? `Faltan ${falta.length} de ${SEG_FICHA_CLAVE.length} datos clave: ${falta.slice(0, 6).map(et).join(', ')}${falta.length > 6 ? '…' : '.'}` : `Los ${SEG_FICHA_CLAVE.length} datos clave están completos.`;
+    const rec = ff.rec;
+    p.txt = (falta.length ? `Faltan ${falta.length} de ${ff.total} datos clave: ${falta.slice(0, 6).map(et).join(', ')}${falta.length > 6 ? '…' : '.'}` : `Los ${ff.total} datos clave están completos.`) +
+      (rec.length ? ' Recomendable: ' + rec.map(et).join(', ') + '.' : '');
     p.bot = can('escribir') ? [[falta.length ? '✏️ Completar ficha' : '✏️ Editar ficha', 'ficha'], ['📄 Ver ejemplo', 'ficha-ej']] : [['📄 Ver ejemplo', 'ficha-ej']];
     P.forEach(x => delete x.sig); const sig = P.find(x => x.est === 'act'); if (sig) sig.sig = true;
     return P;
   };
 })();
+// v78: un único criterio de «ficha completa» (tutorial del club y de la entidad, seguimiento municipal; el servidor aplica el mismo en las recomendaciones)
+function fichaClave(e) { const t = String((e && e.tipo) || ''); return SEG_FICHA_CLAVE.filter(k => k !== 'n_registro' || !t || /club|asociaci/i.test(t)); }
+function fichaEtiq(k) { return k.split('|').map(c => (ETIQ_DATO[c] || c).replace(/ \(.*\)$/, '')).join(' o '); }
+function fichaFaltan(e) {
+  e = e || {}; const lleno = k => k.split('|').some(c => String(e[c] ?? '').trim() !== '');
+  const cl = fichaClave(e);
+  return { falta: cl.filter(k => !lleno(k)), rec: SEG_FICHA_RECOM.filter(k => !lleno(k)), total: cl.length };
+}
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
