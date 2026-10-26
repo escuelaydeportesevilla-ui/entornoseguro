@@ -2944,6 +2944,19 @@ const COORD_DECLARA = [
   'Aplica medidas de protección en desplazamientos, viajes y actividades con pernocta.',
   'Ha formado a sus agentes deportivos en protección de menores.'];
 
+const COORD_ACOMP = [
+  'acuerdo del órgano de gobierno que aprueba la declaración institucional.',
+  'documento de aceptación del Protocolo Marco y justificante de su registro.',
+  'acuerdo de designación del Delegado/a y su certificado de formación.',
+  'protocolo de protección aprobado y acreditación de su difusión.',
+  'ningún documento: la entidad custodia la relación del personal y sus certificados.',
+  'código de conducta (las hojas de aceptación firmadas las custodia la entidad).',
+  'análisis de riesgos y documento de medidas preventivas.',
+  'procedimiento de actuación y flujograma.',
+  'información del canal para menores y familias.',
+  'procedimiento de uso de imágenes y modelo de autorización.',
+  'medidas para desplazamientos y modelo de autorización.',
+  'resumen de la formación realizada (cursos, fechas y nº de personas).'];
 const coordTemporada = () => { const d = new Date(), y = d.getFullYear(); return d.getMonth() >= 7 ? y + '/' + (y + 1) : (y - 1) + '/' + y; };
 const coordOl = arr => '<ol>' + arr.map(t => `<li>${t}</li>`).join('') + '</ol>';
 const coordOrg = cfg => cfg.organismo || 'el Ayuntamiento';
@@ -2982,8 +2995,8 @@ function coordDeclaracion(e, temp, cfg, h) {
       ['Delegado/a de Protección de la entidad', campo(e.delegado_nombre, 'NOMBRE Y APELLIDOS')],
       ['Teléfono y correo del Delegado/a', campo(contacto, 'TELÉFONO · CORREO')]]) +
     '<p>La persona abajo firmante, en representación de la entidad, <b>DECLARA BAJO SU RESPONSABILIDAD</b> que la entidad cumple lo siguiente y dispone de la documentación que lo acredita:</p>' +
-    COORD_DECLARA.map(t => `<p style="margin:0 0 1px 10px;line-height:1.25;font-size:10pt">☐&nbsp; ${esc(t)}</p>`).join('') +
-    pj('Se acompaña: designación del Delegado/a de Protección y su certificado de formación, flujograma de actuación ante incidentes y relación nominal del personal en contacto con menores con la fecha de su certificado negativo.') +
+    COORD_DECLARA.map((t, i) => `<p style="margin:0 0 2px 10px;line-height:1.25;font-size:10pt">☐&nbsp; ${esc(t)}<br><span style="font-size:8.5pt;color:#4f5d65;padding-left:18px">Se acompaña: ${esc(COORD_ACOMP[i])}</span></p>`).join('') +
+    pj('Se acompaña la documentación indicada en cada punto marcado. Los documentos con datos personales (certificados negativos, hojas de aceptación firmadas y autorizaciones de las familias) no se adjuntan: la entidad los custodia y los exhibirá si se le solicitan.') +
     pj('La entidad se compromete a mantener estos requisitos durante toda la temporada, a comunicar cualquier cambio en 15 días y a poner la documentación a disposición del Ayuntamiento cuando se le solicite.') +
     pj('La entidad conoce que la comprobación municipal es formal y documental, y que la veracidad de lo declarado y el cumplimiento de estas obligaciones son responsabilidad exclusiva de la entidad.') +
     `<div style="page-break-inside:avoid;break-inside:avoid"><p>En ${campo(e.municipio || cfg.municipio, 'MUNICIPIO')}, a ____ de ______________ de ______</p>` +
@@ -3179,10 +3192,10 @@ const COORD_FALTA = {
   C1: 'Análisis de riesgos de las actividades, con la valoración de cada riesgo y su fecha.',
   C2: 'Medidas preventivas de cada riesgo, con responsable y fechas de implantación y revisión.',
   D1: 'Código de conducta aprobado por la entidad.',
-  D2: 'Registro de aceptación del código de conducta por los agentes deportivos.',
-  E1: 'Modelo de autorización familiar de uso de imagen y control de las autorizaciones recibidas.',
+  D2: 'Declaración de que los agentes han aceptado el código de conducta (las hojas firmadas las custodia la entidad).',
+  E1: 'Modelo de autorización familiar de uso de imagen (las autorizaciones firmadas las custodia la entidad).',
   E2: 'Procedimiento de uso de imágenes y redes sociales.',
-  F1: 'Modelo de autorización familiar para desplazamientos.',
+  F1: 'Modelo de autorización familiar para desplazamientos (las firmadas las custodia la entidad).',
   F2: 'Medidas de protección en viajes y pernoctas: responsables, ratios, alojamiento y normas.',
   G1: 'Protocolo de protección de la entidad, aprobado y con fecha.',
   G2: 'Acreditación de la difusión del protocolo al personal, las familias y los menores.',
@@ -3191,8 +3204,8 @@ const COORD_FALTA = {
   I1: 'Descripción del canal de comunicación y de sus garantías de confidencialidad.',
   I2: 'Información sobre el canal adaptada a los menores y a las familias.',
   J1: 'Plan o registro de formación de los agentes deportivos.',
-  K1: 'Relación de agentes deportivos en contacto habitual con menores.',
-  K2: 'Relación del personal con la fecha de su certificado negativo de delitos sexuales.'
+  K1: 'Número de agentes deportivos en contacto habitual con menores (la relación nominal la custodia la entidad).',
+  K2: 'Declaración de que todo ese personal tiene el certificado negativo en vigor (los certificados los custodia la entidad y los exhibirá si se le solicitan).'
 };
 const COORD_SIT = { no_cumple: 'No cumple', parcial: 'Parcial', pendiente: 'No acreditado' };
 
@@ -6280,6 +6293,7 @@ async function segCargar(e) {
     'gen-ficha': () => segCoordDoc(e.id, 'ficha'),
     'reg-decl': () => abrirDeclaracion(e.id),
     doc: () => abrirDocumentacion(e.id),
+    sol: () => abrirSolicitud(e.id),
     matriz: fuera(() => segMatriz(e.id)),
     req: () => abrirRequerimiento(e.id),
     alertas: fuera(() => show('alertas')),
@@ -6464,8 +6478,8 @@ async function abrirDocumentacion(entidadId) {
   const e = (state.entidades || []).find(x => x.id === entidadId) || {};
   const mat = await run(() => API.call('matriz', { entidad_id: entidadId }));
   const temp = coordTemporada();
-  const decl = mat.filter(r => (r.estado === 'cumple' || r.estado === 'parcial') && esSoloDecl(r));
-  const otros = mat.filter(r => r.estado === 'no_cumple' || r.estado === 'pendiente' || !r.estado);
+  const decl = segPorAcreditar(mat);
+  const otros = mat.filter(r => decl.indexOf(r) < 0 && r.estado !== 'cumple' && r.estado !== 'no_aplica'); // v82: incluye lo que está en subsanación
   if (!decl.length && !otros.length) { toast('No hay requisitos pendientes de documentación'); return; }
   const fila = (r, on) => `<label class="check"><input type="checkbox" name="r_${esc(r.codigo)}" ${on ? 'checked' : ''} style="flex:0 0 22px"> <span><b>${esc(r.codigo)}</b> ${esc(r.requisito || '')}${COORD_FALTA[r.codigo] ? `<br><small>${esc(COORD_FALTA[r.codigo])}</small>` : ''}</span></label>`;
   const f = $('#modal-form');
@@ -6476,7 +6490,7 @@ async function abrirDocumentacion(entidadId) {
       <label class="full">Enlace a la carpeta del expediente (Drive, acceso restringido)<input type="url" name="url" placeholder="https://drive.google.com/…"></label></div>
     ${decl.length ? `<p style="margin:10px 0 4px"><b>Declarados, pendientes de documento (${decl.length})</b> <button type="button" class="link" data-todos="1">Marcar todos</button> · <button type="button" class="link" data-todos="0">Ninguno</button></p><div class="rev-reqs doc-decl" style="grid-template-columns:1fr">${decl.map(r => fila(r, true)).join('')}</div>
       <label class="check"><input type="checkbox" name="parcial" checked> Los declarados que <b>no</b> marques pasan a «Parcial» con «Falta documentación» (entrarán en el requerimiento)</label>` : ''}
-    ${otros.length ? `<details style="margin-top:8px"><summary style="cursor:pointer;font-weight:600;min-height:40px;display:flex;align-items:center">No declarados o sin empezar (${otros.length}) · márcalos solo si también has recibido su documentación</summary><div class="rev-reqs" style="grid-template-columns:1fr">${otros.map(r => fila(r, false)).join('')}</div></details>` : ''}
+    ${otros.length ? `<details style="margin-top:8px"><summary style="cursor:pointer;font-weight:600;min-height:40px;display:flex;align-items:center">No declarados o en subsanación (${otros.length}) · márcalos si también has recibido su documentación</summary><div class="rev-reqs" style="grid-template-columns:1fr">${otros.map(r => fila(r, false)).join('')}</div></details>` : ''}
     <p class="nota">🔒 La carpeta debe estar en la nube de la entidad o del ayuntamiento con acceso restringido. Los documentos con datos personales (certificados negativos, hojas firmadas, autorizaciones) no se envían al ayuntamiento: basta con comprobarlos y anotarlo. Registro formal y documental: no valida el contenido.</p>
     <div class="actions"><button value="cancel" class="btn ghost" formnovalidate>Cancelar</button><button type="button" class="btn" id="doc-aplicar">Aplicar a la matriz</button></div>`;
   f.querySelectorAll('[data-todos]').forEach(b => b.onclick = () => f.querySelectorAll('.doc-decl input[type=checkbox]').forEach(c => { c.checked = b.dataset.todos === '1'; }));
@@ -6523,6 +6537,111 @@ async function abrirDocumentacion(entidadId) {
   };
 })();
 GUIA.forEach(t => { if (t[1] === 'Entidades y coordinación con clubes') t[2].push(['¿Cómo registro la documentación que me entrega una entidad?', '<p>En <b>🧭 Seguimiento → Verificación (II)</b> o en la <b>Matriz</b> de la entidad, pulsa <b>📂 Registrar documentación recibida</b>:</p><ol><li>Pon la fecha de recepción y, si quieres, el enlace a la carpeta del expediente (acceso restringido).</li><li>Aparecen marcados los requisitos declarados que solo tienen como prueba la declaración responsable. Desmarca los que no hayas podido comprobar.</li><li>Pulsa <b>Aplicar a la matriz</b>: los marcados pasan a «Cumple» con la evidencia; los desmarcados, a «Parcial» con «Falta documentación…», y entrarán en el requerimiento.</li></ol><p>Los documentos con datos personales (certificados negativos, hojas firmadas, autorizaciones de familias) los custodia la entidad: compruébalos y anótalo, sin pedir copia.</p>', 'mun', 'entidades']); });
+// v82: 📄 Solicitud de documentación (verificación II): pide al club que acredite lo que ha declarado, con plazo en días hábiles
+const segSolicitada = r => /^Documentación solicitada el /.test(String(r.accion_pendiente || ''));
+const segPorAcreditar = mat => mat.filter(r => (r.estado === 'cumple' || r.estado === 'parcial') && esSoloDecl(r) && !/^(Falta documentación|Requerido el)/.test(String(r.accion_pendiente || '')));
+function coordSolicitud(e, temp, cfg, items, plazo, venc) {
+  return tablaKV([['A', campo(String(e.nombre || '').trim(), 'ENTIDAD DEPORTIVA') + ', a la atención de su representante legal y de su Delegado/a de Protección'],
+      ['Asunto', 'Solicitud de documentación · Verificación de la declaración responsable · Temporada ' + esc(temp)]]) +
+    pj('Recibida la declaración responsable anual de su entidad, y dentro de la verificación documental del procedimiento de coordinación con las entidades deportivas, les solicitamos la documentación que acredita los siguientes puntos declarados:') +
+    '<table><thead><tr><th style="width:40%">Requisito del Protocolo Marco</th><th>Documentación que deben aportar</th></tr></thead><tbody>' +
+    items.map(x => `<tr><td><b>${esc(x.codigo)}</b> · ${esc(x.requisito)}</td><td>${esc(x.falta)}</td></tr>`).join('') + '</tbody></table>' +
+    `<p>Les rogamos que la aporten en un plazo de <b>${esc(plazo)} días hábiles</b> desde la recepción de este escrito${venc ? ' (hasta el ' + esc(fmtCorta(venc)) + ')' : ''}.</p>` +
+    pj('No deben remitirse documentos con datos personales (certificados negativos, hojas de aceptación firmadas ni autorizaciones de las familias): basta con indicar que la entidad los custodia. El Ayuntamiento podrá pedir que se exhiban.') +
+    pj('Lo que no se acredite en ese plazo se incluirá en un requerimiento de subsanación. La verificación municipal es formal y documental: no valida el contenido de los documentos.') +
+    `<p>En ${coordMuni(cfg)}, a fecha de firma electrónica.</p>` +
+    `<div class="firma"><div>Delegado/a Municipal de Protección de Menores en el Deporte<br>${campo(cfg.delegado_municipal, 'NOMBRE Y APELLIDOS')}</div><div>Recibí (entidad)</div></div>`;
+}
+async function abrirSolicitud(entidadId) {
+  if (!entidadId) { toast('Elige primero la entidad', true); return; }
+  const e = (state.entidades || []).find(x => x.id === entidadId) || {};
+  const mat = await run(() => API.call('matriz', { entidad_id: entidadId }));
+  const pend = segPorAcreditar(mat);
+  if (!pend.length) { toast('No hay puntos declarados pendientes de acreditar'); return; }
+  const temp0 = coordTemporada();
+  const f = $('#modal-form');
+  f.innerHTML = `<h3>📄 Solicitud de documentación</h3>
+    <p class="nota" style="margin:0 0 12px"><b>${esc(e.nombre || '')}</b>. Puntos declarados cuya única prueba es la declaración. Desmarca los que ya hayas comprobado y revisa qué deben aportar.</p>
+    <div class="fields"><label>Temporada<input name="temp" value="${esc(temp0)}"></label>
+      <label>Plazo (días hábiles)<input type="number" name="plazo" min="1" max="60" value="10"></label>
+      <label>Fecha de envío o notificación<input type="date" name="notif" value="${hoyISO()}"></label>
+      <label>Vence el (calculado, editable)<input type="date" name="venc"></label>
+      <label class="full">Festivos locales del municipio (dd/mm/aaaa, separados por comas)<input name="locales" value="${esc(localesGuardados())}" placeholder="Ej.: 20/04/2026, 08/09/2026"></label>
+      <p class="nota full" id="sol-venc-nota" style="margin:-6px 0 8px"></p></div>
+    <div class="req-lista">${pend.map((r, i) => `<div class="req-fila"><label class="check"><input type="checkbox" name="r${i}" ${segSolicitada(r) ? '' : 'checked'} style="flex:0 0 22px"> <span><b>${esc(r.codigo)}</b> ${esc(r.requisito || '')}${segSolicitada(r) ? ' <span class="st warn">ya solicitada</span>' : ''}</span></label>
+      <input name="f${i}" value="${esc(COORD_FALTA[r.codigo] || 'Documento que acredite este requisito.')}" aria-label="Qué deben aportar · ${esc(r.codigo)}"></div>`).join('')}</div>
+    <label class="check"><input type="checkbox" name="guardar" checked> Guardar una copia en Documentos</label>
+    <label class="check"><input type="checkbox" name="anotar" checked> Anotar en la matriz «Documentación solicitada» y poner el vencimiento como próxima revisión (genera alerta si vence)</label>
+    <div class="actions"><button value="cancel" class="btn ghost" formnovalidate>Cancelar</button><button type="button" class="btn ghost" id="sol-word">Word</button><button type="button" class="btn" id="sol-pdf">Ver / PDF</button></div>`;
+  if (!$('#req-estilo')) {
+    const st = document.createElement('style'); st.id = 'req-estilo';
+    st.textContent = '.req-lista{max-height:46vh;overflow-y:auto;border:1px solid var(--line);border-radius:8px;padding:6px 10px;margin:4px 0 12px}' +
+      '.req-fila{padding:8px 0;border-bottom:1px solid var(--line)}.req-fila:last-child{border-bottom:0}.req-fila label.check{margin:0 0 6px}.req-fila .st{margin-left:6px}';
+    document.head.appendChild(st);
+  }
+  $('#modal').onclose = null; $('#modal').oncancel = null;
+  if (!$('#modal').open) $('#modal').showModal();
+  const recalcular = () => {
+    const n = Math.max(1, Math.min(60, Number(f.plazo.value) || 10)), r = sumarHabiles(f.notif.value || hoyISO(), n, leerLocales(f.locales.value));
+    f.venc.value = r.fecha;
+    $('#sol-venc-nota').textContent = n + ' días hábiles sin sábados, domingos ni festivos. Vence el ' + fmtCorta(r.fecha) + '.' + (r.estimado ? ' Festivos de ese año estimados: compruébalos en el BOJA.' : '');
+  };
+  ['plazo', 'notif', 'locales'].forEach(k => f[k].addEventListener('input', recalcular));
+  recalcular();
+  const generar = async fmt => {
+    const items = pend.map((r, i) => f['r' + i].checked ? { codigo: r.codigo, requisito: r.requisito || '', falta: f['f' + i].value.trim() || COORD_FALTA[r.codigo] || '', r } : null).filter(Boolean);
+    if (!items.length) { toast('Marca al menos un punto', true); return; }
+    const temp = f.temp.value.trim() || temp0, plazo = Math.max(1, Math.min(60, Number(f.plazo.value) || 10)), venc = f.venc.value, anotar = f.anotar.checked, guardar = f.guardar.checked;
+    guardarLocales(f.locales.value.trim());
+    const cfg = state.cfg || {};
+    const cuerpo = '<div class="just">' + coordSolicitud(e, temp, cfg, items, plazo, venc) + '</div>';
+    const html = plantillaInforme('Solicitud de documentación', (e.nombre || '') + ' · Temporada ' + temp, cuerpo, false,
+      'EntornoSeguro · ' + esc(coordOrg(cfg)) + ' · Coordinación con entidades deportivas en protección de menores. La verificación municipal es formal y documental.');
+    if (fmt === 'word') descargar('﻿' + html, 'application/msword', nombreInf('solicitud-documentacion-' + (e.nombre || 'entidad')));
+    else abrirInforme(html);
+    $('#modal').close('cancel');
+    if (!anotar && !guardar) return;
+    const hoyTxt = new Date().toLocaleDateString('es-ES'), avisos = [];
+    await run(async () => {
+      if (guardar) {
+        const md = '# Solicitud de documentación\n\n' + String(e.nombre || '').trim() + ' · Temporada ' + temp + '\n\nPlazo: ' + plazo + ' días hábiles' + (venc ? ' (hasta el ' + fmtCorta(venc) + ')' : '') + '\n\n' +
+          items.map(x => '- **' + x.codigo + '** ' + x.requisito + ': ' + x.falta).join('\n');
+        try { await API.call('guardarDocumento', { asunto: 'Solicitud de documentación · ' + String(e.nombre || '').trim() + ' · ' + hoyTxt, tipo: 'requerimiento', formato: 'requerimiento', publico: String(e.nombre || '').trim(), prompt: '', resultado: md }); state.docs = null; avisos.push('guardada en Documentos'); }
+        catch (er) { avisos.push('no se pudo guardar en Documentos (' + er.message + ')'); }
+      }
+      if (anotar) {
+        for (let k = 0; k < items.length; k += 4) await Promise.all(items.slice(k, k + 4).map(x => API.call('guardarCumplimiento', {
+          id: x.r.cumplimiento_id, entidad_id: entidadId, requisito_codigo: x.codigo, estado: x.r.estado, fecha_revision: x.r.fecha_revision || '',
+          proxima_revision: venc || x.r.proxima_revision || '', responsable: x.r.responsable || '',
+          accion_pendiente: ('Documentación solicitada el ' + hoyTxt + (venc ? ' · plazo hasta ' + fmtCorta(venc) : '') + ' · ' + x.falta).slice(0, 300) })));
+        avisos.push(items.length + ' punto(s) anotados en la matriz');
+      }
+    });
+    toast('Solicitud generada · ' + avisos.join(' · '));
+  };
+  $('#sol-pdf').onclick = () => generar('pdf');
+  $('#sol-word').onclick = () => generar('word');
+}
+// Paso 4 del seguimiento: solicitar → registrar lo recibido
+(function () {
+  const baseP = segPasos;
+  segPasos = function (e, mat) {
+    const P = baseP.apply(this, arguments), p = P.find(x => x.k === 'verif');
+    if (!p || p.est !== 'act') return P;
+    const pa = segPorAcreditar(mat), sol = pa.filter(segSolicitada), sin = pa.length - sol.length;
+    const plazo = sol.length ? (String(sol[0].accion_pendiente).match(/plazo hasta ([^·]+)/) || [])[1] : '';
+    p.txt = (sin ? sin + ' punto(s) declarados sin documento: pide la documentación con la solicitud.' : '') +
+      (sol.length ? (sin ? ' ' : '') + 'Documentación solicitada para ' + sol.length + ' punto(s)' + (plazo ? ', plazo hasta ' + plazo.trim() : '') + '. Cuando llegue, regístrala.' : '') +
+      ' Lo que no acredite pasará al requerimiento.';
+    if (can('escribir')) {
+      p.bot = p.bot.filter(b => b[1] !== 'doc' && b[1] !== 'sol');
+      if (sin) p.bot.unshift(['📄 Solicitar documentación', 'sol']);
+      p.bot.splice(sin ? 1 : 0, 0, ['📂 Registrar documentación recibida', 'doc']);
+    }
+    return P;
+  };
+})();
+GUIA.forEach(t => { if (t[1] === 'Entidades y coordinación con clubes') t[2].push(['¿Cómo pido a una entidad que acredite lo que ha declarado?', '<p>La <b>declaración responsable</b> ya indica, en cada punto, qué documentación se acompaña. Si la entidad la devuelve sin documentos:</p><ol><li><b>🧭 Seguimiento → Verificación (II) → 📄 Solicitar documentación</b>. La app lista los puntos declarados sin documento y lo que debe aportar en cada uno; calcula el plazo en días hábiles (10 por defecto).</li><li>Se anota en la Matriz «Documentación solicitada… plazo hasta…» y el vencimiento genera alerta.</li><li>Cuando llegue: <b>📂 Registrar documentación recibida</b>. Lo que no se acredite pasa a «Parcial» y entra en el requerimiento de subsanación.</li></ol><p>Diferencia: la <b>solicitud</b> pide acreditar lo declarado; el <b>requerimiento</b> pide subsanar lo que no se cumple. Los documentos con datos personales no se piden: los custodia la entidad.</p>', 'mun', 'entidades']); });
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
