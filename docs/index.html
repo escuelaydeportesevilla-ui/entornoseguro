@@ -3150,6 +3150,7 @@ function abrirDeclaracion(entidadId) {
       state.entidades = await API.call('listarEntidades');
     });
     toast(n + ' requisito(s) actualizados en la matriz');
+    if ($('#seg-dlg') && $('#seg-dlg').open) return; // v80: desde el seguimiento, se queda en la ventana (se actualiza sola)
     show('matriz');
     setTimeout(() => { const s = $('#matriz-entidad'); if (s) { s.value = entidadId; loadMatriz(); } }, 60);
   };
@@ -6230,9 +6231,10 @@ function segPasos(e, mat, us, alertas) {
   pon('decl', 'Declaración responsable (I)', decl ? 'ok' : 'act', decl ? 'Registrada en la Matriz.' : 'Envíale la declaración responsable anual. Cuando la devuelva firmada, regístrala: la Matriz se rellena de una vez.',
     [['📄 Generar declaración', 'gen-decl']].concat(esc2 ? [['📥 Registrar la recibida', 'reg-decl']] : []));
   const declarados = mat.filter(r => r.estado === 'cumple' || r.estado === 'parcial');
-  const sinEv = declarados.filter(r => !(r.evidencias || []).length);
+  // v80: la propia declaración no acredita el requisito: cuenta solo la documentación aportada
+  const sinEv = declarados.filter(r => !(r.evidencias || []).some(v => !/^Declaraci[oó]n responsable/i.test(String(v.titulo || ''))));
   pon('verif', 'Verificación documental (II)', !decl ? 'pend' : sinEv.length ? 'act' : 'ok',
-    !decl ? 'Tras registrar la declaración.' : sinEv.length ? sinEv.length + ' requisito(s) declarados sin documento que lo acredite (' + sinEv.map(r => r.codigo).join(', ') + '). Pide o adjunta la evidencia en su Matriz.' : 'Todo lo declarado tiene documento. La verificación es formal: no valida el contenido.',
+    !decl ? 'Tras registrar la declaración.' : sinEv.length ? sinEv.length + ' requisito(s) declarados sin más documento que la declaración (' + sinEv.map(r => r.codigo).join(', ') + '). Comprueba la documentación con la ficha de verificación y adjúntala en su Matriz.' : 'Todo lo declarado tiene documento. La verificación es formal: no valida el contenido.',
     decl ? [['🔎 Verificar en su Matriz', 'matriz'], ['📄 Ficha de verificación', 'gen-ficha']] : []);
   const pend = mat.filter(r => ['no_cumple', 'parcial', 'pendiente'].includes(r.estado || 'pendiente'));
   const req = mat.find(r => /^Requerido el /.test(r.accion_pendiente || ''));
