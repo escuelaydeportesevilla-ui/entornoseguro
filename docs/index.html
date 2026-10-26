@@ -2927,7 +2927,7 @@ const COORD_DOCS = [
   ['clausula', 'V · Cláusula tipo', 'Cláusula tipo para autorizaciones de uso y bases de subvenciones']
 ];
 const COORD_REQ = ['Declaración responsable firmada', 'Declaración institucional', 'Aceptación del Protocolo Marco', 'Designación del Delegado/a de Protección',
-  'Formación del Delegado/a', 'Protocolo propio', 'Procedimiento y flujograma ante incidentes', 'Relación de personal con certificado negativo', 'Código de conducta',
+  'Formación del Delegado/a', 'Protocolo propio', 'Procedimiento y flujograma ante incidentes', 'Certificados negativos del personal (custodiados por la entidad)', 'Código de conducta',
   'Análisis de riesgos', 'Canal de comunicación de incidencias', 'Autorizaciones de imagen y datos',
   'Medidas en desplazamientos y viajes', 'Formación de agentes deportivos'];
 const COORD_DECLARA = [
@@ -6645,6 +6645,31 @@ async function abrirSolicitud(entidadId) {
   };
 })();
 GUIA.forEach(t => { if (t[1] === 'Entidades y coordinación con clubes') t[2].push(['¿Cómo pido a una entidad que acredite lo que ha declarado?', '<p>La <b>declaración responsable</b> ya indica, en cada punto, qué documentación se acompaña. Si la entidad la devuelve sin documentos:</p><ol><li><b>🧭 Seguimiento → Verificación (II) → 📄 Solicitar documentación</b>. La app lista los puntos declarados sin documento y lo que debe aportar en cada uno; calcula el plazo en días hábiles (10 por defecto).</li><li>Se anota en la Matriz «Documentación solicitada… plazo hasta…» y el vencimiento genera alerta.</li><li>Cuando llegue: <b>📂 Registrar documentación recibida</b>. Lo que no se acredite pasa a «Parcial» y entra en el requerimiento de subsanación.</li></ol><p>Diferencia: la <b>solicitud</b> pide acreditar lo declarado; el <b>requerimiento</b> pide subsanar lo que no se cumple. Los documentos con datos personales no se piden: los custodia la entidad.</p>', 'mun', 'entidades']); });
+// v84: la tarjeta de coordinación queda para modelos y procedimiento; el trabajo con cada entidad, en 🧭 Seguimiento
+(function () {
+  const i = COORD_DOCS.findIndex(x => x[0] === 'ficha');
+  if (!COORD_DOCS.some(x => x[0] === 'solicitud')) COORD_DOCS.splice(i + 1, 0, ['solicitud', 'II bis · Solicitud de documentación', 'Solicitud de documentación']);
+  const modelo = [{ codigo: '[CÓDIGO]', requisito: '[REQUISITO DECLARADO]', falta: '[DOCUMENTO QUE DEBE APORTAR]' }, { codigo: '[CÓDIGO]', requisito: '[REQUISITO DECLARADO]', falta: '[DOCUMENTO QUE DEBE APORTAR]' }];
+  const resto = ['requerimiento', 'traslado', 'clausula'].map(k => [k, COORD_PARTES[k]]);
+  resto.forEach(([k]) => delete COORD_PARTES[k]);
+  COORD_PARTES.solicitud = (e, temp, cfg, h) => coordH(h, 'Anexo II bis. Solicitud de documentación') + coordSolicitud(e, temp, cfg, modelo, 10, '');
+  resto.forEach(([k, f]) => { COORD_PARTES[k] = f; });
+  const base = pintarCoord;
+  pintarCoord = function () {
+    base.apply(this, arguments);
+    const card = $('#coord-card'); if (!card) return;
+    const d = $('#coord-decl'); if (d) d.closest('.ia-acciones').remove();
+    if (!card.dataset.v84) {
+      card.dataset.v84 = '1';
+      card.querySelector('h3').textContent = '📚 Modelos y procedimiento de coordinación';
+      card.querySelector('p.nota').innerHTML = 'Procedimiento completo para aprobar o publicar, modelos en blanco, traslado de comunicaciones (Anexo IV) y cláusula para autorizaciones de uso y subvenciones. La verificación municipal es formal y documental.<br><b>Para seguir a una entidad paso a paso</b> (declaración, solicitud, verificación y requerimiento con sus datos), usa <b>🧭 Seguimiento</b> en su fila.';
+      const lab = $('#coord-entidad') && $('#coord-entidad').closest('label');
+      if (lab && lab.firstChild && lab.firstChild.nodeType === 3) lab.firstChild.textContent = 'Entidad (opcional, rellena sus datos)';
+      const sel = $('#coord-doc'); if (sel && !sel.querySelector('option[value="solicitud"]')) { const o = document.createElement('option'); o.value = 'solicitud'; o.textContent = 'II bis · Solicitud de documentación'; const f = sel.querySelector('option[value="ficha"]'); f ? f.after(o) : sel.append(o); }
+    }
+  };
+})();
+GUIA.forEach(t => { if (t[1] === 'Entidades y coordinación con clubes') t[2].push(['¿Para qué sirve «Modelos y procedimiento de coordinación»?', '<p>Es la tarjeta de la parte inferior de <b>Entidades</b>. Sirve para lo general, no para una entidad concreta:</p><ul><li><b>Procedimiento completo</b>: el documento del sistema de coordinación con todos sus anexos, para aprobarlo o publicarlo.</li><li><b>Modelos en blanco</b> (Entidad = «Modelo en blanco»): declaración, ficha de verificación, solicitud, requerimiento.</li><li><b>IV · Traslado de comunicaciones</b>: qué hace el Delegado/a municipal si recibe un posible caso de una entidad.</li><li><b>V · Cláusula tipo</b>: texto para autorizaciones de uso de instalaciones y bases de subvenciones.</li></ul><p>Para trabajar con una entidad (declaración, solicitud, verificación, requerimiento e informe con sus datos), usa <b>🧭 Seguimiento</b> en su fila.</p>', 'mun', 'entidades']); });
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
