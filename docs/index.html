@@ -6362,6 +6362,8 @@ function segEstilo() {
     '.seg-pasos{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:6px}.seg-pasos li{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line,#dde);border-radius:10px;background:var(--card,#fff)}' +
     '.seg-pasos li .ico{font-size:1.1em;line-height:1.4}.seg-pasos li.seg-pend,.seg-pasos li.seg-opc{opacity:.72}.seg-pasos li.seg-actual{border-color:var(--seg);box-shadow:0 0 0 2px rgba(15,118,110,.2)}' +
     '#seg-dlg .seg-actual .btn:not(.ghost){background:var(--seg);border-color:var(--seg)}.seg-bot{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.seg-bot .btn{min-height:36px;padding:6px 12px}' +
+    '.segc-datos{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:6px;margin:4px 0 10px}.segc-datos>div{border:1px solid var(--line,#dde);border-radius:10px;padding:6px 10px;background:var(--card,#fff)}.segc-datos small{display:block;color:var(--muted,#667);font-size:.72rem}.segc-datos b{font-size:1rem}' +
+    '#seg-dlg .seg-pasos li.seg-ok{padding:5px 10px}' +
     '#seg-banda{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;padding:8px 12px;background:var(--seg);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.2)}' +
     '#seg-banda .btn{background:#fff;color:var(--seg);border-color:#fff;min-height:36px;padding:6px 12px}#seg-banda .seg-x{width:36px;height:36px}body.con-seg-banda{padding-top:56px}' +
     '.seg-btn-fila{white-space:nowrap;font-weight:600;color:var(--seg)}@media (max-width:640px){.seg-bot .btn{width:100%}#seg-banda span{width:100%;text-align:center}body.con-seg-banda{padding-top:96px}}';
@@ -6655,7 +6657,7 @@ GUIA.forEach(t => { if (t[1] === 'Entidades y coordinación con clubes') t[2].pu
     try {
       const e = (d && d.entidad) || {};
       const vacio = k => !((d && d[k]) || []).length;
-      if (state.club || (state.me && state.me.rol === 'entidad') || e.propia === 'SI' || !['riesgos', 'formacion', 'agentes', 'autorizaciones'].every(vacio)) return h;
+      if (state.club || (state.me && state.me.rol === 'entidad') || e.propia === 'SI' || /CLUB/i.test(String((d.config || {}).tipo_instancia || '')) || !['riesgos', 'formacion', 'agentes', 'autorizaciones'].every(vacio)) return h;
       const est = {}; ((d && d.matriz) || []).forEach(r => { est[r.codigo] = (ESTADOS[r.estado] || ESTADOS.pendiente)[2]; });
       const ac = cods => cods.map(c => `<b>${c}</b> ${esc(est[c] || 'Pendiente')}`).join(' · ');
       const nota = (que, cods) => `<p class="muted">La entidad lleva ${que} en su propia documentación; el Ayuntamiento lo verifica de forma documental. Situación en la Matriz: ${ac(cods)}.</p>`;
@@ -6697,6 +6699,76 @@ async function clubesPropios() {
     return i >= 0 ? h.slice(0, i) + tabla + h.slice(i) : h.replace('<div class="pie">', tabla + '<div class="pie">');
   };
 })();
+// v91: 🧭 Seguimiento de cada club alojado en Mis clubes · ventana de consulta con los 13 pasos de su tutorial (calculados con sus datos), alertas y recomendaciones
+function segClubPasos(d) {
+  const est = d.estados || {}, ok = c => TUT_OK.includes(est[c]);
+  const ff = fichaFaltan(d.entidad || {});
+  const hecho = {
+    ficha: !ff.falta.length, B2: ok('B2'), B1: ok('B1'), A1: ok('A1'), A2: ok('A2'), G1: ok('G1'), D1: ok('D1'), I1: ok('I1'),
+    K: (ok('K1') && ok('K2')) || (d.agentes > 0 && d.agentes_con_cert === d.agentes),
+    C: ok('C1') || d.riesgos > 0,
+    E: (ok('E1') && (ok('F1') || est.F1 === 'no_aplica')) || d.autorizaciones > 0,
+    enc: d.encuestas > 0
+  };
+  let sig = null;
+  const P = TUT_PASOS.map((p, i) => {
+    const o = { n: i + 1, k: p.id, t: p.t, bot: [] };
+    if (p.id === 'inf') { o.est = 'opc'; o.txt = 'Lo descarga el propio club. Tú puedes verlo con «📊 Informe del club».'; return o; }
+    if (hecho[p.id]) { o.est = 'ok'; o.txt = 'Hecho.'; return o; }
+    o.est = sig ? 'pend' : 'act';
+    o.txt = p.id === 'ficha' ? `Le faltan ${ff.falta.length} de ${ff.total} datos clave: ${ff.falta.slice(0, 6).map(fichaEtiq).join(', ')}${ff.falta.length > 6 ? '…' : '.'}` : 'Lo que tiene que hacer el club: ' + p.d;
+    if (!sig) { sig = o; o.sig = true; }
+    return o;
+  });
+  return P;
+}
+async function segClubAbrir(c) {
+  segEstilo(); segActual = null; segQuitarBanda();
+  let dlg = $('#seg-dlg');
+  if (!dlg) { dlg = document.createElement('dialog'); dlg.id = 'seg-dlg'; document.body.append(dlg); dlg.addEventListener('cancel', () => { segActual = null; }); dlg.onclick = ev => { if (ev.target === dlg) { dlg.close(); segActual = null; } }; }
+  dlg.innerHTML = `<header class="seg-cab"><span class="seg-ico" aria-hidden="true">🧭</span><div style="flex:1;min-width:0"><small>Seguimiento del club · 🏠 Club con espacio propio</small><h3>${esc(c.nombre)}</h3></div>
+      <button type="button" class="seg-x" aria-label="Cerrar el seguimiento" title="Cerrar">✕</button></header><div class="seg-prog"></div><div class="seg-cuerpo"><p class="muted">Consultando los datos del club…</p></div>`;
+  dlg.querySelector('.seg-x').onclick = () => dlg.close();
+  dlg.showModal();
+  let d; try { d = await API.call('seguimientoClub', { id: c.id }); }
+  catch (er) { dlg.querySelector('.seg-cuerpo').innerHTML = '<p class="bad-t">' + esc(/desconocida/i.test(er.message) ? 'Actualiza Ampliacion.gs a la v1.28 para ver el seguimiento de los clubes.' : 'No se pudo consultar el club: ' + er.message) + '</p>'; return; }
+  if (!dlg.open) return;
+  const P = segClubPasos(d), sig = P.find(p => p.sig), TIT = { ok: 'hecho', act: 'siguiente', pend: 'más adelante', opc: 'opcional' };
+  dlg.querySelector('.seg-prog').innerHTML = `<div class="seg-tramos" role="list">${P.map(p => `<span role="listitem" class="seg-t seg-t-${p.sig ? 'sig' : p.est}" title="Paso ${p.n} · ${esc(p.t)}: ${TIT[p.est]}">${p.n}</span>`).join('')}</div>
+    <small>${sig ? `<b>El club va por el paso ${sig.n} de ${P.length}</b> · ${esc(sig.t)}` : '<b>El club tiene todos los pasos hechos</b>'} · ${P.filter(p => p.est === 'ok').length} hechos · cumplimiento ${d.pct}%</small>`;
+  const recs = d.recomendaciones || [], a = d.alertas || {};
+  const asunto = 'Recomendaciones de EntornoSeguro · ' + d.nombre;
+  const dato = (k, v, mal) => `<div><small>${k}</small><b${mal ? ' style="color:var(--bad)"' : ''}>${esc(v)}</b></div>`;
+  dlg.querySelector('.seg-cuerpo').innerHTML =
+    `<div class="segc-datos">${dato('Alertas abiertas', a.abiertas || 0)}${dato('Alertas altas', a.altas || 0, a.altas > 0)}${dato('Cerradas sin resolver', a.cerradas_sin_resolver || 0, a.cerradas_sin_resolver > 0)}${dato('Último acceso', d.ultimo_acceso ? segFecha(d.ultimo_acceso) : 'Nunca', !d.ultimo_acceso)}${dato('Próxima revisión', d.proxima_revision ? segFecha(d.proxima_revision) : '—')}</div>
+    <ol class="seg-pasos">${P.map(p => `<li class="seg-${p.est}${p.sig ? ' seg-actual' : ''}"><span class="ico" aria-hidden="true">${p.sig ? SEG_ICO.act : SEG_ICO[p.est] || '⬜'}</span>
+      <div><b><span class="seg-num">${p.n}</span> ${esc(p.t)}</b>${p.sig ? ' <span class="chip">va por aquí</span>' : ''}${p.est === 'ok' ? '' : `<br><small>${esc(p.txt)}</small>`}</div></li>`).join('')}</ol>
+    <h4 style="margin:14px 0 6px">💡 Recomendaciones para el club (${recs.length})</h4>
+    ${recs.length ? `<ul class="rec-lista">${recs.map(r => `<li><span aria-hidden="true">${REC_ICO[r.p] || '⚪'}</span><span class="t">${esc(r.t)}${recItems(r)}</span></li>`).join('')}</ul>` : '<p class="st ok">✓ Sin recomendaciones pendientes</p>'}
+    <div class="seg-bot" style="margin-top:10px">${recs.length ? `<button type="button" class="btn" data-sc="copiar">📋 Copiar recomendaciones</button>` : ''}${recs.length && d.email ? `<a class="btn ghost" href="mailto:${esc(d.email)}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(recTexto(d.nombre, recs))}">✉️ Enviar por correo</a>` : ''}<button type="button" class="btn ghost" data-sc="informe">📊 Informe del club</button><button type="button" class="btn ghost" data-sc="gestionar">⚙️ Gestionar</button></div>
+    <p class="nota" style="margin:10px 0 0">Ventana de consulta: es el espacio del club y lo gestiona el propio club. Los pasos se calculan con sus datos, con la misma regla que su tutorial; sin IA y sin datos personales. Consultar el seguimiento no queda registrado; abrir el informe sí, y el club lo ve en su registro de accesos.</p>`;
+  dlg.querySelectorAll('[data-sc]').forEach(b => b.onclick = async () => {
+    const x = b.dataset.sc;
+    if (x === 'copiar') copiarTexto(recTexto(d.nombre, recs));
+    if (x === 'informe') { const r = await run(() => API.call('informeClub', { id: c.id })); abrirInforme(construirInformeEntidad(r)); }
+    if (x === 'gestionar') { dlg.close(); gestionarClub((state.clubes || []).find(y => y.id === c.id) || c); }
+  });
+}
+(function () {
+  if (typeof loadClubes !== 'function') return;
+  const base = loadClubes;
+  loadClubes = async function () {
+    await base.apply(this, arguments);
+    segEstilo();
+    $$('#tabla-clubes [data-club]').forEach(b => {
+      const c = (state.clubes || []).find(x => x.id === b.dataset.club);
+      if (!c || c.error || c.estado !== 'activo' || b.parentElement.querySelector('[data-segclub]')) return;
+      b.insertAdjacentHTML('beforebegin', `<button type="button" class="link seg-btn-fila" data-segclub="${esc(c.id)}" title="En qué paso está el club y qué le falta">🧭 Seguimiento</button> · `);
+    });
+    $$('[data-segclub]').forEach(x => x.onclick = () => { const c = state.clubes.find(y => y.id === x.dataset.segclub); if (c) segClubAbrir(c); });
+  };
+})();
+GUIA.forEach(t => { if (t[1] === 'Entidades y coordinación con clubes' || t[1] === '💼 Modelo comercial y versiones (solo versión maestra)') t[2].push(['¿Cómo sé en qué punto está cada club de Mis clubes?', '<p>En <b>Mis clubes</b>, pulsa <b>🧭 Seguimiento</b> en la fila del club. Se abre una ventana de consulta con:</p><ul><li>Los <b>13 pasos de su tutorial</b>, numerados y con su estado (✅ hecho · 👉 va por aquí · ⬜ más adelante). Se calculan con sus datos reales, con la misma regla que su tutorial.</li><li>Alertas abiertas, altas y cerradas sin resolver, último acceso y próxima revisión.</li><li>Sus <b>recomendaciones</b>, con <b>Copiar</b> y <b>Enviar por correo</b>, y el <b>Informe del club</b>.</li></ul><p>Es solo de consulta: el espacio es del club. Consultarlo no queda registrado; abrir el informe sí, y el club lo ve en su registro de accesos.</p>', 'admin', 'clubes']); });
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
