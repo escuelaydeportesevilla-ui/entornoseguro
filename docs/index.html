@@ -6893,6 +6893,12 @@ const DIAG_CONTACTO = 'escuelaydeporte.sevilla@gmail.com';
   const base = arrancar;
   arrancar = async function () {
     await base.apply(this, arguments);
+    gestorBanda();
+  };
+  // El arranque automático (sesión guardada o #gt=) llama al arrancar original antes de que cargue este bloque: se comprueba al terminar
+  let n = 0; const t = setInterval(() => { if (state.me) { clearInterval(t); gestorBanda(); } else if (++n > 120) clearInterval(t); }, 250);
+})();
+function gestorBanda() {
     if (!state.me || !state.me.gestor) return;
     const cp = $('#cambiar-pass'); if (cp) cp.remove();
     const ni = $('nav button[data-view="incidencias"]'); if (ni) ni.remove();
@@ -6900,9 +6906,14 @@ const DIAG_CONTACTO = 'escuelaydeporte.sevilla@gmail.com';
     const b = document.createElement('div'); b.id = 'gestor-banda';
     b.innerHTML = `<span>🔑 Estás en el espacio de <b>${esc((state.cfg && state.cfg.organismo) || 'el club')}</b> como gestor (servicio Gestionado). Todo lo que hagas queda registrado y el club lo ve en «Mis datos».</span><button type="button" class="btn" id="gestor-salir">Salir del club</button>`;
     document.body.prepend(b); document.body.classList.add('con-gestor');
+    // v95: también la barra lateral (marrón, letras blancas) y un recuadro encima de SEGUIMIENTO, visibles siempre
+    const nav = $('#menu-principal');
+    if (nav && !$('#gestor-lateral')) {
+      nav.insertAdjacentHTML('beforebegin', `<div id="gestor-lateral" role="status"><b>🔑 MODO GESTOR</b><span>${esc((state.cfg && state.cfg.organismo) || 'Club')}</span><button type="button" class="btn" id="gestor-salir2">Salir del club</button></div>`);
+      $('#gestor-salir2').onclick = () => $('#gestor-salir').click();
+    }
     $('#gestor-salir').onclick = async () => { try { await API.call('logout'); } catch (e) {} ssSet('es_token', null); try { window.close(); } catch (e) {} location.reload(); };
-  };
-})();
+}
 
 // ---- MI CLUB · Mis datos: autorizar o retirar el acceso del gestor ----
 (function () {
@@ -6971,7 +6982,7 @@ const DIAG_CONTACTO = 'escuelaydeporte.sevilla@gmail.com';
       const w = window.open('about:blank', '_blank');
       let r; try { r = await run(() => API.call('entrarComoClub', { id: c.id })); } catch (er) { if (w) w.close(); return; }
       const url = location.origin + location.pathname + '#gt=' + encodeURIComponent(r.token) + (API.base && API.base !== API_URL ? '&api=' + encodeURIComponent(API.base) : '') + (state.inst ? '&inst=' + encodeURIComponent(state.inst) : '');
-      if (w) w.location.href = url; else location.href = url;
+      if (w) w.location.href = url; else { location.href = url; setTimeout(() => location.reload(), 80); } // sin ventana emergente: misma pestaña (el fragmento solo no recarga)
     };
   };
 })();
@@ -7081,7 +7092,11 @@ function pintarDiag() {
 (function () {
   if ($('#v93-estilo')) return;
   const st = document.createElement('style'); st.id = 'v93-estilo';
-  st.textContent = '#gestor-banda{position:sticky;top:0;z-index:70;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;padding:8px 12px;background:#7a3e00;color:#fff}#gestor-banda .btn{background:#fff;color:#7a3e00;border-color:#fff;min-height:36px}' +
+  st.textContent = 'body.con-gestor .sidebar{background:#5c2e00 !important;color:#fff}body.con-gestor .sidebar :is(strong,small,span,b,a,label,p,div){color:#fff}body.con-gestor .sidebar .nav-grupo{color:rgba(255,255,255,.78) !important}' +
+    'body.con-gestor .sidebar nav button{color:#fff !important;background:transparent}body.con-gestor .sidebar nav button:hover{background:rgba(255,255,255,.14)}body.con-gestor .sidebar nav button.active{background:#fff !important;color:#5c2e00 !important}body.con-gestor .sidebar nav button.active *{color:#5c2e00 !important}' +
+    'body.con-gestor .sidebar svg{stroke:#fff}body.con-gestor .menu-toggle{background:#7a3e00;color:#fff}' +
+    '#gestor-lateral{margin:8px 0 10px;padding:10px 12px;border:2px solid #ffd27a;border-radius:12px;background:rgba(255,255,255,.08);display:grid;gap:4px}#gestor-lateral b{color:#ffd27a !important;letter-spacing:.04em}#gestor-lateral span{font-size:.85rem}#gestor-lateral .btn{background:#fff;color:#5c2e00 !important;border-color:#fff;min-height:36px;margin-top:4pxbody.con-gestor .sidebar a,body.con-gestor .sidebar .link{color:#ffd27a !important}@media (max-width:860px){#gestor-lateral{display:none}}' +
+    '#gestor-banda{position:sticky;top:0;z-index:70;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;padding:8px 12px;background:#7a3e00;color:#fff}#gestor-banda .btn{background:#fff;color:#7a3e00;border-color:#fff;min-height:36px}' +
     '.chip-serv{background:color-mix(in srgb,var(--seg,#0f766e) 14%,transparent);color:var(--seg,#0f766e)}.chip-vacio{background:var(--bg);color:var(--muted)}' +
     '#clubes-filtro{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}#clubes-filtro .chip-filtro{border:1px solid var(--line);background:var(--card,#fff);border-radius:99px;padding:6px 12px;cursor:pointer;min-height:36px}#clubes-filtro .chip-filtro.activo{background:var(--brand,#0b3057);color:#fff;border-color:var(--brand,#0b3057)}' +
     '.segc-serv{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:space-between;border:1px dashed var(--line);border-radius:10px;padding:8px 10px;margin:0 0 10px}.segc-serv select{margin-left:6px;min-height:36px}' +
