@@ -7095,7 +7095,7 @@ function pintarDiag() {
   st.textContent = 'body.con-gestor .sidebar{background:#5c2e00 !important;color:#fff}body.con-gestor .sidebar :is(strong,small,span,b,a,label,p,div){color:#fff}body.con-gestor .sidebar .nav-grupo{color:rgba(255,255,255,.78) !important}' +
     'body.con-gestor .sidebar nav button{color:#fff !important;background:transparent}body.con-gestor .sidebar nav button:hover{background:rgba(255,255,255,.14)}body.con-gestor .sidebar nav button.active{background:#fff !important;color:#5c2e00 !important}body.con-gestor .sidebar nav button.active *{color:#5c2e00 !important}' +
     'body.con-gestor .sidebar svg{stroke:#fff}body.con-gestor .menu-toggle{background:#7a3e00;color:#fff}' +
-    '#gestor-lateral{margin:8px 0 10px;padding:10px 12px;border:2px solid #ffd27a;border-radius:12px;background:rgba(255,255,255,.08);display:grid;gap:4px}#gestor-lateral b{color:#ffd27a !important;letter-spacing:.04em}#gestor-lateral span{font-size:.85rem}#gestor-lateral .btn{background:#fff;color:#5c2e00 !important;border-color:#fff;min-height:36px;margin-top:4px}body.con-gestor .sidebar a,body.con-gestor .sidebar .link{color:#ffd27a !important}#gestor-lateral .gl-nota{font-size:.75rem;opacity:.9}@media (max-width:860px){#gestor-lateral{display:none}}@media (min-width:861px){#gestor-banda{display:none !important}}' +
+    '#gestor-lateral{margin:8px 0 10px;padding:10px 12px;border:2px solid #ffd27a;border-radius:12px;background:rgba(255,255,255,.08);display:grid;gap:4px}#gestor-lateral b{color:#ffd27a !important;letter-spacing:.04em}#gestor-lateral span{font-size:.85rem}#gestor-lateral .btn{background:#fff;color:#5c2e00 !important;border-color:#fff;min-height:36px;margin-top:4px}body.con-gestor .sidebar a,body.con-gestor .sidebar .link{color:#ffd27a !important}#gestor-lateral .gl-nota{font-size:.75rem;opacity:.9}@media (min-width:861px){body.con-gestor .app{background:linear-gradient(90deg,#5c2e00 240px,transparent 240px)}}@media (max-width:860px){#gestor-lateral{display:none}}@media (min-width:861px){#gestor-banda{display:none !important}}' +
     '#gestor-banda{position:sticky;top:0;z-index:70;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;padding:8px 12px;background:#7a3e00;color:#fff}#gestor-banda .btn{background:#fff;color:#7a3e00;border-color:#fff;min-height:36px}' +
     '.chip-serv{background:color-mix(in srgb,var(--seg,#0f766e) 14%,transparent);color:var(--seg,#0f766e)}.chip-vacio{background:var(--bg);color:var(--muted)}' +
     '#clubes-filtro{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}#clubes-filtro .chip-filtro{border:1px solid var(--line);background:var(--card,#fff);border-radius:99px;padding:6px 12px;cursor:pointer;min-height:36px}#clubes-filtro .chip-filtro.activo{background:var(--brand,#0b3057);color:#fff;border-color:var(--brand,#0b3057)}' +
@@ -7113,6 +7113,34 @@ GUIA.forEach(t => {
   }
   if (t[1] === 'Entidades y coordinación con clubes') t[2].push(['¿Qué es el kit de bienvenida de un club?', '<p>Un PDF para entregar al Delegado/a del club: acceso (web, perfil, usuario y, si se acaba de generar, la contraseña temporal), los 13 primeros pasos del tutorial, cómo le acompañamos según su servicio, qué hacer si ocurre algo y privacidad. Sale al crear el club o generar una contraseña nueva (<b>📄 Kit de bienvenida</b>) y, sin contraseña, desde <b>Gestionar</b>.</p>', 'admin', 'clubes']);
 });
+// v97: registro de accesos del club con acciones legibles (también las del gestor)
+const ACC_TXT = { ACCESO_GESTOR: 'Entrada en el espacio del club (gestor)', LOGOUT: 'Salida', LOGIN: 'Entrada', CONSULTA_AYUNTAMIENTO: 'Consulta de informe', EXPORTACION_AYUNTAMIENTO: 'Copia completa de datos', ALTA_CLUB: 'Alta del club',
+  CUMPLIMIENTO: 'Actualiza un requisito de la Matriz', EVIDENCIA: 'Añade o cambia una evidencia', ACTUALIZAR: 'Actualiza la ficha del club', CREAR: 'Crea un registro', AGENTE: 'Agente deportivo', ELIMINAR_AGENTES: 'Elimina un agente deportivo',
+  FORMACION: 'Registra formación', FORMACION_LOTE: 'Registra formación (varias personas)', ELIMINAR_FORMACION: 'Elimina formación', RIESGO: 'Riesgo', ELIMINAR_RIESGO: 'Elimina un riesgo', AUTORIZACION: 'Autorizaciones familiares',
+  ELIMINAR_AUTORIZACIONES: 'Elimina autorizaciones', ENCUESTA: 'Encuesta', ELIMINAR_ENCUESTAS: 'Elimina una encuesta', CREAR_DOC: 'Guarda un documento', EDITAR_DOC: 'Edita un documento', ELIMINAR_DOC: 'Elimina un documento',
+  IA_CONTENIDO: 'Contenido con IA', IA_ASISTENTE: 'Consulta al asistente', CERRAR_ALERTA: 'Cierra una alerta', EXPORTACION: 'Descarga de datos', BIBLIOTECA: 'Biblioteca', CAMPANA: 'Campaña', AGENDA: 'Agenda' };
+(function () {
+  if (typeof loadMisDatos !== 'function') return;
+  const base = loadMisDatos;
+  loadMisDatos = async function () {
+    await base.apply(this, arguments);
+    $$('#tabla-accesos tbody tr').forEach(tr => { const td = tr.cells[2]; if (!td) return; const k = td.textContent.trim();
+      if (/^[A-Z_]+$/.test(k)) td.textContent = ACC_TXT[k] || (k.charAt(0) + k.slice(1).toLowerCase().replace(/_/g, ' ')); });
+  };
+})();
+// v97: el aviso de la agenda en la tarjeta principal del club desaparecía al repintarse la tarjeta (recomendaciones y primeros pasos
+// terminan después); es información de estado, no un aviso temporal: se vuelve a poner en cada repintado
+function agChipHero() {
+  const h = $('#panel-hero .hero-chips'); if (!h || !Array.isArray(state.agSemana) || h.querySelector('[data-hero="ag"]')) return;
+  const sem = state.agSemana, ch = document.createElement('button'); ch.type = 'button'; ch.dataset.hero = 'ag';
+  ch.className = sem.length ? 'warn' : 'ok'; ch.innerHTML = ICO(ICOS.cal, 16) + ' ' + (sem.length ? sem.length + ' en tu agenda esta semana' : 'Agenda despejada esta semana');
+  ch.onclick = () => { state.espTab = 'agenda'; state.agSel = ''; show('espacio'); pintarEspacio(); };
+  h.append(ch);
+}
+(function () {
+  const base = pintarHeroClub;
+  pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
+})();
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
