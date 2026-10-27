@@ -6260,7 +6260,11 @@ function segPasos(e, mat, us, alertas) {
     : 'Opcional. Con un usuario «Entidad» la propia entidad completa su Matriz y sube sus documentos; sin él, registras tú lo que te entregue.', can('admin') && !(acc && acc.length) ? [['👤 Crear usuario', 'usuarios']] : []);
   // 3 · Declaración responsable
   const decl = mat.some(r => r.estado && r.estado !== 'pendiente');
-  pon('decl', 'Declaración responsable (I)', decl ? 'ok' : 'act', decl ? 'Registrada en la Matriz.' : 'Envíale la declaración responsable anual: indica qué documentación acompañar. Cuando la devuelva firmada, regístrala y la Matriz se rellena de una vez.',
+  // v100: la declaración es de cada temporada: si solo hay de temporadas anteriores, se vuelve a pedir
+  const temp = coordTemporada(), esDecl = v => /^Declaraci[oó]n responsable/i.test(String(v.titulo || ''));
+  const declAntigua = decl && mat.some(r => (r.evidencias || []).some(esDecl)) && !mat.some(r => (r.evidencias || []).some(v => esDecl(v) && String(v.titulo).includes(temp)));
+  pon('decl', 'Declaración responsable (I)', decl && !declAntigua ? 'ok' : 'act', declAntigua ? 'Nueva temporada ' + temp + ': pide la declaración responsable de esta temporada y regístrala cuando vuelva firmada. La anterior queda como historial.'
+    : decl ? 'Registrada en la Matriz.' : 'Envíale la declaración responsable anual: indica qué documentación acompañar. Cuando la devuelva firmada, regístrala y la Matriz se rellena de una vez.',
     [['📄 Generar declaración', 'gen-decl']].concat(W ? [['📥 Registrar la recibida', 'reg-decl']] : []));
   // 4 · Verificación: lo declarado cuya única prueba es la declaración (segPorAcreditar), solicitud y registro de lo recibido
   const pa = decl ? segPorAcreditar(mat) : [], sol = pa.filter(segSolicitada), sin = pa.length - sol.length;
@@ -7091,7 +7095,16 @@ function pintarDiag() {
 (function () {
   if (!/[?&]diag=/.test(location.search)) {
     const per = $('#perfiles');
-    if (per && !$('#diag-enlace')) per.insertAdjacentHTML('afterend', `<p id="diag-enlace" style="text-align:center;margin:14px 0 0"><a href="${esc(location.pathname)}?diag=1">🧭 ¿Vuestro club cumple? Autodiagnóstico gratuito (5 min)</a></p>`);
+    if (per && !$('#diag-enlace')) {
+      if (!$('#diag-enl-css')) { const st = document.createElement('style'); st.id = 'diag-enl-css';
+        st.textContent = '#diag-enlace{display:flex;align-items:center;gap:14px;margin:16px 0 0;padding:14px 16px;border-radius:14px;text-decoration:none;color:#fff;background:linear-gradient(120deg,#12406e 0%,#0d818f 60%,#2fa37f 100%);box-shadow:0 4px 14px rgba(13,60,90,.22);transition:transform .15s,box-shadow .15s}' +
+          '#diag-enlace:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(13,60,90,.3)}#diag-enlace:focus-visible{outline:3px solid #f2c94c;outline-offset:2px}' +
+          '#diag-enlace .de-ico{flex:none;width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.18);display:grid;place-items:center;font-size:22px}' +
+          '#diag-enlace .de-txt{flex:1;min-width:0;text-align:left;line-height:1.3}#diag-enlace .de-txt b{display:block;font-size:15px}#diag-enlace .de-txt span{font-size:12.5px;opacity:.9}' +
+          '#diag-enlace .de-cta{flex:none;width:30px;height:30px;border-radius:50%;background:#fff;color:#0b3057;font-weight:700;font-size:16px;display:grid;place-items:center}';
+        document.head.appendChild(st); }
+      per.insertAdjacentHTML('afterend', `<a id="diag-enlace" href="${esc(location.pathname)}?diag=1"><span class="de-ico">🧭</span><span class="de-txt"><b>¿Vuestro club cumple?</b><span>Autodiagnóstico gratuito y anónimo · 5 min</span></span><span class="de-cta" aria-hidden="true">→</span></a>`);
+    }
     return;
   }
   pintarDiag();
@@ -7150,7 +7163,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v99';
+const ES_VERSION = 'v101';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -7168,6 +7181,48 @@ async function pintarVersion() {
     st.textContent = '#es-version{font-size:.7rem;color:var(--muted);margin:-6px 0 8px 2px;letter-spacing:.02em}body.con-gestor #es-version{color:rgba(255,255,255,.75)}#es-version-login{font-size:.72rem;color:var(--muted);text-align:center;margin:14px 0 0}';
     document.head.appendChild(st); }
 })();
+// v100: 🔄 renovación anual de la temporada (club, entidad con acceso propio y actividades municipales) y declaración de la temporada en el seguimiento
+async function pintarTemporada() {
+  const v = $('#view-panel'); if (!v) return;
+  const muni = !state.club;
+  if (muni && !can('escribir')) return;
+  const prop = muni ? (state.entidades || []).find(e => e.propia === 'SI') : null;
+  if (muni && !prop) return;
+  let st; try { st = await API.call('estadoTemporada', muni ? { entidad_id: prop.id } : {}); } catch (e) { return; }
+  let card = $('#temporada-card');
+  if (!st || !st.pendiente) { if (card) card.remove(); return; }
+  if (!card) { card = document.createElement('div'); card.id = 'temporada-card'; card.className = 'card'; const ref = $('#panel-hero') || v.querySelector('header'); ref.after(card); }
+  card.innerHTML = `<h3>🔄 Nueva temporada ${esc(st.temporada)}: renovad lo que depende de las personas</h3>
+    <p>${muni ? 'En las actividades municipales' : 'En el club'} entra y sale personal y llegan familias y menores nuevos. Al iniciar la temporada, estos requisitos, acreditados la temporada pasada, pasan a <b>Parcial</b> para renovarlos:</p>
+    <ul class="temp-lista">${st.reabrir.map(x => `<li><b>${esc(x.codigo)}</b> ${esc(x.requisito)} · <span class="muted">${esc(x.motivo)}</span></li>`).join('')}</ul>
+    <p class="nota">No se borra nada: las evidencias de la temporada anterior quedan como historial. El resto (declaración, protocolo, código, riesgos…) sigue con sus fechas de revisión. Si este año cambian las actividades (categorías nuevas, viajes, campus), revisad también el análisis de riesgos (C1 y C2).</p>
+    ${can('escribir') || can('escribir_propia') ? '<div class="ia-acciones"><button type="button" class="btn" id="temp-iniciar">🔄 Iniciar la temporada ' + esc(st.temporada) + '</button></div>' : ''}`;
+  const b = $('#temp-iniciar');
+  if (b) b.onclick = async () => {
+    if (!confirm('¿Iniciar la temporada ' + st.temporada + '?\n\n' + st.reabrir.length + ' requisito(s) pasarán a «Parcial» para renovarlos: ' + st.reabrir.map(x => x.codigo).join(', ') + '.\nNo se borra nada y queda constancia en Documentos.')) return;
+    const r = await run(() => API.call('iniciarTemporada', muni ? { entidad_id: prop.id } : {}));
+    toast('Temporada ' + r.temporada + ' iniciada · ' + r.reabiertos.length + ' requisito(s) por renovar'); show('panel');
+  };
+}
+(function () {
+  const base = loadPanel;
+  loadPanel = async function () { await base.apply(this, arguments); try { await pintarTemporada(); } catch (e) {} };
+  if (!$('#temp-estilo')) { const st = document.createElement('style'); st.id = 'temp-estilo';
+    st.textContent = '#temporada-card{border-left:4px solid var(--warn)}#temporada-card .temp-lista{margin:6px 0 8px;padding-left:20px;line-height:1.6}'; document.head.appendChild(st); }
+})();
+// Seguimiento de clubes (Mis clubes): estado de la temporada
+(function () {
+  const base = segClubAbrir;
+  segClubAbrir = async function (c) {
+    await base.apply(this, arguments);
+    const dlg = $('#seg-dlg'), cu = dlg && dlg.querySelector('.segc-datos'); if (!cu || cu.querySelector('.segc-temp')) return;
+    // el dato llega en las recomendaciones del servidor; aquí solo se marca de forma visible
+    const recs = [...dlg.querySelectorAll('.rec-lista li .t')].map(x => x.textContent);
+    const pend = recs.find(t => /^No ha iniciado la temporada/.test(t));
+    cu.insertAdjacentHTML('beforeend', `<div class="segc-temp"><small>Temporada ${esc(coordTemporada())}</small><b${pend ? ' style="color:var(--bad)"' : ''}>${pend ? 'Sin iniciar' : 'Al día'}</b></div>`);
+  };
+})();
+GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Qué pasa al empezar una temporada nueva?', '<p>La temporada empieza el <b>1 de agosto</b>. Desde ese día, si hay requisitos que dependen de las personas y se acreditaron la temporada anterior, el Panel muestra <b>🔄 Nueva temporada</b>. Al pulsar <b>Iniciar la temporada</b>, pasan a «Parcial» con la acción de renovarlos:</p><ul><li><b>K1 · K2</b>: relación del personal y certificados negativos de todos los de esta temporada.</li><li><b>D2</b>: aceptación del código por los agentes nuevos.</li><li><b>E1 · F1</b>: autorizaciones de las familias de esta temporada.</li><li><b>G2 · I2</b>: protocolo y canal a las familias nuevas.</li><li><b>J1</b>: formación de las incorporaciones.</li></ul><p>No se borra nada: las evidencias anteriores quedan como historial y en Documentos queda «Inicio de la temporada». El resto sigue con sus fechas de revisión. En las entidades que sigue el ayuntamiento, la renovación es la nueva declaración responsable: el seguimiento la pide al cambiar de temporada.</p>', '', 'panel']); });
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
