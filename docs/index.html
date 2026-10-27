@@ -859,6 +859,9 @@ function formPassword(obligatorio) {
 }
 
 (async () => {
+  // v93: acceso del gestor (servicio Gestionado): la sesión llega en el fragmento #gt=… y no pasa por el servidor web
+  try { const h = new URLSearchParams(location.hash.slice(1)); if (h.get('gt')) { ssSet('es_token', h.get('gt')); if (h.get('api')) { ssSet('es_api', h.get('api')); API.base = h.get('api'); } if (h.get('inst')) { ssSet('es_inst', h.get('inst')); state.inst = h.get('inst'); } history.replaceState(null, '', location.pathname + location.search); } } catch (e) {}
+  if (/[?&]diag=/.test(location.search)) return;
   const t = ssGet('es_token');
   if (!t || COD_ENC) return;
   API.token = t;
@@ -1634,7 +1637,7 @@ table{border-collapse:collapse;width:100%;margin:6px 0 10px;font-size:9.5pt}thea
 th{background:#0b3057;color:#fff;text-align:left;font-weight:600}th,td{border:1px solid #b7c6cc;padding:4px 6px;vertical-align:top}
 tr{page-break-inside:avoid}tr:nth-child(even) td{background:#f3f7f8}
 td.k{width:34%;background:#eef4f6 !important;font-weight:600;color:#0b3057}
-.kpis{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 10px}.kpi{border:1px solid #cfd8dc;border-top:3px solid #0d818f;border-radius:6px;padding:6px 10px;min-width:110px}
+.kpis{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 10px}.kpi{border:1px solid #cfd8dc;border-top:3px solid #0d818f;border-radius:6px;padding:6px 10px;min-width:110px;page-break-inside:avoid;break-inside:avoid}
 .kpi span{display:block;font-size:8.5pt;color:#4f5d65}.kpi b{font-size:15pt;color:#0b3057}
 .st{font-weight:700}.ok{color:#2e7d4f}.warn{color:#b7791f}.bad{color:#b83232}.muted{color:#6b7a82}
 .barra{height:8px;background:#e3eaed;border-radius:4px;overflow:hidden;min-width:60px}.barra i{display:block;height:100%}
@@ -6880,6 +6883,221 @@ function limpiarValoracion(t) {
     document.head.appendChild(st); }
 })();
 GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Qué son los «Puntos de atención» de una encuesta?', '<p>En los resultados de cada encuesta, la app destaca sola, sin IA, las preguntas con un <b>20 % o más de «No»</b>, de mayor a menor. Salen también en el informe PDF de la encuesta, en las «Áreas prioritarias» de la memoria y en los prompts de mejora y de valoración, para que las propuestas empiecen por lo más importante.</p><p>Con menos de 10 respuestas la app avisa de que la muestra es pequeña: los resultados son orientativos.</p>', '', 'encuestas']); });
+// v93: línea de consultoría · servicio por club y vista consultor (maestra), acceso del gestor (Gestionado), kit de bienvenida y autodiagnóstico gratuito
+const SERVICIOS = ['Autogestión', 'Acompañado', 'Gestionado'];
+const prestadorTxt = () => state.inst ? 'el Ayuntamiento' : 'Escuela&Deporte';
+const DIAG_CONTACTO = 'escuelaydeporte.sevilla@gmail.com';
+
+// ---- Sesión del gestor dentro de un club: banda fija y sin cambio de contraseña ----
+(function () {
+  const base = arrancar;
+  arrancar = async function () {
+    await base.apply(this, arguments);
+    if (!state.me || !state.me.gestor) return;
+    const cp = $('#cambiar-pass'); if (cp) cp.remove();
+    const ni = $('nav button[data-view="incidencias"]'); if (ni) ni.remove();
+    if ($('#gestor-banda')) return;
+    const b = document.createElement('div'); b.id = 'gestor-banda';
+    b.innerHTML = `<span>🔑 Estás en el espacio de <b>${esc((state.cfg && state.cfg.organismo) || 'el club')}</b> como gestor (servicio Gestionado). Todo lo que hagas queda registrado y el club lo ve en «Mis datos».</span><button type="button" class="btn" id="gestor-salir">Salir del club</button>`;
+    document.body.prepend(b); document.body.classList.add('con-gestor');
+    $('#gestor-salir').onclick = async () => { try { await API.call('logout'); } catch (e) {} ssSet('es_token', null); try { window.close(); } catch (e) {} location.reload(); };
+  };
+})();
+
+// ---- MI CLUB · Mis datos: autorizar o retirar el acceso del gestor ----
+(function () {
+  if (typeof loadMisDatos !== 'function') return;
+  const base = loadMisDatos;
+  loadMisDatos = async function () {
+    await base.apply(this, arguments);
+    const v = $('#view-misdatos'); if (!v || !state.club || (state.me && state.me.rol !== 'club')) return;
+    let st; try { st = await API.call('estadoGestor'); } catch (e) { return; }
+    let card = $('#gestor-card');
+    if (!card) { card = document.createElement('div'); card.className = 'card'; card.id = 'gestor-card'; (v.querySelector('.grid2') || v).appendChild(card); }
+    const quien = prestadorTxt();
+    card.innerHTML = `<h3>🔑 Acceso del gestor (servicio Gestionado)</h3>
+      <p>Si ${quien} os lleva el sistema de protección (servicio <b>Gestionado</b>), necesita entrar en vuestro espacio para trabajar en él. Solo podrá hacerlo si lo autorizáis aquí.</p>
+      <ul class="nota" style="margin:0 0 8px;padding-left:18px"><li>Entra con su propia sesión: no conoce vuestra contraseña ni puede cambiarla.</li><li>No ve el registro de incidencias.</li><li>Cada entrada queda en el registro de abajo. Podéis retirar la autorización cuando queráis.</li></ul>
+      <p><b>Estado:</b> ${st.acceso ? '<span class="st ok">Autorizado</span>' + (st.fecha ? ' desde el ' + esc(fCorta(st.fecha)) : '') : '<span class="st muted">No autorizado</span>'}</p>
+      ${state.me.gestor ? '' : `<button type="button" class="btn ${st.acceso ? 'ghost' : ''}" id="gestor-toggle">${st.acceso ? 'Retirar la autorización' : 'Autorizar el acceso del gestor'}</button>`}`;
+    const t = $('#gestor-toggle');
+    if (t) t.onclick = async () => {
+      if (!st.acceso && !confirm('¿Autorizar a ' + quien + ' a entrar en el espacio del club para gestionarlo?\n\nCada entrada quedará registrada y podréis retirar la autorización cuando queráis.')) return;
+      await run(() => API.call('autorizarGestor', { acceso: st.acceso ? 'NO' : 'SI' }));
+      toast(st.acceso ? 'Autorización retirada' : 'Acceso autorizado'); loadMisDatos();
+    };
+  };
+})();
+
+// ---- Maestra · Mis clubes: servicio de cada club (vista consultor), filtro y entrada del gestor ----
+(function () {
+  if (typeof loadClubes !== 'function') return;
+  const base = loadClubes;
+  let filtro = '';
+  loadClubes = async function () {
+    await base.apply(this, arguments);
+    if (!esMaestra()) return;
+    const rows = state.clubes || [];
+    $$('#tabla-clubes [data-club]').forEach(b => {
+      const c = rows.find(x => x.id === b.dataset.club), tr = b.closest('tr'); if (!c || tr.querySelector('.chip-serv')) return;
+      const nb = tr.cells[0].querySelector('b');
+      nb.insertAdjacentHTML('afterend', ` <span class="chip chip-serv${c.servicio ? '' : ' chip-vacio'}">${esc(c.servicio || 'Sin servicio')}</span>${c.acceso_gestor === 'SI' ? ' <span class="chip" title="El club ha autorizado el acceso del gestor">🔑</span>' : ''}`);
+      tr.dataset.serv = c.servicio || '';
+    });
+    const tabla = $('#tabla-clubes'); if (!tabla) return;
+    let bar = $('#clubes-filtro');
+    if (!bar) { bar = document.createElement('div'); bar.id = 'clubes-filtro'; bar.className = 'filtros-estado'; tabla.parentElement.insertBefore(bar, tabla); }
+    const n = s => rows.filter(c => c.estado === 'activo' && (s === null || (c.servicio || '') === s)).length;
+    bar.innerHTML = [['', 'Todos', null]].concat(SERVICIOS.map(s => [s, s, s])).concat([['-', 'Sin servicio', '']])
+      .map(([k, l, s]) => `<button type="button" class="chip-filtro${filtro === k ? ' activo' : ''}" data-fs="${esc(k)}">${esc(l)} <small>${n(s)}</small></button>`).join('');
+    const aplicar = () => $$('#tabla-clubes tbody tr').forEach(tr => {
+      if (tr.classList.contains('rec-fila')) { const prev = tr.previousElementSibling; tr.hidden = prev ? prev.hidden : false; return; }
+      tr.hidden = !!filtro && (filtro === '-' ? (tr.dataset.serv || '') !== '' : tr.dataset.serv !== filtro);
+    });
+    bar.querySelectorAll('[data-fs]').forEach(b => b.onclick = () => { filtro = b.dataset.fs; bar.querySelectorAll('.chip-filtro').forEach(x => x.classList.toggle('activo', x === b)); aplicar(); });
+    aplicar();
+  };
+  const baseS = segClubAbrir;
+  segClubAbrir = async function (c) {
+    await baseS.apply(this, arguments);
+    if (!esMaestra()) return;
+    const dlg = $('#seg-dlg'), cuerpo = dlg && dlg.querySelector('.seg-cuerpo'); if (!cuerpo || !dlg.open || cuerpo.querySelector('.segc-serv')) return;
+    const cc = (state.clubes || []).find(x => x.id === c.id) || c;
+    cuerpo.insertAdjacentHTML('afterbegin', `<div class="segc-serv"><label>Servicio contratado <select id="segc-servicio"><option value="">Sin servicio</option>${SERVICIOS.map(s => `<option${cc.servicio === s ? ' selected' : ''}>${s}</option>`).join('')}</select></label>
+      <span>${cc.acceso_gestor === 'SI' ? `🔑 Acceso del gestor autorizado${cc.acceso_gestor_fecha ? ' el ' + esc(fCorta(cc.acceso_gestor_fecha)) : ''} <button type="button" class="btn" id="segc-entrar">🔑 Entrar en el club</button>` : '<small class="muted">El club no ha autorizado el acceso del gestor (lo hace en «Mis datos»).</small>'}</span></div>`);
+    $('#segc-servicio').onchange = async e => { await run(() => API.call('guardarServicioClub', { id: c.id, servicio: e.target.value })); cc.servicio = e.target.value; toast('Servicio guardado'); };
+    const en = $('#segc-entrar');
+    if (en) en.onclick = async () => {
+      const w = window.open('about:blank', '_blank');
+      let r; try { r = await run(() => API.call('entrarComoClub', { id: c.id })); } catch (er) { if (w) w.close(); return; }
+      const url = location.origin + location.pathname + '#gt=' + encodeURIComponent(r.token) + (API.base && API.base !== API_URL ? '&api=' + encodeURIComponent(API.base) : '') + (state.inst ? '&inst=' + encodeURIComponent(state.inst) : '');
+      if (w) w.location.href = url; else location.href = url;
+    };
+  };
+})();
+
+// ---- Kit de bienvenida (PDF): claves (si se acaban de generar), primeros pasos, cómo os acompañamos y ayuda ----
+function htmlKitBienvenida(c, usuario, clave) {
+  const web = location.origin + location.pathname + '?perfil=club';
+  const u = usuario ? (state.inst ? usuario + '@' + state.inst : usuario) : '';
+  const serv = { 'Autogestión': 'Usáis la aplicación por vuestra cuenta, guiados por el tutorial del Panel. ' + prestadorTxt() + ' resuelve dudas de uso.',
+    'Acompañado': prestadorTxt() + ' revisa vuestro avance, os envía recomendaciones y os orienta en cada paso.',
+    'Gestionado': prestadorTxt() + ' os lleva el sistema de protección. Para ello autorizaréis su acceso en «Mis datos»; cada entrada queda registrada.' }[c.servicio] || '';
+  const cuerpo = `<h2>1. Vuestro acceso</h2><table>${fila('Web', esc(web))}${fila('Perfil', 'MI CLUB')}${fila('Usuario', esc(u || c.usuario || ''))}${fila('Contraseña', clave ? '<b>' + esc(clave) + '</b> (temporal: se cambia en el primer acceso)' : 'Os la enviamos por separado')}</table>
+    ${clave ? '<p class="nota">Este documento contiene la contraseña: entrégalo solo al Delegado/a de Protección, en mano o por un canal seguro.</p>' : ''}
+    <h2>2. Primeros pasos</h2><p>Al entrar, el Panel os ofrece un <b>tutorial guiado</b> con estos pasos. Cada uno se marca solo cuando está hecho.</p><ol>${TUT_PASOS.map(p => `<li><b>${esc(p.t)}</b></li>`).join('')}</ol>
+    <h2>3. Cómo os acompañamos</h2><p>${serv ? '<b>Servicio ' + esc(c.servicio) + '.</b> ' + esc(serv) : 'Tenéis las <b>recomendaciones automáticas</b> del Panel, que os dicen qué falta y en qué orden, y la <b>Guía de uso</b> con preguntas frecuentes.'}</p>
+    <h2>4. Si ocurre algo</h2><ul><li>Si un menor está en peligro: <b>112</b>.</li><li>Escuchad sin interrogar, no confrontéis a nadie y comunicadlo al Delegado/a de Protección.</li><li>Fundación ANAR: <b>900 20 20 10</b> · Línea de ayuda a la infancia: <b>116 111</b>.</li></ul>
+    <h2>5. Privacidad</h2><p>Vuestros datos están en una hoja propia, separada de la de cualquier otra entidad. ${esc(prestadorTxt())} solo ve indicadores; cualquier consulta de detalle queda registrada en «Mis datos». No anotéis nunca datos de menores ni detalles de casos fuera del registro de incidencias.</p>`;
+  return plantillaInforme('Bienvenida a EntornoSeguro', c.nombre || '', cuerpo, false, 'EntornoSeguro · Kit de bienvenida del club');
+}
+(function () {
+  if (typeof mostrarClaves === 'function') {
+    const base = mostrarClaves;
+    mostrarClaves = function (nombre, usuario, clave) {
+      base.apply(this, arguments);
+      const acc = $('#modal-form .actions');
+      if (acc && !$('#kit-bienvenida')) {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost'; b.id = 'kit-bienvenida'; b.textContent = '📄 Kit de bienvenida (PDF)';
+        b.onclick = () => abrirInforme(htmlKitBienvenida(Object.assign({ nombre }, (state.clubes || []).find(x => x.usuario === usuario) || {}), usuario, clave));
+        acc.insertBefore(b, acc.firstChild);
+      }
+    };
+  }
+  if (typeof gestionarClub === 'function') {
+    const base = gestionarClub;
+    gestionarClub = function (c) {
+      base.apply(this, arguments);
+      const cont = $('#modal-form .acciones-club');
+      if (cont && !cont.querySelector('[data-acc="kit"]')) {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost'; b.dataset.acc = 'kit'; b.textContent = '📄 Kit de bienvenida (sin contraseña)';
+        b.onclick = ev => { ev.stopPropagation(); abrirInforme(htmlKitBienvenida(c, c.usuario, null)); };
+        cont.insertBefore(b, cont.children[1] || null);
+      }
+    };
+  }
+})();
+
+// ---- Autodiagnóstico gratuito (página pública ?diag=1): 13 preguntas, resultado y PDF, sin guardar nada ----
+const DIAG_PREG = [
+  ['A', '¿El órgano de gobierno ha aprobado una declaración de compromiso con la protección de menores?', 'Aprobar en Junta una declaración institucional de compromiso (requisito A1).'],
+  ['A', '¿El club ha aceptado formalmente el Protocolo Marco andaluz (Orden de 18 de noviembre de 2024)?', 'Firmar el Anexo I y presentarlo en el Registro de la Junta (A2).'],
+  ['B', '¿Tenéis un Delegado/a de Protección designado y con formación específica?', 'Designar Delegado/a por acuerdo de la Junta y acreditar su formación (B1 y B2).'],
+  ['C', '¿Habéis analizado los riesgos de vuestras actividades (vestuarios, viajes, redes…) y aplicáis medidas?', 'Hacer el análisis de riesgos y aprobar las medidas preventivas (C1 y C2).'],
+  ['D', '¿Tenéis un código de conducta firmado por entrenadores, monitores y voluntariado?', 'Aprobar el código de conducta y recoger la aceptación firmada de cada agente (D1 y D2).'],
+  ['K', '¿Todo el personal en contacto con menores ha entregado el certificado negativo de delitos sexuales?', 'Pedir y custodiar el certificado negativo de cada persona (K2, art. 57 LOPIVI).'],
+  ['E', '¿Pedís autorización a las familias para usar imágenes y tenéis normas para redes sociales?', 'Recoger autorizaciones de imagen y fijar criterios de publicación (E1 y E2).'],
+  ['F', '¿Tenéis autorizaciones y normas para desplazamientos y viajes?', 'Autorizaciones familiares y medidas en viajes y pernoctas (F1 y F2).'],
+  ['G', '¿Tenéis un protocolo de protección propio, aprobado y conocido por familias y personal?', 'Aprobar el protocolo de la entidad y difundirlo (G1 y G2).'],
+  ['H', '¿Sabe vuestro personal qué hacer y a quién avisar ante una sospecha?', 'Procedimiento de actuación y flujograma difundidos (H1 y H2).'],
+  ['I', '¿Hay un canal para que menores y familias comuniquen preocupaciones, y lo conocen?', 'Habilitar el canal, informar a menores y familias (I1 e I2).'],
+  ['J', '¿Habéis formado a vuestros agentes deportivos en protección de menores?', 'Plan de formación y registro de quién se ha formado (J1).'],
+  ['P', '¿Preguntáis a los menores, de forma anónima, cómo se sienten en el club?', 'Hacer una encuesta anónima de percepción de seguridad cada temporada.']
+];
+function diagResultado(resp) {
+  const v = { si: 1, parte: 0.5, no: 0 };
+  const pts = DIAG_PREG.reduce((s, q, i) => s + (v[resp[i]] || 0), 0), pct = Math.round(pts * 100 / DIAG_PREG.length);
+  const nivel = pct >= 80 ? ['Avanzado', 'Tenéis casi todo: toca mantenerlo vivo y acreditarlo.'] : pct >= 40 ? ['En marcha', 'Hay una buena base, pero faltan piezas importantes.'] : ['Inicial', 'Conviene empezar cuanto antes: la LOPIVI ya es obligatoria.'];
+  const falta = DIAG_PREG.map((q, i) => ({ q, r: resp[i] })).filter(x => x.r !== 'si').sort((a, b) => (a.r === 'no' ? 0 : 1) - (b.r === 'no' ? 0 : 1));
+  return { pct, nivel, falta };
+}
+function htmlDiagInforme(res) {
+  const lis = res.falta.map(x => `<li><b>${x.r === 'no' ? 'Pendiente' : 'En parte'}</b> · ${esc(x.q[2])}</li>`).join('');
+  return plantillaInforme('Autodiagnóstico de protección de menores', 'Resultado orientativo', `<div class="kpis"><div class="kpi"><span>Grado de implantación</span><b>${res.pct}%</b></div><div class="kpi"><span>Nivel</span><b>${esc(res.nivel[0])}</b></div></div>
+    <p>${esc(res.nivel[1])}</p><h2>Qué os falta, por orden</h2>${lis ? '<ul>' + lis + '</ul>' : '<p>Nada destacable según vuestras respuestas.</p>'}
+    <h2>Siguiente paso</h2><p>EntornoSeguro os guía paso a paso en cada uno de estos puntos, con plantillas, recordatorios y el informe de implantación. Información: <b>${esc(DIAG_CONTACTO)}</b>.</p>
+    <p class="nota">Resultado orientativo basado en vuestras respuestas. No es una auditoría ni sustituye la revisión de la documentación. Referencias: LO 8/2021 (LOPIVI) y Protocolo Marco andaluz (Orden de 18/11/2024).</p>`,
+    false, 'EntornoSeguro · Escuela&Deporte · Autodiagnóstico gratuito. No se guarda ningún dato.');
+}
+function pintarDiag() {
+  $('#login') && $('#login').classList.add('hidden'); $('#app') && $('#app').classList.add('hidden');
+  document.title = 'Autodiagnóstico · EntornoSeguro';
+  let s = $('#diag'); if (!s) { s = document.createElement('section'); s.id = 'diag'; document.body.appendChild(s); }
+  s.innerHTML = `<div class="diag-caja"><h1>¿Vuestro club cumple con la protección de menores?</h1>
+    <p>Autodiagnóstico gratuito y anónimo: 13 preguntas, unos 5 minutos. No pedimos nombres y <b>no se guarda nada</b>.</p>
+    <form id="diag-form">${DIAG_PREG.map((q, i) => `<fieldset class="diag-p"><legend>${i + 1}. ${esc(q[1])}</legend>${[['si', 'Sí'], ['parte', 'En parte'], ['no', 'No']].map(([v, l]) => `<label><input type="radio" name="p${i}" value="${v}" required> ${l}</label>`).join('')}</fieldset>`).join('')}
+    <button class="btn" type="submit">Ver resultado</button></form><div id="diag-res"></div>
+    <p class="nota" style="margin-top:16px">EntornoSeguro · Escuela&amp;Deporte · Referencias: LO 8/2021 (LOPIVI) y Protocolo Marco andaluz (Orden de 18/11/2024).</p></div>`;
+  $('#diag-form').onsubmit = ev => {
+    ev.preventDefault();
+    const fd = new FormData(ev.target), resp = DIAG_PREG.map((q, i) => fd.get('p' + i));
+    const res = diagResultado(resp);
+    const resumen = 'Hola:\n\nHe hecho el autodiagnóstico de EntornoSeguro: ' + res.pct + ' % (' + res.nivel[0] + ').\nMe gustaría información para nuestro club.\n\nNombre del club:\nPersona de contacto:\nTeléfono:\n';
+    $('#diag-res').innerHTML = `<div class="diag-resultado"><div class="diag-pct">${res.pct}%</div><div><h2>Nivel: ${esc(res.nivel[0])}</h2><p>${esc(res.nivel[1])}</p></div></div>
+      ${res.falta.length ? `<h3>Qué os falta, por orden</h3><ul>${res.falta.map(x => `<li><b>${x.r === 'no' ? 'Pendiente' : 'En parte'}</b> · ${esc(x.q[2])}</li>`).join('')}</ul>` : '<p>¡Enhorabuena! Según vuestras respuestas lo tenéis todo. El reto ahora es mantenerlo y poder acreditarlo.</p>'}
+      <div class="ia-acciones"><button type="button" class="btn" id="diag-pdf">📄 Descargar resultado (PDF)</button><a class="btn ghost" href="mailto:${esc(DIAG_CONTACTO)}?subject=${encodeURIComponent('Autodiagnóstico EntornoSeguro')}&body=${encodeURIComponent(resumen)}">✉️ Quiero información</a></div>`;
+    $('#diag-pdf').onclick = () => abrirInforme(htmlDiagInforme(res));
+    $('#diag-res').scrollIntoView({ behavior: 'smooth' });
+  };
+}
+(function () {
+  if (!/[?&]diag=/.test(location.search)) {
+    const per = $('#perfiles');
+    if (per && !$('#diag-enlace')) per.insertAdjacentHTML('afterend', `<p id="diag-enlace" style="text-align:center;margin:14px 0 0"><a href="${esc(location.pathname)}?diag=1">🧭 ¿Vuestro club cumple? Autodiagnóstico gratuito (5 min)</a></p>`);
+    return;
+  }
+  pintarDiag();
+})();
+(function () {
+  if ($('#v93-estilo')) return;
+  const st = document.createElement('style'); st.id = 'v93-estilo';
+  st.textContent = '#gestor-banda{position:sticky;top:0;z-index:70;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;padding:8px 12px;background:#7a3e00;color:#fff}#gestor-banda .btn{background:#fff;color:#7a3e00;border-color:#fff;min-height:36px}' +
+    '.chip-serv{background:color-mix(in srgb,var(--seg,#0f766e) 14%,transparent);color:var(--seg,#0f766e)}.chip-vacio{background:var(--bg);color:var(--muted)}' +
+    '#clubes-filtro{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}#clubes-filtro .chip-filtro{border:1px solid var(--line);background:var(--card,#fff);border-radius:99px;padding:6px 12px;cursor:pointer;min-height:36px}#clubes-filtro .chip-filtro.activo{background:var(--brand,#0b3057);color:#fff;border-color:var(--brand,#0b3057)}' +
+    '.segc-serv{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:space-between;border:1px dashed var(--line);border-radius:10px;padding:8px 10px;margin:0 0 10px}.segc-serv select{margin-left:6px;min-height:36px}' +
+    '#diag{min-height:100vh;background:var(--bg,#f3f7f8);padding:24px 16px}.diag-caja{max-width:760px;margin:0 auto;background:var(--card,#fff);border-radius:16px;padding:22px;box-shadow:0 2px 12px rgba(0,0,0,.06)}.diag-caja h1{font-size:1.5rem;color:var(--brand,#0b3057);margin:0 0 6px}' +
+    '.diag-p{border:1px solid var(--line,#dde);border-radius:10px;margin:0 0 10px;padding:10px 12px}.diag-p legend{font-weight:600;padding:0 4px}.diag-p label{display:inline-flex;gap:6px;align-items:center;margin:6px 16px 0 0;min-height:36px}' +
+    '.diag-resultado{display:flex;gap:16px;align-items:center;margin:18px 0 8px}.diag-pct{font-size:2.4rem;font-weight:800;color:#fff;background:var(--seg,#0f766e);border-radius:16px;padding:14px 18px}';
+  document.head.appendChild(st);
+})();
+GUIA.forEach(t => {
+  if (t[1] === '💼 Modelo comercial y versiones (solo versión maestra)') {
+    t[2].push(['¿Cómo organizo los clubes por servicio (vista consultor)?', '<p>En <b>Mis clubes</b>, cada club muestra su servicio (Autogestión, Acompañado o Gestionado) y hay filtros arriba. El servicio se asigna en <b>🧭 Seguimiento</b> del club → «Servicio contratado». La 🔑 indica que el club ha autorizado el acceso del gestor.</p>', 'admin', 'clubes']);
+    t[2].push(['¿Cómo entro en el espacio de un club con servicio Gestionado?', '<ol><li>El club lo autoriza en <b>Mis datos → Acceso del gestor</b>.</li><li>En <b>Mis clubes → 🧭 Seguimiento</b> del club, pulsa <b>🔑 Entrar en el club</b>. Se abre una pestaña nueva con una banda que lo indica.</li></ol><p>Entras con tu propia sesión (2 horas): no conoces su contraseña ni puedes cambiarla, no ves el registro de incidencias y cada entrada y acción queda registrada en «Mis datos» del club. El club puede retirar la autorización cuando quiera.</p>', 'admin', 'clubes']);
+    t[2].push(['¿Qué es el autodiagnóstico gratuito?', '<p>Una página pública, sin acceso, con 13 preguntas sobre el Protocolo Marco: <b>' + esc(location.origin + location.pathname) + '?diag=1</b>. Da un porcentaje, un nivel (Inicial, En marcha, Avanzado) y lo que falta por orden, con PDF y botón de contacto. No guarda ningún dato. También está enlazada en la portada.</p>', 'admin', 'clubes']);
+  }
+  if (t[1] === 'Entidades y coordinación con clubes') t[2].push(['¿Qué es el kit de bienvenida de un club?', '<p>Un PDF para entregar al Delegado/a del club: acceso (web, perfil, usuario y, si se acaba de generar, la contraseña temporal), los 13 primeros pasos del tutorial, cómo le acompañamos según su servicio, qué hacer si ocurre algo y privacidad. Sale al crear el club o generar una contraseña nueva (<b>📄 Kit de bienvenida</b>) y, sin contraseña, desde <b>Gestionar</b>.</p>', 'admin', 'clubes']);
+});
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
