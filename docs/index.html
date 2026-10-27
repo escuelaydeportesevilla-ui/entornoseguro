@@ -2475,7 +2475,7 @@ async function loadEncuestas() {
   if (!ent) { $('#tabla-encuestas').innerHTML = '<tr><td class="empty">Registra primero una entidad que trabaje con menores.</td></tr>'; return; }
   const rows = state.encuestas = await run(() => API.call('listarEncuestas', { entidad_id: ent }));
   $('#tabla-encuestas').innerHTML = `<thead><tr><th>Encuesta</th><th>Edades</th><th>Estado</th><th>Respuestas</th><th>Enlace</th><th></th></tr></thead><tbody>` +
-    (rows.map(e => `<tr><td><b>${esc(e.titulo)}</b><br><small>${[esc(e.grupo), e.fecha_inicio || e.fecha_fin ? esc(e.fecha_inicio || '…') + ' a ' + esc(e.fecha_fin || '…') : ''].filter(Boolean).join(' · ')}</small></td>
+    (rows.map(e => `<tr><td><b>${esc(e.titulo)}</b><br><small>${[esc(e.grupo), esc(encPeriodo(e))].filter(Boolean).join(' · ')}</small></td>
       <td>${esc((FRANJAS.find(f => f[0] === e.franja) || ['', e.franja])[1])}</td>
       <td><span class="st ${e.estado === 'abierta' ? 'ok' : 'muted'}">${e.estado === 'abierta' ? 'Abierta' : 'Cerrada'}</span></td><td>${e.respuestas}</td>
       <td><button class="link" data-enl="${esc(e.id)}">Copiar enlace</button> <button class="link" data-cartel="${esc(e.id)}">Cartel</button></td>
@@ -2515,7 +2515,7 @@ async function verResultados(id) {
   if (r.oculto) { cont.innerHTML = `<div class="card"><h3>${esc(e.titulo)}</h3><p>Hay <b>${r.n}</b> respuesta(s). Los resultados se muestran a partir de ${r.minimo} para proteger el anonimato.</p></div>`; cont.scrollIntoView({ behavior: 'smooth' }); return; }
   const P = PREGUNTAS_ENC[e.franja] || [];
   cont.innerHTML = `<div class="card"><h3>Resultados · ${esc(e.titulo)} (${r.n} respuestas)</h3>
-    <p class="leyenda">🟩 Sí · 🟨 A veces · 🟥 No</p>
+    <p class="leyenda"><span class="ley ley-si"></span> Sí · <span class="ley ley-av"></span> A veces · <span class="ley ley-no"></span> No</p>${encAtencionHtml(r, P)}
     ${r.preguntas.map((o, i) => `<div class="res-preg"><p>${i + 1}. ${esc(P[i])}</p>${barraTri(o)}</div>`).join('')}
     ${r.comentarios.length ? `<h3>Comentarios (${r.comentarios.length})</h3><ul>${r.comentarios.map(c => `<li>${esc(c)}</li>`).join('')}</ul>` : ''}
     <div class="ia-acciones"><button class="btn" type="button" id="res-pdf">Informe PDF</button><button class="btn ghost" type="button" id="res-word">Word</button>${can('ia') ? '<button class="btn ghost" type="button" id="res-ia">Propuestas de mejora con IA</button>' : ''}</div>
@@ -2527,7 +2527,9 @@ async function verResultados(id) {
       'TAREA: a partir de los resultados agregados de una encuesta anónima de percepción de seguridad a deportistas ' + ((FRANJAS.find(f => f[0] === e.franja) || ['', e.franja + ' años'])[1]).toLowerCase() + ', propón una valoración breve (máx. 200 palabras) y 5 medidas de mejora concretas para la entidad deportiva, en el marco del Protocolo Marco andaluz. No interpretes los datos como prueba de violencia.',
       'Todos los ítems están redactados en positivo: «Sí» = percepción favorable; «A veces» y «No» = aspecto que conviene reforzar. Relaciona cada medida con los ítems concretos que la motivan (por su número y enunciado).',
       r.n < 10 ? 'Muestra pequeña (' + r.n + ' respuestas): cada respuesta pesa ' + Math.round(100 / r.n) + ' puntos. Trata los resultados como orientativos, sin extrapolar ni dar porcentajes como conclusiones.' : '',
-      'Formato: «VALORACIÓN» en un párrafo; «MEDIDAS DE MEJORA» como lista numerada del 1 al 5, cada medida con una línea «Fundamento:» (norma o apartado; si no hay certeza, indícalo). Termina con «PENDIENTE DE VALIDAR» solo si hace falta.',
+      'Ordena las medidas de mayor a menor prioridad: primero las que responden a los ítems con más «No».',
+      'Formato: «Valoración» en un párrafo; «Medidas de mejora» como lista numerada del 1 al 5, cada medida con una línea «Ítems:» (número y enunciado). Cita el marco normativo una sola vez, en una línea final «Fundamento:» común a todas (sin artículos concretos si no hay certeza). Termina con «Pendiente de validar» solo si hace falta. Subtítulos en minúscula inicial, nunca en MAYÚSCULAS.',
+      encAtencionTxt(r, P),
       'Grupo: ' + (e.grupo || 'sin indicar') + ' · Respuestas: ' + r.n + (r.comentarios.length ? ' · Hay ' + r.comentarios.length + ' comentario(s) libre(s) que no se incluyen aquí por privacidad: léelos en la app.' : ''), 'Resultados por ítem (% Sí / A veces / No):',
       r.preguntas.map((o, i) => { const [a, b, c] = pctTri(o); return `${i + 1}. ${P[i] || 'Ítem ' + (i + 1)}: ${a}% / ${b}% / ${c}%`; }).join('\n')].filter(Boolean).join('\n');
     mostrarPrompt($('#res-ia-out'), prompt, { asunto: 'Mejoras tras encuesta · ' + e.titulo, tipo: 'asistente' });
@@ -2537,12 +2539,13 @@ async function verResultados(id) {
 function htmlResultadosEnc(r) {
   const e = r.encuesta, P = PREGUNTAS_ENC[e.franja] || [];
   let b = '<table>' + fila('Encuesta', esc(e.titulo)) + fila('Grupo', esc(e.grupo) || '—') + fila('Edades', esc((FRANJAS.find(f => f[0] === e.franja) || ['', e.franja])[1])) +
-    fila('Periodo', esc((e.fecha_inicio || '…') + ' a ' + (e.fecha_fin || '…'))) + fila('Respuestas', r.n) + '</table>';
+    fila('Periodo', esc(encPeriodo(e) || '—')) + fila('Respuestas', r.n) + '</table>';
   b += '<h2>Resultados</h2><table><thead><tr><th>Pregunta</th><th>Sí</th><th>A veces</th><th>No</th></tr></thead><tbody>' +
     r.preguntas.map((o, i) => { const [a, bb, c] = pctTri(o); return `<tr><td>${i + 1}. ${esc(P[i])}</td><td class="ok st">${a}%</td><td class="warn st">${bb}%</td><td class="bad st">${c}%</td></tr>`; }).join('') + '</tbody></table>';
+  b += encAtencionHtml(r, P, true);
   if (r.comentarios.length) b += '<h2>Comentarios</h2><ul>' + r.comentarios.map(c => `<li>${esc(c)}</li>`).join('') + '</ul>';
   b += '<div class="nota">Encuesta anónima: no se recogen nombres ni datos identificativos. Los resultados reflejan percepciones y orientan la mejora preventiva; no constituyen valoración de personas.</div>';
-  return plantillaInforme('Resultados de encuesta de percepción de seguridad', e.titulo, b);
+  return plantillaInforme('Resultados de encuesta de percepción de seguridad', e.titulo, b, false, 'EntornoSeguro · ' + esc((state.cfg && state.cfg.organismo) || '') + ' · Resultados de una encuesta anónima de percepción. Orientan la mejora preventiva; no constituyen valoración de personas.');
 }
 function htmlCartelEncuesta(e) {
   const url = enlaceEnc(e.codigo), peq = e.franja === '6-11';
@@ -2666,8 +2669,8 @@ async function htmlMemoria() {
   }
   b += '<h3>Implantación por bloque del Protocolo Marco</h3><table><thead><tr><th>Bloque</th><th colspan="2">' + (d.club ? 'Completo' : '% de entidades con el bloque completo') + '</th></tr></thead><tbody>' +
     d.bloques.map(x => `<tr><td>${esc(x.bloque)}</td><td style="width:90px">${barra(x.pct)}</td><td><b>${d.club ? (x.pct === 100 ? 'Sí' : 'No') : x.pct + '%'}</b></td></tr>`).join('') + '</tbody></table>';
-  b += '<h2>3. Actividad del periodo</h2>';
-  b += '<h3>3.1 Formación</h3>' + kp([['Personas formadas', a.formacion.personas], ['Acciones formativas', a.formacion.acciones], ['Horas de formación', a.formacion.horas]]) + tabObj(a.formacion.por_colectivo, 'Colectivo');
+  b += '<h2>3. Actividad del periodo</h2>' + (d.club ? '' : '<p class="muted">Formación, agentes, riesgos y autorizaciones recogen lo registrado en la app (actividades municipales y entidades con acceso propio). Las entidades seguidas por verificación documental figuran en la situación de implantación y en la coordinación (3.7).</p>');
+  b += '<h3>3.1 Formación</h3>' + kp([['Personas formadas', a.formacion.personas], ['Acciones formativas', a.formacion.acciones], ['Horas de formación', a.formacion.horas]]) + tabObj(Object.fromEntries(Object.entries(a.formacion.por_colectivo || {}).map(([k, v]) => [COLECTIVO_TXT[k] || k, v])), 'Colectivo');
   const g = a.agentes;
   b += '<h3>3.2 Agentes deportivos</h3>' + kp([['Agentes activos', g.activos], ['Altas en el periodo', g.altas], ['Con certificado negativo', pc(g.con_cert, g.activos)], ['Código de conducta aceptado', pc(g.con_codigo, g.activos)], ['Con formación en protección', pc(g.con_formacion, g.activos)]]);
   b += '<h3>3.3 Análisis de riesgos</h3>' + kp([['Riesgos identificados en el periodo', a.riesgos.identificados], ['Medidas implantadas en el periodo', a.riesgos.implantados], ['Riesgos altos pendientes', a.riesgos.altos_pendientes]]);
@@ -2680,18 +2683,19 @@ async function htmlMemoria() {
       fr.preguntas.map((o, i) => { const [x, y, z] = pctTri(o); return `<tr><td>${i + 1}. ${esc(PREGUNTAS_ENC[k][i])}</td><td>${x}%</td><td>${y}%</td><td>${z}%</td></tr>`; }).join('') + '</tbody></table>';
   });
   b += '<h3>3.6 Sensibilización y documentación</h3>' + kp([['Documentos y contenidos elaborados', a.documentos.total]]) + tabObj(Object.fromEntries(Object.entries(a.documentos.por_tipo || {}).map(([k, v]) => [TIPOS_DOC[k] || k, v])), 'Tipo');
-  if (a.incidencias) b += '<h3>3.7 Comunicaciones e incidencias (datos agregados)</h3>' + kp([['Comunicaciones registradas', a.incidencias.comunicados], ['Casos cerrados', a.incidencias.cerrados], ['Casos abiertos a la fecha', a.incidencias.abiertos]]) +
+  if (!d.club && d.coordinacion) { const co = d.coordinacion; b += '<h3>3.7 Coordinación con entidades deportivas</h3>' + kp([['Declaraciones responsables registradas', co.declaraciones + ' de ' + co.entidades], ['Solicitudes de documentación', co.solicitudes], ['Requerimientos de subsanación', co.requerimientos], ['Entidades con documentación verificada', co.documentacion + ' de ' + co.entidades]]); }
+  if (a.incidencias) b += '<h3>' + (!d.club && d.coordinacion ? '3.8' : '3.7') + ' Comunicaciones e incidencias (datos agregados)</h3>' + kp([['Comunicaciones registradas', a.incidencias.comunicados], ['Casos cerrados', a.incidencias.cerrados], ['Casos abiertos a la fecha', a.incidencias.abiertos]]) +
     '<p class="muted">Solo se ofrecen cifras agregadas, sin tipología ni datos que permitan identificar casos.</p>';
   const mej = d.bloques.slice().sort((x, y) => x.pct - y.pct).filter(x => x.pct < 100).slice(0, 3);
   b += '<h2>4. Áreas prioritarias de mejora</h2><ul>' + (mej.map(x => `<li><b>${esc(x.bloque)}</b>${d.club ? ': pendiente de completar.' : ': ' + x.pct + '% de entidades con el bloque completo.'}</li>`).join('') +
     (g.activos && g.con_cert < g.activos ? `<li><b>${g.activos - g.con_cert}</b> agente(s) sin certificado negativo registrado.</li>` : '') +
     (a.riesgos.altos_pendientes ? `<li><b>${a.riesgos.altos_pendientes}</b> riesgo(s) alto(s) sin medidas implantadas.</li>` : '') +
-    (!en.respuestas ? '<li>Impulsar la participación de los menores mediante encuestas anónimas.</li>' : '')) + '</ul>';
-  const val = $('#mem-valoracion').value.trim();
+    (!en.respuestas ? '<li>Impulsar la participación de los menores mediante encuestas anónimas.</li>' : '') + memAtencionLis(en)).replace(/^$/, '<li>Sin áreas prioritarias pendientes con los datos del periodo.</li>') + '</ul>';
+  const val = limpiarValoracion($('#mem-valoracion').value);
   if (val) b += '<h2>5. Valoración técnica</h2>' + mdToHtml(val);
-  b += '<div style="page-break-inside:avoid"><div class="nota">Datos extraídos de EntornoSeguro a fecha del informe. Estado de implantación documental; no constituye valoración de personas ni de entidades.</div>';
-  b += `<div class="firma"><div>Delegado/a de Protección<br>${esc(d.club ? ((state.entidades[0] || {}).delegado_nombre || '') : (d.config.delegado_municipal || ''))}</div><div>Visto bueno</div></div></div>`;
-  return plantillaInforme(periodoEsAnual() ? 'Memoria anual ' + $('#mem-anio').value : 'Informe de actividad', 'Protección de menores en el deporte · ' + periodo, b);
+  b += '<div style="page-break-inside:avoid"><div class="nota">Datos agregados de la actividad del periodo, extraídos de EntornoSeguro a fecha de la memoria. No constituyen valoración de personas ni de entidades.</div>';
+  b += `<div class="firma"><div>Delegado/a de Protección<br>${esc(d.club ? ((state.entidades[0] || {}).delegado_nombre || '') : (d.config.delegado_municipal || ''))}</div><div>${d.club ? 'Vº Bº Presidencia<br>' + esc((state.entidades[0] || {}).presidencia_nombre || '') : 'Vº Bº Concejalía de Deportes'}</div></div></div>`;
+  return plantillaInforme(periodoEsAnual() ? 'Memoria anual ' + $('#mem-anio').value : 'Informe de actividad', 'Protección de menores en el deporte · ' + periodo, b, false, 'EntornoSeguro · ' + esc(org) + ' · Memoria de actividad con datos agregados del periodo; no constituye valoración de personas ni de entidades.');
 }
 const periodoEsAnual = () => $('#mem-periodo').value === 'anual';
 $('#mem-pdf').onclick = async () => abrirInforme(await htmlMemoria());
@@ -2708,7 +2712,10 @@ $('#mem-ia') && ($('#mem-ia').onclick = async () => {
     `- Encuestas a menores: ${a.encuestas.encuestas}; respuestas: ${a.encuestas.respuestas}; respuestas positivas: ${a.encuestas.pct_si === null ? 'sin datos' : a.encuestas.pct_si + '%'}`,
     `- Documentos y contenidos de sensibilización: ${a.documentos.total}`,
     'Implantación por bloque (%):', d.bloques.map(x => `- ${x.bloque}: ${x.pct}%`).join('\n'), '',
-    'Incluye: balance del periodo, fortalezas, áreas de mejora y 4-6 objetivos para el próximo periodo. No valores a personas ni entidades concretas. No incluyas datos de incidencias.'].join('\n');
+    memAtencionTxt(a.encuestas),
+    (!d.club && d.coordinacion ? `- Coordinación con entidades: ${d.coordinacion.declaraciones} declaraciones responsables registradas de ${d.coordinacion.entidades}; ${d.coordinacion.solicitudes} solicitudes de documentación; ${d.coordinacion.requerimientos} requerimientos; ${d.coordinacion.documentacion} entidades con documentación verificada` : ''),
+    'Incluye: balance del periodo, fortalezas, áreas de mejora (da prioridad a los puntos de atención de las encuestas, si los hay) y 4-6 objetivos para el próximo periodo. No valores a personas ni entidades concretas. No incluyas datos de incidencias.',
+    'Formato: empieza directamente por el balance, sin título ni periodo (ya figuran en la memoria). Subtítulos en minúscula inicial, nunca en MAYÚSCULAS. Objetivos como lista numerada.'].filter(Boolean).join('\n');
   mostrarPrompt($('#mem-ia-out'), prompt, null);
   const nota = document.createElement('p'); nota.className = 'nota'; nota.textContent = 'Pega la respuesta de Claude en "Valoración técnica" y genera la memoria.';
   $('#mem-ia-out').appendChild(nota);
@@ -6606,7 +6613,7 @@ async function abrirSolicitud(entidadId) {
       if (guardar) {
         const md = '# Solicitud de documentación\n\n' + String(e.nombre || '').trim() + ' · Temporada ' + temp + '\n\nPlazo: ' + plazo + ' días hábiles' + (venc ? ' (hasta el ' + fmtCorta(venc) + ')' : '') + '\n\n' +
           items.map(x => '- **' + x.codigo + '** ' + x.requisito + ': ' + x.falta).join('\n');
-        try { await API.call('guardarDocumento', { asunto: 'Solicitud de documentación · ' + String(e.nombre || '').trim() + ' · ' + hoyTxt, tipo: 'requerimiento', formato: 'requerimiento', publico: String(e.nombre || '').trim(), prompt: '', resultado: md }); state.docs = null; avisos.push('guardada en Documentos'); }
+        try { await API.call('guardarDocumento', { asunto: 'Solicitud de documentación · ' + String(e.nombre || '').trim() + ' · ' + hoyTxt, tipo: 'solicitud', formato: 'solicitud', publico: String(e.nombre || '').trim(), prompt: '', resultado: md }); state.docs = null; avisos.push('guardada en Documentos'); }
         catch (er) { avisos.push('no se pudo guardar en Documentos (' + er.message + ')'); }
       }
       if (anotar) {
@@ -6769,6 +6776,110 @@ async function segClubAbrir(c) {
   };
 })();
 GUIA.forEach(t => { if (t[1] === 'Entidades y coordinación con clubes' || t[1] === '💼 Modelo comercial y versiones (solo versión maestra)') t[2].push(['¿Cómo sé en qué punto está cada club de Mis clubes?', '<p>En <b>Mis clubes</b>, pulsa <b>🧭 Seguimiento</b> en la fila del club. Se abre una ventana de consulta con:</p><ul><li>Los <b>13 pasos de su tutorial</b>, numerados y con su estado (✅ hecho · 👉 va por aquí · ⬜ más adelante). Se calculan con sus datos reales, con la misma regla que su tutorial.</li><li>Alertas abiertas, altas y cerradas sin resolver, último acceso y próxima revisión.</li><li>Sus <b>recomendaciones</b>, con <b>Copiar</b> y <b>Enviar por correo</b>, y el <b>Informe del club</b>.</li></ul><p>Es solo de consulta: el espacio es del club. Consultarlo no queda registrado; abrir el informe sí, y el club lo ve en su registro de accesos.</p>', 'admin', 'clubes']); });
+// v92: encuesta y memoria (revisión del 27/10): puntos de atención, periodos legibles, pies propios, prompts ordenados, coordinación y clubes en la memoria municipal
+const COLECTIVO_TXT = { delegado: 'Delegado/a de Protección', entrenador: 'Entrenador/a', monitor: 'Monitor/a', directivo: 'Directivo/a', arbitro: 'Árbitro/a', voluntario: 'Voluntariado', personal_municipal: 'Personal municipal' };
+if (typeof TIPOS_DOC === 'object') { TIPOS_DOC.requerimiento = TIPOS_DOC.requerimiento || 'Requerimientos'; TIPOS_DOC.solicitud = 'Solicitudes de documentación'; }
+const fCorta = f => { const s = String(f || '').slice(0, 10); return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s.split('-').reverse().join('/') : s; };
+function encPeriodo(e) {
+  const a = fCorta(e.fecha_inicio), b = fCorta(e.fecha_fin);
+  return a && b ? 'Del ' + a + ' al ' + b : a ? 'Desde el ' + a + ' (sin fecha de fin)' : b ? 'Hasta el ' + b : '';
+}
+// Puntos de atención: preguntas con 20 % o más de «No», de más a menos (sin IA)
+const ENC_UMBRAL_NO = 20;
+function encAtencion(r, P) {
+  return (r.preguntas || []).map((o, i) => { const [s, a, n] = pctTri(o); return { i: i + 1, t: (P || [])[i] || 'Ítem ' + (i + 1), si: s, no: n }; })
+    .filter(x => x.no >= ENC_UMBRAL_NO).sort((x, y) => y.no - x.no || x.si - y.si);
+}
+function encAtencionHtml(r, P, pdf) {
+  const at = encAtencion(r, P), poca = r.n < 10;
+  if (!at.length && !poca) return '';
+  const lis = at.map(x => `<li><b>${x.i}. ${esc(x.t)}</b> · ${x.no} % de «No»</li>`).join('');
+  const aviso = poca ? `<p class="${pdf ? 'muted' : 'nota'}" style="margin:6px 0 0">Muestra pequeña (${r.n} respuestas): cada respuesta pesa ${Math.round(100 / r.n)} puntos. Resultados orientativos.</p>` : '';
+  if (pdf) return (at.length ? `<h2>Puntos de atención</h2><p>Preguntas con un ${ENC_UMBRAL_NO} % o más de «No», de mayor a menor:</p><ul>${lis}</ul>` : '') + aviso;
+  return `<div class="enc-atencion">${at.length ? `<p style="margin:0 0 4px"><b>⚠️ Puntos de atención</b> · preguntas con un ${ENC_UMBRAL_NO} % o más de «No»:</p><ul style="margin:0">${lis}</ul>` : ''}${aviso}</div>`;
+}
+function encAtencionTxt(r, P) {
+  const at = encAtencion(r, P);
+  return at.length ? 'Puntos de atención (ítems con ' + ENC_UMBRAL_NO + ' % o más de «No», de mayor a menor): ' + at.map(x => x.i + ' (' + x.no + ' %)').join(', ') + '.' : '';
+}
+function memAtencion(en) {
+  const out = [];
+  FRANJAS.forEach(([k, txt]) => {
+    const fr = en && en.por_franja && en.por_franja[k]; if (!fr || fr.n < 5) return;
+    encAtencion({ preguntas: fr.preguntas, n: fr.n }, PREGUNTAS_ENC[k]).forEach(x => out.push(Object.assign({ franja: txt, n: fr.n }, x)));
+  });
+  return out.sort((x, y) => y.no - x.no).slice(0, 4);
+}
+const memAtencionLis = en => memAtencion(en).map(x => `<li><b>Encuesta a menores (${esc(x.franja.toLowerCase())})</b>: «${esc(x.t.replace(/\.$/, ''))}», ${x.no} % de «No».</li>`).join('');
+const memAtencionTxt = en => { const at = memAtencion(en); return at.length ? '- Puntos de atención de las encuestas (≥ ' + ENC_UMBRAL_NO + ' % de «No»): ' + at.map(x => '«' + x.t.replace(/\.$/, '') + '» ' + x.no + ' %').join('; ') : ''; };
+// Valoración pegada desde la IA: sin título ni periodo repetidos y sin líneas en MAYÚSCULAS
+function limpiarValoracion(t) {
+  let l = String(t || '').replace(/\r/g, '').split('\n');
+  while (l.length && (!l[0].trim() || /^\s*(#+\s*)?(\*\*)?\s*valoraci[oó]n t[eé]cnica/i.test(l[0]) || /^\s*(\*\*)?periodo evaluado/i.test(l[0]))) l.shift();
+  l = l.map(x => { const s = x.replace(/[*#]/g, '').trim(); return s.length > 6 && s === s.toUpperCase() && /[A-ZÁÉÍÓÚÑ]{3}/.test(s) && !/[a-záéíóúñ]/.test(s) ? '### ' + s.charAt(0) + s.slice(1).toLowerCase() : x; });
+  return l.join('\n').trim();
+}
+// Markdown «escapado» que dejan algunos asistentes al copiar: «1\.», «\-», «\*»…
+(function () {
+  const base = mdToHtml;
+  mdToHtml = function (t) { return base(String(t == null ? '' : t).replace(/\\([\\`*_{}\[\]()#+\-.!>|~])/g, '$1')); };
+})();
+// Cualquier respuesta pegada se puede ver como documento sin salir de la pantalla
+(function () {
+  const base = mostrarPrompt;
+  mostrarPrompt = function (caja, prompt, meta) {
+    const r = base.apply(this, arguments);
+    const zona = caja && caja.querySelector('.guardar-res');
+    if (zona && meta && !zona.querySelector('.ver-doc')) {
+      const v = document.createElement('button'); v.type = 'button'; v.className = 'btn ghost ver-doc'; v.textContent = '📄 Ver como documento';
+      v.onclick = () => { const t = zona.querySelector('textarea').value.trim(); if (!t) { toast('Pega primero la respuesta', true); return; }
+        abrirInforme(plantillaInforme(meta.asunto || 'Documento', '', mdToHtml(t), false, 'EntornoSeguro · Borrador generado con apoyo de IA, sujeto a validación profesional.')); };
+      zona.append(v);
+    }
+    return r;
+  };
+})();
+// Resultados de la encuesta: propuestas de mejora ya guardadas, a mano
+(function () {
+  const base = verResultados;
+  verResultados = async function (id) {
+    await base.apply(this, arguments);
+    const r = state.resEnc, cont = $('#enc-resultados'); if (!r || r.oculto || !cont) return;
+    let docs = []; try { docs = await API.call('listarDocumentos'); } catch (e) { return; }
+    const pref = 'Mejoras tras encuesta · ' + r.encuesta.titulo;
+    const mias = (docs || []).filter(d => String(d.asunto || '') === pref);
+    if (!mias.length) return;
+    const card = cont.querySelector('.card'); if (!card || card.querySelector('.enc-props')) return;
+    card.querySelector('.ia-acciones').insertAdjacentHTML('beforebegin', `<div class="enc-props"><p style="margin:10px 0 4px"><b>📄 Propuestas de mejora guardadas (${mias.length})</b></p><ul style="margin:0 0 8px">${mias.map(d => `<li>${esc(fCorta(d.actualizado || d.creado))} · <button type="button" class="link" data-prop="${esc(d.id)}">Ver</button></li>`).join('')}</ul></div>`);
+    card.querySelectorAll('[data-prop]').forEach(b => b.onclick = () => { const d = mias.find(x => x.id === b.dataset.prop);
+      abrirInforme(plantillaInforme(d.asunto, '', mdToHtml(d.resultado), false, 'EntornoSeguro · Borrador generado con apoyo de IA, sujeto a validación profesional.')); });
+  };
+})();
+// Memoria municipal: clubes con espacio propio, aparte
+(function () {
+  const base = htmlMemoria;
+  htmlMemoria = async function () {
+    const h = await base.apply(this, arguments);
+    if (state.club || typeof h !== 'string') return h;
+    const cs = await clubesPropios(); if (!cs.length) return h;
+    const anon = ($('#mem-anon') || {}).checked, sn = v => v ? '<span class="st ok">Sí</span>' : '<span class="st bad">No</span>';
+    const t = `<h3>Clubes con espacio propio en la aplicación</h3><p>Gestionan su sistema de protección directamente en EntornoSeguro. Se muestran aparte y no se suman a los indicadores anteriores.</p><table><thead><tr><th>Club</th><th>Delegado/a</th><th>Protocolo Marco</th><th colspan="2">Cumplimiento</th></tr></thead><tbody>` +
+      cs.map((c, i) => `<tr><td>${anon ? 'Club ' + (i + 1) : esc(c.nombre)}</td><td>${sn(c.delegado)}</td><td>${sn(c.protocolo)}</td><td style="width:70px">${barra(c.pct || 0)}</td><td><b>${c.pct || 0}%</b></td></tr>`).join('') + '</tbody></table>';
+    const i = h.indexOf('<h3>Implantación por bloque');
+    return i >= 0 ? h.slice(0, i) + t + h.slice(i) : h;
+  };
+})();
+// Notas bajo las casillas de anonimizar y estilos
+(function () {
+  const nota = '<p class="nota" style="margin:2px 0 8px">Sustituye los nombres por «Entidad 1, 2…» (y «Club 1, 2…»). Márcala si el documento va a salir del ayuntamiento: publicación, otra administración…</p>';
+  const l1 = $('#mem-anon-l'); if (l1 && !l1.nextElementSibling?.classList.contains('nota-anon')) { l1.insertAdjacentHTML('afterend', nota); l1.nextElementSibling.classList.add('nota-anon'); }
+  const c2 = $('#inf-anon'), l2 = c2 && c2.closest('label'); if (l2 && !l2.nextElementSibling?.classList.contains('nota-anon')) { l2.insertAdjacentHTML('afterend', nota); l2.nextElementSibling.classList.add('nota-anon'); }
+  if (!$('#v92-estilo')) { const st = document.createElement('style'); st.id = 'v92-estilo';
+    st.textContent = '.ley{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px}.ley-si{background:var(--ok)}.ley-av{background:var(--warn)}.ley-no{background:var(--bad)}' +
+      '.enc-atencion{border-left:4px solid var(--warn);background:color-mix(in srgb,var(--warn) 8%,var(--panel,#fff));border-radius:8px;padding:8px 12px;margin:0 0 12px}';
+    document.head.appendChild(st); }
+})();
+GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Qué son los «Puntos de atención» de una encuesta?', '<p>En los resultados de cada encuesta, la app destaca sola, sin IA, las preguntas con un <b>20 % o más de «No»</b>, de mayor a menor. Salen también en el informe PDF de la encuesta, en las «Áreas prioritarias» de la memoria y en los prompts de mejora y de valoración, para que las propuestas empiecen por lo más importante.</p><p>Con menos de 10 respuestas la app avisa de que la muestra es pequeña: los resultados son orientativos.</p>', '', 'encuestas']); });
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
