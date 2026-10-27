@@ -7149,6 +7149,25 @@ function agChipHero() {
   const base = pintarHeroClub;
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
+// v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
+const ES_VERSION = 'v99';
+async function pintarVersion() {
+  const br = $('.sidebar .brand'); if (!br) return;
+  let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
+  v.textContent = 'Versión ' + ES_VERSION;
+  try { const r = await API.call('ampliacion'); if (r && r.version) v.textContent = 'Versión ' + ES_VERSION + ' · servidor ' + r.version; } catch (e) { /* sin servidor ampliado: solo la versión de la web */ }
+}
+(function () {
+  const base = arrancar;
+  arrancar = async function () { await base.apply(this, arguments); try { pintarVersion(); } catch (e) {} };
+  let n = 0; const t = setInterval(() => { if (state.me) { clearInterval(t); pintarVersion(); } else if (++n > 120) clearInterval(t); }, 250);
+  const lg = $('#login .logo, #login img'); // también en la portada, para comprobarlo sin entrar
+  const p = document.createElement('p'); p.id = 'es-version-login'; p.textContent = 'Versión ' + ES_VERSION;
+  const per = $('#perfiles'); if (per && !$('#es-version-login')) per.parentElement.appendChild(p);
+  if (!$('#es-version-estilo')) { const st = document.createElement('style'); st.id = 'es-version-estilo';
+    st.textContent = '#es-version{font-size:.7rem;color:var(--muted);margin:-6px 0 8px 2px;letter-spacing:.02em}body.con-gestor #es-version{color:rgba(255,255,255,.75)}#es-version-login{font-size:.72rem;color:var(--muted);text-align:center;margin:14px 0 0}';
+    document.head.appendChild(st); }
+})();
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
