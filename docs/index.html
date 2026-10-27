@@ -6996,11 +6996,13 @@ function htmlKitBienvenida(c, usuario, clave) {
     'Gestionado': prestadorTxt() + ' os lleva el sistema de protección. Para ello autorizaréis su acceso en «Mis datos»; cada entrada queda registrada.' }[c.servicio] || '';
   const cuerpo = `<h2>1. Vuestro acceso</h2><table>${fila('Web', esc(web))}${fila('Perfil', 'MI CLUB')}${fila('Usuario', esc(u || c.usuario || ''))}${fila('Contraseña', clave ? '<b>' + esc(clave) + '</b> (temporal: se cambia en el primer acceso)' : 'Os la enviamos por separado')}</table>
     ${clave ? '<p class="nota">Este documento contiene la contraseña: entrégalo solo al Delegado/a de Protección, en mano o por un canal seguro.</p>' : ''}
-    <h2>2. Primeros pasos</h2><p>Al entrar, el Panel os ofrece un <b>tutorial guiado</b> con estos pasos. Cada uno se marca solo cuando está hecho.</p><ol>${TUT_PASOS.map(p => `<li><b>${esc(p.t)}</b></li>`).join('')}</ol>
+    <h2>2. Primeros pasos</h2><p>Al entrar, el Panel os ofrece un <b>tutorial guiado</b> con estos pasos. Cada uno se marca solo cuando está hecho.</p><ol style="columns:2;column-gap:28px">${TUT_PASOS.map(p => `<li><b>${esc(p.t)}</b></li>`).join('')}</ol>
     <h2>3. Cómo os acompañamos</h2><p>${serv ? '<b>Servicio ' + esc(c.servicio) + '.</b> ' + esc(serv) : 'Tenéis las <b>recomendaciones automáticas</b> del Panel, que os dicen qué falta y en qué orden, y la <b>Guía de uso</b> con preguntas frecuentes.'}</p>
     <h2>4. Si ocurre algo</h2><ul><li>Si un menor está en peligro: <b>112</b>.</li><li>Escuchad sin interrogar, no confrontéis a nadie y comunicadlo al Delegado/a de Protección.</li><li>Fundación ANAR: <b>900 20 20 10</b> · Línea de ayuda a la infancia: <b>116 111</b>.</li></ul>
     <h2>5. Privacidad</h2><p>Vuestros datos están en una hoja propia, separada de la de cualquier otra entidad. ${esc(prestadorTxt())} solo ve indicadores; cualquier consulta de detalle queda registrada en «Mis datos». No anotéis nunca datos de menores ni detalles de casos fuera del registro de incidencias.</p>`;
-  return plantillaInforme('Bienvenida a EntornoSeguro', c.nombre || '', cuerpo, false, 'EntornoSeguro · Kit de bienvenida del club');
+  const prev = state.cfg && state.cfg.organismo;
+  if (state.cfg && !state.inst) state.cfg.organismo = 'Escuela&Deporte'; // en la maestra, el documento lo firma el prestador, no «Ayuntamientos · versión maestra»
+  try { return plantillaInforme('Bienvenida a EntornoSeguro', c.nombre || '', cuerpo, false, 'EntornoSeguro · Kit de bienvenida del club'); } finally { if (state.cfg) state.cfg.organismo = prev; }
 }
 (function () {
   if (typeof mostrarClaves === 'function') {
@@ -7061,6 +7063,7 @@ function htmlDiagInforme(res) {
     false, 'EntornoSeguro · Escuela&Deporte · Autodiagnóstico gratuito. No se guarda ningún dato.');
 }
 function pintarDiag() {
+  state.cfg = Object.assign({}, state.cfg || {}, { organismo: 'Escuela&Deporte' });
   $('#login') && $('#login').classList.add('hidden'); $('#app') && $('#app').classList.add('hidden');
   document.title = 'Autodiagnóstico · EntornoSeguro';
   let s = $('#diag'); if (!s) { s = document.createElement('section'); s.id = 'diag'; document.body.appendChild(s); }
@@ -7076,7 +7079,11 @@ function pintarDiag() {
     const resumen = 'Hola:\n\nHe hecho el autodiagnóstico de EntornoSeguro: ' + res.pct + ' % (' + res.nivel[0] + ').\nMe gustaría información para nuestro club.\n\nNombre del club:\nPersona de contacto:\nTeléfono:\n';
     $('#diag-res').innerHTML = `<div class="diag-resultado"><div class="diag-pct">${res.pct}%</div><div><h2>Nivel: ${esc(res.nivel[0])}</h2><p>${esc(res.nivel[1])}</p></div></div>
       ${res.falta.length ? `<h3>Qué os falta, por orden</h3><ul>${res.falta.map(x => `<li><b>${x.r === 'no' ? 'Pendiente' : 'En parte'}</b> · ${esc(x.q[2])}</li>`).join('')}</ul>` : '<p>¡Enhorabuena! Según vuestras respuestas lo tenéis todo. El reto ahora es mantenerlo y poder acreditarlo.</p>'}
-      <div class="ia-acciones"><button type="button" class="btn" id="diag-pdf">📄 Descargar resultado (PDF)</button><a class="btn ghost" href="mailto:${esc(DIAG_CONTACTO)}?subject=${encodeURIComponent('Autodiagnóstico EntornoSeguro')}&body=${encodeURIComponent(resumen)}">✉️ Quiero información</a></div>`;
+      <div class="ia-acciones"><button type="button" class="btn" id="diag-pdf">📄 Descargar resultado (PDF)</button><button type="button" class="btn ghost" id="diag-info">✉️ Quiero información</button></div>
+      <div id="diag-contacto" class="diag-contacto" hidden><p style="margin:0 0 6px">Escríbenos a <b>${esc(DIAG_CONTACTO)}</b> con este mensaje (ya lleva tu resultado):</p>
+        <pre class="out">${esc(resumen)}</pre><div class="ia-acciones"><a class="btn" target="_blank" rel="noopener" href="https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(DIAG_CONTACTO)}&su=${encodeURIComponent('Autodiagnóstico EntornoSeguro')}&body=${encodeURIComponent(resumen)}">Abrir en Gmail</a><a class="btn ghost" href="mailto:${esc(DIAG_CONTACTO)}?subject=${encodeURIComponent('Autodiagnóstico EntornoSeguro')}&body=${encodeURIComponent(resumen)}">Abrir mi programa de correo</a><button type="button" class="btn ghost" id="diag-copiar">📋 Copiar mensaje</button></div></div>`;
+    $('#diag-info').onclick = () => { const c = $('#diag-contacto'); c.hidden = false; c.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
+    $('#diag-copiar').onclick = () => copiarTexto(DIAG_CONTACTO + '\n\n' + resumen);
     $('#diag-pdf').onclick = () => abrirInforme(htmlDiagInforme(res));
     $('#diag-res').scrollIntoView({ behavior: 'smooth' });
   };
@@ -7101,7 +7108,8 @@ function pintarDiag() {
     '#clubes-filtro{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}#clubes-filtro .chip-filtro{border:1px solid var(--line);background:var(--card,#fff);border-radius:99px;padding:6px 12px;cursor:pointer;min-height:36px}#clubes-filtro .chip-filtro.activo{background:var(--brand,#0b3057);color:#fff;border-color:var(--brand,#0b3057)}' +
     '.segc-serv{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:space-between;border:1px dashed var(--line);border-radius:10px;padding:8px 10px;margin:0 0 10px}.segc-serv select{margin-left:6px;min-height:36px}' +
     '#diag{min-height:100vh;background:var(--bg,#f3f7f8);padding:24px 16px}.diag-caja{max-width:760px;margin:0 auto;background:var(--card,#fff);border-radius:16px;padding:22px;box-shadow:0 2px 12px rgba(0,0,0,.06)}.diag-caja h1{font-size:1.5rem;color:var(--brand,#0b3057);margin:0 0 6px}' +
-    '.diag-p{border:1px solid var(--line,#dde);border-radius:10px;margin:0 0 10px;padding:10px 12px}.diag-p legend{font-weight:600;padding:0 4px}.diag-p label{display:inline-flex;gap:6px;align-items:center;margin:6px 16px 0 0;min-height:36px}' +
+    '.diag-p{border:1px solid var(--line,#dde);border-radius:10px;margin:0 0 10px;padding:10px 12px}.diag-p legend{font-weight:600;padding:0 4px}.diag-p label{display:inline-flex;gap:8px;align-items:center;margin:6px 18px 0 0;min-height:40px;white-space:nowrap;font-weight:400}.diag-p input[type=radio]{width:20px;height:20px;min-height:0;flex:0 0 20px;margin:0;padding:0;accent-color:var(--seg,#0f766e)}' +
+    '.diag-contacto{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:10px}.diag-contacto pre{white-space:pre-wrap;font-size:.85rem}' +
     '.diag-resultado{display:flex;gap:16px;align-items:center;margin:18px 0 8px}.diag-pct{font-size:2.4rem;font-weight:800;color:#fff;background:var(--seg,#0f766e);border-radius:16px;padding:14px 18px}';
   document.head.appendChild(st);
 })();
