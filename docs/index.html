@@ -7165,7 +7165,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v103';
+const ES_VERSION = 'v104';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -7225,6 +7225,50 @@ async function pintarTemporada() {
   };
 })();
 GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Qué pasa al empezar una temporada nueva?', '<p>La temporada empieza el <b>1 de agosto</b>. Desde ese día, si hay requisitos que dependen de las personas y se acreditaron la temporada anterior, el Panel muestra <b>🔄 Nueva temporada</b>. Al pulsar <b>Iniciar la temporada</b>, pasan a «Parcial» con la acción de renovarlos:</p><ul><li><b>K1 · K2</b>: relación del personal y certificados negativos de todos los de esta temporada.</li><li><b>D2</b>: aceptación del código por los agentes nuevos.</li><li><b>E1 · F1</b>: autorizaciones de las familias de esta temporada.</li><li><b>G2 · I2</b>: protocolo y canal a las familias nuevas.</li><li><b>J1</b>: formación de las incorporaciones.</li></ul><p>No se borra nada: las evidencias anteriores quedan como historial y en Documentos queda «Inicio de la temporada». El resto sigue con sus fechas de revisión. En las entidades que sigue el ayuntamiento, la renovación es la nueva declaración responsable: el seguimiento la pide al cambiar de temporada.</p>', '', 'panel']); });
+// v104: código del requisito (K2, B2…) en las alertas, con enlace a la Matriz en ese requisito; tipo legible
+const AL_TIPO = { requisito: 'Requisito', formacion: 'Formación', revision: 'Revisión', delegado: 'Delegado/a', protocolo: 'Protocolo', incidencia: 'Incidencia', riesgo: 'Riesgo', documento: 'Documento', caducidad: 'Caducidad' };
+function alCod(x) { return x && /^[A-K]\d{1,2}$/.test(String(x.referencia || '')) && x.entidad_id ? String(x.referencia) : ''; }
+function alChip(x) { const c = alCod(x); return c ? `<button type="button" class="al-cod" data-al-ent="${esc(x.entidad_id)}" data-al-cod="${esc(c)}" title="Abrir ${esc(c)} en la Matriz">${esc(c)}</button> ` : ''; }
+function alIrMatriz(ent, cod) {
+  show('matriz');
+  setTimeout(() => { const s = $('#matriz-entidad'); state.filtroMatriz = ''; state.tutResaltar = cod; if (s && [...s.options].some(o => o.value === ent)) s.value = ent; loadMatriz(); }, 80);
+}
+function alEnlazar(raiz) { (raiz || document).querySelectorAll('[data-al-cod]').forEach(b => b.onclick = ev => { ev.stopPropagation(); alIrMatriz(b.dataset.alEnt, b.dataset.alCod); }); }
+(function () {
+  if (!$('#al-cod-css')) { const st = document.createElement('style'); st.id = 'al-cod-css';
+    st.textContent = '.al-cod{display:inline-block;min-width:0;min-height:0;padding:1px 6px;margin-right:6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--muted);font:600 11px/1.5 ui-monospace,Menlo,Consolas,monospace;cursor:pointer;vertical-align:1px}.al-cod:hover{border-color:var(--brand-2);color:var(--brand-2)}.al-cod:focus-visible{outline:2px solid var(--brand-2);outline-offset:1px}';
+    document.head.appendChild(st); }
+  state.alCache = state.alCache || {};
+  const llamar = API.call;
+  API.call = async function (accion) {
+    const r = await llamar.apply(this, arguments);
+    if ((accion === 'listarAlertas' || accion === 'alertasCerradas') && Array.isArray(r)) r.forEach(x => { if (x && x.mensaje) state.alCache[x.mensaje] = x; });
+    if (accion === 'dashboard' && r && Array.isArray(r.alertas)) r.alertas.forEach(x => { if (x && x.mensaje) state.alCache[x.mensaje] = x; });
+    return r;
+  };
+  if (typeof alertList === 'function') {
+    alertList = function (a) {
+      return a.length ? '<ul class="alerts">' + a.map(x => `<li class="p-${esc(x.prioridad)}"><span>${alChip(x)}${esc(x.mensaje)}</span>${x.fecha_limite ? `<small>${esc(x.fecha_limite)}</small>` : ''}</li>`).join('') + '</ul>'
+        : '<p class="empty">Sin alertas abiertas.</p>';
+    };
+  }
+  const baseP = loadPanel;
+  loadPanel = async function () { await baseP.apply(this, arguments); alEnlazar($('#panel-alertas')); };
+  const baseA = loadAlertas;
+  loadAlertas = async function () {
+    await baseA.apply(this, arguments);
+    const t = $('#tabla-alertas'); if (!t || !t.tBodies[0]) return;
+    [...t.tBodies[0].rows].forEach(tr => {
+      if (tr.cells.length < 4 || tr.dataset.alCod) return; tr.dataset.alCod = '1';
+      const tdT = tr.cells[1], tdM = tr.cells[2];
+      const tipo = tdT.textContent.trim(); if (AL_TIPO[tipo]) tdT.textContent = AL_TIPO[tipo];
+      const nodo = [...tdM.childNodes].find(n => n.nodeType === 3 && n.textContent.trim());
+      const x = nodo && state.alCache[nodo.textContent.trim()];
+      if (x && alCod(x)) tdM.insertAdjacentHTML('afterbegin', alChip(x));
+    });
+    alEnlazar(t);
+  };
+})();
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
