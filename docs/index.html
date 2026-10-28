@@ -7165,7 +7165,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v104';
+const ES_VERSION = 'v105';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -7269,6 +7269,46 @@ function alEnlazar(raiz) { (raiz || document).querySelectorAll('[data-al-cod]').
     alEnlazar(t);
   };
 })();
+// v105 + Ampliacion v1.32: «📧 Aviso por correo» en Alertas (frecuencia y destinatario) + guía
+const CORREO_TXT = { nuevas: 'Solo cuando hay alertas nuevas (y recordatorio los lunes si quedan altas)', semanal: 'Resumen semanal, los lunes', diario: 'Cada día, si hay alertas abiertas', no: 'Sin correo' };
+function correoPuedeVer() { return state.me && state.me.rol !== 'entidad' && can('escribir'); }
+async function pintarCorreoAlertas() {
+  const vista = $('#view-alertas'); if (!vista) return;
+  let c = $('#correo-alertas');
+  if (!correoPuedeVer()) { if (c) c.remove(); return; }
+  if (!c) { c = document.createElement('div'); c.id = 'correo-alertas'; c.className = 'card'; const t = $('#tabla-alertas'); vista.insertBefore(c, t ? t.closest('.card') : null); }
+  let e;
+  try { e = await API.call('estadoCorreoAlertas'); } catch (er) { c.innerHTML = '<p class="nota" style="margin:0">📧 Aviso por correo: actualiza el servidor (Ampliacion v1.32) para configurarlo.</p>'; return; }
+  const f = d => d ? String(d).slice(0, 10).split('-').reverse().join('/') : '';
+  c.innerHTML = `<div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;justify-content:space-between"><div style="flex:1;min-width:240px">
+    <b>📧 Aviso por correo</b><br><span>${e.email ? 'A <b style="overflow-wrap:anywhere">' + esc(e.email) + '</b>' : '<span class="bad-t">Sin correo configurado</span>'} · ${esc(CORREO_TXT[e.frecuencia] || '')}</span>
+    <br><small class="muted">${e.ultimo ? 'Último aviso: ' + esc(f(e.ultimo)) : 'Aún no se ha enviado ningún aviso'} · Se comprueba cada día a las 7:00.</small></div>
+    <div class="ia-acciones" style="margin:0"><button type="button" class="btn ghost" id="correo-cambiar">Cambiar</button>${e.email ? '<button type="button" class="btn ghost" id="correo-probar">Enviar prueba</button>' : ''}</div></div>`;
+  $('#correo-cambiar').onclick = () => {
+    modal('📧 Aviso por correo', [['email', 'Correo que recibe los avisos', 'email'], ['frecuencia', 'Frecuencia', Object.keys(CORREO_TXT).map(k => [k, CORREO_TXT[k]])]],
+      { email: e.email, frecuencia: e.frecuencia },
+      async v => { try { await run(() => API.call('guardarCorreoAlertas', v)); toast('Aviso por correo guardado'); pintarCorreoAlertas(); } catch (er) {} });
+    const fl = $('#modal-form .fields');
+    if (fl) fl.insertAdjacentHTML('afterend', '<p class="nota">Recomendado: <b>solo alertas nuevas</b>. El correo no lleva datos de menores ni de casos. Las alertas siguen completas en esta pantalla.</p>');
+  };
+  const bp = $('#correo-probar');
+  if (bp) bp.onclick = async () => { bp.disabled = true; bp.textContent = 'Enviando…'; try { const r = await run(() => API.call('probarCorreoAlertas')); toast(r.enviado ? 'Correo de prueba enviado a ' + e.email : r.motivo); } catch (er) {} bp.disabled = false; bp.textContent = 'Enviar prueba'; };
+}
+(function () {
+  const base = loadAlertas;
+  loadAlertas = async function () { await base.apply(this, arguments); try { await pintarCorreoAlertas(); } catch (e) {} };
+})();
+GUIA.forEach(t => { if (t[1] === 'Alertas e informes') { const q = t[2].find(x => x[0] === '¿Cuándo se generan las alertas?'); if (q) q[1] = q[1].replace('con resumen por correo si está configurado', 'y el aviso por correo según la frecuencia elegida (ver «¿Cómo funcionan los avisos por correo?»)'); } });
+GUIA.forEach(t => { if (t[1] === 'Alertas e informes') t[2].splice(1, 0, ['¿Cómo funcionan los avisos por correo?',
+  '<p>Cada día a las <b>7:00</b> la app recalcula las alertas y decide si envía un correo. Se configura en <b>Alertas → 📧 Aviso por correo → Cambiar</b> (correo y frecuencia). Cada club configura el suyo; el ayuntamiento, el de su instalación.</p>' +
+  '<table class="md-tabla"><thead><tr><th>Frecuencia</th><th>Cuándo llega</th></tr></thead><tbody>' +
+  '<tr><td><b>Solo alertas nuevas</b> (recomendada, por defecto)</td><td>El día que aparece una alerta que no estaba. Además, los <b>lunes</b>, un recordatorio si siguen abiertas alertas <b>altas</b>. Si nada cambia, no llega nada.</td></tr>' +
+  '<tr><td><b>Resumen semanal</b></td><td>Los lunes, si hay alertas abiertas.</td></tr>' +
+  '<tr><td><b>Cada día</b></td><td>Todos los días que haya alertas abiertas.</td></tr>' +
+  '<tr><td><b>Sin correo</b></td><td>Nunca. Las alertas se consultan solo en la app.</td></tr></tbody></table>' +
+  '<p><b>Qué contiene:</b> primero las alertas <b>nuevas</b>; después todas las abiertas por prioridad (altas, medias, bajas) con su código (K2, B2…) y el botón <b>Entrar en EntornoSeguro</b>. No lleva datos de menores; los avisos del registro de incidencias aparecen sin detalles.</p>' +
+  '<p><b>Procedimiento recomendado:</b></p><ol><li>Pon el correo del Delegado/a (o un correo de la entidad que lea a diario) y deja <b>Solo alertas nuevas</b>.</li><li>Pulsa <b>Enviar prueba</b> y comprueba que llega (mira también en spam la primera vez).</li><li>Cuando llegue un aviso, entra, pulsa el código de la alerta y resuélvela en la Matriz siguiendo las <b>recomendaciones</b>.</li><li>Si una alerta no requiere acción, <b>Ciérrala</b>: no volverá a avisarse como nueva.</li></ol>' +
+  '<p class="nota">El primer día tras activarlo llega un aviso con todas las alertas abiertas (todas son «nuevas»). Guardar un requisito, sacar un informe o iniciar la temporada recalcula las alertas en el momento, pero no envía correo; «Recalcular» sí puede enviarlo si aparecen alertas nuevas.</p>', '', 'alertas']); });
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
