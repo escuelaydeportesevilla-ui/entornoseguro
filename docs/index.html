@@ -6998,7 +6998,7 @@ function htmlKitBienvenida(c, usuario, clave) {
   const serv = { 'Autogestión': 'Usáis la aplicación por vuestra cuenta, guiados por el tutorial del Panel. ' + prestadorTxt() + ' resuelve dudas de uso.',
     'Acompañado': prestadorTxt() + ' revisa vuestro avance, os envía recomendaciones y os orienta en cada paso.',
     'Gestionado': prestadorTxt() + ' os lleva el sistema de protección. Para ello autorizaréis su acceso en «Mis datos»; cada entrada queda registrada.' }[c.servicio] || '';
-  const cuerpo = `<h2>1. Vuestro acceso</h2><table>${fila('Web', esc(web))}${fila('Perfil', 'MI CLUB')}${fila('Usuario', esc(u || c.usuario || ''))}${fila('Contraseña', clave ? '<b>' + esc(clave) + '</b> (temporal: se cambia en el primer acceso)' : 'Os la enviamos por separado')}</table>
+  const cuerpo = `<h2>1. Vuestro acceso</h2><table>${fila('Web', esc(web))}${fila('Perfil', 'MI CLUB')}${fila('Usuario', esc(u || c.usuario || ''))}${fila('Contraseña', clave ? '<b>' + esc(clave) + '</b> (temporal: se cambia en el primer acceso)' : 'Os la enviamos por separado')}${fila('Avisos', 'Llegan desde <b>' + esc(state.correoRemitente || DIAG_CONTACTO) + '</b>. El primer día: Alertas → 📧 Enviar prueba; si llega a spam, «No es spam».')}</table>
     ${clave ? '<p class="nota">Este documento contiene la contraseña: entrégalo solo al Delegado/a de Protección, en mano o por un canal seguro.</p>' : ''}
     <h2>2. Primeros pasos</h2><p>Al entrar, el Panel os ofrece un <b>tutorial guiado</b> con estos pasos. Cada uno se marca solo cuando está hecho.</p><ol style="columns:2;column-gap:28px">${TUT_PASOS.map(p => `<li><b>${esc(p.t)}</b></li>`).join('')}</ol>
     <h2>3. Cómo os acompañamos</h2><p>${serv ? '<b>Servicio ' + esc(c.servicio) + '.</b> ' + esc(serv) : 'Tenéis las <b>recomendaciones automáticas</b> del Panel, que os dicen qué falta y en qué orden, y la <b>Guía de uso</b> con preguntas frecuentes.'}</p>
@@ -7165,7 +7165,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v105';
+const ES_VERSION = 'v106';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -7278,11 +7278,12 @@ async function pintarCorreoAlertas() {
   if (!correoPuedeVer()) { if (c) c.remove(); return; }
   if (!c) { c = document.createElement('div'); c.id = 'correo-alertas'; c.className = 'card'; const t = $('#tabla-alertas'); vista.insertBefore(c, t ? t.closest('.card') : null); }
   let e;
-  try { e = await API.call('estadoCorreoAlertas'); } catch (er) { c.innerHTML = '<p class="nota" style="margin:0">📧 Aviso por correo: actualiza el servidor (Ampliacion v1.32) para configurarlo.</p>'; return; }
+  try { e = await API.call('estadoCorreoAlertas'); if (e && e.remitente) state.correoRemitente = e.remitente; } catch (er) { c.innerHTML = '<p class="nota" style="margin:0">📧 Aviso por correo: actualiza el servidor (Ampliacion v1.32) para configurarlo.</p>'; return; }
   const f = d => d ? String(d).slice(0, 10).split('-').reverse().join('/') : '';
   c.innerHTML = `<div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;justify-content:space-between"><div style="flex:1;min-width:240px">
     <b>📧 Aviso por correo</b><br><span>${e.email ? 'A <b style="overflow-wrap:anywhere">' + esc(e.email) + '</b>' : '<span class="bad-t">Sin correo configurado</span>'} · ${esc(CORREO_TXT[e.frecuencia] || '')}</span>
-    <br><small class="muted">${e.ultimo ? 'Último aviso: ' + esc(f(e.ultimo)) : 'Aún no se ha enviado ningún aviso'} · Se comprueba cada día a las 7:00.</small></div>
+    <br><small class="muted">${e.ultimo ? 'Último aviso: ' + esc(f(e.ultimo)) : 'Aún no se ha enviado ningún aviso'} · Se comprueba cada día a las 7:00.</small>
+    <p class="nota" style="margin:8px 0 0">ℹ️ ${e.remitente ? 'Lo envía <b style="overflow-wrap:anywhere">' + esc(e.remitente) + '</b>. ' : ''}Si no te llega, mira en spam, márcalo como «No es spam» y crea un filtro para esa dirección.${!e.club && !state.club ? ' Aquí solo llegan las alertas de esta instalación: cada club de <b>Mis clubes</b> recibe las suyas en su propio correo.' : ''}</p></div>
     <div class="ia-acciones" style="margin:0"><button type="button" class="btn ghost" id="correo-cambiar">Cambiar</button>${e.email ? '<button type="button" class="btn ghost" id="correo-probar">Enviar prueba</button>' : ''}</div></div>`;
   $('#correo-cambiar').onclick = () => {
     modal('📧 Aviso por correo', [['email', 'Correo que recibe los avisos', 'email'], ['frecuencia', 'Frecuencia', Object.keys(CORREO_TXT).map(k => [k, CORREO_TXT[k]])]],
@@ -7308,7 +7309,18 @@ GUIA.forEach(t => { if (t[1] === 'Alertas e informes') t[2].splice(1, 0, ['¿Có
   '<tr><td><b>Sin correo</b></td><td>Nunca. Las alertas se consultan solo en la app.</td></tr></tbody></table>' +
   '<p><b>Qué contiene:</b> primero las alertas <b>nuevas</b>; después todas las abiertas por prioridad (altas, medias, bajas) con su código (K2, B2…) y el botón <b>Entrar en EntornoSeguro</b>. No lleva datos de menores; los avisos del registro de incidencias aparecen sin detalles.</p>' +
   '<p><b>Procedimiento recomendado:</b></p><ol><li>Pon el correo del Delegado/a (o un correo de la entidad que lea a diario) y deja <b>Solo alertas nuevas</b>.</li><li>Pulsa <b>Enviar prueba</b> y comprueba que llega (mira también en spam la primera vez).</li><li>Cuando llegue un aviso, entra, pulsa el código de la alerta y resuélvela en la Matriz siguiendo las <b>recomendaciones</b>.</li><li>Si una alerta no requiere acción, <b>Ciérrala</b>: no volverá a avisarse como nueva.</li></ol>' +
+  '<p><b>Quién envía y quién recibe:</b></p><table class="md-tabla"><thead><tr><th></th><th>Correo</th></tr></thead><tbody>' +
+  '<tr><td>Envía</td><td>La cuenta que administra la instalación (aparece en la tarjeta «📧 Aviso por correo»). Es siempre la misma para todos los avisos.</td></tr>' +
+  '<tr><td>Recibe (ayuntamiento)</td><td>El correo de su tarjeta: alertas de sus actividades y de las entidades que sigue.</td></tr>' +
+  '<tr><td>Recibe (cada club)</td><td>El correo de la tarjeta del club: solo sus alertas. El ayuntamiento no recibe por correo las de los clubes; las ve en Mis clubes.</td></tr></tbody></table>' +
+  '<p><b>Ejemplo de una semana</b> (frecuencia «Solo alertas nuevas»): <b>lunes</b>, K2 sigue pendiente → recordatorio semanal; <b>martes</b>, aparece «B2 caduca pronto» → un correo; <b>miércoles</b>, nada cambia → ningún correo; <b>jueves</b>, se da de alta una entidad sin Delegado/a (B1) → un correo.</p>' +
   '<p class="nota">El primer día tras activarlo llega un aviso con todas las alertas abiertas (todas son «nuevas»). Guardar un requisito, sacar un informe o iniciar la temporada recalcula las alertas en el momento, pero no envía correo; «Recalcular» sí puede enviarlo si aparecen alertas nuevas.</p>', '', 'alertas']); });
+GUIA.forEach(t => { if (t[1] === 'Modelo comercial y versiones (solo versión maestra)' || t[1] === '💼 Modelo comercial y versiones (solo versión maestra)') t[2].push(['Avisos por correo al dar de alta un cliente (comprobación)',
+  '<ol><li><b>Activador:</b> en la hoja del cliente, Extensiones → Apps Script → ⏰ Activadores: debe haber <b>uno solo</b>, <code>generarAlertasTodos</code>, diario de 7 a 8, con propietario <b>Yo</b> (la cuenta propietaria). Si hay otro de «Otro usuario», bórralo entrando con esa cuenta en script.google.com/home/triggers: si no, los avisos saldrían desde esa cuenta o fallarían.</li>' +
+  '<li><b>Correo del cliente:</b> en su instalación, Alertas → 📧 Aviso por correo → Cambiar: correo del Delegado/a municipal y «Solo alertas nuevas». Pulsa <b>Enviar prueba</b>.</li>' +
+  '<li><b>Spam:</b> pide al cliente que marque el primer correo como «No es spam» y cree un filtro para el remitente.</li>' +
+  '<li><b>Cada club:</b> al darlo de alta, su correo queda como destinatario. Pídele que haga <b>Enviar prueba</b> desde su espacio (también lo indica el kit de bienvenida).</li>' +
+  '<li><b>Maestra:</b> su tarjeta debe tener un correo neutro (no un correo personal ni municipal).</li></ol>', 'admin', 'alertas']); });
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
