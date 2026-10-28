@@ -7035,6 +7035,7 @@ function htmlKitBienvenida(c, usuario, clave) {
   }
 })();
 
+function diagMovil() { return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (window.matchMedia && matchMedia('(pointer:coarse)').matches && innerWidth < 900); }
 // ---- Autodiagnóstico gratuito (página pública ?diag=1): 13 preguntas, resultado y PDF, sin guardar nada ----
 const DIAG_PREG = [
   ['A', '¿El órgano de gobierno ha aprobado una declaración de compromiso con la protección de menores?', 'Aprobar en Junta una declaración institucional de compromiso (requisito A1).'],
@@ -7081,11 +7082,12 @@ function pintarDiag() {
     const fd = new FormData(ev.target), resp = DIAG_PREG.map((q, i) => fd.get('p' + i));
     const res = diagResultado(resp);
     const resumen = 'Hola:\n\nHe hecho el autodiagnóstico de EntornoSeguro: ' + res.pct + ' % (' + res.nivel[0] + ').\nMe gustaría información para nuestro club.\n\nNombre del club:\nPersona de contacto:\nTeléfono:\n';
+    const mailtoDiag = 'mailto:' + DIAG_CONTACTO + '?subject=' + encodeURIComponent('Autodiagnóstico EntornoSeguro') + '&body=' + encodeURIComponent(resumen);
     $('#diag-res').innerHTML = `<div class="diag-resultado"><div class="diag-pct">${res.pct}%</div><div><h2>Nivel: ${esc(res.nivel[0])}</h2><p>${esc(res.nivel[1])}</p></div></div>
       ${res.falta.length ? `<h3>Qué os falta, por orden</h3><ul>${res.falta.map(x => `<li><b>${x.r === 'no' ? 'Pendiente' : 'En parte'}</b> · ${esc(x.q[2])}</li>`).join('')}</ul>` : '<p>¡Enhorabuena! Según vuestras respuestas lo tenéis todo. El reto ahora es mantenerlo y poder acreditarlo.</p>'}
       <div class="ia-acciones"><button type="button" class="btn" id="diag-pdf">📄 Descargar resultado (PDF)</button><button type="button" class="btn ghost" id="diag-info">✉️ Quiero información</button></div>
-      <div id="diag-contacto" class="diag-contacto" hidden><p style="margin:0 0 6px">Escríbenos a <b>${esc(DIAG_CONTACTO)}</b> con este mensaje (ya lleva tu resultado):</p>
-        <pre class="out">${esc(resumen)}</pre><div class="ia-acciones"><a class="btn" target="_blank" rel="noopener" href="https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(DIAG_CONTACTO)}&su=${encodeURIComponent('Autodiagnóstico EntornoSeguro')}&body=${encodeURIComponent(resumen)}">Abrir en Gmail</a><a class="btn ghost" href="mailto:${esc(DIAG_CONTACTO)}?subject=${encodeURIComponent('Autodiagnóstico EntornoSeguro')}&body=${encodeURIComponent(resumen)}">Abrir mi programa de correo</a><button type="button" class="btn ghost" id="diag-copiar">📋 Copiar mensaje</button></div></div>`;
+      <div id="diag-contacto" class="diag-contacto" hidden><p style="margin:0 0 6px">Escríbenos a <b style="overflow-wrap:anywhere;word-break:break-word">${esc(DIAG_CONTACTO)}</b> con este mensaje (ya lleva tu resultado):</p>
+        <pre class="out">${esc(resumen)}</pre><div class="ia-acciones">${diagMovil() ? `<a class="btn" href="${mailtoDiag}">✉️ Enviar por correo</a>` : `<a class="btn" target="_blank" rel="noopener" href="https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(DIAG_CONTACTO)}&su=${encodeURIComponent('Autodiagnóstico EntornoSeguro')}&body=${encodeURIComponent(resumen)}">Abrir en Gmail</a><a class="btn ghost" href="${mailtoDiag}">Abrir mi programa de correo</a>`}<button type="button" class="btn ghost" id="diag-copiar">📋 Copiar mensaje</button></div><p class="muted" style="margin:8px 0 0;font-size:12.5px">El mensaje ya incluye tu resultado. Si quieres, adjunta también el PDF descargado.</p></div>`;
     $('#diag-info').onclick = () => { const c = $('#diag-contacto'); c.hidden = false; c.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
     $('#diag-copiar').onclick = () => copiarTexto(DIAG_CONTACTO + '\n\n' + resumen);
     $('#diag-pdf').onclick = () => abrirInforme(htmlDiagInforme(res));
@@ -7163,7 +7165,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v101';
+const ES_VERSION = 'v103';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
