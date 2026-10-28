@@ -7165,7 +7165,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v107';
+const ES_VERSION = 'v108';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -7341,7 +7341,7 @@ const CS_TARIFA = { 'Autogestión': [170, 170], 'Acompañado': [420, 270], 'Gest
 const CS_INCLUYE = {
   'Autogestión': ['Acceso a la aplicación EntornoSeguro (perfil MI CLUB) durante la vigencia del contrato, con sus actualizaciones.', 'Sesión de puesta en marcha de una hora (presencial o en línea) y kit de bienvenida.', 'Soporte de uso por correo electrónico, con respuesta en un máximo de dos días hábiles.'],
   'Acompañado': ['Todo lo incluido en el servicio Autogestión.', 'Acompañamiento en la implantación: ficha de la entidad, protocolo, código de conducta, designación del Delegado/a, análisis de riesgos (en sesión de trabajo), documentos y campaña informativa a familias.', 'Orientación para la inscripción en el registro de la Junta de Andalucía y la aceptación del Protocolo Marco.', 'Seguimiento periódico del avance y envío de recomendaciones.', 'Revisión anual del sistema e informe de implantación.'],
-  'Gestionado': ['Todo lo incluido en el servicio Acompañado.', 'Gestión delegada del sistema de protección: el PRESTADOR realiza en la aplicación las tareas encargadas, con acceso autorizado por la ENTIDAD en «Mis datos» y registrado.', 'Revisión trimestral y una reunión anual con el órgano de gobierno de la ENTIDAD.', 'Soporte prioritario, con respuesta en un máximo de un día hábil.'],
+  'Gestionado': ['Todo lo incluido en el servicio Acompañado.', 'Gestión delegada del sistema de protección: el PRESTADOR realiza en la aplicación las tareas encargadas, con acceso autorizado por la CLIENTE en «Mis datos» y registrado.', 'Revisión trimestral y una reunión anual con el órgano de gobierno de la CLIENTE.', 'Soporte prioritario, con respuesta en un máximo de un día hábil.'],
   'Ayuntamiento Base': ['Instalación propia de EntornoSeguro para el Ayuntamiento, con función municipal completa: entidades ilimitadas, actividades municipales, coordinación y verificación con entidades, alertas, informes y memoria.', 'Actualizaciones de la aplicación durante la vigencia del contrato.', 'Soporte de uso por correo electrónico, con respuesta en un máximo de dos días hábiles.'],
   'Ayuntamiento Base + paquete de clubes': ['Todo lo incluido en Ayuntamiento Base.', 'Espacio propio completo (perfil MI CLUB) para el número de clubes indicado en la cláusula de precio, gestionado por el Ayuntamiento.', 'Soporte de uso a los clubes incluidos, por correo electrónico.']
 };
