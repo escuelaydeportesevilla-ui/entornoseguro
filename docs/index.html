@@ -7165,7 +7165,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v106';
+const ES_VERSION = 'v107';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -7321,6 +7321,122 @@ GUIA.forEach(t => { if (t[1] === 'Modelo comercial y versiones (solo versión ma
   '<li><b>Spam:</b> pide al cliente que marque el primer correo como «No es spam» y cree un filtro para el remitente.</li>' +
   '<li><b>Cada club:</b> al darlo de alta, su correo queda como destinatario. Pídele que haga <b>Enviar prueba</b> desde su espacio (también lo indica el kit de bienvenida).</li>' +
   '<li><b>Maestra:</b> su tarjeta debe tener un correo neutro (no un correo personal ni municipal).</li></ol>', 'admin', 'alertas']); });
+// v107: contrato de encargo actualizado (acceso del gestor, avisos por correo, incidencias) + contrato de servicios (solo maestra)
+(function () {
+  if (typeof htmlContrato !== 'function') return;
+  const base = htmlContrato;
+  htmlContrato = function (p, e) {
+    const prev = state.cfg && state.cfg.organismo;
+    if (state.cfg && !state.inst && typeof esMaestra === 'function' && esMaestra()) state.cfg.organismo = p.nombre || 'Escuela&Deporte';
+    let h; try { h = base(p, e); } finally { if (state.cfg) state.cfg.organismo = prev; }
+    const li = '<li>' + textoCampos('Acceder al espacio de la ENTIDAD solo cuando esta lo autorice expresamente en el apartado "Mis datos" (servicio con gestión delegada), para realizar por su cuenta las tareas encargadas. Cada acceso tiene una duración limitada, queda registrado y es visible para la ENTIDAD, que puede retirar la autorización en cualquier momento. Durante ese acceso no se permite cambiar la contraseña de la ENTIDAD ni consultar el registro de incidencias.') + '</li>';
+    h = h.replace('<li>Garantizar que las personas autorizadas', li + '<li>Garantizar que las personas autorizadas');
+    h = h.replace('<h2>TERCERA. Duración</h2>', pj('El servicio utiliza la dirección de correo electrónico que indique la ENTIDAD para enviarle avisos automáticos sobre el estado de su sistema de protección. Los avisos no contienen datos de menores ni información sobre casos.') +
+      pj('El registro de incidencias no forma parte del servicio salvo que la ENTIDAD lo active expresamente tras la validación de su Delegado/a de Protección de Datos. Mientras no se active, no se trata información sobre casos.') + '<h2>TERCERA. Duración</h2>');
+    h = h.replace('<tr><td class="k">Organizativas</td>', '<tr><td class="k">Acceso con gestión delegada</td><td>Solo con autorización expresa de la entidad, sesión limitada a dos horas, registro de cada entrada y salida visible para la entidad y retirada de la autorización en cualquier momento.</td></tr><tr><td class="k">Organizativas</td>');
+    return h;
+  };
+})();
+const CS_TARIFA = { 'Autogestión': [170, 170], 'Acompañado': [420, 270], 'Gestionado': [850, 850], 'Ayuntamiento Base': [1800, 1800], 'Ayuntamiento Base + paquete de clubes': [2475, 2475] };
+const CS_INCLUYE = {
+  'Autogestión': ['Acceso a la aplicación EntornoSeguro (perfil MI CLUB) durante la vigencia del contrato, con sus actualizaciones.', 'Sesión de puesta en marcha de una hora (presencial o en línea) y kit de bienvenida.', 'Soporte de uso por correo electrónico, con respuesta en un máximo de dos días hábiles.'],
+  'Acompañado': ['Todo lo incluido en el servicio Autogestión.', 'Acompañamiento en la implantación: ficha de la entidad, protocolo, código de conducta, designación del Delegado/a, análisis de riesgos (en sesión de trabajo), documentos y campaña informativa a familias.', 'Orientación para la inscripción en el registro de la Junta de Andalucía y la aceptación del Protocolo Marco.', 'Seguimiento periódico del avance y envío de recomendaciones.', 'Revisión anual del sistema e informe de implantación.'],
+  'Gestionado': ['Todo lo incluido en el servicio Acompañado.', 'Gestión delegada del sistema de protección: el PRESTADOR realiza en la aplicación las tareas encargadas, con acceso autorizado por la ENTIDAD en «Mis datos» y registrado.', 'Revisión trimestral y una reunión anual con el órgano de gobierno de la ENTIDAD.', 'Soporte prioritario, con respuesta en un máximo de un día hábil.'],
+  'Ayuntamiento Base': ['Instalación propia de EntornoSeguro para el Ayuntamiento, con función municipal completa: entidades ilimitadas, actividades municipales, coordinación y verificación con entidades, alertas, informes y memoria.', 'Actualizaciones de la aplicación durante la vigencia del contrato.', 'Soporte de uso por correo electrónico, con respuesta en un máximo de dos días hábiles.'],
+  'Ayuntamiento Base + paquete de clubes': ['Todo lo incluido en Ayuntamiento Base.', 'Espacio propio completo (perfil MI CLUB) para el número de clubes indicado en la cláusula de precio, gestionado por el Ayuntamiento.', 'Soporte de uso a los clubes incluidos, por correo electrónico.']
+};
+function csEuros(n) { const [e, d] = (Number(n) || 0).toFixed(2).split('.'); return e.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ',' + d + ' €'; }
+function csFecha(f) { return f ? new Date(f + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : ''; }
+function htmlContratoServicios(p, e, c) {
+  const ayto = /^Ayuntamiento/.test(c.servicio);
+  const CLI = campo(e.nombre, ayto ? 'AYUNTAMIENTO DE …' : 'DENOMINACIÓN DE LA ENTIDAD'), PRE = campo(p.nombre, 'DENOMINACIÓN DEL PRESTADOR');
+  const hoy = new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+  const imp = Number(c.importe) || 0, dto = Number(c.descuento) || 0, impl = Number(c.implantacion) || 0;
+  const neto = Math.round(imp * (100 - dto)) / 100;
+  let n = 0; const cl = t => `<h2>${['PRIMERA', 'SEGUNDA', 'TERCERA', 'CUARTA', 'QUINTA', 'SEXTA', 'SÉPTIMA', 'OCTAVA', 'NOVENA', 'DÉCIMA', 'UNDÉCIMA', 'DUODÉCIMA', 'DECIMOTERCERA'][n++]}. ${esc(t)}</h2>`;
+  let b = `<p>En ${campo(p.localidad, 'LOCALIDAD')}, a ${esc(hoy)}.</p><h3 class="centro">REUNIDOS</h3>
+  <p>De una parte, ${campo(ayto ? '' : e.presidencia, 'NOMBRE Y APELLIDOS')}, con DNI <span class="campo">[DNI]</span>, en nombre y representación de ${CLI}, con CIF ${campo(e.cif, 'CIF')} y domicilio en ${campo(e.domicilio, 'DOMICILIO')}, en su condición de ${campo(ayto ? '' : e.presidencia ? 'Presidente/a' : '', 'CARGO')}, en adelante el CLIENTE.</p>
+  <p>De otra parte, ${campo(p.representante, 'NOMBRE Y APELLIDOS')}, con DNI <span class="campo">[DNI]</span>, en nombre y representación de ${PRE}, con CIF ${campo(p.cif, 'CIF')} y domicilio en ${campo(p.domicilio, 'DOMICILIO')}, en su condición de ${campo(p.cargo, 'CARGO')}, en adelante el PRESTADOR.</p>
+  <p>Ambas partes se reconocen capacidad suficiente para suscribir el presente contrato y</p><h3 class="centro">EXPONEN</h3><ol type="I">
+  <li>Que el CLIENTE ${ayto ? 'desea disponer de una herramienta para ejercer sus funciones de impulso, coordinación y seguimiento de la protección de las personas menores en el deporte municipal' : 'desarrolla actividades deportivas con personas menores de edad y está sujeto a las obligaciones'} de la Ley Orgánica 8/2021 (LOPIVI) y del Protocolo Marco de Actuación para la Protección de las Personas Menores frente a la Violencia en el Deporte (Orden de 18 de noviembre de 2024).</li>
+  <li>Que el PRESTADOR presta el servicio EntornoSeguro, aplicación web y servicios de acompañamiento para la implantación y el seguimiento del sistema de protección.</li>
+  <li>Que ambas partes acuerdan formalizar la prestación con arreglo a las siguientes</li></ol><h3 class="centro">CLÁUSULAS</h3>` +
+  cl('Objeto') + pj('El PRESTADOR prestará al CLIENTE el servicio EntornoSeguro en la modalidad «' + c.servicio + '», con el contenido descrito en la cláusula segunda.') +
+  cl('Servicios incluidos') + lista(CS_INCLUYE[c.servicio] || []) +
+  cl('Servicios no incluidos') + lista(['Asesoramiento jurídico y representación ante cualquier administración u órgano judicial.', 'Formación oficial o certificada (por ejemplo, la exigida al Delegado/a de Protección), que el CLIENTE realizará con la entidad formadora que corresponda.', 'La valoración y la actuación ante situaciones o casos concretos, que corresponden al Delegado/a de Protección y a los órganos competentes del CLIENTE. La aplicación ayuda a documentar y recordar procedimientos, pero no sustituye las decisiones de las personas responsables.', 'La custodia de documentos con datos personales (certificados, autorizaciones, hojas firmadas), que permanecen en el CLIENTE.']) +
+  cl('Duración') + pj('El contrato estará vigente desde el ' + (csFecha(c.inicio) || '[FECHA DE INICIO]') + ' hasta el ' + (csFecha(c.fin) || '[FECHA DE FIN]') + '. Podrá renovarse por temporadas sucesivas por acuerdo expreso y por escrito de ambas partes, con las tarifas vigentes en ese momento.') +
+  cl('Precio y forma de pago') + tablaKV([
+    ['Servicio', esc(c.servicio) + (/paquete/.test(c.servicio) ? ' · ' + campo(c.clubes, 'Nº') + ' clubes' : '')],
+    ['Importe anual de tarifa', csEuros(imp)],
+    ...(dto ? [['Descuento cliente fundador', dto + ' % (solo durante el periodo de este contrato)'], ['Importe del periodo', '<b>' + csEuros(neto) + '</b>']] : [['Importe del periodo', '<b>' + csEuros(imp) + '</b>']]),
+    ...(impl ? [['Implantación y formación (pago único)', csEuros(impl)]] : []),
+    ['Impuestos', '<span class="campo">[IVA aplicable según el régimen fiscal del PRESTADOR]</span>'],
+    ['Forma de pago', 'Transferencia bancaria en los quince días siguientes a la emisión de la factura, a la cuenta <span class="campo">[IBAN]</span>.']]) +
+  (ayto ? pj('Cuando el CLIENTE sea una administración pública, este documento recoge las condiciones del servicio y acompaña a la oferta; la contratación se tramitará conforme a la Ley 9/2017, de Contratos del Sector Público, y prevalecerá lo que disponga la resolución de adjudicación.') : '') +
+  cl('Obligaciones del PRESTADOR') + lista(['Mantener la aplicación disponible y actualizada, salvo interrupciones por mantenimiento o por causas ajenas al PRESTADOR, que procurará reducir al mínimo.', 'Prestar los servicios incluidos con diligencia profesional y en los plazos indicados.', 'Guardar confidencialidad sobre la información del CLIENTE, también tras la finalización del contrato.', 'Cumplir el contrato de encargo del tratamiento que las partes firman junto a este.']) +
+  cl('Obligaciones del CLIENTE') + lista(['Designar una persona de contacto (preferentemente el Delegado/a de Protección).', 'Custodiar sus credenciales de acceso y comunicar cualquier uso indebido.', 'No introducir en la aplicación datos que identifiquen a personas menores de edad.', 'Mantener sus documentos en su propio almacenamiento, con acceso restringido a las personas que autorice.', 'Abonar el precio en la forma acordada.']) +
+  (dto ? cl('Condición de cliente fundador') + pj('El descuento de la cláusula quinta se concede por la condición de cliente fundador. A cambio, el CLIENTE participará en una reunión de valoración al final del periodo y responderá a una breve encuesta de satisfacción. Si lo desea, y solo con su consentimiento previo por escrito, podrá autorizar al PRESTADOR a citarle como referencia o a publicar su testimonio.') : '') +
+  cl('Protección de datos') + pj('El tratamiento de datos personales que conlleva el servicio se regula en el contrato de encargo del tratamiento firmado por las partes, que forma parte inseparable de este contrato.') +
+  cl('Propiedad intelectual') + pj('La aplicación EntornoSeguro, su diseño, sus textos y sus plantillas son propiedad del PRESTADOR. Los documentos que el CLIENTE genere y apruebe con la aplicación le pertenecen y puede usarlos libremente, también tras la finalización del contrato.') +
+  cl('Responsabilidad') + pj('El PRESTADOR responde de la correcta prestación de los servicios incluidos. No responde de las decisiones del CLIENTE ni de la veracidad de los datos que este introduzca. La responsabilidad total del PRESTADOR derivada del contrato se limita al importe abonado por el CLIENTE en el periodo en curso, salvo dolo o negligencia grave.') +
+  cl('Resolución') + pj('Cualquiera de las partes podrá resolver el contrato con un preaviso de treinta días o de forma inmediata en caso de incumplimiento grave de la otra parte. A la finalización, el CLIENTE podrá descargar una copia completa de sus datos y se aplicará lo previsto en el contrato de encargo del tratamiento.') +
+  cl('Legislación y jurisdicción') + `<p>Este contrato se rige por la legislación española. Para cualquier controversia, las partes se someten a los juzgados y tribunales de ${campo(p.localidad, 'LOCALIDAD')}.</p>` +
+  pj('Y en prueba de conformidad, firman el presente documento por duplicado en el lugar y fecha indicados.') +
+  `<div class="firma"><div>Por el CLIENTE<br>${CLI}</div><div>Por el PRESTADOR<br>${PRE}</div></div>`;
+  const prev = state.cfg && state.cfg.organismo;
+  if (state.cfg && !state.inst) state.cfg.organismo = p.nombre || 'Escuela&Deporte';
+  try { return plantillaInforme('Contrato de prestación de servicios', 'Servicio EntornoSeguro · ' + (e.nombre || 'Modelo'), '<div class="just">' + b + '</div>', false,
+    `EntornoSeguro · Contrato de servicios entre ${e.nombre ? esc(e.nombre) : 'el cliente'} y ${p.nombre ? esc(p.nombre) : 'el prestador'}.`); } finally { if (state.cfg) state.cfg.organismo = prev; }
+}
+async function abrirContratoServicios(club) {
+  const d = await run(() => API.call('datosContrato', club ? { club_id: club.id } : {}));
+  const serv = club && CS_TARIFA[club.servicio] ? club.servicio : (club ? 'Acompañado' : 'Acompañado');
+  const temp = new Date().getMonth() >= 7 ? new Date().getFullYear() + 1 : new Date().getFullYear();
+  const opciones = club ? SERVICIOS : Object.keys(CS_TARIFA);
+  modal('📄 Contrato de servicios' + (club ? ' · ' + club.nombre : ''), [
+    ['servicio', 'Servicio', opciones], ['importe', 'Importe anual de tarifa (€)', 'number', true],
+    ['descuento', 'Descuento cliente fundador', [['0', 'Sin descuento'], ['10', '10 %'], ['20', '20 %'], ['30', '30 %'], ['50', '50 %'], ['100', '100 % (bonificado)']]],
+    ['clubes', 'Nº de clubes del paquete (solo ayuntamientos)', 'number'], ['implantacion', 'Implantación y formación, pago único (€)', 'number'],
+    ['inicio', 'Fecha de inicio', 'date', true], ['fin', 'Fecha de fin', 'date', true], ['formato', 'Formato', [['pdf', 'PDF (ver e imprimir)'], ['word', 'Word (para retocar)']]]],
+    { servicio: serv, importe: CS_TARIFA[serv][0], descuento: '0', clubes: '', implantacion: /^Ayuntamiento/.test(serv) ? 450 : 0,
+      inicio: new Date().toISOString().slice(0, 10), fin: temp + '-07-31', formato: 'pdf' },
+    async v => {
+      const html = htmlContratoServicios(d.prestador, d.entidad, v);
+      if (v.formato === 'word') descargar('﻿' + html, 'application/msword', nombreInf('contrato-servicios-' + (d.entidad.nombre || 'modelo'))); else abrirInforme(html);
+    });
+  const f = $('#modal-form'), sel = f && f.servicio;
+  if (sel) sel.onchange = () => { const t = CS_TARIFA[sel.value]; if (t) f.importe.value = t[0]; f.implantacion.value = /^Ayuntamiento/.test(sel.value) ? 450 : 0; };
+  const fl = f && f.querySelector('.fields');
+  if (fl) fl.insertAdjacentHTML('afterend', '<p class="nota">El importe se propone con la tarifa del servicio y se puede cambiar. Los datos que falten (DNI, IVA, IBAN…) salen marcados para completarlos. Fírmalo junto con el contrato de encargo del tratamiento.</p>');
+}
+(function () {
+  if (typeof gestionarClub === 'function') {
+    const base = gestionarClub;
+    gestionarClub = function (c) {
+      base.apply(this, arguments);
+      if (typeof esMaestra === 'function' && !esMaestra()) return;
+      const cont = $('#modal-form .acciones-club');
+      if (cont && !cont.querySelector('[data-acc="servicios"]')) {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost'; b.dataset.acc = 'servicios'; b.textContent = '📄 Contrato de servicios';
+        b.onclick = ev => { ev.stopPropagation(); $('#modal').close('cancel'); setTimeout(() => abrirContratoServicios(Object.assign({}, c, (state.clubes || []).find(x => x.id === c.id) || {})), 50); };
+        const ref = cont.querySelector('[data-acc="contrato"]'); cont.insertBefore(b, ref || null);
+      }
+    };
+  }
+  const baseDoc = typeof loadDocumentacion === 'function' ? loadDocumentacion : null;
+  if (baseDoc) loadDocumentacion = async function () {
+    await baseDoc.apply(this, arguments);
+    if (typeof esMaestra === 'function' && !esMaestra()) return;
+    const card = [...$$('#view-documentacion .card')].find(x => /Contrato de encargo/.test(x.textContent));
+    if (card && !$('#card-servicios')) card.insertAdjacentHTML('beforebegin', '<div class="card" id="card-servicios"><h3>Contrato de prestación de servicios</h3><p class="nota">Para clubes (Autogestión, Acompañado, Gestionado) y ayuntamientos. Se firma junto con el contrato de encargo. El de cada club, con sus datos, está en Mis clubes → Gestionar.</p><div class="ia-acciones"><button class="btn" type="button" id="btn-cs-modelo">Preparar contrato</button></div></div>');
+    const bt = $('#btn-cs-modelo'); if (bt) bt.onclick = () => abrirContratoServicios(null);
+  };
+})();
+GUIA.forEach(t => { if (t[1] === 'Modelo comercial y versiones (solo versión maestra)' || t[1] === '💼 Modelo comercial y versiones (solo versión maestra)') t[2].push(['¿Qué documentos firma un cliente nuevo?',
+  '<p>Dos documentos, que se firman juntos:</p><ol><li><b>Contrato de prestación de servicios</b>: qué incluye el servicio contratado, qué no incluye, duración, precio y forma de pago.</li><li><b>Contrato de encargo del tratamiento</b> (art. 28 RGPD): cómo se tratan los datos, acceso del gestor solo con autorización, avisos por correo y exclusión de incidencias.</li></ol>' +
+  '<p><b>Dónde se preparan:</b> para un club, en <b>Mis clubes → Gestionar → 📄 Contrato de servicios</b> y <b>Contrato de encargo</b> (salen con sus datos). Para un ayuntamiento o un cliente aún sin alta, en <b>Documentación → Preparar contrato</b>.</p>' +
+  '<p><b>Cliente fundador:</b> elige el descuento (10–100 %). El contrato añade la cláusula de cliente fundador: reunión de valoración, encuesta y, solo con su consentimiento escrito, testimonio.</p>' +
+  '<p><b>Antes de firmar:</b> descarga en Word, completa lo marcado entre corchetes (DNI, IVA según tu régimen fiscal, IBAN) y revisa la denominación completa del prestador. En ayuntamientos, el documento acompaña a la oferta del contrato menor y prevalece la resolución de adjudicación.</p>', 'admin', 'documentacion']); });
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
