@@ -7166,7 +7166,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v110';
+const ES_VERSION = 'v112';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -7620,8 +7620,153 @@ GUIA.forEach(t => { if (t[1] === 'Entidades y coordinación con clubes') t[2].pu
   '<tr><td>Agentes deportivos</td><td>Personas nuevas y datos que faltan (fecha del certificado, código, formación)</td><td>Agentes → sugerencias K1, K2, D2, J1</td></tr>' +
   '<tr><td>Autorizaciones</td><td>Por grupo: nº de menores, recibidas y denegadas (solo cifras)</td><td>Autorizaciones → sugerencias E1, F1</td></tr>' +
   '<tr><td>Documento aprobado</td><td>Título, fecha de aprobación y enlace</td><td>Matriz como «Parcial · revisar» con la evidencia</td></tr></tbody></table>' +
-  '<p><b>Dónde se piden:</b> en <b>Mis clubes → 🧭 Seguimiento → 📨 Pedir al club…</b> (abajo verás las <b>peticiones enviadas</b> y su estado); en modo gestor, en cada paso del tutorial con <b>📨 Pedírselo al club</b>; y la ficha también desde el paso 1 del seguimiento de entidades o desde la propia ficha.</p>' +
+  '<p><b>Dónde se piden:</b> en <b>Mis clubes → 🧭 Seguimiento → 📨 Pedir al club…</b> (abajo verás las <b>peticiones enviadas</b> y su estado); en modo gestor, en cada paso del tutorial con <b>📨 Pedírselo al club</b>; y, en cada pantalla, <b>📨 Pedir por enlace</b>: Formación (al registrar), Agentes, Autorizaciones y la Matriz (al actualizar un requisito con documento). La ficha, también desde el paso 1 del seguimiento de entidades o desde la propia ficha.</p>' +
   '<p class="nota">La Matriz la validas tú: lo recibido no marca «Cumple» solo. El enlace caduca a los 14 días y sirve una vez. Solo datos de la entidad y de personas adultas, nunca de menores; los certificados y autorizaciones firmadas se quedan en la entidad. Las casillas vacías no borran datos.</p>', 'escribir', 'entidades']); });
+// v111: «📨 Pedir por enlace» donde se registra cada dato: Formación, Agentes, Autorizaciones y Matriz (documentos)
+function petDestinoDe(entId) {
+  if (!state.me || state.me.rol === 'entidad' || !can('escribir')) return null;
+  if (state.club) return {};
+  const e = (state.entidades || []).find(x => x.id === entId);
+  if (!e || e.propia === 'SI') return null;
+  return { entidad_id: e.id };
+}
+function petNombreDe(entId) { const e = (state.entidades || []).find(x => x.id === entId) || {}; return { nombre: state.club ? (state.me && state.me.nombre) : e.nombre, email: state.club ? '' : e.delegado_email }; }
+function petBoton(tipo, ref, getEnt, cls) {
+  const b = document.createElement('button'); b.type = 'button'; b.className = cls || 'btn ghost'; b.textContent = '📨 Pedir por enlace';
+  b.title = 'Envía un formulario a la entidad para que rellene estos datos ella misma';
+  b.onclick = () => {
+    const ent = getEnt(), dest = petDestinoDe(ent);
+    if (!dest) { toast(state.club ? 'No disponible' : 'Elige una entidad (las actividades municipales propias no se piden por enlace)', true); return; }
+    const n = petNombreDe(ent); if ($('#modal').open) $('#modal').close('cancel');
+    setTimeout(() => pedirPeticion(dest, tipo, ref || '', n.nombre, n.email), 60);
+  };
+  return b;
+}
+(function () {
+  // Agentes y Autorizaciones: botón junto a «+ Nuevo …»
+  [['#nuevo-agente', 'agentes', '#agentes-entidad'], ['#nueva-aut', 'autorizaciones', '#aut-entidad']].forEach(([id, tipo, sel]) => {
+    const n = $(id); if (!n || n.parentElement.querySelector('[data-pet-pant]')) return;
+    const b = petBoton(tipo, '', () => ($(sel) || {}).value); b.dataset.petPant = tipo; n.after(b);
+  });
+  const vis = () => { $$('[data-pet-pant]').forEach(b => { const tipo = b.dataset.petPant, sel = $(tipo === 'agentes' ? '#agentes-entidad' : '#aut-entidad'); b.hidden = !petDestinoDe(sel && sel.value); }); };
+  if (typeof loadAgentes === 'function') { const b1 = loadAgentes; loadAgentes = async function () { const r = await b1.apply(this, arguments); try { vis(); } catch (e) {} return r; }; }
+  if (typeof loadAutorizaciones === 'function') { const b2 = loadAutorizaciones; loadAutorizaciones = async function () { const r = await b2.apply(this, arguments); try { vis(); } catch (e) {} return r; }; }
+  // Formación: en el formulario «Registrar formación»
+  if (typeof formFormacion === 'function') {
+    const base = formFormacion;
+    formFormacion = async function (x) {
+      const r = await base.apply(this, arguments);
+      try {
+        if (x && x.id) return r;
+        const f = $('#modal-form'); if (!f || f.querySelector('#pet-form')) return r;
+        const getEnt = () => { const s = f.querySelector('[name=entidad_id]'); return s ? s.value : (state.me && state.me.entidad_id); };
+        if (!state.club && !petDestinoDe(getEnt()) && !(state.entidades || []).some(e => e.propia !== 'SI')) return r;
+        const p = document.createElement('p'); p.className = 'nota'; p.id = 'pet-form'; p.style.margin = '0 0 8px';
+        p.innerHTML = '¿Los datos del curso del Delegado/a los tiene la entidad? ';
+        p.appendChild(petBoton('formacion_del', '', getEnt, 'link'));
+        const h = f.querySelector('h3'); if (h) h.after(p);
+      } catch (e) {}
+      return r;
+    };
+  }
+  // Matriz: en «Actualizar» de los requisitos que se acreditan con un documento
+  if (typeof formCumplimiento === 'function') {
+    const base = formCumplimiento;
+    formCumplimiento = function (entidad_id, req) {
+      const r = base.apply(this, arguments);
+      try {
+        const cod = req && req.codigo; if (!cod || !PET_DOCS.includes(cod) || !petDestinoDe(entidad_id)) return r;
+        const f = $('#modal-form'); if (!f || f.querySelector('#pet-mat')) return r;
+        const p = document.createElement('p'); p.className = 'nota'; p.id = 'pet-mat'; p.style.margin = '8px 0';
+        p.innerHTML = '¿El documento aprobado lo tiene la entidad? ';
+        p.appendChild(petBoton('documento', cod, () => entidad_id, 'link'));
+        const act = f.querySelector('.actions'); if (act) act.before(p); else f.appendChild(p);
+      } catch (e) {}
+      return r;
+    };
+  }
+})();
+// v112: formación del Delegado/a y de los agentes · curso oficial de la Junta de Andalucía y formación continua del IAD
+const CURSO_JUNTA = { nombre: 'Curso básico de sensibilización y protección del menor frente a la violencia en el deporte', entidad: 'Junta de Andalucía (Consejería de Cultura y Deporte)',
+  url: 'https://www.juntadeandalucia.es/organismos/culturapatrimoniohistoricoydeporte/areas/deporte/formacion-investigacion-innovacion/curso-proteccion-menor-violencia-deporte.html' };
+const IAD_FC_URL = 'https://www.juntadeandalucia.es/organismos/culturapatrimoniohistoricoydeporte/areas/deporte/formacion-investigacion-innovacion/formacion-continua.html';
+const cursoLinks = () => `<a href="${CURSO_JUNTA.url}" target="_blank" rel="noopener">Hacer el curso de la Junta ↗</a> · <a href="${IAD_FC_URL}" target="_blank" rel="noopener">Otras formaciones del IAD ↗</a>`;
+function cursoNota(form, conBoton) {
+  const p = document.createElement('p'); p.className = 'nota'; p.dataset.curso = '1'; p.style.margin = '0 0 8px';
+  p.innerHTML = '🎓 <b>Curso oficial en Andalucía:</b> «' + esc(CURSO_JUNTA.nombre) + '» (Junta de Andalucía, en línea). ' + (conBoton ? '<button type="button" class="link" data-usar-curso>Usar este curso</button> · ' : '') + cursoLinks();
+  const u = p.querySelector('[data-usar-curso]');
+  if (u) u.onclick = () => { const c = form.querySelector('[name=curso]'), ef = form.querySelector('[name=entidad_formadora]'); if (c) c.value = CURSO_JUNTA.nombre; if (ef) ef.value = CURSO_JUNTA.entidad; toast('Curso de la Junta rellenado: añade la fecha'); };
+  return p;
+}
+(function () {
+  // Registrar formación (una persona)
+  if (typeof formFormacion === 'function') {
+    const base = formFormacion;
+    formFormacion = async function (x) {
+      const r = await base.apply(this, arguments);
+      try { const f = $('#modal-form'); if (f && !f.querySelector('[data-curso]')) { const h = f.querySelector('h3'); const n = cursoNota(f, !(x && x.id)); (f.querySelector('#pet-form') || h).after(n); } } catch (e) {}
+      return r;
+    };
+  }
+  // Curso con varios asistentes
+  const lote = $('#formacion-lote');
+  if (lote) lote.addEventListener('click', () => {
+    let n = 0; const t = setInterval(() => {
+      const f = $('#modal-form'), h = f && f.querySelector('h3');
+      if (h && /varios asistentes/i.test(h.textContent) && $('#modal').open) { clearInterval(t); if (!f.querySelector('[data-curso]')) h.after(cursoNota(f, true)); }
+      if (++n > 40) clearInterval(t);
+    }, 50);
+  });
+  // Matriz: B2 y J1
+  if (typeof formCumplimiento === 'function') {
+    const base = formCumplimiento;
+    formCumplimiento = function (entidad_id, req) {
+      const r = base.apply(this, arguments);
+      try {
+        if (req && (req.codigo === 'B2' || req.codigo === 'J1')) {
+          const f = $('#modal-form'); if (f && !f.querySelector('[data-curso]')) {
+            const p = document.createElement('p'); p.className = 'nota'; p.dataset.curso = '1'; p.style.margin = '8px 0';
+            p.innerHTML = '🎓 ' + (req.codigo === 'B2' ? 'El Delegado/a debe tener formación (Protocolo Marco, ap. 4.b y 10.b). ' : 'Todo el personal en contacto con menores necesita formación mínima (Protocolo Marco, ap. 4.b). ') + cursoLinks();
+            const act = f.querySelector('.actions'); if (act) act.before(p); else f.appendChild(p);
+          }
+        }
+      } catch (e) {}
+      return r;
+    };
+  }
+  // Tutorial: paso B2 con acceso directo al curso
+  if (typeof tutPintar === 'function') {
+    const base = tutPintar;
+    tutPintar = function () {
+      const r = base.apply(this, arguments);
+      try {
+        const barra = $('#tut-barra'), acc = barra && barra.querySelector('.tut-acc'); if (!acc || acc.querySelector('[data-curso-tut]')) return r;
+        const pasos = tutVisibles(), h = state.tut.hechos || {}, salt = tutLeer().saltados || [];
+        const i = pasos.findIndex(x => !h[x.id] && !salt.includes(x.id)), pend = pasos.findIndex(x => !h[x.id]);
+        const k = state.tut.ver != null ? state.tut.ver : (i >= 0 ? i : pend), paso = pasos[k];
+        if (!paso || (paso.id !== 'B2' && paso.id !== 'J1')) return r;
+        const a = document.createElement('a'); a.className = 'btn ghost'; a.dataset.cursoTut = '1'; a.href = CURSO_JUNTA.url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = '🎓 Curso de la Junta ↗';
+        acc.insertBefore(a, acc.querySelector('#tut-sig') || null);
+      } catch (e) {}
+      return r;
+    };
+  }
+})();
+// Formulario público «Formación del Delegado/a»: rellenar con el curso de la Junta
+(function () {
+  if (!/[?&]ficha=/.test(location.search)) return;
+  const obs = new MutationObserver(() => {
+    const f = $('#fp-form'), c = f && f.querySelector('[name=curso]');
+    if (!c || f.querySelector('[data-curso]')) return;
+    const p = cursoNota(f, true); const fl = f.querySelector('.fields'); if (fl) fl.before(p);
+  });
+  obs.observe(document.body, { childList: true, subtree: true });
+})();
+GUIA.forEach(t => { if (t[1] === 'Agentes, formación y autorizaciones') t[2].unshift(['¿Qué formación debe tener el Delegado/a? ¿Y el resto del personal?',
+  '<p>El Protocolo Marco andaluz exige <b>formación mínima en prevención y detección</b> de la violencia al Delegado/a de Protección y a las personas en contacto directo con menores (ap. 4.b), y vincula la figura del Delegado/a a una <b>formación acreditada</b> (ap. 10.b). No fija horas ni un curso concreto.</p>' +
+  '<p><b>Curso oficial en Andalucía:</b> <a href="' + CURSO_JUNTA.url + '" target="_blank" rel="noopener">' + esc(CURSO_JUNTA.nombre) + '</a> (Junta de Andalucía, en línea). Además, el Instituto Andaluz del Deporte programa talleres sobre protección de menores deportistas en su <a href="' + IAD_FC_URL + '" target="_blank" rel="noopener">formación continua</a>.</p>' +
+  '<ol><li>Haz el curso y guarda el certificado en la carpeta restringida de la entidad.</li><li>En <b>Formación → Registrar formación</b>, pulsa <b>Usar este curso</b> (rellena el nombre y la entidad), elige el colectivo y pon la fecha. Para varias personas, <b>Curso con varios asistentes</b>.</li><li>La app te sugerirá marcar <b>B2</b> (Delegado/a) y <b>J1</b> (resto del personal) en la Matriz.</li></ol>' +
+  '<p class="nota">La app registra la formación, pero no la imparte ni la certifica. Si el Delegado/a o el personal han hecho otra formación equivalente (federación, universidad, otra comunidad), regístrala igual con su nombre y entidad.</p>', 'leer', 'formacion']); });
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
