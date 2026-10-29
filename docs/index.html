@@ -6891,7 +6891,8 @@ GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Qué son los «
 // v93: línea de consultoría · servicio por club y vista consultor (maestra), acceso del gestor (Gestionado), kit de bienvenida y autodiagnóstico gratuito
 const SERVICIOS = ['Autogestión', 'Acompañado', 'Gestionado'];
 const prestadorTxt = () => state.inst ? 'el Ayuntamiento' : 'Escuela&Deporte';
-const DIAG_CONTACTO = 'escuelaydeporte.sevilla@gmail.com';
+const DIAG_CONTACTO = 'entornoseguro.deporte@gmail.com'; // contacto comercial (v113); el remitente de los avisos sigue siendo la cuenta propietaria
+const REMITENTE_DEF = 'escuelaydeporte.sevilla@gmail.com';
 
 // ---- Sesión del gestor dentro de un club: banda fija y sin cambio de contraseña ----
 (function () {
@@ -6999,7 +7000,7 @@ function htmlKitBienvenida(c, usuario, clave) {
   const serv = { 'Autogestión': 'Usáis la aplicación por vuestra cuenta, guiados por el tutorial del Panel. ' + prestadorTxt() + ' resuelve dudas de uso.',
     'Acompañado': prestadorTxt() + ' revisa vuestro avance, os envía recomendaciones y os orienta en cada paso.',
     'Gestionado': prestadorTxt() + ' os lleva el sistema de protección. Para ello autorizaréis su acceso en «Mis datos»; cada entrada queda registrada.' }[c.servicio] || '';
-  const cuerpo = `<h2>1. Vuestro acceso</h2><table>${fila('Web', esc(web))}${fila('Perfil', 'MI CLUB')}${fila('Usuario', esc(u || c.usuario || ''))}${fila('Contraseña', clave ? '<b>' + esc(clave) + '</b> (temporal: se cambia en el primer acceso)' : 'Os la enviamos por separado')}${fila('Avisos', 'Llegan desde <b>' + esc(state.correoRemitente || DIAG_CONTACTO) + '</b>. El primer día: Alertas → 📧 Enviar prueba; si llega a spam, «No es spam».')}</table>
+  const cuerpo = `<h2>1. Vuestro acceso</h2><table>${fila('Web', esc(web))}${fila('Perfil', 'MI CLUB')}${fila('Usuario', esc(u || c.usuario || ''))}${fila('Contraseña', clave ? '<b>' + esc(clave) + '</b> (temporal: se cambia en el primer acceso)' : 'Os la enviamos por separado')}${fila('Avisos', 'Llegan desde <b>' + esc(state.correoRemitente || REMITENTE_DEF) + '</b>. El primer día: Alertas → 📧 Enviar prueba; si llega a spam, «No es spam».')}</table>
     ${clave ? '<p class="nota">Este documento contiene la contraseña: entrégalo solo al Delegado/a de Protección, en mano o por un canal seguro.</p>' : ''}
     <h2>2. Primeros pasos</h2><p>Al entrar, el Panel os ofrece un <b>tutorial guiado</b> con estos pasos. Cada uno se marca solo cuando está hecho.</p><ol style="columns:2;column-gap:28px">${TUT_PASOS.map(p => `<li><b>${esc(p.t)}</b></li>`).join('')}</ol>
     <h2>3. Cómo os acompañamos</h2><p>${serv ? '<b>Servicio ' + esc(c.servicio) + '.</b> ' + esc(serv) : 'Tenéis las <b>recomendaciones automáticas</b> del Panel, que os dicen qué falta y en qué orden, y la <b>Guía de uso</b> con preguntas frecuentes.'}</p>
@@ -7166,7 +7167,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v112';
+const ES_VERSION = 'v113';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -7541,6 +7542,7 @@ async function pintarFichaPublica() {
     d = await API.call('peticionPublica', { t });
   } catch (e) { caja.innerHTML = `<h1>Formulario</h1><p class="bad-t">${esc(e.message)}</p>`; return; }
   const v = x => esc(x ?? ''), inp = (n, l, tp, val, req, ph) => `<label><span>${esc(l)}${req ? ' <span class="fp-falta">obligatorio</span>' : ''}</span><input type="${tp || 'text'}" name="${n}" value="${v(val)}"${req ? ' required' : ''}${ph ? ` placeholder="${esc(ph)}"` : ''}></label>`;
+  const compartirTxt = que => `<small class="fp-compartir">🔑 Para que tu gestor pueda revisarlo, comparte ${que} (o su carpeta) ${d.compartir_con ? 'con <b style="overflow-wrap:anywhere">' + esc(d.compartir_con) + '</b>' : 'con la persona que te envió este enlace'} como <b>Lector</b>. Mantén el resto del acceso restringido: no uses «Cualquier persona con el enlace».</small>`;
   const aviso = `<p class="nota">🔒 Solo datos de la entidad y de personas adultas: <b>nunca escribáis datos de menores</b>. El enlace caduca el ${esc(fCorta(d.caduca))} y solo se puede enviar una vez.</p>`;
   let cuerpo = '';
   if (d.tipo === 'ficha') {
@@ -7559,7 +7561,7 @@ async function pintarFichaPublica() {
       ${inp('persona_nombre', 'Delegado/a de Protección', 'text', d.datos.delegado_nombre, true)}${inp('curso', 'Nombre del curso', 'text', '', true, 'Ej. Curso de sensibilización y protección del menor en el deporte')}
       ${inp('entidad_formadora', 'Entidad que lo imparte', 'text', '', false, 'Ej. Junta de Andalucía')}${inp('horas', 'Horas', 'number', '')}
       ${inp('fecha', 'Fecha de finalización', 'date', '', true)}${inp('fecha_caducidad', 'Caducidad (si la tiene)', 'date', '')}
-      <label class="full"><span>Enlace al certificado (opcional)</span><input type="url" name="certificado_url" placeholder="https://drive.google.com/…"><small class="muted">Con acceso restringido a las personas autorizadas por la entidad.</small></label></div>`;
+      <label class="full"><span>Enlace al certificado (opcional)</span><input type="url" name="certificado_url" placeholder="https://drive.google.com/…">${compartirTxt('el certificado')}</label></div>`;
   } else if (d.tipo === 'agentes') {
     const RA = typeof ROLES_AGENTE !== 'undefined' ? ROLES_AGENTE : ['entrenador', 'monitor', 'voluntario', 'otro'];
     const fila = i => `<div class="fp-fila" data-n="${i}"><div class="fields">${inp('n_nombre', 'Nombre y apellidos', 'text', '')}<label><span>Rol</span><select name="n_rol">${RA.map(r => `<option>${esc(r)}</option>`).join('')}</select></label>
@@ -7583,7 +7585,7 @@ async function pintarFichaPublica() {
     const sug = ((REQ_COMO[d.ref] || [])[1] || d.requisito || '').replace(' · carpeta restringida', '');
     cuerpo = `<p>Documento del requisito <b>${esc(d.ref)} · ${esc(d.requisito)}</b>, ya aprobado o firmado.</p>${aviso}<div class="fields">
       ${inp('titulo', 'Título del documento (opcional)', 'text', '', false, sug.replace(/ ?\(Junta dd\/mm\/aaaa\)/, '').replace(/ vX/, ''))}${inp('fecha', 'Fecha de aprobación o firma', 'date', '', true)}${inp('organo', 'Quién lo aprobó', 'text', '', false, 'Ej. Junta Directiva')}
-      <label class="full"><span>Enlace al documento <span class="fp-falta">obligatorio</span></span><input type="url" name="url" required placeholder="https://drive.google.com/…"><small class="muted">Guardadlo en la nube de la entidad con acceso restringido y compartidlo con la persona que os envió este enlace para que pueda revisarlo.</small></label></div>`;
+      <label class="full"><span>Enlace al documento <span class="fp-falta">obligatorio</span></span><input type="url" name="url" required placeholder="https://drive.google.com/…">${compartirTxt('el documento')}</label></div>`;
   }
   caja.innerHTML = `<h1>${esc(d.titulo)} · ${esc(d.nombre)}</h1><form id="fp-form">${cuerpo}<div class="ia-acciones" style="margin-top:14px"><button class="btn" type="submit">Enviar</button></div></form>
     <p class="nota" style="margin-top:14px">EntornoSeguro · Los datos se guardan en el espacio de vuestra entidad, que es quien decide sobre ellos.</p>`;
@@ -7609,7 +7611,7 @@ async function pintarFichaPublica() {
 (function () {
   if (!/[?&]ficha=/.test(location.search)) return;
   const st = document.createElement('style');
-  st.textContent = '.fp-falta{display:inline-block;background:#fdecea;color:#b83232;border-radius:999px;padding:0 8px;font-size:.75rem;font-weight:700;margin-left:4px}.fp-clave{color:#b7791f;margin-left:4px}#diag .fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}#diag label{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:.92rem}#diag label.full{grid-column:1/-1}#diag h3{margin:18px 0 8px;color:var(--brand,#0b3057);font-size:1.05rem}.fp-fila{border:1px solid var(--line,#cfd8dc);border-radius:12px;padding:12px;margin:0 0 10px;background:#fff}';
+  st.textContent = '.fp-falta{display:inline-block;background:#fdecea;color:#b83232;border-radius:999px;padding:0 8px;font-size:.75rem;font-weight:700;margin-left:4px}.fp-clave{color:#b7791f;margin-left:4px}#diag .fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}#diag label{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:.92rem}#diag label.full{grid-column:1/-1}.fp-compartir{display:block;margin-top:4px;padding:8px 10px;border-radius:8px;background:#eef6f8;border:1px solid #cde3e8;font-weight:500;line-height:1.4}#diag h3{margin:18px 0 8px;color:var(--brand,#0b3057);font-size:1.05rem}.fp-fila{border:1px solid var(--line,#cfd8dc);border-radius:12px;padding:12px;margin:0 0 10px;background:#fff}';
   document.head.appendChild(st);
   pintarFichaPublica();
 })();
