@@ -861,7 +861,7 @@ function formPassword(obligatorio) {
 (async () => {
   // v93: acceso del gestor (servicio Gestionado): la sesión llega en el fragmento #gt=… y no pasa por el servidor web
   try { const h = new URLSearchParams(location.hash.slice(1)); if (h.get('gt')) { ssSet('es_token', h.get('gt')); if (h.get('api')) { ssSet('es_api', h.get('api')); API.base = h.get('api'); } if (h.get('inst')) { ssSet('es_inst', h.get('inst')); state.inst = h.get('inst'); } history.replaceState(null, '', location.pathname + location.search); } } catch (e) {}
-  if (/[?&]diag=/.test(location.search)) return;
+  if (/[?&](diag|ficha)=/.test(location.search)) return;
   const t = ssGet('es_token');
   if (!t || COD_ENC) return;
   API.token = t;
@@ -6253,7 +6253,7 @@ function segPasos(e, mat, us, alertas) {
   pon('ficha', 'Ficha básica', ff.falta.length ? 'act' : 'ok',
     (ff.falta.length ? `Faltan ${ff.falta.length} de ${ff.total} datos clave: ${ff.falta.slice(0, 6).map(fichaEtiq).join(', ')}${ff.falta.length > 6 ? '…' : '.'}` : `Los ${ff.total} datos clave están completos.`) +
       (ff.rec.length ? ' Recomendable: ' + ff.rec.map(fichaEtiq).join(', ') + '.' : ''),
-    (W ? [[ff.falta.length ? '✏️ Completar ficha' : '✏️ Editar ficha', 'ficha']] : []).concat([['📄 Ver ejemplo', 'ficha-ej']]));
+    (W ? [[ff.falta.length ? '✏️ Completar ficha' : '✏️ Editar ficha', 'ficha']].concat(ff.falta.length ? [['📨 Pedir los datos a la entidad', 'pedir-ficha']] : []) : []).concat([['📄 Ver ejemplo', 'ficha-ej']]));
   // 2 · Acceso propio (opcional)
   const acc = us ? us.filter(u => u.rol === 'entidad' && u.entidad_id === e.id && u.activo !== 'NO') : null;
   pon('acceso', 'Acceso propio (opcional)', acc && acc.length ? 'ok' : 'opc', acc && acc.length ? 'Tiene usuario «Entidad» (' + acc.map(u => u.usuario).join(', ') + '): sube su documentación y tú verificas.'
@@ -6319,6 +6319,7 @@ async function segCargar(e) {
     ficha: () => formEntidad(e),
     usuarios: fuera(() => { show('usuarios'); toast('Pulsa «Nuevo usuario», rol «Entidad deportiva» y elige ' + e.nombre); }),
     'ficha-ej': () => abrirInforme(htmlFichaEjemplo()),
+    'pedir-ficha': () => pedirFicha({ entidad_id: e.id }, e.nombre, e.delegado_email),
     'gen-decl': () => segCoordDoc(e.id, 'declaracion'),
     'gen-ficha': () => segCoordDoc(e.id, 'ficha'),
     'reg-decl': () => abrirDeclaracion(e.id),
@@ -7165,7 +7166,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v108';
+const ES_VERSION = 'v109';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -7437,6 +7438,100 @@ GUIA.forEach(t => { if (t[1] === 'Modelo comercial y versiones (solo versión ma
   '<p><b>Dónde se preparan:</b> para un club, en <b>Mis clubes → Gestionar → 📄 Contrato de servicios</b> y <b>Contrato de encargo</b> (salen con sus datos). Para un ayuntamiento o un cliente aún sin alta, en <b>Documentación → Preparar contrato</b>.</p>' +
   '<p><b>Cliente fundador:</b> elige el descuento (10–100 %). El contrato añade la cláusula de cliente fundador: reunión de valoración, encuesta y, solo con su consentimiento escrito, testimonio.</p>' +
   '<p><b>Antes de firmar:</b> descarga en Word, completa lo marcado entre corchetes (DNI, IVA según tu régimen fiscal, IBAN) y revisa la denominación completa del prestador. En ayuntamientos, el documento acompaña a la oferta del contrato menor y prevalece la resolución de adjudicación.</p>', 'admin', 'documentacion']); });
+// v109 + Ampliacion v1.34: «📨 Pedir los datos de la ficha» · enlace personal (14 días, un solo envío) con formulario público sin contraseña
+const FICHA_PUB_FUERA = ['nombre', 'trabaja_menores', 'acepta_protocolo_marco', 'fecha_aceptacion', 'observaciones', 'activo'];
+const enlaceFicha = t => WEB_PUBLICA + '?ficha=' + encodeURIComponent(t) + (state.inst ? '&a=' + encodeURIComponent(state.inst) : '');
+async function pedirFicha(destino, nombre, email) {
+  const r = await run(() => API.call('crearEnlaceFicha', destino));
+  const url = enlaceFicha(r.token), cad = fCorta(r.caduca);
+  const msg = 'Hola:\n\nPara completar la ficha de ' + (r.nombre || nombre || 'vuestra entidad') + ' en EntornoSeguro, rellenad este formulario (unos 10 minutos, sin contraseña):\n\n' + url +
+    '\n\nEl enlace es personal, caduca el ' + cad + ' y solo se puede enviar una vez. Solo pide datos de la entidad y de personas adultas; nunca de menores.\n\nGracias.';
+  const f = $('#modal-form');
+  f.innerHTML = `<h3>📨 Pedir los datos de la ficha</h3><p class="nota">Envía este enlace a ${esc(r.nombre || nombre || 'la entidad')}. Quien lo abra verá un formulario con los datos que ya hay y los que faltan; al enviarlo, se cargan en la ficha y queda registrado.</p>
+    <label class="full">Enlace (caduca el ${esc(cad)}, un solo envío)<input readonly value="${esc(url)}" style="font-size:.85rem"></label>
+    <div class="ia-acciones"><button type="button" class="btn" id="pf-copiar">📋 Copiar mensaje</button>${email ? `<a class="btn ghost" href="mailto:${esc(email)}?subject=${encodeURIComponent('Datos de la ficha · EntornoSeguro')}&body=${encodeURIComponent(msg)}">✉️ Enviar por correo</a>` : ''}<a class="btn ghost" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(msg)}">WhatsApp</a></div>
+    <div class="actions"><button value="cancel" class="btn ghost">Cerrar</button></div>`;
+  const dlg = $('#modal'); dlg.onclose = null; dlg.oncancel = null; if (!dlg.open) dlg.showModal();
+  $('#pf-copiar').onclick = () => copiarTexto(msg);
+}
+// Botón en el seguimiento de cada club (Mis clubes)
+(function () {
+  if (typeof segClubAbrir !== 'function') return;
+  const base = segClubAbrir;
+  segClubAbrir = async function (c) {
+    await base.apply(this, arguments);
+    const dlg = $('#seg-dlg'); if (!dlg || !dlg.open) return;
+    const bot = dlg.querySelector('.seg-cuerpo .seg-bot'); if (!bot || bot.querySelector('[data-pf]')) return;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost'; b.dataset.pf = '1'; b.textContent = '📨 Pedir datos de la ficha';
+    b.onclick = () => { dlg.close(); pedirFicha({ club_id: c.id }, c.nombre, c.email); };
+    bot.appendChild(b);
+  };
+})();
+// En la ficha del propio club (también en modo gestor)
+(function () {
+  const base = formEntidad;
+  formEntidad = async function () {
+    const r = await base.apply(this, arguments);
+    if (!state.club) return r;
+    const f = $('#modal-form'), nota = f && f.querySelector('p.nota');
+    if (nota && !f.querySelector('#ficha-pedir')) {
+      nota.insertAdjacentHTML('beforeend', ' · <button type="button" class="link" id="ficha-pedir">📨 Pedir los datos por enlace</button>');
+      f.querySelector('#ficha-pedir').onclick = () => { $('#modal').close('cancel'); setTimeout(() => pedirFicha({}, state.me && state.me.nombre), 50); };
+    }
+    return r;
+  };
+})();
+if (typeof ACC_TXT === 'object') Object.assign(ACC_TXT, { ENLACE_FICHA: 'Envío de enlace para completar la ficha', FICHA_EXTERNA: 'Datos de la ficha recibidos por enlace' });
+// Página pública ?ficha=…
+async function pintarFichaPublica() {
+  const q = new URLSearchParams(location.search), t = (q.get('ficha') || '').replace(/[^A-Za-z0-9]/g, ''), a = (q.get('a') || '').toLowerCase().replace(/[^a-z0-9-]/g, '');
+  state.cfg = Object.assign({}, state.cfg || {}, { organismo: 'EntornoSeguro' });
+  $('#login') && $('#login').classList.add('hidden'); $('#app') && $('#app').classList.add('hidden');
+  document.title = 'Ficha de la entidad · EntornoSeguro';
+  let s = $('#diag'); if (!s) { s = document.createElement('section'); s.id = 'diag'; document.body.appendChild(s); }
+  s.innerHTML = '<div class="diag-caja"><p class="muted">Cargando el formulario…</p></div>';
+  const caja = s.querySelector('.diag-caja');
+  let d;
+  try {
+    if (a && !EN_SCRIPT) { const r = await API.call('resolverInstancia', { codigo: a }); API.base = r.api_url; }
+    d = await API.call('fichaPublica', { t });
+  } catch (e) { caja.innerHTML = `<h1>Ficha de la entidad</h1><p class="bad-t">${esc(e.message)}</p>`; return; }
+  const clave = new Set(fichaClave(d.datos).flatMap(k => k.split('|')));
+  const falta = new Set(fichaFaltan(d.datos).falta.flatMap(k => k.split('|')));
+  const campo = ([n, l, tp]) => {
+    const v = esc(d.datos[n] ?? ''), marca = falta.has(n) ? ' <span class="fp-falta">falta</span>' : clave.has(n) ? ' <span class="fp-clave">★</span>' : '';
+    if (Array.isArray(tp)) return `<label><span>${esc(l)}${marca}</span><select name="${n}"><option value=""></option>${tp.map(o => `<option${String(d.datos[n]) === o ? ' selected' : ''}>${esc(o)}</option>`).join('')}</select></label>`;
+    if (tp === 'textarea') return `<label class="full"><span>${esc(l)}${marca}</span><textarea name="${n}" rows="3">${v}</textarea></label>`;
+    return `<label><span>${esc(l)}${marca}</span><input type="${tp || 'text'}" name="${n}" value="${v}"></label>`;
+  };
+  caja.innerHTML = `<h1>Ficha de ${esc(d.nombre)}</h1>
+    <p>Completad los datos de la entidad. Los marcados con <span class="fp-falta">falta</span> son imprescindibles para que los documentos salgan completos; ★ son datos clave ya rellenos. Podéis corregir cualquier dato.</p>
+    <p class="nota">🔒 Solo datos de la entidad y de personas adultas: <b>nunca escribáis datos de menores</b>. El enlace caduca el ${esc(fCorta(d.caduca))} y solo se puede enviar una vez. <button type="button" class="link" id="fp-ej">¿Qué pongo en cada casilla? Ver ejemplo</button></p>
+    <form id="fp-form">${FICHA_SECCIONES.map(([tit, cs]) => { const vis = cs.filter(c => !FICHA_PUB_FUERA.includes(c[0])); const nf = vis.filter(c => falta.has(c[0])).length;
+      return vis.length ? `<details class="ficha-sec"${nf ? ' open' : ''}><summary>${esc(tit)} <small>${nf ? nf + ' por completar' : 'completo'}</small></summary><div class="fields">${vis.map(campo).join('')}</div></details>` : ''; }).join('')}
+    <div class="ia-acciones" style="margin-top:14px"><button class="btn" type="submit">Enviar los datos</button></div></form>
+    <p class="nota" style="margin-top:14px">EntornoSeguro · Los datos se guardan en el espacio de vuestra entidad, que es quien decide sobre ellos.</p>`;
+  $('#fp-ej').onclick = () => abrirInforme(htmlFichaEjemplo());
+  $('#fp-form').onsubmit = async ev => {
+    ev.preventDefault();
+    const datos = Object.fromEntries(new FormData(ev.target));
+    const b = ev.target.querySelector('button[type=submit]'); b.disabled = true; b.textContent = 'Enviando…';
+    try {
+      const r = await API.call('guardarFichaPublica', { t, datos });
+      caja.innerHTML = `<h1>✓ Datos recibidos</h1><p>Se han guardado ${r.campos} datos en la ficha de <b>${esc(d.nombre)}</b>. Gracias.</p><p class="nota">Ya podéis cerrar esta página. Si hay que cambiar algo más, pedid un enlace nuevo.</p>`;
+    } catch (e) { toast(e.message, true); b.disabled = false; b.textContent = 'Enviar los datos'; }
+  };
+}
+(function () {
+  if (!/[?&]ficha=/.test(location.search)) return;
+  const st = document.createElement('style');
+  st.textContent = '.fp-falta{display:inline-block;background:#fdecea;color:#b83232;border-radius:999px;padding:0 8px;font-size:.75rem;font-weight:700;margin-left:4px}.fp-clave{color:#b7791f;margin-left:4px}#diag .fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}#diag label{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:.92rem}#diag label.full{grid-column:1/-1}';
+  document.head.appendChild(st);
+  pintarFichaPublica();
+})();
+GUIA.forEach(t => { if (t[1] === 'Entidades y coordinación con clubes') t[2].push(['¿Cómo pido a una entidad los datos de su ficha?',
+  '<p>Con un <b>enlace personal</b>: la entidad rellena un formulario sencillo, sin contraseña, y los datos se cargan solos en su ficha.</p><ol><li>Pulsa <b>📨 Pedir los datos de la ficha</b>: en <b>🧭 Seguimiento</b> (paso 1 de la entidad, o abajo en el seguimiento de un club de Mis clubes) o, dentro del espacio de un club, en su ficha («Pedir los datos por enlace»).</li><li>Envía el enlace por correo, WhatsApp o copiándolo.</li><li>La entidad ve los datos que ya hay, los que faltan marcados en rojo y la ficha de ejemplo. Al pulsar <b>Enviar los datos</b> se guardan.</li><li>Comprueba la ficha: el seguimiento se actualiza y el envío queda en el registro del club («Datos de la ficha recibidos por enlace»).</li></ol>' +
+  '<p class="nota">El enlace caduca a los 14 días y solo sirve una vez; si hace falta, pide otro. Solo pide datos de la entidad y de personas adultas, nunca de menores. Las casillas vacías no borran lo que ya había. No incluye la aceptación del Protocolo Marco, que se registra en la Matriz (A2).</p>', 'escribir', 'entidades']); });
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
