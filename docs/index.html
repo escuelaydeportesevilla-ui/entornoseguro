@@ -7166,7 +7166,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v109';
+const ES_VERSION = 'v110';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -7438,23 +7438,41 @@ GUIA.forEach(t => { if (t[1] === 'Modelo comercial y versiones (solo versión ma
   '<p><b>Dónde se preparan:</b> para un club, en <b>Mis clubes → Gestionar → 📄 Contrato de servicios</b> y <b>Contrato de encargo</b> (salen con sus datos). Para un ayuntamiento o un cliente aún sin alta, en <b>Documentación → Preparar contrato</b>.</p>' +
   '<p><b>Cliente fundador:</b> elige el descuento (10–100 %). El contrato añade la cláusula de cliente fundador: reunión de valoración, encuesta y, solo con su consentimiento escrito, testimonio.</p>' +
   '<p><b>Antes de firmar:</b> descarga en Word, completa lo marcado entre corchetes (DNI, IVA según tu régimen fiscal, IBAN) y revisa la denominación completa del prestador. En ayuntamientos, el documento acompaña a la oferta del contrato menor y prevalece la resolución de adjudicación.</p>', 'admin', 'documentacion']); });
-// v109 + Ampliacion v1.34: «📨 Pedir los datos de la ficha» · enlace personal (14 días, un solo envío) con formulario público sin contraseña
+// v110 + Ampliacion v1.35: PETICIONES POR ENLACE · ficha, formación del Delegado/a, agentes, autorizaciones y documentos aprobados
+// Enlace personal (14 días, un solo envío), formulario público sin contraseña; los datos se cargan solos y la Matriz la valida el gestor.
+const PET_TXT = { ficha: 'Datos de la ficha', formacion_del: 'Formación del Delegado/a', agentes: 'Agentes deportivos', autorizaciones: 'Autorizaciones familiares (cifras)', documento: 'Documento aprobado' };
+const PET_PIDE = { ficha: 'los datos de la ficha de la entidad', formacion_del: 'el curso de protección del Delegado/a', agentes: 'los datos de las personas que trabajan con menores (sin datos de menores)',
+  autorizaciones: 'el número de autorizaciones de imagen y desplazamiento por grupo (solo cifras)', documento: 'el enlace del documento aprobado y su fecha' };
+const PET_DOCS = ['A1', 'A2', 'B1', 'D1', 'G1', 'G2', 'H1', 'H2', 'I1', 'I2', 'E2', 'F2', 'J1', 'C1', 'C2'];
+const PET_TUT = { ficha: ['ficha'], B2: ['formacion_del'], B1: ['documento', 'B1'], A1: ['documento', 'A1'], A2: ['documento', 'A2'], G1: ['documento', 'G1'], D1: ['documento', 'D1'], I1: ['documento', 'I1'], K: ['agentes'], E: ['autorizaciones'] };
 const FICHA_PUB_FUERA = ['nombre', 'trabaja_menores', 'acepta_protocolo_marco', 'fecha_aceptacion', 'observaciones', 'activo'];
 const enlaceFicha = t => WEB_PUBLICA + '?ficha=' + encodeURIComponent(t) + (state.inst ? '&a=' + encodeURIComponent(state.inst) : '');
-async function pedirFicha(destino, nombre, email) {
-  const r = await run(() => API.call('crearEnlaceFicha', destino));
-  const url = enlaceFicha(r.token), cad = fCorta(r.caduca);
-  const msg = 'Hola:\n\nPara completar la ficha de ' + (r.nombre || nombre || 'vuestra entidad') + ' en EntornoSeguro, rellenad este formulario (unos 10 minutos, sin contraseña):\n\n' + url +
-    '\n\nEl enlace es personal, caduca el ' + cad + ' y solo se puede enviar una vez. Solo pide datos de la entidad y de personas adultas; nunca de menores.\n\nGracias.';
+async function pedirPeticion(destino, tipo, ref, nombre, email) {
+  const r = await run(() => API.call('crearPeticion', Object.assign({}, destino, { tipo, ref: ref || '' })));
+  const url = enlaceFicha(r.token), cad = fCorta(r.caduca), quien = r.nombre || nombre || 'vuestra entidad';
+  const que = PET_TXT[tipo] + (ref ? ' · ' + ref : '');
+  const msg = 'Hola:\n\nPara avanzar con el sistema de protección de ' + quien + ' en EntornoSeguro, necesitamos ' + PET_PIDE[tipo] + (ref ? ' (' + ref + ')' : '') + '. Es un formulario sencillo, sin contraseña:\n\n' + url +
+    '\n\nEl enlace es personal, caduca el ' + cad + ' y solo se puede enviar una vez. Nunca escribáis datos de menores.\n\nGracias.';
   const f = $('#modal-form');
-  f.innerHTML = `<h3>📨 Pedir los datos de la ficha</h3><p class="nota">Envía este enlace a ${esc(r.nombre || nombre || 'la entidad')}. Quien lo abra verá un formulario con los datos que ya hay y los que faltan; al enviarlo, se cargan en la ficha y queda registrado.</p>
+  f.innerHTML = `<h3>📨 Petición: ${esc(que)}</h3><p class="nota">Envía este enlace a ${esc(quien)}. Quien lo abra verá un formulario sencillo; al enviarlo, los datos se cargan solos y te llega un aviso por correo. ${tipo === 'documento' ? 'El documento queda en la Matriz como «Parcial · revisar»: compruébalo y márcalo Cumple.' : 'Revisa después la Matriz: la app te sugerirá qué marcar.'}</p>
     <label class="full">Enlace (caduca el ${esc(cad)}, un solo envío)<input readonly value="${esc(url)}" style="font-size:.85rem"></label>
-    <div class="ia-acciones"><button type="button" class="btn" id="pf-copiar">📋 Copiar mensaje</button>${email ? `<a class="btn ghost" href="mailto:${esc(email)}?subject=${encodeURIComponent('Datos de la ficha · EntornoSeguro')}&body=${encodeURIComponent(msg)}">✉️ Enviar por correo</a>` : ''}<a class="btn ghost" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(msg)}">WhatsApp</a></div>
+    <div class="ia-acciones"><button type="button" class="btn" id="pf-copiar">📋 Copiar mensaje</button>${email ? `<a class="btn ghost" href="mailto:${esc(email)}?subject=${encodeURIComponent(que + ' · EntornoSeguro')}&body=${encodeURIComponent(msg)}">✉️ Enviar por correo</a>` : ''}<a class="btn ghost" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(msg)}">WhatsApp</a></div>
     <div class="actions"><button value="cancel" class="btn ghost">Cerrar</button></div>`;
   const dlg = $('#modal'); dlg.onclose = null; dlg.oncancel = null; if (!dlg.open) dlg.showModal();
   $('#pf-copiar').onclick = () => copiarTexto(msg);
 }
-// Botón en el seguimiento de cada club (Mis clubes)
+const pedirFicha = (destino, nombre, email) => pedirPeticion(destino, 'ficha', '', nombre, email);
+function elegirPeticion(destino, nombre, email) {
+  modal('📨 Pedir a ' + (nombre || 'la entidad'), [['tipo', 'Qué le pides', Object.keys(PET_TXT).map(k => [k, PET_TXT[k]])],
+    ['ref', 'Documento (solo si pides un documento)', [['', '—']].concat(PET_DOCS.map(c => [c, c + ' · ' + ((REQ_COMO[c] || [])[1] || c).replace(/ \(.*$/, '')]))]],
+    { tipo: 'ficha', ref: '' }, async v => { if (v.tipo === 'documento' && !v.ref) { toast('Elige el documento', true); return; } setTimeout(() => pedirPeticion(destino, v.tipo, v.tipo === 'documento' ? v.ref : '', nombre, email), 60); });
+}
+function petLista(ps) {
+  if (!ps || !ps.length) return '<p class="muted" style="margin:4px 0">Aún no has enviado peticiones.</p>';
+  const ico = { enviada: '⏳ enviada', recibida: '✅ recibida', caducada: '⌛ caducada' };
+  return '<ul class="rec-lista">' + ps.slice(0, 10).map(p => `<li><span aria-hidden="true">📨</span><span class="t"><b>${esc(PET_TXT[p.tipo] || p.tipo)}${p.ref ? ' · ' + esc(p.ref) : ''}</b> · ${esc(ico[p.estado] || p.estado)}${p.estado === 'recibida' ? ' el ' + esc(fCorta(p.recibido)) + (p.resumen ? ': ' + esc(p.resumen) : '') : p.estado === 'enviada' ? ' · caduca el ' + esc(fCorta(p.caduca)) : ''}</span></li>`).join('') + '</ul>';
+}
+// Seguimiento de cada club (Mis clubes): «📨 Pedir al club…» + peticiones enviadas
 (function () {
   if (typeof segClubAbrir !== 'function') return;
   const base = segClubAbrir;
@@ -7462,12 +7480,16 @@ async function pedirFicha(destino, nombre, email) {
     await base.apply(this, arguments);
     const dlg = $('#seg-dlg'); if (!dlg || !dlg.open) return;
     const bot = dlg.querySelector('.seg-cuerpo .seg-bot'); if (!bot || bot.querySelector('[data-pf]')) return;
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost'; b.dataset.pf = '1'; b.textContent = '📨 Pedir datos de la ficha';
-    b.onclick = () => { dlg.close(); pedirFicha({ club_id: c.id }, c.nombre, c.email); };
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost'; b.dataset.pf = '1'; b.textContent = '📨 Pedir al club…';
+    b.onclick = () => { dlg.close(); elegirPeticion({ club_id: c.id }, c.nombre, c.email); };
     bot.appendChild(b);
+    const caja = document.createElement('div'); caja.innerHTML = '<h4 style="margin:14px 0 6px">📨 Peticiones enviadas</h4><div class="pet-l"><p class="muted">Consultando…</p></div>';
+    bot.after(caja);
+    try { const ps = await API.call('listarPeticiones', { club_id: c.id }); caja.querySelector('.pet-l').innerHTML = petLista(ps); }
+    catch (e) { caja.querySelector('.pet-l').innerHTML = '<p class="muted">Actualiza el servidor (Ampliacion v1.35) para ver las peticiones.</p>'; }
   };
 })();
-// En la ficha del propio club (también en modo gestor)
+// Ficha del propio club (también en modo gestor)
 (function () {
   const base = formEntidad;
   formEntidad = async function () {
@@ -7481,57 +7503,125 @@ async function pedirFicha(destino, nombre, email) {
     return r;
   };
 })();
-if (typeof ACC_TXT === 'object') Object.assign(ACC_TXT, { ENLACE_FICHA: 'Envío de enlace para completar la ficha', FICHA_EXTERNA: 'Datos de la ficha recibidos por enlace' });
-// Página pública ?ficha=…
+// Tutorial en modo gestor: «📨 Pedírselo al club» en cada paso que lo admite
+(function () {
+  if (typeof tutPintar !== 'function') return;
+  const base = tutPintar;
+  tutPintar = function () {
+    const r = base.apply(this, arguments);
+    try {
+      if (!state.club || !state.me || !state.me.gestor) return r;
+      const barra = $('#tut-barra'), acc = barra && barra.querySelector('.tut-acc'), tit = barra && barra.querySelector('.tut-paso b');
+      if (!acc || !tit || acc.querySelector('[data-pet-tut]')) return r;
+      const pasos = tutVisibles(), h = state.tut.hechos || {}, salt = tutLeer().saltados || [];
+      const i = pasos.findIndex(p => !h[p.id] && !salt.includes(p.id)), pend = pasos.findIndex(p => !h[p.id]);
+      const k = state.tut.ver != null ? state.tut.ver : (i >= 0 ? i : pend), paso = pasos[k];
+      const m = paso && PET_TUT[paso.id]; if (!m) return r;
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost'; b.dataset.petTut = '1'; b.textContent = '📨 Pedírselo al club';
+      b.onclick = () => pedirPeticion({}, m[0], m[1] || '', state.me.nombre);
+      const sig = acc.querySelector('#tut-sig'); acc.insertBefore(b, sig || null);
+    } catch (e) {}
+    return r;
+  };
+})();
+if (typeof ACC_TXT === 'object') Object.assign(ACC_TXT, { ENLACE_FICHA: 'Envío de enlace para completar la ficha', FICHA_EXTERNA: 'Datos de la ficha recibidos por enlace',
+  PETICION_ENVIADA: 'Petición de datos enviada por enlace', PETICION_RECIBIDA: 'Datos recibidos por enlace' });
+// Página pública ?ficha=… (todas las peticiones)
 async function pintarFichaPublica() {
   const q = new URLSearchParams(location.search), t = (q.get('ficha') || '').replace(/[^A-Za-z0-9]/g, ''), a = (q.get('a') || '').toLowerCase().replace(/[^a-z0-9-]/g, '');
   state.cfg = Object.assign({}, state.cfg || {}, { organismo: 'EntornoSeguro' });
   $('#login') && $('#login').classList.add('hidden'); $('#app') && $('#app').classList.add('hidden');
-  document.title = 'Ficha de la entidad · EntornoSeguro';
+  document.title = 'Formulario · EntornoSeguro';
   let s = $('#diag'); if (!s) { s = document.createElement('section'); s.id = 'diag'; document.body.appendChild(s); }
   s.innerHTML = '<div class="diag-caja"><p class="muted">Cargando el formulario…</p></div>';
   const caja = s.querySelector('.diag-caja');
   let d;
   try {
     if (a && !EN_SCRIPT) { const r = await API.call('resolverInstancia', { codigo: a }); API.base = r.api_url; }
-    d = await API.call('fichaPublica', { t });
-  } catch (e) { caja.innerHTML = `<h1>Ficha de la entidad</h1><p class="bad-t">${esc(e.message)}</p>`; return; }
-  const clave = new Set(fichaClave(d.datos).flatMap(k => k.split('|')));
-  const falta = new Set(fichaFaltan(d.datos).falta.flatMap(k => k.split('|')));
-  const campo = ([n, l, tp]) => {
-    const v = esc(d.datos[n] ?? ''), marca = falta.has(n) ? ' <span class="fp-falta">falta</span>' : clave.has(n) ? ' <span class="fp-clave">★</span>' : '';
-    if (Array.isArray(tp)) return `<label><span>${esc(l)}${marca}</span><select name="${n}"><option value=""></option>${tp.map(o => `<option${String(d.datos[n]) === o ? ' selected' : ''}>${esc(o)}</option>`).join('')}</select></label>`;
-    if (tp === 'textarea') return `<label class="full"><span>${esc(l)}${marca}</span><textarea name="${n}" rows="3">${v}</textarea></label>`;
-    return `<label><span>${esc(l)}${marca}</span><input type="${tp || 'text'}" name="${n}" value="${v}"></label>`;
-  };
-  caja.innerHTML = `<h1>Ficha de ${esc(d.nombre)}</h1>
-    <p>Completad los datos de la entidad. Los marcados con <span class="fp-falta">falta</span> son imprescindibles para que los documentos salgan completos; ★ son datos clave ya rellenos. Podéis corregir cualquier dato.</p>
-    <p class="nota">🔒 Solo datos de la entidad y de personas adultas: <b>nunca escribáis datos de menores</b>. El enlace caduca el ${esc(fCorta(d.caduca))} y solo se puede enviar una vez. <button type="button" class="link" id="fp-ej">¿Qué pongo en cada casilla? Ver ejemplo</button></p>
-    <form id="fp-form">${FICHA_SECCIONES.map(([tit, cs]) => { const vis = cs.filter(c => !FICHA_PUB_FUERA.includes(c[0])); const nf = vis.filter(c => falta.has(c[0])).length;
-      return vis.length ? `<details class="ficha-sec"${nf ? ' open' : ''}><summary>${esc(tit)} <small>${nf ? nf + ' por completar' : 'completo'}</small></summary><div class="fields">${vis.map(campo).join('')}</div></details>` : ''; }).join('')}
-    <div class="ia-acciones" style="margin-top:14px"><button class="btn" type="submit">Enviar los datos</button></div></form>
+    d = await API.call('peticionPublica', { t });
+  } catch (e) { caja.innerHTML = `<h1>Formulario</h1><p class="bad-t">${esc(e.message)}</p>`; return; }
+  const v = x => esc(x ?? ''), inp = (n, l, tp, val, req, ph) => `<label><span>${esc(l)}${req ? ' <span class="fp-falta">obligatorio</span>' : ''}</span><input type="${tp || 'text'}" name="${n}" value="${v(val)}"${req ? ' required' : ''}${ph ? ` placeholder="${esc(ph)}"` : ''}></label>`;
+  const aviso = `<p class="nota">🔒 Solo datos de la entidad y de personas adultas: <b>nunca escribáis datos de menores</b>. El enlace caduca el ${esc(fCorta(d.caduca))} y solo se puede enviar una vez.</p>`;
+  let cuerpo = '';
+  if (d.tipo === 'ficha') {
+    const clave = new Set(fichaClave(d.datos).flatMap(k => k.split('|'))), falta = new Set(fichaFaltan(d.datos).falta.flatMap(k => k.split('|')));
+    const campo = ([n, l, tp]) => {
+      const vv = v(d.datos[n]), marca = falta.has(n) ? ' <span class="fp-falta">falta</span>' : clave.has(n) ? ' <span class="fp-clave">★</span>' : '';
+      if (Array.isArray(tp)) return `<label><span>${esc(l)}${marca}</span><select name="${n}"><option value=""></option>${tp.map(o => `<option${String(d.datos[n]) === o ? ' selected' : ''}>${esc(o)}</option>`).join('')}</select></label>`;
+      if (tp === 'textarea') return `<label class="full"><span>${esc(l)}${marca}</span><textarea name="${n}" rows="3">${vv}</textarea></label>`;
+      return `<label><span>${esc(l)}${marca}</span><input type="${tp || 'text'}" name="${n}" value="${vv}"></label>`;
+    };
+    cuerpo = `<p>Completad los datos de la entidad. Los marcados con <span class="fp-falta">falta</span> son imprescindibles para que los documentos salgan completos; ★ son datos clave ya rellenos. Podéis corregir cualquier dato. <button type="button" class="link" id="fp-ej">¿Qué pongo en cada casilla? Ver ejemplo</button></p>${aviso}
+      ${FICHA_SECCIONES.map(([tit, cs]) => { const vis = cs.filter(c => !FICHA_PUB_FUERA.includes(c[0])); const nf = vis.filter(c => falta.has(c[0])).length;
+        return vis.length ? `<details class="ficha-sec"${nf ? ' open' : ''}><summary>${esc(tit)} <small>${nf ? nf + ' por completar' : 'completo'}</small></summary><div class="fields">${vis.map(campo).join('')}</div></details>` : ''; }).join('')}`;
+  } else if (d.tipo === 'formacion_del') {
+    cuerpo = `<p>Indicad el curso de protección de menores que ha realizado el Delegado/a de Protección.</p>${aviso}<div class="fields">
+      ${inp('persona_nombre', 'Delegado/a de Protección', 'text', d.datos.delegado_nombre, true)}${inp('curso', 'Nombre del curso', 'text', '', true, 'Ej. Curso de sensibilización y protección del menor en el deporte')}
+      ${inp('entidad_formadora', 'Entidad que lo imparte', 'text', '', false, 'Ej. Junta de Andalucía')}${inp('horas', 'Horas', 'number', '')}
+      ${inp('fecha', 'Fecha de finalización', 'date', '', true)}${inp('fecha_caducidad', 'Caducidad (si la tiene)', 'date', '')}
+      <label class="full"><span>Enlace al certificado (opcional)</span><input type="url" name="certificado_url" placeholder="https://drive.google.com/…"><small class="muted">Con acceso restringido a las personas autorizadas por la entidad.</small></label></div>`;
+  } else if (d.tipo === 'agentes') {
+    const RA = typeof ROLES_AGENTE !== 'undefined' ? ROLES_AGENTE : ['entrenador', 'monitor', 'voluntario', 'otro'];
+    const fila = i => `<div class="fp-fila" data-n="${i}"><div class="fields">${inp('n_nombre', 'Nombre y apellidos', 'text', '')}<label><span>Rol</span><select name="n_rol">${RA.map(r => `<option>${esc(r)}</option>`).join('')}</select></label>
+      ${inp('n_grupo', 'Grupo o equipo', 'text', '')}${inp('n_cert', 'Fecha del certificado negativo', 'date', '')}<label><span>¿Ha firmado el código de conducta?</span><select name="n_codigo"><option value="NO">No</option><option value="SI">Sí</option></select></label>${inp('n_form', 'Fecha de su formación en protección', 'date', '')}</div></div>`;
+    cuerpo = `<p>Personas que están en contacto habitual con menores (entrenadores, monitores, voluntarios…). Solo se pide la <b>fecha</b> del certificado negativo: el certificado lo guarda la entidad.</p>${aviso}
+      ${d.pendientes && d.pendientes.length ? `<h3>Completar datos de personas ya registradas (${d.pendientes.length})</h3>${d.pendientes.map(p => `<div class="fp-fila" data-id="${esc(p.id)}"><b>${esc(p.nombre)}</b> <small class="muted">${esc(p.rol || '')}${p.grupo ? ' · ' + esc(p.grupo) : ''}</small><div class="fields">
+        ${p.falta_cert ? inp('p_cert', 'Fecha del certificado negativo', 'date', '') : ''}${p.falta_codigo ? '<label><span>¿Ha firmado el código de conducta?</span><select name="p_codigo"><option value="">—</option><option value="SI">Sí</option></select></label>' : ''}${p.falta_form ? inp('p_form', 'Fecha de su formación en protección', 'date', '') : ''}</div></div>`).join('')}` : ''}
+      <h3>Añadir personas${d.total ? ` <small class="muted">(ya hay ${d.total} registradas)</small>` : ''}</h3><div id="fp-nuevos">${[0, 1, 2].map(fila).join('')}</div>
+      <button type="button" class="btn ghost" id="fp-mas">+ Añadir otra persona</button>`;
+    caja.dataset.fila = fila(0);
+  } else if (d.tipo === 'autorizaciones') {
+    const g = {}; (d.grupos || []).forEach(x => { const k = x.grupo; g[k] = g[k] || { grupo: x.grupo, total: x.total }; g[k][x.tipo === 'imagen' ? 'img' : 'des'] = x; });
+    const lista = Object.values(g);
+    const fila = x => `<div class="fp-fila fp-grupo"><div class="fields">${inp('grupo', 'Grupo o equipo', 'text', x && x.grupo)}${inp('total', 'Nº de menores del grupo', 'number', x && x.total)}
+      ${inp('img_rec', 'Imagen: autorizaciones recibidas', 'number', x && x.img ? x.img.recibidas : '')}${inp('img_den', 'Imagen: de ellas, NO autorizan', 'number', x && x.img ? x.img.denegadas : '')}
+      ${inp('des_rec', 'Desplazamiento: recibidas', 'number', x && x.des ? x.des.recibidas : '')}${inp('des_den', 'Desplazamiento: de ellas, NO autorizan', 'number', x && x.des ? x.des.denegadas : '')}</div></div>`;
+    cuerpo = `<p>Temporada ${esc(d.temporada)}. Para cada grupo, el número de menores y cuántas autorizaciones familiares tenéis firmadas. <b>Solo cifras</b>: las autorizaciones firmadas se quedan en la entidad.</p>${aviso}
+      <div id="fp-grupos">${lista.map(fila).join('')}${fila(null)}${lista.length ? '' : fila(null)}</div><button type="button" class="btn ghost" id="fp-mas">+ Añadir otro grupo</button>`;
+    caja.dataset.fila = fila(null);
+  } else if (d.tipo === 'documento') {
+    const sug = ((REQ_COMO[d.ref] || [])[1] || d.requisito || '').replace(' · carpeta restringida', '');
+    cuerpo = `<p>Documento del requisito <b>${esc(d.ref)} · ${esc(d.requisito)}</b>, ya aprobado o firmado.</p>${aviso}<div class="fields">
+      ${inp('titulo', 'Título del documento (opcional)', 'text', '', false, sug.replace(/ ?\(Junta dd\/mm\/aaaa\)/, '').replace(/ vX/, ''))}${inp('fecha', 'Fecha de aprobación o firma', 'date', '', true)}${inp('organo', 'Quién lo aprobó', 'text', '', false, 'Ej. Junta Directiva')}
+      <label class="full"><span>Enlace al documento <span class="fp-falta">obligatorio</span></span><input type="url" name="url" required placeholder="https://drive.google.com/…"><small class="muted">Guardadlo en la nube de la entidad con acceso restringido y compartidlo con la persona que os envió este enlace para que pueda revisarlo.</small></label></div>`;
+  }
+  caja.innerHTML = `<h1>${esc(d.titulo)} · ${esc(d.nombre)}</h1><form id="fp-form">${cuerpo}<div class="ia-acciones" style="margin-top:14px"><button class="btn" type="submit">Enviar</button></div></form>
     <p class="nota" style="margin-top:14px">EntornoSeguro · Los datos se guardan en el espacio de vuestra entidad, que es quien decide sobre ellos.</p>`;
-  $('#fp-ej').onclick = () => abrirInforme(htmlFichaEjemplo());
+  const ej = $('#fp-ej'); if (ej) ej.onclick = () => abrirInforme(htmlFichaEjemplo());
+  const mas = $('#fp-mas'); if (mas) mas.onclick = () => { const cont = $('#fp-nuevos') || $('#fp-grupos'); cont.insertAdjacentHTML('beforeend', caja.dataset.fila); };
   $('#fp-form').onsubmit = async ev => {
     ev.preventDefault();
-    const datos = Object.fromEntries(new FormData(ev.target));
-    const b = ev.target.querySelector('button[type=submit]'); b.disabled = true; b.textContent = 'Enviando…';
+    const f = ev.target, val = (el, n) => { const x = el.querySelector(`[name="${n}"]`); return x ? x.value.trim() : ''; };
+    let datos;
+    if (d.tipo === 'agentes') datos = {
+      pendientes: [...f.querySelectorAll('.fp-fila[data-id]')].map(el => ({ id: el.dataset.id, cert_fecha: val(el, 'p_cert'), codigo: val(el, 'p_codigo'), formacion_fecha: val(el, 'p_form') })),
+      nuevos: [...f.querySelectorAll('.fp-fila[data-n]')].map(el => ({ nombre: val(el, 'n_nombre'), rol: val(el, 'n_rol'), grupo: val(el, 'n_grupo'), cert_fecha: val(el, 'n_cert'), codigo: val(el, 'n_codigo'), formacion_fecha: val(el, 'n_form') })).filter(x => x.nombre) };
+    else if (d.tipo === 'autorizaciones') datos = { grupos: [...f.querySelectorAll('.fp-grupo')].map(el => ({ grupo: val(el, 'grupo'), total: val(el, 'total'), img_rec: val(el, 'img_rec'), img_den: val(el, 'img_den'), des_rec: val(el, 'des_rec'), des_den: val(el, 'des_den') })).filter(x => x.grupo) };
+    else datos = Object.fromEntries(new FormData(f));
+    if (d.tipo === 'documento' && !datos.titulo) datos.titulo = (d.requisito || d.ref) + (datos.fecha ? ' · aprobado el ' + fCorta(datos.fecha) : '');
+    const b = f.querySelector('button[type=submit]'); b.disabled = true; b.textContent = 'Enviando…';
     try {
-      const r = await API.call('guardarFichaPublica', { t, datos });
-      caja.innerHTML = `<h1>✓ Datos recibidos</h1><p>Se han guardado ${r.campos} datos en la ficha de <b>${esc(d.nombre)}</b>. Gracias.</p><p class="nota">Ya podéis cerrar esta página. Si hay que cambiar algo más, pedid un enlace nuevo.</p>`;
-    } catch (e) { toast(e.message, true); b.disabled = false; b.textContent = 'Enviar los datos'; }
+      const r = await API.call('guardarPeticionPublica', { t, datos });
+      caja.innerHTML = `<h1>✓ Recibido</h1><p>${esc(r.resumen)} · <b>${esc(d.nombre)}</b>. Gracias.</p><p class="nota">Ya podéis cerrar esta página. Si hay que cambiar algo más, pedid un enlace nuevo.</p>`;
+    } catch (e) { toast(e.message, true); b.disabled = false; b.textContent = 'Enviar'; }
   };
 }
 (function () {
   if (!/[?&]ficha=/.test(location.search)) return;
   const st = document.createElement('style');
-  st.textContent = '.fp-falta{display:inline-block;background:#fdecea;color:#b83232;border-radius:999px;padding:0 8px;font-size:.75rem;font-weight:700;margin-left:4px}.fp-clave{color:#b7791f;margin-left:4px}#diag .fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}#diag label{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:.92rem}#diag label.full{grid-column:1/-1}';
+  st.textContent = '.fp-falta{display:inline-block;background:#fdecea;color:#b83232;border-radius:999px;padding:0 8px;font-size:.75rem;font-weight:700;margin-left:4px}.fp-clave{color:#b7791f;margin-left:4px}#diag .fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}#diag label{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:.92rem}#diag label.full{grid-column:1/-1}#diag h3{margin:18px 0 8px;color:var(--brand,#0b3057);font-size:1.05rem}.fp-fila{border:1px solid var(--line,#cfd8dc);border-radius:12px;padding:12px;margin:0 0 10px;background:#fff}';
   document.head.appendChild(st);
   pintarFichaPublica();
 })();
-GUIA.forEach(t => { if (t[1] === 'Entidades y coordinación con clubes') t[2].push(['¿Cómo pido a una entidad los datos de su ficha?',
-  '<p>Con un <b>enlace personal</b>: la entidad rellena un formulario sencillo, sin contraseña, y los datos se cargan solos en su ficha.</p><ol><li>Pulsa <b>📨 Pedir los datos de la ficha</b>: en <b>🧭 Seguimiento</b> (paso 1 de la entidad, o abajo en el seguimiento de un club de Mis clubes) o, dentro del espacio de un club, en su ficha («Pedir los datos por enlace»).</li><li>Envía el enlace por correo, WhatsApp o copiándolo.</li><li>La entidad ve los datos que ya hay, los que faltan marcados en rojo y la ficha de ejemplo. Al pulsar <b>Enviar los datos</b> se guardan.</li><li>Comprueba la ficha: el seguimiento se actualiza y el envío queda en el registro del club («Datos de la ficha recibidos por enlace»).</li></ol>' +
-  '<p class="nota">El enlace caduca a los 14 días y solo sirve una vez; si hace falta, pide otro. Solo pide datos de la entidad y de personas adultas, nunca de menores. Las casillas vacías no borran lo que ya había. No incluye la aceptación del Protocolo Marco, que se registra en la Matriz (A2).</p>', 'escribir', 'entidades']); });
+GUIA.forEach(t => { if (t[1] === 'Entidades y coordinación con clubes') t[2].push(['¿Cómo pido datos o documentos a una entidad o a un club por enlace?',
+  '<p>Con un <b>enlace personal</b> por cada petición: la entidad rellena un formulario sencillo, sin contraseña, y los datos se cargan solos. Te llega un aviso por correo cuando responde.</p>' +
+  '<table class="md-tabla"><thead><tr><th>Petición</th><th>Qué pide</th><th>Dónde se carga</th></tr></thead><tbody>' +
+  '<tr><td>Ficha</td><td>Datos de la entidad, gobierno, Delegado/a, canal…</td><td>Ficha</td></tr><tr><td>Formación del Delegado/a</td><td>Curso, entidad, fecha y horas</td><td>Formación → sugerencia B2</td></tr>' +
+  '<tr><td>Agentes deportivos</td><td>Personas nuevas y datos que faltan (fecha del certificado, código, formación)</td><td>Agentes → sugerencias K1, K2, D2, J1</td></tr>' +
+  '<tr><td>Autorizaciones</td><td>Por grupo: nº de menores, recibidas y denegadas (solo cifras)</td><td>Autorizaciones → sugerencias E1, F1</td></tr>' +
+  '<tr><td>Documento aprobado</td><td>Título, fecha de aprobación y enlace</td><td>Matriz como «Parcial · revisar» con la evidencia</td></tr></tbody></table>' +
+  '<p><b>Dónde se piden:</b> en <b>Mis clubes → 🧭 Seguimiento → 📨 Pedir al club…</b> (abajo verás las <b>peticiones enviadas</b> y su estado); en modo gestor, en cada paso del tutorial con <b>📨 Pedírselo al club</b>; y la ficha también desde el paso 1 del seguimiento de entidades o desde la propia ficha.</p>' +
+  '<p class="nota">La Matriz la validas tú: lo recibido no marca «Cumple» solo. El enlace caduca a los 14 días y sirve una vez. Solo datos de la entidad y de personas adultas, nunca de menores; los certificados y autorizaciones firmadas se quedan en la entidad. Las casillas vacías no borran datos.</p>', 'escribir', 'entidades']); });
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
