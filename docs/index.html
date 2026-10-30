@@ -6755,7 +6755,7 @@ async function segClubAbrir(c) {
   const asunto = 'Recomendaciones de EntornoSeguro · ' + d.nombre;
   const dato = (k, v, mal) => `<div><small>${k}</small><b${mal ? ' style="color:var(--bad)"' : ''}>${esc(v)}</b></div>`;
   dlg.querySelector('.seg-cuerpo').innerHTML =
-    `<div class="segc-datos">${dato('Alertas abiertas', a.abiertas || 0)}${dato('Alertas altas', a.altas || 0, a.altas > 0)}${dato('Cerradas sin resolver', a.cerradas_sin_resolver || 0, a.cerradas_sin_resolver > 0)}${dato('Último acceso', d.ultimo_acceso ? segFecha(d.ultimo_acceso) : 'Nunca', !d.ultimo_acceso)}${dato('Próxima revisión', d.proxima_revision ? segFecha(d.proxima_revision) : '—')}</div>
+    `<div class="segc-datos">${dato('Alertas abiertas', a.abiertas || 0)}${dato('Alertas altas', a.altas || 0, a.altas > 0)}${dato('Cerradas sin resolver', a.cerradas_sin_resolver || 0, a.cerradas_sin_resolver > 0)}${dato('Último acceso', d.ultimo_acceso ? segFecha(d.ultimo_acceso) : 'Nunca', !d.ultimo_acceso)}${dato('Próxima revisión del club (Matriz)', d.proxima_revision ? segFecha(d.proxima_revision) : '—')}</div>
     <ol class="seg-pasos">${P.map(p => `<li class="seg-${p.est}${p.sig ? ' seg-actual' : ''}"><span class="ico" aria-hidden="true">${p.sig ? SEG_ICO.act : SEG_ICO[p.est] || '⬜'}</span>
       <div><b><span class="seg-num">${p.n}</span> ${esc(p.t)}</b>${p.sig ? ' <span class="chip">va por aquí</span>' : ''}${p.est === 'ok' ? '' : `<br><small>${esc(p.txt)}</small>`}</div></li>`).join('')}</ol>
     <h4 style="margin:14px 0 6px">💡 Recomendaciones para el club (${recs.length})</h4>
@@ -7167,7 +7167,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v115';
+const ES_VERSION = 'v117';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -7789,8 +7789,12 @@ function htmlTuServicio(m) {
     'Acompañado': `${esc(quien)} revisa vuestro avance cada 3 semanas y os envía recomendaciones${prox}.`,
     'Gestionado': `${esc(quien)} se ocupa de vuestro sistema de protección y os pide por enlace los datos que necesita${prox}. Acceso del gestor: ${m.acceso ? '<span class="st ok">autorizado</span>' : '<span class="st warn">sin autorizar</span> (Mis datos)'}.`
   }[m.servicio] || '';
-  const act = m.servicio === 'Gestionado' && (m.actuaciones || []).length ? `<details style="margin-top:6px"><summary style="cursor:pointer">Últimas actuaciones de tu gestor (${m.actuaciones.length})</summary><ul class="nota" style="margin:6px 0 0;padding-left:18px">${m.actuaciones.map(a => `<li>${esc(fCorta(a.fecha))} · ${esc(ACC_TXT[a.accion] || String(a.accion).toLowerCase().replace(/_/g, ' '))}</li>`).join('')}</ul></details>` : '';
-  return `<h3 style="margin:0 0 4px">🤝 Tu servicio: ${esc(m.servicio)} <small class="muted" style="font-weight:500">· ${esc(quien)}</small></h3><p style="margin:0">${txt}</p>
+  const act = m.servicio === 'Gestionado' && (m.actuaciones || []).length ? `<details style="margin-top:6px"><summary style="cursor:pointer">Últimas actuaciones en vuestro espacio (${m.actuaciones.length})</summary><ul class="nota" style="margin:6px 0 0;padding-left:18px">${m.actuaciones.map(a => `<li>${esc(fCorta(a.fecha))} · ${esc(ACC_TXT[a.accion] || String(a.accion).toLowerCase().replace(/_/g, ' '))}${a.club ? ' <small class="muted">(enviado por el club)</small>' : ''}</li>`).join('')}</ul></details>` : '';
+  const rol = m.servicio === 'Gestionado' ? 'tu gestor' : 'tu acompañante';
+  const rev = m.revision && m.servicio !== 'Autogestión' ? `<div style="margin:10px 0 0;padding:10px 12px;border-radius:10px;background:color-mix(in srgb,var(--brand-2) 8%,var(--panel));border:1px solid color-mix(in srgb,var(--brand-2) 25%,transparent)">
+      <b>💬 Última revisión de ${rol}</b> <small class="muted">· ${esc(fCorta(m.revision.fecha))}</small>${m.revision.mensaje ? `<p style="margin:4px 0 0">«${esc(m.revision.mensaje)}»</p>` : ''}
+      ${m.revision.proxima_sesion ? `<p style="margin:4px 0 0">📅 Próxima sesión: <b>${esc(fCorta(m.revision.proxima_sesion))}</b></p>` : ''}</div>` : '';
+  return `<h3 style="margin:0 0 4px">🤝 Tu servicio: ${esc(m.servicio)} <small class="muted" style="font-weight:500">· ${esc(quien)}</small></h3><p style="margin:0">${txt}</p>${rev}
     <p class="nota" style="margin:6px 0 0">¿Dudas? ${cont} · respuesta en ${dias} día${dias > 1 ? 's' : ''} hábil${dias > 1 ? 'es' : ''}.</p>${act}`;
 }
 (function () {
@@ -7861,11 +7865,13 @@ function htmlTuServicio(m) {
       const hoy = new Date().toISOString().slice(0, 10), venc = d.proximo && d.proximo <= hoy;
       caja.querySelector('.ded-c').innerHTML = `<p style="margin:0 0 6px">${SEG_DIAS[d.servicio] ? `Cada ${SEG_DIAS[d.servicio] === 21 ? '3 semanas' : 'mes'} (${esc(d.servicio)}) · próximo: <b style="${venc ? 'color:var(--bad)' : ''}">${esc(fCorta(d.proximo))}${venc ? ' (vencido)' : ''}</b>` : 'Sin seguimiento programado' + (d.servicio ? ' (' + esc(d.servicio) + ')' : '')}${d.ultimo ? ' · último: ' + esc(fCorta(d.ultimo)) : ''} · <b>${esc(String(d.total).replace('.', ','))} h</b> registradas</p>
         <button type="button" class="btn ghost" id="ded-reg">✓ Registrar seguimiento</button>
-        ${d.filas.length ? `<ul class="nota" style="margin:8px 0 0;padding-left:18px">${d.filas.map(f => `<li>${esc(fCorta(f.fecha))} · ${esc(String(f.horas).replace('.', ','))} h${f.nota ? ' · ' + esc(f.nota) : ''}</li>`).join('')}</ul>` : ''}`;
+        ${d.filas.length ? `<ul class="nota" style="margin:8px 0 0;padding-left:18px">${d.filas.map(f => `<li>${esc(fCorta(f.fecha))} · ${esc(String(f.horas).replace('.', ','))} h${f.nota ? ' · ' + esc(f.nota) : ''}${f.mensaje ? ' · 💬 «' + esc(f.mensaje) + '»' : ''}${f.proxima_sesion ? ' · 📅 ' + esc(fCorta(f.proxima_sesion)) : ''}</li>`).join('')}</ul>` : ''}`;
       caja.querySelector('#ded-reg').onclick = () => {
         const prev = { dlg }; dlg.close();
-        modal('✓ Registrar seguimiento · ' + c.nombre, [['fecha', 'Fecha', 'date', true], ['horas', 'Horas dedicadas (ej. 1,5)', 'text'], ['nota', 'Qué has hecho (sin datos personales)', 'textarea']],
+        modal('✓ Registrar seguimiento · ' + c.nombre, [['fecha', 'Fecha', 'date', true], ['horas', 'Horas dedicadas (ej. 1,5)', 'text'], ['nota', 'Qué has hecho (nota interna, sin datos personales)', 'textarea'],
+          ['mensaje', '💬 Mensaje para el club (lo verá en su Panel; opcional)', 'textarea'], ['proxima_sesion', '📅 Próxima sesión acordada (opcional)', 'date']],
           { fecha: hoy, horas: '' }, async v => { await run(() => API.call('registrarSeguimiento', Object.assign({ club_id: c.id }, v))); toast('Seguimiento registrado'); await loadClubes(); segClubAbrir((state.clubes || []).find(x => x.id === c.id) || c); });
+        const fl = $('#modal-form .fields'); if (fl) fl.insertAdjacentHTML('afterend', '<p class="nota">La nota y las horas son internas. El <b>mensaje</b> y la <b>próxima sesión</b> los verá el club en su tarjeta «Tu servicio»: escribe en positivo y sin datos de personas.</p>');
       };
     };
     pintar();
@@ -7876,9 +7882,9 @@ GUIA.forEach(t => {
     '<table class="md-tabla"><thead><tr><th></th><th>Autogestión</th><th>Acompañado</th><th>Gestionado</th></tr></thead><tbody>' +
     '<tr><td>Seguimiento del gestor</td><td>No programado</td><td>Cada 3 semanas</td><td>Cada mes</td></tr><tr><td>Soporte</td><td>2 días hábiles</td><td>2 días hábiles</td><td>1 día hábil</td></tr>' +
     '<tr><td>Acceso del gestor (Mis datos)</td><td>Oculto</td><td>Oculto</td><td>Visible</td></tr><tr><td>📨 Peticiones por enlace</td><td colspan="3">Las envías tú desde Mis clubes o en modo gestor</td></tr></tbody></table>' +
-    '<ol><li>En <b>Mis clubes</b>, cada club muestra <b>📅 próximo seguimiento</b> (en rojo si está vencido) y <b>⏱ horas</b> registradas.</li><li>Cuando venza, aparece una alerta «seguimiento pendiente» en <b>Alertas</b> (y en el aviso por correo).</li><li>Tras revisar al club, en su <b>🧭 Seguimiento → ✓ Registrar seguimiento</b> anota fecha, horas y qué has hecho (sin datos personales). El próximo se recalcula solo.</li></ol>' +
+    '<ol><li>En <b>Mis clubes</b>, cada club muestra <b>📅 próximo seguimiento</b> (en rojo si está vencido) y <b>⏱ horas</b> registradas.</li><li>Cuando venza, aparece una alerta «seguimiento pendiente» en <b>Alertas</b> (y en el aviso por correo).</li><li>Tras revisar al club, en su <b>🧭 Seguimiento → ✓ Registrar seguimiento</b> anota fecha, horas y qué has hecho (nota interna). Opcional: un <b>💬 mensaje para el club</b> y la <b>📅 próxima sesión</b>, que el club verá en su tarjeta «Tu servicio». El próximo seguimiento se recalcula solo.</li></ol>' +
     '<p class="nota">Las horas te sirven para comprobar si los precios de cada servicio están bien calculados. El club no ve las horas; sí ve, en su Panel, la tarjeta «Tu servicio» con su próxima revisión y, en Gestionado, tus últimas actuaciones.</p>', 'admin', 'clubes']);
-  if (t[1] === 'Primeros pasos') t[2].push(['¿Qué incluye nuestro servicio?', '<p>En el <b>Panel</b> veréis la tarjeta <b>🤝 Tu servicio</b> con el servicio contratado, el contacto y el plazo de respuesta:</p><ul><li><b>Autogestión</b>: usáis la app por vuestra cuenta con el tutorial y la Guía; dudas por correo (2 días hábiles).</li><li><b>Acompañado</b>: vuestro acompañante revisa el avance cada 3 semanas y os envía recomendaciones.</li><li><b>Gestionado</b>: vuestro gestor se ocupa del sistema, os pide los datos por enlace y veis sus últimas actuaciones. Para que pueda trabajar, autorizad su acceso en <b>Mis datos</b>; podéis retirarlo cuando queráis.</li></ul>', 'club', 'panel']);
+  if (t[1] === 'Primeros pasos') t[2].push(['¿Qué incluye nuestro servicio?', '<p>En el <b>Panel</b> veréis la tarjeta <b>🤝 Tu servicio</b> con el servicio contratado, el contacto y el plazo de respuesta:</p><ul><li><b>Autogestión</b>: usáis la app por vuestra cuenta con el tutorial y la Guía; dudas por correo (2 días hábiles).</li><li><b>Acompañado</b>: vuestro acompañante revisa el avance cada 3 semanas y os envía recomendaciones; en la tarjeta veréis su último mensaje y la próxima sesión acordada.</li><li><b>Gestionado</b>: vuestro gestor se ocupa del sistema, os pide los datos por enlace y veis sus últimas actuaciones. Para que pueda trabajar, autorizad su acceso en <b>Mis datos</b>; podéis retirarlo cuando queráis.</li></ul>', 'club', 'panel']);
 });
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
