@@ -7167,7 +7167,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v119';
+const ES_VERSION = 'v120';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -7790,7 +7790,7 @@ function htmlTuServicio(m) {
     'Acompañado': `${esc(quien)} revisa vuestro avance cada 3 semanas y os envía recomendaciones${prox}.`,
     'Gestionado': `${esc(quien)} se ocupa de vuestro sistema de protección y os pide por enlace los datos que necesita${prox}. Acceso del gestor: ${m.acceso ? '<span class="st ok">autorizado</span>' : '<span class="st warn">sin autorizar</span> (Mis datos)'}.`
   }[m.servicio] || '';
-  const act = m.servicio === 'Gestionado' && (m.actuaciones || []).length ? `<details style="margin-top:6px"><summary style="cursor:pointer">Últimas actuaciones en vuestro espacio (${m.actuaciones.length})</summary><ul class="nota" style="margin:6px 0 0;padding-left:18px">${m.actuaciones.map(a => `<li>${esc(fCorta(a.fecha))} · ${esc(ACC_TXT[a.accion] || String(a.accion).toLowerCase().replace(/_/g, ' '))}${a.club ? ' <small class="muted">(enviado por el club)</small>' : ''}</li>`).join('')}</ul></details>` : '';
+  const act = m.servicio !== 'Gestionado' ? '' : (m.sesiones ? htmlSesionesGestor(m.sesiones) : ((m.actuaciones || []).length ? `<details style="margin-top:6px"><summary style="cursor:pointer">Últimas actuaciones en vuestro espacio (${m.actuaciones.length})</summary><ul class="nota" style="margin:6px 0 0;padding-left:18px">${m.actuaciones.map(a => `<li>${esc(fCorta(a.fecha))} · ${esc(ACC_TXT[a.accion] || String(a.accion).toLowerCase().replace(/_/g, ' '))}${a.club ? ' <small class="muted">(enviado por el club)</small>' : ''}</li>`).join('')}</ul></details>` : ''));
   const rol = m.servicio === 'Gestionado' ? 'tu gestor' : 'tu acompañante';
   const rev = m.revision && m.servicio !== 'Autogestión' ? `<div style="margin:10px 0 0;padding:10px 12px;border-radius:10px;background:color-mix(in srgb,var(--brand-2) 8%,var(--panel));border:1px solid color-mix(in srgb,var(--brand-2) 25%,transparent)">
       <b>💬 Última revisión de ${rol}</b> <small class="muted">· ${esc(fCorta(m.revision.fecha))}</small>${m.revision.mensaje ? `<p style="margin:4px 0 0">«${esc(m.revision.mensaje)}»</p>` : ''}
@@ -7942,6 +7942,29 @@ document.addEventListener('click', ev => {
 }, true);
 GUIA.forEach(t => { if (t[1] === 'Modelo comercial y versiones (solo versión maestra)' || t[1] === '💼 Modelo comercial y versiones (solo versión maestra)') t[2].push(['¿Se registra solo el tiempo que dedico a cada club?',
   '<p>Te lo propone la app y tú lo confirmas:</p><ul><li><b>Gestionado:</b> al pulsar <b>Salir del club</b>, la app calcula el tiempo desde tu entrada (redondeado a 0,25 h) y resume lo que has hecho (requisitos actualizados con sus códigos, formación, peticiones…). Revisa las horas (añade lo que hiciste fuera de la app: llamadas, reuniones, revisión de documentos), escribe si quieres un mensaje para el club y guarda. También puedes «Salir sin registrar» o «Volver al club».</li><li><b>Acompañado y Gestionado desde la maestra:</b> en <b>✓ Registrar seguimiento</b>, la nota se rellena con las peticiones enviadas y recibidas desde el último seguimiento; las horas las pones tú.</li></ul><p class="nota">Si dejaste la sesión abierta sin actividad más de 30 minutos, se cuenta hasta tu última acción + 5 min. Nada se guarda sin que pulses Guardar.</p>', 'admin', 'clubes']); });
+// v120: actuaciones del gestor agrupadas por día y en concreto (servidor 1.41)
+function textoActuacion(it) {
+  const lista = arr => arr.join(', '), n = it.n > 1 ? ` ×${it.n}` : '';
+  const T = {
+    CUMPLIMIENTO: () => `Matriz de cumplimiento actualizada${it.codigos.length ? ': ' + lista(it.codigos) : n}`,
+    EVIDENCIA: () => `Evidencia añadida o revisada${it.codigos.length ? ': ' + lista(it.codigos) : n}`,
+    PETICION_ENVIADA: () => `Datos pedidos por enlace${it.tipos.length ? ': ' + lista(it.tipos) : n}`,
+    PETICION_RECIBIDA: () => `Datos recibidos por enlace${it.tipos.length ? ': ' + lista(it.tipos) : n}`,
+    ENLACE_FICHA: () => 'Enlace enviado para completar la ficha',
+    FICHA_EXTERNA: () => 'Ficha recibida por enlace',
+    ACTUALIZAR: () => 'Ficha del club actualizada'
+  };
+  return (T[it.accion] ? T[it.accion]() : (ACC_TXT[it.accion] || String(it.accion).toLowerCase().replace(/_/g, ' ')) + n + (it.codigos.length ? ' (' + lista(it.codigos) + ')' : ''));
+}
+function htmlSesionesGestor(ses) {
+  if (!ses.length) return '';
+  const dia = s => {
+    const its = s.items.map(it => `<li>${esc(textoActuacion(it))}${it.club ? ' <small class="muted">· enviado por el club</small>' : ''}</li>`);
+    if (!its.length) its.push('<li>Revisión del estado del club</li>');
+    return `<li style="margin-bottom:4px"><b>${esc(fCorta(s.fecha))}</b><ul style="margin:2px 0 0;padding-left:18px">${its.join('')}</ul></li>`;
+  };
+  return `<details open style="margin-top:6px"><summary style="cursor:pointer">Trabajo en vuestro espacio (últimos ${ses.length} día${ses.length > 1 ? 's' : ''} con actividad)</summary><ul class="nota" style="margin:6px 0 0;padding-left:18px;list-style:none">${ses.map(dia).join('')}</ul></details>`;
+}
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
