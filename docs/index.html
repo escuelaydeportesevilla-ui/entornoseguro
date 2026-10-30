@@ -7167,7 +7167,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v117';
+const ES_VERSION = 'v118';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -7783,7 +7783,8 @@ function cargarMiServicio(forzar) {
 function htmlTuServicio(m) {
   const quien = m.prestador || (m.maestra ? 'Escuela&Deporte' : 'tu ayuntamiento'), dias = m.soporte_dias || 2;
   const cont = m.contacto ? `<a href="mailto:${esc(m.contacto)}">${esc(m.contacto)}</a>` : esc(quien);
-  const prox = m.proximo ? ` · próxima revisión: <b>${esc(fCorta(m.proximo))}</b>` : '';
+  const hoyS = new Date().toISOString().slice(0, 10), sesion = m.revision && m.revision.proxima_sesion && m.revision.proxima_sesion >= hoyS && m.servicio !== 'Autogestión';
+  const prox = m.proximo && !sesion ? ` · próxima revisión: <b>${esc(fCorta(m.proximo))}</b>` : ''; // v118: si hay sesión acordada, solo se muestra la sesión
   const txt = {
     'Autogestión': 'Usáis la aplicación por vuestra cuenta, con el tutorial, las recomendaciones del Panel y la Guía de uso.',
     'Acompañado': `${esc(quien)} revisa vuestro avance cada 3 semanas y os envía recomendaciones${prox}.`,
