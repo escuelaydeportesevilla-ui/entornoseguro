@@ -7167,7 +7167,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v113';
+const ES_VERSION = 'v115';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -7457,10 +7457,11 @@ async function pedirPeticion(destino, tipo, ref, nombre, email) {
   const f = $('#modal-form');
   f.innerHTML = `<h3>📨 Petición: ${esc(que)}</h3><p class="nota">Envía este enlace a ${esc(quien)}. Quien lo abra verá un formulario sencillo; al enviarlo, los datos se cargan solos y te llega un aviso por correo. ${tipo === 'documento' ? 'El documento queda en la Matriz como «Parcial · revisar»: compruébalo y márcalo Cumple.' : 'Revisa después la Matriz: la app te sugerirá qué marcar.'}</p>
     <label class="full">Enlace (caduca el ${esc(cad)}, un solo envío)<input readonly value="${esc(url)}" style="font-size:.85rem"></label>
-    <div class="ia-acciones"><button type="button" class="btn" id="pf-copiar">📋 Copiar mensaje</button>${email ? `<a class="btn ghost" href="mailto:${esc(email)}?subject=${encodeURIComponent(que + ' · EntornoSeguro')}&body=${encodeURIComponent(msg)}">✉️ Enviar por correo</a>` : ''}<a class="btn ghost" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(msg)}">WhatsApp</a></div>
+    <div class="ia-acciones"><button type="button" class="btn" id="pf-copiar">📋 Copiar mensaje</button><button type="button" class="btn ghost" id="pf-enlace">🔗 Copiar enlace</button>${email ? `<a class="btn ghost" href="mailto:${esc(email)}?subject=${encodeURIComponent(que + ' · EntornoSeguro')}&body=${encodeURIComponent(msg)}">✉️ Enviar por correo</a>` : ''}<a class="btn ghost" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(msg)}">WhatsApp</a></div>
     <div class="actions"><button value="cancel" class="btn ghost">Cerrar</button></div>`;
   const dlg = $('#modal'); dlg.onclose = null; dlg.oncancel = null; if (!dlg.open) dlg.showModal();
   $('#pf-copiar').onclick = () => copiarTexto(msg);
+  $('#pf-enlace').onclick = () => copiarTexto(url);
 }
 const pedirFicha = (destino, nombre, email) => pedirPeticion(destino, 'ficha', '', nombre, email);
 function elegirPeticion(destino, nombre, email) {
@@ -7495,7 +7496,7 @@ function petLista(ps) {
   const base = formEntidad;
   formEntidad = async function () {
     const r = await base.apply(this, arguments);
-    if (!state.club) return r;
+    if (!state.club || !(state.me && state.me.gestor)) return r;
     const f = $('#modal-form'), nota = f && f.querySelector('p.nota');
     if (nota && !f.querySelector('#ficha-pedir')) {
       nota.insertAdjacentHTML('beforeend', ' · <button type="button" class="link" id="ficha-pedir">📨 Pedir los datos por enlace</button>');
@@ -7622,12 +7623,12 @@ GUIA.forEach(t => { if (t[1] === 'Entidades y coordinación con clubes') t[2].pu
   '<tr><td>Agentes deportivos</td><td>Personas nuevas y datos que faltan (fecha del certificado, código, formación)</td><td>Agentes → sugerencias K1, K2, D2, J1</td></tr>' +
   '<tr><td>Autorizaciones</td><td>Por grupo: nº de menores, recibidas y denegadas (solo cifras)</td><td>Autorizaciones → sugerencias E1, F1</td></tr>' +
   '<tr><td>Documento aprobado</td><td>Título, fecha de aprobación y enlace</td><td>Matriz como «Parcial · revisar» con la evidencia</td></tr></tbody></table>' +
-  '<p><b>Dónde se piden:</b> en <b>Mis clubes → 🧭 Seguimiento → 📨 Pedir al club…</b> (abajo verás las <b>peticiones enviadas</b> y su estado); en modo gestor, en cada paso del tutorial con <b>📨 Pedírselo al club</b>; y, en cada pantalla, <b>📨 Pedir por enlace</b>: Formación (al registrar), Agentes, Autorizaciones y la Matriz (al actualizar un requisito con documento). La ficha, también desde el paso 1 del seguimiento de entidades o desde la propia ficha.</p>' +
+  '<p><b>Dónde se piden:</b> en <b>Mis clubes → 🧭 Seguimiento → 📨 Pedir al club…</b> (abajo verás las <b>peticiones enviadas</b> y su estado); en modo gestor, en cada paso del tutorial con <b>📨 Pedírselo al club</b>; y, en cada pantalla, <b>📨 Pedir por enlace</b>: Formación (al registrar), Agentes, Autorizaciones y la Matriz (al actualizar un requisito con documento). Estos botones los ve el gestor (o el ayuntamiento con sus entidades), no el club cuando entra por su cuenta. La ficha, también desde el paso 1 del seguimiento de entidades o desde la propia ficha.</p>' +
   '<p class="nota">La Matriz la validas tú: lo recibido no marca «Cumple» solo. El enlace caduca a los 14 días y sirve una vez. Solo datos de la entidad y de personas adultas, nunca de menores; los certificados y autorizaciones firmadas se quedan en la entidad. Las casillas vacías no borran datos.</p>', 'escribir', 'entidades']); });
 // v111: «📨 Pedir por enlace» donde se registra cada dato: Formación, Agentes, Autorizaciones y Matriz (documentos)
 function petDestinoDe(entId) {
   if (!state.me || state.me.rol === 'entidad' || !can('escribir')) return null;
-  if (state.club) return {};
+  if (state.club) return state.me.gestor ? {} : null; // v114: el club por su cuenta no ve «Pedir por enlace»; solo su gestor
   const e = (state.entidades || []).find(x => x.id === entId);
   if (!e || e.propia === 'SI') return null;
   return { entidad_id: e.id };
@@ -7662,7 +7663,7 @@ function petBoton(tipo, ref, getEnt, cls) {
         if (x && x.id) return r;
         const f = $('#modal-form'); if (!f || f.querySelector('#pet-form')) return r;
         const getEnt = () => { const s = f.querySelector('[name=entidad_id]'); return s ? s.value : (state.me && state.me.entidad_id); };
-        if (!state.club && !petDestinoDe(getEnt()) && !(state.entidades || []).some(e => e.propia !== 'SI')) return r;
+        if (state.club ? !(state.me && state.me.gestor) : !(state.entidades || []).some(e => e.propia !== 'SI')) return r;
         const p = document.createElement('p'); p.className = 'nota'; p.id = 'pet-form'; p.style.margin = '0 0 8px';
         p.innerHTML = '¿Los datos del curso del Delegado/a los tiene la entidad? ';
         p.appendChild(petBoton('formacion_del', '', getEnt, 'link'));
@@ -7769,6 +7770,116 @@ GUIA.forEach(t => { if (t[1] === 'Agentes, formación y autorizaciones') t[2].un
   '<p><b>Curso oficial en Andalucía:</b> <a href="' + CURSO_JUNTA.url + '" target="_blank" rel="noopener">' + esc(CURSO_JUNTA.nombre) + '</a> (Junta de Andalucía, en línea). Además, el Instituto Andaluz del Deporte programa talleres sobre protección de menores deportistas en su <a href="' + IAD_FC_URL + '" target="_blank" rel="noopener">formación continua</a>.</p>' +
   '<ol><li>Haz el curso y guarda el certificado en la carpeta restringida de la entidad.</li><li>En <b>Formación → Registrar formación</b>, pulsa <b>Usar este curso</b> (rellena el nombre y la entidad), elige el colectivo y pon la fecha. Para varias personas, <b>Curso con varios asistentes</b>.</li><li>La app te sugerirá marcar <b>B2</b> (Delegado/a) y <b>J1</b> (resto del personal) en la Matriz.</li></ol>' +
   '<p class="nota">La app registra la formación, pero no la imparte ni la certifica. Si el Delegado/a o el personal han hecho otra formación equivalente (federación, universidad, otra comunidad), regístrala igual con su nombre y entidad.</p>', 'leer', 'formacion']); });
+// v115 + Ampliacion v1.37: diferencias por servicio (Autogestión · Acompañado · Gestionado)
+if (typeof AL_TIPO === 'object') AL_TIPO.seguimiento = 'Seguimiento';
+if (typeof ACC_TXT === 'object') Object.assign(ACC_TXT, { SEGUIMIENTO_CLUB: 'Seguimiento del gestor' });
+const SEG_DIAS = { 'Acompañado': 21, 'Gestionado': 30 };
+let miServicioProm = null;
+function cargarMiServicio(forzar) {
+  if (!state.club) return Promise.resolve(null);
+  if (!miServicioProm || forzar) miServicioProm = API.call('miServicio').then(r => (state.miServicio = r), () => (state.miServicio = null));
+  return miServicioProm;
+}
+function htmlTuServicio(m) {
+  const quien = m.prestador || (m.maestra ? 'Escuela&Deporte' : 'tu ayuntamiento'), dias = m.soporte_dias || 2;
+  const cont = m.contacto ? `<a href="mailto:${esc(m.contacto)}">${esc(m.contacto)}</a>` : esc(quien);
+  const prox = m.proximo ? ` · próxima revisión: <b>${esc(fCorta(m.proximo))}</b>` : '';
+  const txt = {
+    'Autogestión': 'Usáis la aplicación por vuestra cuenta, con el tutorial, las recomendaciones del Panel y la Guía de uso.',
+    'Acompañado': `${esc(quien)} revisa vuestro avance cada 3 semanas y os envía recomendaciones${prox}.`,
+    'Gestionado': `${esc(quien)} se ocupa de vuestro sistema de protección y os pide por enlace los datos que necesita${prox}. Acceso del gestor: ${m.acceso ? '<span class="st ok">autorizado</span>' : '<span class="st warn">sin autorizar</span> (Mis datos)'}.`
+  }[m.servicio] || '';
+  const act = m.servicio === 'Gestionado' && (m.actuaciones || []).length ? `<details style="margin-top:6px"><summary style="cursor:pointer">Últimas actuaciones de tu gestor (${m.actuaciones.length})</summary><ul class="nota" style="margin:6px 0 0;padding-left:18px">${m.actuaciones.map(a => `<li>${esc(fCorta(a.fecha))} · ${esc(ACC_TXT[a.accion] || String(a.accion).toLowerCase().replace(/_/g, ' '))}</li>`).join('')}</ul></details>` : '';
+  return `<h3 style="margin:0 0 4px">🤝 Tu servicio: ${esc(m.servicio)} <small class="muted" style="font-weight:500">· ${esc(quien)}</small></h3><p style="margin:0">${txt}</p>
+    <p class="nota" style="margin:6px 0 0">¿Dudas? ${cont} · respuesta en ${dias} día${dias > 1 ? 's' : ''} hábil${dias > 1 ? 'es' : ''}.</p>${act}`;
+}
+(function () {
+  // Panel del club: tarjeta «Tu servicio»
+  const baseP = loadPanel;
+  loadPanel = async function () {
+    const r = await baseP.apply(this, arguments);
+    try {
+      const v = $('#view-panel'); let c = $('#card-servicio');
+      if (!state.club) { if (c) c.remove(); return r; }
+      const m = await cargarMiServicio(); if (!m || !m.servicio) { if (c) c.remove(); return r; }
+      if (!c) { c = document.createElement('div'); c.className = 'card'; c.id = 'card-servicio'; c.style.borderLeft = '4px solid var(--brand-2)'; }
+      c.innerHTML = htmlTuServicio(m);
+      const ref = $('#panel-hero') || $('#kpis'); if (ref && c.previousElementSibling !== ref) ref.after(c); else if (!c.parentElement) v.prepend(c);
+    } catch (e) {}
+    return r;
+  };
+  // Mis datos: el acceso del gestor solo en Gestionado (o si ya estaba autorizado / sin servicio asignado)
+  if (typeof loadMisDatos === 'function') {
+    const baseM = loadMisDatos;
+    loadMisDatos = async function () {
+      const r = await baseM.apply(this, arguments);
+      try { const m = await cargarMiServicio(true), card = $('#gestor-card'); if (card) card.hidden = !!(m && ['Autogestión', 'Acompañado'].includes(m.servicio) && !m.acceso); } catch (e) {}
+      return r;
+    };
+  }
+  // Tutorial: aviso en Gestionado (cuando entra el club, no el gestor)
+  const baseT = tutPintar;
+  tutPintar = function () {
+    const r = baseT.apply(this, arguments);
+    try {
+      const barra = $('#tut-barra'), m = state.miServicio;
+      if (barra && state.club && !(state.me && state.me.gestor) && m && m.servicio === 'Gestionado' && !barra.querySelector('[data-gest-aviso]')) {
+        const p = document.createElement('p'); p.className = 'nota'; p.dataset.gestAviso = '1'; p.style.margin = '6px 0';
+        p.innerHTML = '🤝 <b>Servicio Gestionado:</b> tu gestor se ocupa de estos pasos y te pedirá por enlace los datos que necesite. Aquí puedes seguir el avance.';
+        const cab = barra.querySelector('.tut-cab'); if (cab) cab.after(p);
+      }
+    } catch (e) {}
+    return r;
+  };
+  // Maestra · Mis clubes: próximo seguimiento y horas por club
+  const baseC = loadClubes;
+  loadClubes = async function () {
+    const r = await baseC.apply(this, arguments);
+    try {
+      if (!esMaestra()) return r;
+      const hoy = new Date().toISOString().slice(0, 10);
+      $$('#tabla-clubes [data-club]').forEach(b => {
+        const c = (state.clubes || []).find(x => x.id === b.dataset.club), tr = b.closest('tr'); if (!c || tr.querySelector('.chip-seg')) return;
+        const venc = c.proximo_seguimiento && c.proximo_seguimiento <= hoy;
+        const nb = tr.cells[0].querySelector('.chip-serv') || tr.cells[0].querySelector('b');
+        if (nb) nb.insertAdjacentHTML('afterend', (c.proximo_seguimiento ? ` <span class="chip chip-seg" style="${venc ? 'background:#fdecea;color:#b83232' : ''}" title="Próximo seguimiento según el servicio">📅 ${venc ? 'vencido ' : ''}${esc(fCorta(c.proximo_seguimiento))}</span>` : '<span class="chip-seg"></span>') +
+          (c.horas ? ` <span class="chip" title="Horas dedicadas registradas">⏱ ${esc(String(c.horas).replace('.', ','))} h</span>` : ''));
+      });
+    } catch (e) {}
+    return r;
+  };
+  // Maestra · Seguimiento del club: seguimiento del gestor y dedicación
+  const baseS = segClubAbrir;
+  segClubAbrir = async function (c) {
+    await baseS.apply(this, arguments);
+    if (!esMaestra()) return;
+    const dlg = $('#seg-dlg'), cuerpo = dlg && dlg.querySelector('.seg-cuerpo'); if (!cuerpo || !dlg.open || cuerpo.querySelector('.seg-ded')) return;
+    const caja = document.createElement('div'); caja.className = 'seg-ded'; caja.innerHTML = '<h4 style="margin:14px 0 6px">⏱ Seguimiento del gestor y dedicación</h4><div class="ded-c"><p class="muted">Consultando…</p></div>';
+    const serv = cuerpo.querySelector('.segc-serv'); (serv || cuerpo.firstChild).after(caja);
+    const pintar = async () => {
+      let d; try { d = await API.call('dedicacionClub', { club_id: c.id }); } catch (e) { caja.querySelector('.ded-c').innerHTML = '<p class="muted">Actualiza el servidor (Ampliacion v1.37).</p>'; return; }
+      const hoy = new Date().toISOString().slice(0, 10), venc = d.proximo && d.proximo <= hoy;
+      caja.querySelector('.ded-c').innerHTML = `<p style="margin:0 0 6px">${SEG_DIAS[d.servicio] ? `Cada ${SEG_DIAS[d.servicio] === 21 ? '3 semanas' : 'mes'} (${esc(d.servicio)}) · próximo: <b style="${venc ? 'color:var(--bad)' : ''}">${esc(fCorta(d.proximo))}${venc ? ' (vencido)' : ''}</b>` : 'Sin seguimiento programado' + (d.servicio ? ' (' + esc(d.servicio) + ')' : '')}${d.ultimo ? ' · último: ' + esc(fCorta(d.ultimo)) : ''} · <b>${esc(String(d.total).replace('.', ','))} h</b> registradas</p>
+        <button type="button" class="btn ghost" id="ded-reg">✓ Registrar seguimiento</button>
+        ${d.filas.length ? `<ul class="nota" style="margin:8px 0 0;padding-left:18px">${d.filas.map(f => `<li>${esc(fCorta(f.fecha))} · ${esc(String(f.horas).replace('.', ','))} h${f.nota ? ' · ' + esc(f.nota) : ''}</li>`).join('')}</ul>` : ''}`;
+      caja.querySelector('#ded-reg').onclick = () => {
+        const prev = { dlg }; dlg.close();
+        modal('✓ Registrar seguimiento · ' + c.nombre, [['fecha', 'Fecha', 'date', true], ['horas', 'Horas dedicadas (ej. 1,5)', 'text'], ['nota', 'Qué has hecho (sin datos personales)', 'textarea']],
+          { fecha: hoy, horas: '' }, async v => { await run(() => API.call('registrarSeguimiento', Object.assign({ club_id: c.id }, v))); toast('Seguimiento registrado'); await loadClubes(); segClubAbrir((state.clubes || []).find(x => x.id === c.id) || c); });
+      };
+    };
+    pintar();
+  };
+})();
+GUIA.forEach(t => {
+  if (t[1] === 'Modelo comercial y versiones (solo versión maestra)' || t[1] === '💼 Modelo comercial y versiones (solo versión maestra)') t[2].push(['¿Cómo llevo el seguimiento de cada club según su servicio?',
+    '<table class="md-tabla"><thead><tr><th></th><th>Autogestión</th><th>Acompañado</th><th>Gestionado</th></tr></thead><tbody>' +
+    '<tr><td>Seguimiento del gestor</td><td>No programado</td><td>Cada 3 semanas</td><td>Cada mes</td></tr><tr><td>Soporte</td><td>2 días hábiles</td><td>2 días hábiles</td><td>1 día hábil</td></tr>' +
+    '<tr><td>Acceso del gestor (Mis datos)</td><td>Oculto</td><td>Oculto</td><td>Visible</td></tr><tr><td>📨 Peticiones por enlace</td><td colspan="3">Las envías tú desde Mis clubes o en modo gestor</td></tr></tbody></table>' +
+    '<ol><li>En <b>Mis clubes</b>, cada club muestra <b>📅 próximo seguimiento</b> (en rojo si está vencido) y <b>⏱ horas</b> registradas.</li><li>Cuando venza, aparece una alerta «seguimiento pendiente» en <b>Alertas</b> (y en el aviso por correo).</li><li>Tras revisar al club, en su <b>🧭 Seguimiento → ✓ Registrar seguimiento</b> anota fecha, horas y qué has hecho (sin datos personales). El próximo se recalcula solo.</li></ol>' +
+    '<p class="nota">Las horas te sirven para comprobar si los precios de cada servicio están bien calculados. El club no ve las horas; sí ve, en su Panel, la tarjeta «Tu servicio» con su próxima revisión y, en Gestionado, tus últimas actuaciones.</p>', 'admin', 'clubes']);
+  if (t[1] === 'Primeros pasos') t[2].push(['¿Qué incluye nuestro servicio?', '<p>En el <b>Panel</b> veréis la tarjeta <b>🤝 Tu servicio</b> con el servicio contratado, el contacto y el plazo de respuesta:</p><ul><li><b>Autogestión</b>: usáis la app por vuestra cuenta con el tutorial y la Guía; dudas por correo (2 días hábiles).</li><li><b>Acompañado</b>: vuestro acompañante revisa el avance cada 3 semanas y os envía recomendaciones.</li><li><b>Gestionado</b>: vuestro gestor se ocupa del sistema, os pide los datos por enlace y veis sus últimas actuaciones. Para que pueda trabajar, autorizad su acceso en <b>Mis datos</b>; podéis retirarlo cuando queráis.</li></ul>', 'club', 'panel']);
+});
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
