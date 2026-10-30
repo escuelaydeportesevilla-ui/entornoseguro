@@ -5138,7 +5138,7 @@ const EJ_SENSIBLE = { K2: 'Certificados negativos 2026/2027 (2 de 2) · carpeta 
     const sg = (state.recSug || {})[r.codigo];
     if (sg) {
       // v59: con sugerencia, el formulario se reduce a una decisión: aplicar (y guardar) o hacerlo a mano.
-      const ETQ = { cumple: 'Cumple', parcial: 'Parcial', no_aplica: 'No aplica' };
+      const ETQ = { cumple: 'Cumple', parcial: 'Parcial', no_aplica: 'No aplica', no_cumple: 'No cumple' };
       const faltaEnlace = !!(sg.ev && !sg.url && (sg.enlace || REQ_SENSIBLES[sg.c])); // documentos y carpetas que solo tiene el club
       f.classList.add('modo-sug');
       f.querySelector('h3').insertAdjacentHTML('afterend', `<div class="plant-ok" id="sug-req" style="grid-column:1/-1;margin:0 0 10px;padding:12px 14px;border-radius:10px">💡 <b>La app sugiere: ${ETQ[sg.e] || sg.e}</b><br>${esc(String(sg.t).replace(/^[A-K][12] → [^:]+: /, ''))}
@@ -7167,7 +7167,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v121';
+const ES_VERSION = 'v122';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -7559,6 +7559,8 @@ async function pintarFichaPublica() {
         return vis.length ? `<details class="ficha-sec"${nf ? ' open' : ''}><summary>${esc(tit)} <small>${nf ? nf + ' por completar' : 'completo'}</small></summary><div class="fields">${vis.map(campo).join('')}</div></details>` : ''; }).join('')}`;
   } else if (d.tipo === 'formacion_del') {
     cuerpo = `<p>Indicad el curso de protección de menores que ha realizado el Delegado/a de Protección.</p>${aviso}<div class="fields">
+      <label class="full"><span>¿Ha realizado ya un curso de protección de menores?</span><select name="tiene_curso" id="fp-tiene"><option value="SI">Sí, ya lo ha hecho</option><option value="NO">Todavía no</option></select></label>
+      <p class="nota full" id="fp-sin" hidden style="grid-column:1/-1">No pasa nada: enviadlo así y quedará como <b>formación pendiente</b>. El curso oficial de la Junta es gratuito y en línea (enlace «Hacer el curso de la Junta», arriba). Cuando lo termine, os pediremos el certificado.</p>
       ${inp('persona_nombre', 'Delegado/a de Protección', 'text', d.datos.delegado_nombre, true)}${inp('curso', 'Nombre del curso', 'text', '', true, 'Ej. Curso de sensibilización y protección del menor en el deporte')}
       ${inp('entidad_formadora', 'Entidad que lo imparte', 'text', '', false, 'Ej. Junta de Andalucía')}${inp('horas', 'Horas', 'number', '')}
       ${inp('fecha', 'Fecha de finalización', 'date', '', true)}${inp('fecha_caducidad', 'Caducidad (si la tiene)', 'date', '')}
@@ -7591,6 +7593,13 @@ async function pintarFichaPublica() {
   caja.innerHTML = `<h1>${esc(d.titulo)} · ${esc(d.nombre)}</h1><form id="fp-form">${cuerpo}<div class="ia-acciones" style="margin-top:14px"><button class="btn" type="submit">Enviar</button></div></form>
     <p class="nota" style="margin-top:14px">EntornoSeguro · Los datos se guardan en el espacio de vuestra entidad, que es quien decide sobre ellos.</p>`;
   const ej = $('#fp-ej'); if (ej) ej.onclick = () => abrirInforme(htmlFichaEjemplo());
+  // v122: Delegado/a sin curso → se envía como formación pendiente (no se registra como curso)
+  const tiene = $('#fp-tiene');
+  if (tiene) tiene.onchange = () => {
+    const no = tiene.value === 'NO'; $('#fp-sin').hidden = !no;
+    ['curso', 'entidad_formadora', 'horas', 'fecha', 'fecha_caducidad', 'certificado_url'].forEach(n => { const el = caja.querySelector(`[name="${n}"]`); if (!el) return;
+      const lab = el.closest('label'); if (lab) lab.style.display = no ? 'none' : ''; if (el.dataset.req === undefined) el.dataset.req = el.required ? '1' : ''; el.required = !no && el.dataset.req === '1'; });
+  };
   const mas = $('#fp-mas'); if (mas) mas.onclick = () => { const cont = $('#fp-nuevos') || $('#fp-grupos'); cont.insertAdjacentHTML('beforeend', caja.dataset.fila); };
   $('#fp-form').onsubmit = async ev => {
     ev.preventDefault();
