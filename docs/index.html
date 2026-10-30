@@ -7167,7 +7167,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v118';
+const ES_VERSION = 'v119';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -7887,6 +7887,61 @@ GUIA.forEach(t => {
     '<p class="nota">Las horas te sirven para comprobar si los precios de cada servicio están bien calculados. El club no ve las horas; sí ve, en su Panel, la tarjeta «Tu servicio» con su próxima revisión y, en Gestionado, tus últimas actuaciones.</p>', 'admin', 'clubes']);
   if (t[1] === 'Primeros pasos') t[2].push(['¿Qué incluye nuestro servicio?', '<p>En el <b>Panel</b> veréis la tarjeta <b>🤝 Tu servicio</b> con el servicio contratado, el contacto y el plazo de respuesta:</p><ul><li><b>Autogestión</b>: usáis la app por vuestra cuenta con el tutorial y la Guía; dudas por correo (2 días hábiles).</li><li><b>Acompañado</b>: vuestro acompañante revisa el avance cada 3 semanas y os envía recomendaciones; en la tarjeta veréis su último mensaje y la próxima sesión acordada.</li><li><b>Gestionado</b>: vuestro gestor se ocupa del sistema, os pide los datos por enlace y veis sus últimas actuaciones. Para que pueda trabajar, autorizad su acceso en <b>Mis datos</b>; podéis retirarlo cuando queráis.</li></ul>', 'club', 'panel']);
 });
+// v119 + Ampliacion v1.40: propuesta automática del seguimiento (editable)
+const accTxt = a => (typeof ACC_TXT === 'object' && ACC_TXT[a]) || String(a).toLowerCase().replace(/_/g, ' ');
+function textoSesion(r) {
+  const acc = (r.acciones || []).map(x => accTxt(x.accion) + (x.n > 1 ? ' ×' + x.n : '') + (x.codigos && x.codigos.length ? ' (' + x.codigos.join(', ') + ')' : '')).join(' · ');
+  return 'Sesión en la app ' + (r.inicio ? r.inicio + '–' + r.fin + ' ' : '') + '(' + r.minutos + ' min)' + (acc ? ': ' + acc : '') + '.';
+}
+function textoPeticiones(r) {
+  const f = o => Object.keys(o || {}).map(k => (PET_TXT[k] || k) + (o[k] > 1 ? ' ×' + o[k] : '')).join(', ');
+  const e = f(r.enviadas), rc = f(r.recibidas);
+  return (e ? 'Peticiones enviadas: ' + e + '. ' : '') + (rc ? 'Recibidas: ' + rc + '.' : '');
+}
+// Modo gestor: al pulsar «Salir del club», propuesta de seguimiento con el tiempo y lo hecho
+(function () {
+  const parchear = () => {
+    const b = $('#gestor-salir'); if (!b || b.dataset.seg) return;
+    b.dataset.seg = '1';
+    const salir = b.onclick;
+    b.onclick = async () => {
+      let r = null, p = null;
+      try { r = await API.call('resumenSesionGestor'); } catch (e) {}
+      try { p = await API.call('resumenPeticiones', {}); } catch (e) {}
+      if (!r || !r.acciones || !r.acciones.length) { return salir && salir(); }
+      const hoy = new Date().toISOString().slice(0, 10);
+      const nota = (textoSesion(r) + ' ' + (p ? textoPeticiones(p) : '')).trim().slice(0, 300);
+      modal('✓ Registrar este trabajo antes de salir', [['fecha', 'Fecha', 'date', true], ['horas', 'Horas (calculadas; ajústalas si trabajaste también fuera de la app)', 'text'],
+        ['nota', 'Qué has hecho (nota interna, ya resumida)', 'textarea'], ['mensaje', '💬 Mensaje para el club (opcional)', 'textarea'], ['proxima_sesion', '📅 Próxima sesión acordada (opcional)', 'date']],
+        { fecha: hoy, horas: String(r.horas).replace('.', ','), nota }, async v => {
+          try { await run(() => API.call('registrarSeguimiento', v)); toast('Seguimiento registrado'); } catch (e) {}
+          setTimeout(() => salir && salir(), 300);
+        });
+      const act = $('#modal-form .actions');
+      if (act) {
+        const c = act.querySelector('[value=cancel]'); if (c) c.textContent = 'Volver al club';
+        const sn = document.createElement('button'); sn.type = 'button'; sn.className = 'btn ghost'; sn.textContent = 'Salir sin registrar';
+        sn.onclick = () => { $('#modal').onclose = null; $('#modal').close('cancel'); salir && salir(); };
+        act.prepend(sn);
+      }
+      const fl = $('#modal-form .fields'); if (fl) fl.insertAdjacentHTML('afterend', `<p class="nota">⏱ Entrada ${esc(r.inicio || '')} · salida ${esc(r.fin || '')} · ${r.minutos} min en la app (redondeado a 0,25 h). La nota y las horas son internas; el mensaje y la sesión los verá el club.</p>`);
+    };
+  };
+  setInterval(parchear, 1000);
+})();
+// Maestra · «✓ Registrar seguimiento»: la nota se rellena con las peticiones desde el último seguimiento
+document.addEventListener('click', ev => {
+  const b = ev.target.closest && ev.target.closest('#ded-reg'); if (!b) return;
+  const dlg = $('#seg-dlg'), id = (state.clubes || []).find(c => dlg && dlg.querySelector('h3') && c.nombre === dlg.querySelector('h3').textContent);
+  setTimeout(async () => {
+    const f = $('#modal-form'), n = f && f.querySelector('[name=nota]'); if (!n || n.value) return;
+    const h3 = f.querySelector('h3'), nombre = h3 ? h3.textContent.replace(/^✓ Registrar seguimiento · /, '') : '', c = (state.clubes || []).find(x => x.nombre === nombre);
+    if (!c) return;
+    try { const p = await API.call('resumenPeticiones', { club_id: c.id }); const t = textoPeticiones(p); if (t && !n.value) n.value = t; } catch (e) {}
+  }, 150);
+}, true);
+GUIA.forEach(t => { if (t[1] === 'Modelo comercial y versiones (solo versión maestra)' || t[1] === '💼 Modelo comercial y versiones (solo versión maestra)') t[2].push(['¿Se registra solo el tiempo que dedico a cada club?',
+  '<p>Te lo propone la app y tú lo confirmas:</p><ul><li><b>Gestionado:</b> al pulsar <b>Salir del club</b>, la app calcula el tiempo desde tu entrada (redondeado a 0,25 h) y resume lo que has hecho (requisitos actualizados con sus códigos, formación, peticiones…). Revisa las horas (añade lo que hiciste fuera de la app: llamadas, reuniones, revisión de documentos), escribe si quieres un mensaje para el club y guarda. También puedes «Salir sin registrar» o «Volver al club».</li><li><b>Acompañado y Gestionado desde la maestra:</b> en <b>✓ Registrar seguimiento</b>, la nota se rellena con las peticiones enviadas y recibidas desde el último seguimiento; las horas las pones tú.</li></ul><p class="nota">Si dejaste la sesión abierta sin actividad más de 30 minutos, se cuenta hasta tu última acción + 5 min. Nada se guarda sin que pulses Guardar.</p>', 'admin', 'clubes']); });
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
