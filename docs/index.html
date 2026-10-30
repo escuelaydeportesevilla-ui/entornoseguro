@@ -7167,7 +7167,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v120';
+const ES_VERSION = 'v121';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -7952,14 +7952,17 @@ function textoActuacion(it) {
     PETICION_RECIBIDA: () => `Datos recibidos por enlace${it.tipos.length ? ': ' + lista(it.tipos) : n}`,
     ENLACE_FICHA: () => 'Enlace enviado para completar la ficha',
     FICHA_EXTERNA: () => 'Ficha recibida por enlace',
-    ACTUALIZAR: () => 'Ficha del club actualizada'
+    ACTUALIZAR: () => 'Ficha del club actualizada',
+    CONSULTA_AYUNTAMIENTO: () => 'Revisión del informe del club'
   };
   return (T[it.accion] ? T[it.accion]() : (ACC_TXT[it.accion] || String(it.accion).toLowerCase().replace(/_/g, ' ')) + n + (it.codigos.length ? ' (' + lista(it.codigos) + ')' : ''));
 }
 function htmlSesionesGestor(ses) {
   if (!ses.length) return '';
   const dia = s => {
-    const its = s.items.map(it => `<li>${esc(textoActuacion(it))}${it.club ? ' <small class="muted">· enviado por el club</small>' : ''}</li>`);
+    // v121: lo que guarda un formulario por enlace ya se resume en «Datos recibidos por enlace»; no se repite
+    const hayRec = s.items.some(it => it.club && (it.accion === 'PETICION_RECIBIDA' || it.accion === 'FICHA_EXTERNA'));
+    const its = s.items.filter(it => !hayRec || !it.club || it.accion === 'PETICION_RECIBIDA' || it.accion === 'FICHA_EXTERNA').map(it => `<li>${esc(textoActuacion(it))}${it.club ? ' <small class="muted">· enviado por el club</small>' : ''}</li>`);
     if (!its.length) its.push('<li>Revisión del estado del club</li>');
     return `<li style="margin-bottom:4px"><b>${esc(fCorta(s.fecha))}</b><ul style="margin:2px 0 0;padding-left:18px">${its.join('')}</ul></li>`;
   };
