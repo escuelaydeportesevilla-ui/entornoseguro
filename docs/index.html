@@ -4753,7 +4753,7 @@ function tutPintar() {
   barra.innerHTML = `<div class="tut-cab">🧭 <span>Paso ${k + 1} de ${pasos.length} · ${hechos} hecho${hechos === 1 ? '' : 's'}${nEsp ? ` · ${nEsp} esperando al club` : ''}</span>
       <button type="button" class="tut-mini" id="tut-ver" aria-expanded="${!!state.tut.lista}">${state.tut.lista ? 'Ocultar la lista' : 'Ver todos los pasos'}</button><button type="button" class="tut-mini" id="tut-act" title="Comprobar de nuevo">↻ Comprobar</button><button type="button" class="tut-mini" id="tut-pausa">Pausar</button></div>
     <div class="pasos-barra"><i style="width:${Math.round(hechos * 100 / pasos.length)}%"></i></div>
-    ${state.tut.ronda ? '<p class="nota" style="margin:6px 0 0">🔁 Has repasado todos los pasos: volvemos a los que quedan pendientes.</p>' : ''}
+    ${state.tut.ronda ? '<p class="nota" style="margin:6px 0 0">🔁 Has repasado todos los pasos: volvemos a los que quedan pendientes.</p>' : ''}${(state.tut.ronda = false, '')}
     <div class="tut-paso"><b>${hecho ? '✓ ' : ''}${esc(p.t)} ${estadoPaso}</b><small>${esc(p.d)}</small></div>
     <div class="tut-acc">${p.ir.map(([l, d], j) => `<button class="btn${j || hecho || (pe && pe.e === 'pedido') ? ' ghost' : ''}" type="button" data-tut-ir="${esc(d)}">${esc(l)}</button>`).join('')}
       ${p.manual && !hecho ? '<button class="btn ghost" type="button" id="tut-hecho">✓ Ya lo he hecho</button>' : ''}
@@ -7211,7 +7211,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v126';
+const ES_VERSION = 'v127';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -7503,6 +7503,8 @@ const FICHA_PUB_FUERA = ['nombre', 'trabaja_menores', 'acepta_protocolo_marco', 
 const enlaceFicha = t => WEB_PUBLICA + '?ficha=' + encodeURIComponent(t) + (state.inst ? '&a=' + encodeURIComponent(state.inst) : '');
 async function pedirPeticion(destino, tipo, ref, nombre, email) {
   const r = await run(() => API.call('crearPeticion', Object.assign({}, destino, { tipo, ref: ref || '' })));
+  // v127: el tutorial marca el paso como «pedido» al momento, sin pulsar «Comprobar»
+  try { if (state.club && typeof tutRefrescar === 'function' && tutLeer().estado === 'activo') tutRefrescar(true); } catch (e) {}
   const url = enlaceFicha(r.token), cad = fCorta(r.caduca), quien = r.nombre || nombre || 'vuestra entidad';
   const que = PET_TXT[tipo] + (ref ? ' · ' + ref : '');
   const msg = 'Hola:\n\nPara avanzar con el sistema de protección de ' + quien + ' en EntornoSeguro, necesitamos ' + PET_PIDE[tipo] + (ref ? ' (' + ref + ')' : '') + '. Es un formulario sencillo, sin contraseña:\n\n' + url +
