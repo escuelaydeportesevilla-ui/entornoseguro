@@ -7220,7 +7220,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v128';
+const ES_VERSION = 'v129';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -8215,6 +8215,62 @@ async function abrirContratoAgente() {
 GUIA.forEach(t => { if (t[1] === 'Modelo comercial y versiones (solo versión maestra)' || t[1] === '💼 Modelo comercial y versiones (solo versión maestra)') t[2].push(['¿Cómo incorporo a un agente colaborador?',
   '<ol><li><b>Contrato:</b> Documentación → Contrato de colaboración con agentes → Preparar contrato. Complétalo, revísalo con tu asesor y firmadlo. Pide su certificado negativo de delitos sexuales.</li><li><b>Material:</b> comparte con él, desde el Drive de la maestra, una carpeta con el dossier, las tarifas y los modelos. Nunca documentos de clubes.</li><li><b>Usuario:</b> Mis clubes → 🤝 Agentes colaboradores → <b>+ Nuevo agente</b>. Entrégale las claves; en el primer acceso cambia la contraseña.</li><li><b>Clubes:</b> el alta la haces tú (cada club recibe un código ES-001, ES-002…). Después, <b>Asignar clubes</b>.</li></ol>' +
   '<p><b>Qué ve el agente:</b> solo «Mis clubes» con los suyos. Si el club ha autorizado el acceso del gestor, entra como gestor con su nombre, sigue el tutorial y registra sus seguimientos (horas por agente). No ve otros clubes, configuración, precios ni usuarios, ni da de alta clubes.</p><p><b>Para retirarle el acceso:</b> Desactivar (inmediato, también dentro de un club) o quítale el club en Asignar clubes.</p>', 'admin', 'clubes']); });
+// v129: pantalla de acceso profesional en escritorio (dos mitades) y selector de perfil en pestañas (también en móvil)
+(function () {
+  const login = $('#login'), card = login && login.querySelector('.login-card');
+  if (!login || !card || $('#login-hero')) return;
+  const st = document.createElement('style'); st.id = 'login-v129';
+  st.textContent =
+    '#login{display:flex;align-items:center;justify-content:center}' +
+    '#login .login-der{width:100%;display:flex;align-items:center;justify-content:center}' +
+    '#login-hero{display:none}' +
+    '.login-tabs{display:flex;gap:4px;padding:4px;margin:0 0 14px;border-radius:12px;background:var(--bg)}' +
+    '.login-tabs button{flex:1;border:0;border-radius:9px;padding:10px 6px;min-height:44px;font:inherit;font-size:.92rem;font-weight:700;color:var(--muted);background:transparent;cursor:pointer}' +
+    '.login-tabs button[aria-selected="true"]{background:var(--panel);color:var(--brand);box-shadow:0 1px 4px rgba(11,48,87,.15)}' +
+    '.login-tabs button:focus-visible{outline:3px solid var(--brand-2);outline-offset:1px}' +
+    '#login #perfiles,#login #login-volver{display:none!important}#login .login-titulo{text-align:left;font-size:1.35rem;margin:0 0 4px}' +
+    '@media (min-width:900px){' +
+      '#login{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);padding:0;align-items:stretch;min-height:100vh}' +
+      '#login-hero{display:flex;flex-direction:column;justify-content:center;gap:22px;padding:56px 64px;color:#fff}' +
+      '#login-hero .lh-marca{display:flex;align-items:center;gap:18px}#login-hero img{width:96px;height:96px;border-radius:22px;background:#fff;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.25)}' +
+      '#login-hero h1{margin:0;font-size:2.6rem;letter-spacing:.02em;color:#fff}#login-hero .lh-lema{margin:4px 0 0;font-size:1.15rem;opacity:.92}' +
+      '#login-hero ul{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:14px;max-width:460px}#login-hero li{display:flex;gap:12px;align-items:flex-start;font-size:1.02rem;line-height:1.4}' +
+      '#login-hero li span{flex:none;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.18);display:grid;place-items:center;font-weight:700}' +
+      '#login-hero .lh-pie{margin-top:auto;font-size:.82rem;opacity:.8}' +
+      '#login .login-der{background:var(--panel);padding:48px}' +
+      '#login .login-card{box-shadow:none;background:transparent;max-width:400px;padding:0;text-align:left}' +
+      '#login .login-card>.logo,#login .login-card>h1,#login .login-card>p:not(.error):not(#es-version-login):not(.nota){display:none}' +
+      '#login .login-card>.copy{display:none}#login #diag-enlace{margin:22px 0 18px}#login .login-card .tamano{justify-content:flex-start!important}#login .login-card small,#login .login-card .copy,#es-version-login{text-align:left}' +
+    '}';
+  document.head.appendChild(st);
+  const hero = document.createElement('aside'); hero.id = 'login-hero';
+  hero.innerHTML = `<div class="lh-marca"><img src="${typeof LOGO !== 'undefined' ? LOGO : ''}" alt=""><div><h1>EntornoSeguro</h1><p class="lh-lema">Protección de menores en el deporte</p></div></div>
+    <ul><li><span>✓</span>Cumplimiento de la LOPIVI y del Protocolo Marco de Andalucía, paso a paso.</li><li><span>✓</span>Matriz de cumplimiento, alertas, documentos y seguimiento de cada entidad.</li><li><span>✓</span>Sin datos de menores: cada entidad custodia sus documentos.</li></ul>
+    <p class="lh-pie">© 2026 Escuela&amp;Deporte · by M.A. Ballesteros</p>`;
+  const der = document.createElement('div'); der.className = 'login-der';
+  login.insertBefore(hero, card); login.insertBefore(der, card); der.appendChild(card);
+  const form = $('#form-login');
+  const tabs = document.createElement('div'); tabs.className = 'login-tabs'; tabs.setAttribute('role', 'tablist'); tabs.setAttribute('aria-label', 'Perfil de acceso');
+  tabs.innerHTML = '<button type="button" role="tab" data-tab="admin">Ayuntamiento / equipo</button><button type="button" role="tab" data-tab="club">Mi club</button>';
+  form.parentElement.insertBefore(tabs, form);
+  const base = elegirPerfil;
+  elegirPerfil = function (p) {
+    base(p);
+    $('#login-titulo').textContent = 'Acceder';
+    tabs.querySelectorAll('[data-tab]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === p)));
+    const h = $('#login-ayuda');
+    if (h) h.textContent = p === 'club' ? 'Con el usuario de tu club. Si tu club lo dio de alta un ayuntamiento: usuario@código.'
+      : 'Ayuntamiento, técnicos, entidades y agentes colaboradores. Si tu ayuntamiento tiene código: usuario@código.';
+  };
+  tabs.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => elegirPerfil(b.dataset.tab));
+  let ini = 'admin';
+  try { const q = new URLSearchParams(location.search).get('perfil'); ini = q === 'club' || q === 'admin' ? q : (localStorage.getItem('es_perfil') === 'club' ? 'club' : 'admin'); } catch (e) {}
+  if (!/[?&](diag|ficha)=/.test(location.search)) { elegirPerfil(ini); try { form.usuario.blur(); } catch (e) {} }
+  const tt = $('#login-titulo'); if (tt) tabs.before(tt);
+  // El autodiagnóstico, debajo del formulario (primero se ve cómo entrar)
+  const moverDiag = () => { const dg = $('#diag-enlace'), er = $('#login-error'); if (dg && er && er.nextElementSibling !== dg) er.after(dg); };
+  moverDiag(); setTimeout(moverDiag, 300);
+})();
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
