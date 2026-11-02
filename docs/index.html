@@ -4727,7 +4727,12 @@ function tutPintar() {
   if (!tutModo() || cfg.estado !== 'activo') { if (barra) barra.remove(); if ($('#tut-pill')) $('#tut-pill').remove(); tutOferta(); return; }
   if ($('#tut-oferta')) $('#tut-oferta').remove();
   if (!barra) { barra = document.createElement('section'); barra.id = 'tut-barra'; barra.setAttribute('aria-label', 'Tutorial guiado'); main.prepend(barra); }
-  const { pasos, h, salt, pet, espera, auto, k } = tutPasoActual();
+  let { pasos, h, salt, pet, espera, auto, k } = tutPasoActual();
+  // v125: si todos los pendientes están «dejados para después», empieza otra ronda (sin etiquetas que confundan)
+  if (auto >= 0 && salt.includes(pasos[auto].id) && state.tut.ver == null) {
+    const c = tutLeer(); c.saltados = []; tutGuardar(c); state.tut.ronda = true;
+    ({ pasos, h, salt, pet, espera, auto, k } = tutPasoActual());
+  }
   const hechos = pasos.filter(p => h[p.id]).length, nEsp = pasos.filter(espera).length;
   if (auto < 0) {
     barra.innerHTML = `<div class="tut-cab">🎉 <span>Tutorial completado: ${pasos.length} de ${pasos.length} pasos</span><button class="btn" type="button" id="tut-fin">Cerrar el tutorial</button></div>`;
@@ -4735,7 +4740,7 @@ function tutPintar() {
     return;
   }
   const p = pasos[k], hecho = !!h[p.id], pe = !hecho && pet[p.id], gestor = !!(state.me && state.me.gestor), dias = f => f ? Math.floor((Date.now() - new Date(f)) / 864e5) : 0;
-  const estadoPaso = hecho ? '<span class="tut-ok">hecho</span>' : !pe ? (salt.includes(p.id) ? '<span class="tut-est">↷ dejado para después</span>' : '')
+  const estadoPaso = hecho ? '<span class="tut-ok">hecho</span>' : !pe ? (salt.includes(p.id) && k !== auto ? '<span class="tut-est">↷ dejado para después</span>' : '')
     : pe.e === 'pedido' ? `<span class="tut-est">📨 ${gestor ? 'Pedido al club' : 'Vuestro gestor os lo pidió por enlace'} el ${esc(fCorta(pe.f))}${dias(pe.f) > 7 ? ` · hace ${dias(pe.f)} días` : ''} · esperando respuesta</span>`
     : pe.e === 'recibido' ? `<span class="tut-est">📥 ${gestor ? 'El club lo envió' : 'Lo enviasteis'} el ${esc(fCorta(pe.f))} · ${gestor ? 'revísalo y márcalo' : 'vuestro gestor lo revisará'}</span>`
     : `<span class="tut-est warn">⌛ El enlace caducó sin respuesta${gestor ? ' · vuelve a pedirlo' : ''}</span>`;
@@ -4748,6 +4753,7 @@ function tutPintar() {
   barra.innerHTML = `<div class="tut-cab">🧭 <span>Paso ${k + 1} de ${pasos.length} · ${hechos} hecho${hechos === 1 ? '' : 's'}${nEsp ? ` · ${nEsp} esperando al club` : ''}</span>
       <button type="button" class="tut-mini" id="tut-ver" aria-expanded="${!!state.tut.lista}">${state.tut.lista ? 'Ocultar la lista' : 'Ver todos los pasos'}</button><button type="button" class="tut-mini" id="tut-act" title="Comprobar de nuevo">↻ Comprobar</button><button type="button" class="tut-mini" id="tut-pausa">Pausar</button></div>
     <div class="pasos-barra"><i style="width:${Math.round(hechos * 100 / pasos.length)}%"></i></div>
+    ${state.tut.ronda ? '<p class="nota" style="margin:6px 0 0">🔁 Has repasado todos los pasos: volvemos a los que quedan pendientes.</p>' : ''}
     <div class="tut-paso"><b>${hecho ? '✓ ' : ''}${esc(p.t)} ${estadoPaso}</b><small>${esc(p.d)}</small></div>
     <div class="tut-acc">${p.ir.map(([l, d], j) => `<button class="btn${j || hecho || (pe && pe.e === 'pedido') ? ' ghost' : ''}" type="button" data-tut-ir="${esc(d)}">${esc(l)}</button>`).join('')}
       ${p.manual && !hecho ? '<button class="btn ghost" type="button" id="tut-hecho">✓ Ya lo he hecho</button>' : ''}
@@ -4756,10 +4762,11 @@ function tutPintar() {
     ${state.tut.lista ? '<p class="nota" style="margin:6px 0 0">✓ hecho · 📨 pedido al club · 📥 recibido, por revisar · ⌛ enlace caducado · ↷ dejado para después · ○ pendiente. Toca un paso para verlo.</p>' : ''}`;
   const sig = $('#tut-sig');
   if (sig) sig.onclick = () => {
+    state.tut.ronda = false;
     if (sig.dataset.tut === 'despues') { const c = tutLeer(); c.saltados = [...new Set([...(c.saltados || []), p.id])]; tutGuardar(c); }
     state.tut.ver = null; tutPintar();
   };
-  $$('[data-tut-ver]').forEach(b => b.onclick = () => { state.tut.ver = +b.dataset.tutVer === auto ? null : +b.dataset.tutVer; tutPintar(); });
+  $$('[data-tut-ver]').forEach(b => b.onclick = () => { state.tut.ronda = false; state.tut.ver = +b.dataset.tutVer === auto ? null : +b.dataset.tutVer; tutPintar(); });
   $$('[data-tut-ir]').forEach(b => b.onclick = () => tutIr(b.dataset.tutIr));
   $('#tut-ver').onclick = () => { state.tut.lista = !state.tut.lista; tutPintar(); };
   $('#tut-act').onclick = async () => {
@@ -7204,7 +7211,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v124';
+const ES_VERSION = 'v126';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -7376,7 +7383,10 @@ GUIA.forEach(t => { if (t[1] === 'Modelo comercial y versiones (solo versión ma
     return h;
   };
 })();
-const CS_TARIFA = { 'Autogestión': [170, 170], 'Acompañado': [420, 270], 'Gestionado': [850, 850], 'Ayuntamiento Base': [1800, 1800], 'Ayuntamiento Base + paquete de clubes': [2475, 2475] };
+// v125: política de precios cerrada el 31/10/2026 (sin IVA). [1.ª temporada o 1.er año, renovación]
+const CS_TARIFA = { 'Autogestión': [195, 195], 'Acompañado': [495, 295], 'Gestionado': [990, 990],
+  'Ayuntamiento (menos de 20.000 hab.)': [2400, 2400], 'Ayuntamiento (20.000–50.000 hab.)': [3600, 3600], 'Ayuntamiento (más de 50.000 hab.)': [4800, 4800] };
+const CS_CLUB_AYTO = 150, CS_CLUB_MIN = 5, CS_IMPL = 600;
 const CS_INCLUYE = {
   'Autogestión': ['Acceso a la aplicación EntornoSeguro (perfil MI CLUB) durante la vigencia del contrato, con sus actualizaciones.', 'Sesión de puesta en marcha de una hora (presencial o en línea) y kit de bienvenida.', 'Soporte de uso por correo electrónico, con respuesta en un máximo de dos días hábiles.'],
   'Acompañado': ['Todo lo incluido en el servicio Autogestión.', 'Acompañamiento en la implantación: ficha de la entidad, protocolo, código de conducta, designación del Delegado/a, análisis de riesgos (en sesión de trabajo), documentos y campaña informativa a familias.', 'Orientación para la inscripción en el registro de la Junta de Andalucía y la aceptación del Protocolo Marco.', 'Seguimiento periódico del avance y envío de recomendaciones.', 'Revisión anual del sistema e informe de implantación.'],
@@ -7391,7 +7401,9 @@ function htmlContratoServicios(p, e, c) {
   const CLI = campo(e.nombre, ayto ? 'AYUNTAMIENTO DE …' : 'DENOMINACIÓN DE LA ENTIDAD'), PRE = campo(p.nombre, 'DENOMINACIÓN DEL PRESTADOR');
   const hoy = new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
   const imp = Number(c.importe) || 0, dto = Number(c.descuento) || 0, impl = Number(c.implantacion) || 0;
-  const neto = Math.round(imp * (100 - dto)) / 100;
+  const nCl = ayto && Number(c.clubes) > 0 ? Math.max(CS_CLUB_MIN, Number(c.clubes)) : 0, impCl = nCl * CS_CLUB_AYTO;
+  const paq = !ayto && c.paquete === 'SI' ? CS_CLUB_AYTO : 0, tar = CS_TARIFA[c.servicio], renov = tar ? tar[1] : imp;
+  const neto = Math.round((imp - paq) * (100 - dto)) / 100;
   let n = 0; const cl = t => `<h2>${['PRIMERA', 'SEGUNDA', 'TERCERA', 'CUARTA', 'QUINTA', 'SEXTA', 'SÉPTIMA', 'OCTAVA', 'NOVENA', 'DÉCIMA', 'UNDÉCIMA', 'DUODÉCIMA', 'DECIMOTERCERA'][n++]}. ${esc(t)}</h2>`;
   let b = `<p>En ${campo(p.localidad, 'LOCALIDAD')}, a ${esc(hoy)}.</p><h3 class="centro">REUNIDOS</h3>
   <p>De una parte, ${campo(ayto ? '' : e.presidencia, 'NOMBRE Y APELLIDOS')}, con DNI <span class="campo">[DNI]</span>, en nombre y representación de ${CLI}, con CIF ${campo(e.cif, 'CIF')} y domicilio en ${campo(e.domicilio, 'DOMICILIO')}, en su condición de ${campo(ayto ? '' : e.presidencia ? 'Presidente/a' : '', 'CARGO')}, en adelante el CLIENTE.</p>
@@ -7401,13 +7413,17 @@ function htmlContratoServicios(p, e, c) {
   <li>Que el PRESTADOR presta el servicio EntornoSeguro, aplicación web y servicios de acompañamiento para la implantación y el seguimiento del sistema de protección.</li>
   <li>Que ambas partes acuerdan formalizar la prestación con arreglo a las siguientes</li></ol><h3 class="centro">CLÁUSULAS</h3>` +
   cl('Objeto') + pj('El PRESTADOR prestará al CLIENTE el servicio EntornoSeguro en la modalidad «' + c.servicio + '», con el contenido descrito en la cláusula segunda.') +
-  cl('Servicios incluidos') + lista(CS_INCLUYE[c.servicio] || []) +
+  cl('Servicios incluidos') + lista(ayto ? CS_INCLUYE['Ayuntamiento Base'].concat(nCl ? ['Espacio propio completo (perfil MI CLUB) para ' + nCl + ' clubes, gestionado por el Ayuntamiento, con soporte de uso a los clubes por correo electrónico.'] : []) : (CS_INCLUYE[c.servicio] || [])) +
   cl('Servicios no incluidos') + lista(['Asesoramiento jurídico y representación ante cualquier administración u órgano judicial.', 'Formación oficial o certificada (por ejemplo, la exigida al Delegado/a de Protección), que el CLIENTE realizará con la entidad formadora que corresponda.', 'La valoración y la actuación ante situaciones o casos concretos, que corresponden al Delegado/a de Protección y a los órganos competentes del CLIENTE. La aplicación ayuda a documentar y recordar procedimientos, pero no sustituye las decisiones de las personas responsables.', 'La custodia de documentos con datos personales (certificados, autorizaciones, hojas firmadas), que permanecen en el CLIENTE.']) +
   cl('Duración') + pj('El contrato estará vigente desde el ' + (csFecha(c.inicio) || '[FECHA DE INICIO]') + ' hasta el ' + (csFecha(c.fin) || '[FECHA DE FIN]') + '. Podrá renovarse por temporadas sucesivas por acuerdo expreso y por escrito de ambas partes, con las tarifas vigentes en ese momento.') +
   cl('Precio y forma de pago') + tablaKV([
-    ['Servicio', esc(c.servicio) + (/paquete/.test(c.servicio) ? ' · ' + campo(c.clubes, 'Nº') + ' clubes' : '')],
-    ['Importe anual de tarifa', csEuros(imp)],
-    ...(dto ? [['Descuento cliente fundador', dto + ' % (solo durante el periodo de este contrato)'], ['Importe del periodo', '<b>' + csEuros(neto) + '</b>']] : [['Importe del periodo', '<b>' + csEuros(imp) + '</b>']]),
+    ['Servicio', esc(c.servicio)],
+    [ayto ? 'Licencia anual de tarifa' : 'Tarifa de la temporada', csEuros(imp)],
+    ...(paq ? [['Club incluido en el paquete municipal', '−' + csEuros(paq) + ' (la aplicación ya la abona el ayuntamiento)']] : []),
+    ...(dto ? [['Descuento cliente fundador', dto + ' %' + (ayto ? ' sobre la licencia' : '') + ' (solo durante el periodo de este contrato)']] : []),
+    ...(nCl ? [['Clubes con espacio propio', nCl + ' × ' + csEuros(CS_CLUB_AYTO) + ' = ' + csEuros(impCl) + (Number(c.clubes) < CS_CLUB_MIN ? ' (mínimo ' + CS_CLUB_MIN + ' clubes)' : '')]] : []),
+    ['Importe del periodo', '<b>' + csEuros(neto + impCl) + '</b>'],
+    ['Renovación', (ayto ? 'Años siguientes: ' : 'Temporadas siguientes: ') + csEuros(renov - paq + impCl) + (ayto ? ' al año' : ' por temporada') + ', con las tarifas vigentes y sin el descuento de fundador'],
     ...(impl ? [['Implantación y formación (pago único)', csEuros(impl)]] : []),
     ['Impuestos', '<span class="campo">[IVA aplicable según el régimen fiscal del PRESTADOR]</span>'],
     ['Forma de pago', 'Transferencia bancaria en los quince días siguientes a la emisión de la factura, a la cuenta <span class="campo">[IBAN]</span>.']]) +
@@ -7435,16 +7451,16 @@ async function abrirContratoServicios(club) {
   modal('📄 Contrato de servicios' + (club ? ' · ' + club.nombre : ''), [
     ['servicio', 'Servicio', opciones], ['importe', 'Importe anual de tarifa (€)', 'number', true],
     ['descuento', 'Descuento cliente fundador', [['0', 'Sin descuento'], ['10', '10 %'], ['20', '20 %'], ['30', '30 %'], ['50', '50 %'], ['100', '100 % (bonificado)']]],
-    ['clubes', 'Nº de clubes del paquete (solo ayuntamientos)', 'number'], ['implantacion', 'Implantación y formación, pago único (€)', 'number'],
+    ['clubes', 'Ayuntamientos: nº de clubes con espacio propio (opcional; 150 €/club, mínimo 5)', 'number'], ['paquete', 'Clubes: ¿está incluido en un paquete municipal? (−150 €)', [['NO', 'No'], ['SI', 'Sí: el ayuntamiento ya paga su aplicación']]], ['implantacion', 'Implantación y formación, pago único (€)', 'number'],
     ['inicio', 'Fecha de inicio', 'date', true], ['fin', 'Fecha de fin', 'date', true], ['formato', 'Formato', [['pdf', 'PDF (ver e imprimir)'], ['word', 'Word (para retocar)']]]],
-    { servicio: serv, importe: CS_TARIFA[serv][0], descuento: '0', clubes: '', implantacion: /^Ayuntamiento/.test(serv) ? 450 : 0,
+    { servicio: serv, importe: CS_TARIFA[serv][0], descuento: '0', clubes: '', paquete: 'NO', implantacion: /^Ayuntamiento/.test(serv) ? CS_IMPL : 0,
       inicio: new Date().toISOString().slice(0, 10), fin: temp + '-07-31', formato: 'pdf' },
     async v => {
       const html = htmlContratoServicios(d.prestador, d.entidad, v);
       if (v.formato === 'word') descargar('﻿' + html, 'application/msword', nombreInf('contrato-servicios-' + (d.entidad.nombre || 'modelo'))); else abrirInforme(html);
     });
   const f = $('#modal-form'), sel = f && f.servicio;
-  if (sel) sel.onchange = () => { const t = CS_TARIFA[sel.value]; if (t) f.importe.value = t[0]; f.implantacion.value = /^Ayuntamiento/.test(sel.value) ? 450 : 0; };
+  if (sel) sel.onchange = () => { const t = CS_TARIFA[sel.value]; if (t) f.importe.value = t[0]; f.implantacion.value = /^Ayuntamiento/.test(sel.value) ? CS_IMPL : 0; };
   const fl = f && f.querySelector('.fields');
   if (fl) fl.insertAdjacentHTML('afterend', '<p class="nota">El importe se propone con la tarifa del servicio y se puede cambiar. Los datos que falten (DNI, IVA, IBAN…) salen marcados para completarlos. Fírmalo junto con el contrato de encargo del tratamiento.</p>');
 }
@@ -8087,13 +8103,17 @@ async function pintarAgentesCom() {
   if (!card) { v.insertAdjacentHTML('beforeend', '<div class="card" id="card-agentes-com"><h3>🤝 Agentes colaboradores</h3><p class="nota">Cada agente entra con su propio usuario y solo ve los clubes que le asignes. Si el club ha autorizado el acceso del gestor, puede trabajar en él como gestor; todo queda registrado con su nombre. El alta de clubes la haces siempre tú. Antes de darle acceso, firmad el contrato de colaboración (Documentación).</p><div class="ag-c"></div><div class="ia-acciones" style="margin-top:10px"><button class="btn" type="button" id="ag-nuevo">+ Nuevo agente</button></div></div>'); card = $('#card-agentes-com'); }
   let ags; try { ags = await API.call('listarAgentesCom'); } catch (e) { card.querySelector('.ag-c').innerHTML = '<p class="muted">Actualiza el servidor (Ampliacion v1.44).</p>'; return; }
   card.querySelector('.ag-c').innerHTML = ags.length ? `<table><thead><tr><th>Agente</th><th>Usuario</th><th>Clubes asignados</th><th>Último acceso</th><th></th></tr></thead><tbody>${ags.map(a => `<tr class="${a.activo !== 'SI' ? 'inactivo' : ''}">
-      <td><b>${esc(a.nombre)}</b>${a.email ? '<br><small>' + esc(a.email) + '</small>' : ''}${a.activo !== 'SI' ? '<br><small class="bad-t">DESACTIVADO</small>' : ''}</td><td>${esc(a.usuario)}</td>
+      <td><b>${esc(a.nombre)}</b>${a.email ? '<br><small>' + esc(a.email) + '</small>' : ''}${a.telefono ? '<br><small>📞 ' + esc(a.telefono) + '</small>' : ''}${a.activo !== 'SI' ? '<br><small class="bad-t">DESACTIVADO</small>' : ''}</td><td>${esc(a.usuario)}</td>
       <td>${a.clubes.length ? a.clubes.map(c => `<span class="chip">${esc(c.codigo)}</span> ${esc(c.nombre)}`).join('<br>') : '<small class="muted">Ninguno</small>'}</td><td>${esc(a.ultimo_acceso) || 'Nunca'}</td>
-      <td style="white-space:nowrap"><button class="link" type="button" data-ag-asig="${esc(a.usuario)}">Asignar clubes</button> · <button class="link" type="button" data-ag-clave="${esc(a.usuario)}">Nueva contraseña</button> · <button class="link" type="button" data-ag-act="${esc(a.usuario)}">${a.activo === 'SI' ? 'Desactivar' : 'Activar'}</button></td></tr>`).join('')}</tbody></table>`
+      <td style="white-space:nowrap"><button class="link" type="button" data-ag-edit="${esc(a.usuario)}">Editar</button> · <button class="link" type="button" data-ag-asig="${esc(a.usuario)}">Asignar clubes</button> · <button class="link" type="button" data-ag-clave="${esc(a.usuario)}">Nueva contraseña</button> · <button class="link" type="button" data-ag-act="${esc(a.usuario)}">${a.activo === 'SI' ? 'Desactivar' : 'Activar'}</button></td></tr>`).join('')}</tbody></table>`
     : '<p class="muted">Aún no hay agentes colaboradores.</p>';
-  $('#ag-nuevo').onclick = () => modal('+ Nuevo agente colaborador', [['nombre', 'Nombre y apellidos', 'text', true], ['email', 'Correo electrónico', 'email'], ['usuario', 'Usuario (opcional; si lo dejas vacío se crea solo)']], {}, async d => {
+  $('#ag-nuevo').onclick = () => modal('+ Nuevo agente colaborador', [['nombre', 'Nombre y apellidos', 'text', true], ['email', 'Correo electrónico', 'email'], ['telefono', 'Teléfono', 'tel'], ['usuario', 'Usuario (opcional; si lo dejas vacío se crea solo)']], {}, async d => {
     const r = await run(() => API.call('crearAgenteCom', d)); agClaves(d.nombre, r.usuario, r.temporal); pintarAgentesCom();
   });
+  $$('[data-ag-edit]').forEach(b => b.onclick = () => { const a = ags.find(x => x.usuario === b.dataset.agEdit);
+    modal('Editar agente · ' + a.usuario, [['nombre', 'Nombre y apellidos', 'text', true], ['email', 'Correo electrónico', 'email'], ['telefono', 'Teléfono', 'tel']], a, async d => {
+      await run(() => API.call('editarAgenteCom', Object.assign({ usuario: a.usuario }, d))); toast('Datos del agente guardados'); pintarAgentesCom(); });
+    const fl = $('#modal-form .fields'); if (fl) fl.insertAdjacentHTML('afterend', '<p class="nota">El usuario no se puede cambiar. Para una contraseña nueva, usa «Nueva contraseña».</p>'); });
   $$('[data-ag-clave]').forEach(b => b.onclick = async () => { const a = ags.find(x => x.usuario === b.dataset.agClave); const r = await run(() => API.call('claveAgenteCom', { usuario: a.usuario })); agClaves(a.nombre, r.usuario, r.temporal); });
   $$('[data-ag-act]').forEach(b => b.onclick = async () => { const a = ags.find(x => x.usuario === b.dataset.agAct); await run(() => API.call('activarAgenteCom', { usuario: a.usuario, activo: a.activo === 'SI' ? 'NO' : 'SI' })); toast(a.activo === 'SI' ? 'Agente desactivado: ya no puede entrar' : 'Agente activado'); pintarAgentesCom(); });
   $$('[data-ag-asig]').forEach(b => b.onclick = () => {
@@ -8138,7 +8158,10 @@ function htmlContratoAgente(p, v) {
     ['Club · renovaciones', pc(v.club_renov) + ' en las renovaciones de los ' + (Number(v.anos) || 2) + ' años siguientes'],
     ['Ayuntamiento · primera contratación', pc(v.ayto_alta) + ' del importe anual cobrado, sin impuestos'],
     ['Ayuntamiento · renovaciones', pc(v.ayto_renov) + ' en las renovaciones de los ' + (Number(v.anos) || 2) + ' años siguientes'],
-    ...(gestion ? [['Prestación del servicio', '<span class="campo">[IMPORTE O PORCENTAJE POR CLUB GESTIONADO]</span>']] : []),
+    ...(gestion ? [['Club captado y desarrollado por el AGENTE', pc(v.des_capta) + ' de lo cobrado cada temporada que lo gestione (sustituye a las comisiones de captación de ese club)'],
+      ['Club captado por el PRESTADOR y desarrollado por el AGENTE', pc(v.des_solo) + ' de lo cobrado cada temporada que lo gestione'],
+      ['Clubes bonificados que desarrolle el AGENTE', (Number(v.bonif_h) || 0) + ' € por hora registrada en la aplicación']] : []),
+    ['Implantación municipal impartida por el AGENTE', pc(v.impl) + ' del importe de la implantación'],
     ['Devengo', 'Cuando el cliente haya pagado la factura correspondiente. No se devenga comisión por clientes que no paguen o por importes devueltos.'],
     ['Liquidación', 'Trimestral, previa factura del AGENTE con los impuestos que correspondan, en los quince días siguientes a su recepción.']]) +
   pj('Los servicios bonificados o gratuitos no generan comisión, salvo acuerdo escrito.') +
@@ -8162,10 +8185,10 @@ async function abrirContratoAgente() {
   modal('📄 Contrato de colaboración · agente', [['nombre', 'Nombre y apellidos del agente'], ['domicilio', 'Domicilio del agente'], ['ambito', 'Ámbito territorial (ej. provincia de Sevilla)'],
     ['gestion', '¿Prestará también el servicio en clubes asignados?', [['SI', 'Sí: captación y gestión de clubes'], ['NO', 'No: solo captación']]],
     ['club_alta', 'Comisión club · alta (%)', 'number'], ['club_renov', 'Comisión club · renovaciones (%)', 'number'], ['ayto_alta', 'Comisión ayuntamiento · alta (%)', 'number'], ['ayto_renov', 'Comisión ayuntamiento · renovaciones (%)', 'number'],
-    ['anos', 'Años de renovación con comisión', 'number'], ['inicio', 'Fecha de inicio', 'date', true], ['fin', 'Fecha de fin', 'date', true], ['formato', 'Formato', [['pdf', 'PDF (ver e imprimir)'], ['word', 'Word (para retocar)']]]],
-    { gestion: 'SI', club_alta: 25, club_renov: 10, ayto_alta: 15, ayto_renov: 5, anos: 2, inicio: new Date().toISOString().slice(0, 10), fin: temp + '-07-31', formato: 'word' },
+    ['anos', 'Años de renovación con comisión', 'number'], ['des_capta', 'Capta y desarrolla un club (%)', 'number'], ['des_solo', 'Solo desarrolla un club (%)', 'number'], ['bonif_h', 'Clubes bonificados (€/hora)', 'number'], ['impl', 'Implantación municipal impartida (%)', 'number'], ['inicio', 'Fecha de inicio', 'date', true], ['fin', 'Fecha de fin', 'date', true], ['formato', 'Formato', [['pdf', 'PDF (ver e imprimir)'], ['word', 'Word (para retocar)']]]],
+    { gestion: 'SI', club_alta: 25, club_renov: 10, ayto_alta: 15, ayto_renov: 5, anos: 2, des_capta: 50, des_solo: 40, bonif_h: 25, impl: 50, inicio: new Date().toISOString().slice(0, 10), fin: temp + '-07-31', formato: 'word' },
     async v => { const html = htmlContratoAgente(d.prestador, v); if (v.formato === 'word') descargar('﻿' + html, 'application/msword', nombreInf('contrato-agente-' + (v.nombre || 'modelo'))); else abrirInforme(html); });
-  const fl = $('#modal-form .fields'); if (fl) fl.insertAdjacentHTML('afterend', '<p class="nota">Comisiones propuestas según tu modelo (clubes 25 % / 10 %, ayuntamientos 15 % / 5 %). Lo que falte (NIF, DNI, importes) sale marcado entre corchetes. Revísalo con tu asesor antes de firmarlo.</p>');
+  const fl = $('#modal-form .fields'); if (fl) fl.insertAdjacentHTML('afterend', '<p class="nota">Comisiones de tu política de precios (31/10/2026): solo captación, clubes 25 % / 10 % y ayuntamientos 15 % / 5 %; capta y desarrolla 50 %; solo desarrolla 40 %; bonificados 25 €/h; implantación 50 %. Lo que falte (NIF, DNI, importes) sale marcado entre corchetes. Revísalo con tu asesor antes de firmarlo.</p>');
 }
 (function () {
   const baseDoc = loadDocumentacion;
