@@ -4580,8 +4580,25 @@ const TUT_PASOS_MUN = [
 ];
 const tutLista = () => ({ club: TUT_PASOS, entidad: TUT_PASOS_ENT, municipal: TUT_PASOS_MUN })[tutModo()] || TUT_PASOS;
 const tutKey = () => 'es_tut_' + (tutModo() === 'municipal' ? 'mun_' : '') + ((state.me && (state.me.usuario || state.me.club_id)) || 'club');
-const tutLeer = () => { try { return JSON.parse(localStorage.getItem(tutKey()) || '{}'); } catch (e) { return {}; } };
-const tutGuardar = o => { try { localStorage.setItem(tutKey(), JSON.stringify(o)); } catch (e) {} };
+const tutLeerLocal = () => { try { return JSON.parse(localStorage.getItem(tutKey()) || '{}'); } catch (e) { return {}; } };
+// v123: el progreso (paso, saltados, pausa) se guarda en el espacio del club (servidor 1.43): igual en móvil, escritorio y para otro gestor
+const tutSrvValido = () => state.tutSrvKey === tutKey() && state.tutSrv && typeof state.tutSrv === 'object';
+const tutLeer = () => tutSrvValido() ? JSON.parse(JSON.stringify(state.tutSrv)) : tutLeerLocal();
+const tutGuardar = o => {
+  try { localStorage.setItem(tutKey(), JSON.stringify(o)); } catch (e) {}
+  if (state.tutSrvKey === tutKey() && state.tutSrvOk) { state.tutSrv = JSON.parse(JSON.stringify(o)); API.call('tutorialGuardar', { t: o }).catch(() => {}); }
+};
+async function tutCargarSrv() {
+  if (!state.me) return;
+  if (state.tutSrvKey === tutKey() && state.tutSrvOk !== undefined) return;
+  state.tutSrvKey = tutKey(); state.tutSrv = null; state.tutSrvOk = undefined;
+  try {
+    const r = await API.call('tutorialLeer', {});
+    state.tutSrvOk = true;
+    if (r && typeof r === 'object' && Object.keys(r).length) state.tutSrv = r;
+    else { const loc = tutLeerLocal(); if (Object.keys(loc).length) { state.tutSrv = loc; API.call('tutorialGuardar', { t: loc }).catch(() => {}); } }
+  } catch (e) { state.tutSrvOk = false; }
+}
 state.tut = state.tut || { hechos: {} };
 const TUT_OK = ['cumple', 'parcial', 'no_aplica'];
 const tutCuenta = () => Object.values(state.tut.hechos || {}).filter(Boolean).length;
@@ -4598,9 +4615,18 @@ function tutEvaluarMatrizBase(rows) {
   h.K = h.K || (ok('K1') && ok('K2')); h.C = h.C || ok('C1'); h.E = h.E || (ok('E1') && (ok('F1') || est.F1 === 'no_aplica'));
 }
 async function tutEvaluar() {
+  await tutCargarSrv();
   if (tutModo() === 'municipal') return tutEvaluarMun();
   if (!tutModo()) return;
   const ok = p => p.then(x => x, () => null);
+  // v123: peticiones enviadas al club → «esperando al club», «recibido» o «caducado» en su paso
+  if (state.club) {
+    const pets = (await ok(API.call('listarPeticiones', {}))) || [], pet = {}, PASO = { ficha: 'ficha', formacion_del: 'B2', agentes: 'K', autorizaciones: 'E' };
+    pets.forEach(x => { const id = x.tipo === 'documento' ? x.ref : PASO[x.tipo]; if (!id || pet[id]) return;
+      pet[id] = x.estado === 'recibida' ? { e: 'recibido', f: x.recibido } : x.estado === 'caducada' ? { e: 'caducado', f: x.creado } : x.estado === 'enviada' ? { e: 'pedido', f: x.creado } : null;
+      if (!pet[id]) delete pet[id]; });
+    state.tut.pet = pet;
+  }
   const ents = state.entidades.length ? state.entidades : (await ok(API.call('listarEntidades'))) || [];
   const e = ents[0] || {};
   const [mat, ag, rie, aut, enc] = await Promise.all([e.id ? ok(API.call('matriz', { entidad_id: e.id })) : null, ok(API.call('listarAgentes', {})),
@@ -4639,6 +4665,17 @@ async function tutEvaluarMun() {
   h.clubes = !!(clu && clu.length) || !!tutLeer().clubes;
   h.infm = !!tutLeer().infm;
   if (tutCuenta() > antes) state.tut.ver = null;
+}
+function tutPasoActual() {
+  const pasos = tutVisibles(), h = state.tut.hechos || {}, salt = tutLeer().saltados || [], pet = state.tut.pet || {};
+  const espera = p => !h[p.id] && pet[p.id] && pet[p.id].e === 'pedido';
+  const libre = p => !h[p.id] && !espera(p);
+  let auto = pasos.findIndex(p => libre(p) && !salt.includes(p.id));
+  if (auto < 0) auto = pasos.findIndex(libre);
+  if (auto < 0) auto = pasos.findIndex(p => !h[p.id]);
+  if (state.tut.ver != null && (state.tut.ver < 0 || state.tut.ver >= pasos.length)) state.tut.ver = null;
+  const k = state.tut.ver != null ? state.tut.ver : auto;
+  return { pasos, h, salt, pet, espera, auto, k, paso: pasos[k] };
 }
 const tutVisibles = () => tutLista().filter(p => (!p.adm || can('admin')) && (!p.ir.some(([, d]) => d.indexOf('v:') === 0 && !hayVista(d.slice(2))) || p.manual));
 function tutIr(dest) {
@@ -4681,6 +4718,7 @@ function tutPintar() {
       '.plantilla.tut-destello{animation:tutBorde .9s ease-in-out 5}' +
       '@media (prefers-reduced-motion:reduce){tr.tut-fila td,.plantilla.tut-destello{animation:none}.plantilla.tut-destello{box-shadow:0 0 0 4px var(--brand-2)}}' +
       '.tut-lista{margin:8px 0 0;padding-left:20px}.tut-lista li{margin:0}#tut-barra .tut-lista .tut-mini{text-decoration:none;color:var(--ink);text-align:left;min-height:32px}#tut-barra .tut-lista li.hecho .tut-mini{color:var(--muted)}#tut-barra .tut-lista .tut-mini:hover{text-decoration:underline}' +
+      '.tut-est{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:color-mix(in srgb,var(--brand-2) 14%,var(--panel));color:var(--brand);font-size:.74rem;font-weight:600;vertical-align:middle}.tut-est.warn{background:#fdf1e3;color:#8a4b0f}' +
       '.tut-ok{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:var(--ok);color:#fff;font-size:.72rem;vertical-align:middle}#tut-barra .btn:disabled{opacity:.45;cursor:default}';
     document.head.appendChild(st);
   }
@@ -4689,48 +4727,47 @@ function tutPintar() {
   if (!tutModo() || cfg.estado !== 'activo') { if (barra) barra.remove(); if ($('#tut-pill')) $('#tut-pill').remove(); tutOferta(); return; }
   if ($('#tut-oferta')) $('#tut-oferta').remove();
   if (!barra) { barra = document.createElement('section'); barra.id = 'tut-barra'; barra.setAttribute('aria-label', 'Tutorial guiado'); main.prepend(barra); }
-  const pasos = tutVisibles(), h = state.tut.hechos, salt = cfg.saltados || [];
-  const hechos = pasos.filter(p => h[p.id]).length;
-  const i = pasos.findIndex(p => !h[p.id] && !salt.includes(p.id));
-  const pend = pasos.findIndex(p => !h[p.id]);
-  if (i < 0 && pend < 0) {
+  const { pasos, h, salt, pet, espera, auto, k } = tutPasoActual();
+  const hechos = pasos.filter(p => h[p.id]).length, nEsp = pasos.filter(espera).length;
+  if (auto < 0) {
     barra.innerHTML = `<div class="tut-cab">🎉 <span>Tutorial completado: ${pasos.length} de ${pasos.length} pasos</span><button class="btn" type="button" id="tut-fin">Cerrar el tutorial</button></div>`;
     $('#tut-fin').onclick = () => { tutGuardar(Object.assign(tutLeer(), { estado: 'completado' })); tutPintar(); };
     return;
   }
-  const auto = i >= 0 ? i : pend;
-  if (state.tut.ver != null && (state.tut.ver < 0 || state.tut.ver >= pasos.length)) state.tut.ver = null;
-  const k = state.tut.ver != null ? state.tut.ver : auto, p = pasos[k], hecho = !!h[p.id];
+  const p = pasos[k], hecho = !!h[p.id], pe = !hecho && pet[p.id], gestor = !!(state.me && state.me.gestor), dias = f => f ? Math.floor((Date.now() - new Date(f)) / 864e5) : 0;
+  const estadoPaso = hecho ? '<span class="tut-ok">hecho</span>' : !pe ? (salt.includes(p.id) ? '<span class="tut-est">↷ dejado para después</span>' : '')
+    : pe.e === 'pedido' ? `<span class="tut-est">📨 ${gestor ? 'Pedido al club' : 'Vuestro gestor os lo pidió por enlace'} el ${esc(fCorta(pe.f))}${dias(pe.f) > 7 ? ` · hace ${dias(pe.f)} días` : ''} · esperando respuesta</span>`
+    : pe.e === 'recibido' ? `<span class="tut-est">📥 ${gestor ? 'El club lo envió' : 'Lo enviasteis'} el ${esc(fCorta(pe.f))} · ${gestor ? 'revísalo y márcalo' : 'vuestro gestor lo revisará'}</span>`
+    : `<span class="tut-est warn">⌛ El enlace caducó sin respuesta${gestor ? ' · vuelve a pedirlo' : ''}</span>`;
+  const ico = x => h[x.id] ? '✓' : pet[x.id] && pet[x.id].e === 'pedido' ? '📨' : pet[x.id] && pet[x.id].e === 'recibido' ? '📥' : pet[x.id] && pet[x.id].e === 'caducado' ? '⌛' : salt.includes(x.id) ? '↷' : '○';
   let pill = $('#tut-pill');
   if (!pill) { pill = document.createElement('button'); pill.id = 'tut-pill'; pill.type = 'button'; pill.hidden = true; document.body.appendChild(pill);
     pill.onclick = () => { window.scrollTo({ top: 0, behavior: 'smooth' }); };
     new IntersectionObserver(en => { pill.hidden = !$('#tut-barra') || en[0].isIntersecting; }).observe(barra); }
   pill.textContent = '🧭 Tutorial · paso ' + (k + 1) + ' de ' + pasos.length;
-  barra.innerHTML = `<div class="tut-cab">🧭 <span>Tutorial · paso ${k + 1} de ${pasos.length} · ${hechos} hechos</span>
-      <button type="button" class="tut-mini" id="tut-ver">Ver todos</button><button type="button" class="tut-mini" id="tut-act" title="Comprobar de nuevo">↻ Comprobar</button></div>
+  barra.innerHTML = `<div class="tut-cab">🧭 <span>Paso ${k + 1} de ${pasos.length} · ${hechos} hecho${hechos === 1 ? '' : 's'}${nEsp ? ` · ${nEsp} esperando al club` : ''}</span>
+      <button type="button" class="tut-mini" id="tut-ver" aria-expanded="${!!state.tut.lista}">${state.tut.lista ? 'Ocultar la lista' : 'Ver todos los pasos'}</button><button type="button" class="tut-mini" id="tut-act" title="Comprobar de nuevo">↻ Comprobar</button><button type="button" class="tut-mini" id="tut-pausa">Pausar</button></div>
     <div class="pasos-barra"><i style="width:${Math.round(hechos * 100 / pasos.length)}%"></i></div>
-    <div class="tut-paso"><b>${hecho ? '✓ ' : ''}${esc(p.t)}${hecho ? ' <span class="tut-ok">hecho</span>' : ''}</b><small>${esc(p.d)}</small></div>
-    <div class="tut-acc"><button class="btn ghost" type="button" id="tut-ant"${k === 0 ? ' disabled' : ''} aria-label="Paso anterior">← Anterior</button>
-      ${p.ir.map(([l, d], j) => `<button class="btn${j || hecho ? ' ghost' : ''}" type="button" data-tut-ir="${esc(d)}">${esc(l)}</button>`).join('')}
+    <div class="tut-paso"><b>${hecho ? '✓ ' : ''}${esc(p.t)} ${estadoPaso}</b><small>${esc(p.d)}</small></div>
+    <div class="tut-acc">${p.ir.map(([l, d], j) => `<button class="btn${j || hecho || (pe && pe.e === 'pedido') ? ' ghost' : ''}" type="button" data-tut-ir="${esc(d)}">${esc(l)}</button>`).join('')}
       ${p.manual && !hecho ? '<button class="btn ghost" type="button" id="tut-hecho">✓ Ya lo he hecho</button>' : ''}
-      ${!hecho && k === auto ? '<button class="btn ghost" type="button" id="tut-saltar">Saltar este paso</button>' : ''}
-      <button class="btn ghost" type="button" id="tut-sig"${k === pasos.length - 1 ? ' disabled' : ''} aria-label="Paso siguiente">Siguiente →</button>
-      ${k !== auto ? '<button class="btn" type="button" id="tut-volver">Ir al paso pendiente</button>' : ''}
-      <button class="btn ghost" type="button" id="tut-pausa">Pausar</button></div>
-    <ol class="tut-lista${state.tut.lista ? '' : ' hidden'}" id="tut-todos">${pasos.map((x, j) => `<li class="${h[x.id] ? 'hecho' : ''}"><button type="button" class="tut-mini" data-tut-ver="${j}">${h[x.id] ? '✓ ' : salt.includes(x.id) ? '↷ ' : ''}${j === k ? '<b>' + esc(x.t) + '</b>' : esc(x.t)}</button></li>`).join('')}</ol>`;
-  $('#tut-ant').onclick = () => { state.tut.ver = k - 1; tutPintar(); };
-  $('#tut-sig').onclick = () => { state.tut.ver = k + 1; tutPintar(); };
-  $('#tut-volver') && ($('#tut-volver').onclick = () => { state.tut.ver = null; tutPintar(); });
-  $$('[data-tut-ver]').forEach(b => b.onclick = () => { state.tut.ver = +b.dataset.tutVer; tutPintar(); });
+      ${k !== auto ? '<button class="btn" type="button" id="tut-sig" data-tut="volver">↩ Volver al paso actual</button>' : !hecho && !(pe && pe.e === 'pedido') ? '<button class="btn ghost" type="button" id="tut-sig" data-tut="despues">Dejar para después →</button>' : ''}</div>
+    <ol class="tut-lista${state.tut.lista ? '' : ' hidden'}" id="tut-todos">${pasos.map((x, j) => `<li class="${h[x.id] ? 'hecho' : ''}"><button type="button" class="tut-mini" data-tut-ver="${j}"><span aria-hidden="true">${ico(x)}</span> ${j === k ? '<b>' + esc(x.t) + '</b>' : esc(x.t)}${j === auto && j !== k ? ' <small class="muted">← paso actual</small>' : ''}</button></li>`).join('')}</ol>
+    ${state.tut.lista ? '<p class="nota" style="margin:6px 0 0">✓ hecho · 📨 pedido al club · 📥 recibido, por revisar · ⌛ enlace caducado · ↷ dejado para después · ○ pendiente. Toca un paso para verlo.</p>' : ''}`;
+  const sig = $('#tut-sig');
+  if (sig) sig.onclick = () => {
+    if (sig.dataset.tut === 'despues') { const c = tutLeer(); c.saltados = [...new Set([...(c.saltados || []), p.id])]; tutGuardar(c); }
+    state.tut.ver = null; tutPintar();
+  };
+  $$('[data-tut-ver]').forEach(b => b.onclick = () => { state.tut.ver = +b.dataset.tutVer === auto ? null : +b.dataset.tutVer; tutPintar(); });
   $$('[data-tut-ir]').forEach(b => b.onclick = () => tutIr(b.dataset.tutIr));
-  $('#tut-ver').onclick = () => { state.tut.lista = !state.tut.lista; $('#tut-todos').classList.toggle('hidden', !state.tut.lista); };
+  $('#tut-ver').onclick = () => { state.tut.lista = !state.tut.lista; tutPintar(); };
   $('#tut-act').onclick = async () => {
     const bt = $('#tut-act'); bt.disabled = true; bt.textContent = 'Comprobando…';
     const antes = tutCuenta(); await tutRefrescar(true);
     const d = tutCuenta() - antes;
     toast(d > 0 ? '✓ ' + d + ' paso(s) nuevo(s) completado(s)' : 'Comprobado: sin cambios. Recuerda guardar en la Matriz o en la pantalla del paso.');
   };
-  $('#tut-saltar') && ($('#tut-saltar').onclick = () => { const c = tutLeer(); c.saltados = [...new Set([...(c.saltados || []), p.id])]; tutGuardar(c); state.tut.ver = null; tutPintar(); });
   $('#tut-pausa').onclick = () => { tutGuardar(Object.assign(tutLeer(), { estado: 'pausado' })); toast('Tutorial en pausa. Puedes retomarlo desde el Panel o la Guía de uso.'); tutPintar(); };
   $('#tut-hecho') && ($('#tut-hecho').onclick = () => { tutGuardar(Object.assign(tutLeer(), { [p.id]: true })); state.tut.hechos[p.id] = true; tutPintar(); });
 }
@@ -4762,12 +4799,12 @@ async function tutRefrescar(forzar) {
 }
 (function () {
   const basePanel = loadPanel;
-  loadPanel = async function () { await basePanel(); if (!tutModo()) return; if (tutLeer().estado === 'activo') tutRefrescar(true); else tutPintar(); };
+  loadPanel = async function () { await basePanel(); if (!tutModo()) return; await tutCargarSrv(); if (tutLeer().estado === 'activo') tutRefrescar(true); else tutPintar(); };
   const baseMatriz = loadMatriz;
   loadMatriz = async function () { await baseMatriz(); if ((state.club || tutModo() === 'entidad') && state.matriz) { tutEvaluarMatriz(state.matriz); tutPintar(); } else if (tutModo() === 'municipal' && tutLeer().estado === 'activo') tutRefrescar(); };
 })();
 GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Hay tutorial para el ayuntamiento y para las entidades?', '<p>Sí. Cada perfil tiene el suyo y lo ve en su Panel:</p><ul><li><b>Ayuntamiento</b> (administración, Delegado/a municipal, técnicos): 10 pasos para poner en marcha el sistema municipal: directorio de recursos, ficha, documentos, personal y riesgos de las <b>Actividades municipales</b>, alta de entidades, usuarios, coordinación, clubes con espacio propio e informe municipal.</li><li><b>Usuario «Entidad»</b> (un club registrado por el ayuntamiento): 13 pasos para completar su sistema de protección y su informe para el ayuntamiento.</li><li><b>MI CLUB</b>: el tutorial completo del club.</li></ul><p>Todos funcionan igual: cada paso se marca solo al comprobarse, se pueden saltar, pausar y retomar.</p>', '', 'panel']); });
-GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Cómo funciona el tutorial guiado?', '<p>En el <b>Panel</b> del club aparece <b>«¿Quieres que te guíe paso a paso?»</b>. Con <b>Empezar el tutorial</b> se fija arriba una barra con el paso en el que estás, su explicación y botones que te llevan a la pantalla exacta (ficha, plantilla, Matriz…).</p><ul><li>Cada paso <b>se marca solo</b> cuando la app comprueba que está hecho; pulsa <b>↻ Comprobar</b> si acabas de guardar algo.</li><li><b>Saltar este paso</b> lo deja para después; <b>Pausar</b> oculta la barra.</li><li>Para retomarlo: <b>Panel → Retomar el tutorial</b>.</li><li>Los pasos hechos salen de los datos del club; los saltados y la pausa se recuerdan en este navegador.</li></ul>', 'club', 'panel']); });
+GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Cómo funciona el tutorial guiado?', '<p>En el <b>Panel</b> del club aparece <b>«¿Quieres que te guíe paso a paso?»</b>. Con <b>Empezar el tutorial</b> se fija arriba una barra con el <b>paso actual</b>, su explicación y botones que te llevan a la pantalla exacta (ficha, plantilla, Matriz…).</p><ul><li>Cada paso <b>se marca solo</b> cuando la app comprueba que está hecho; pulsa <b>↻ Comprobar</b> si acabas de guardar algo.</li><li><b>Dejar para después →</b> pasa al siguiente paso pendiente; el que dejas queda marcado con ↷.</li><li><b>Ver todos los pasos</b> abre la lista: toca cualquiera para verlo y <b>↩ Volver al paso actual</b> para seguir.</li><li>Si el gestor ha pedido algo por enlace, el paso muestra <b>📨 esperando respuesta</b> y el tutorial sigue con el siguiente; cuando el club lo envía pasa a <b>📥 recibido</b>, y si el enlace caduca, a <b>⌛</b>.</li><li><b>Pausar</b> oculta la barra; para retomarlo: <b>Panel → Retomar el tutorial</b>.</li><li>El progreso se guarda en el espacio del club: se ve igual en el móvil, en el ordenador y si otra persona continúa el trabajo.</li></ul>', 'club', 'panel']); });
 
 // v27: RIESGOS · prompt con los datos de la ficha y paso directo de la propuesta a la tabla de riesgos
 function promptRiesgos(e, ya) {
@@ -7167,7 +7204,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v122';
+const ES_VERSION = 'v124';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -7515,11 +7552,9 @@ function petLista(ps) {
       if (!state.club || !state.me || !state.me.gestor) return r;
       const barra = $('#tut-barra'), acc = barra && barra.querySelector('.tut-acc'), tit = barra && barra.querySelector('.tut-paso b');
       if (!acc || !tit || acc.querySelector('[data-pet-tut]')) return r;
-      const pasos = tutVisibles(), h = state.tut.hechos || {}, salt = tutLeer().saltados || [];
-      const i = pasos.findIndex(p => !h[p.id] && !salt.includes(p.id)), pend = pasos.findIndex(p => !h[p.id]);
-      const k = state.tut.ver != null ? state.tut.ver : (i >= 0 ? i : pend), paso = pasos[k];
+      const { paso } = tutPasoActual();
       const m = paso && PET_TUT[paso.id]; if (!m) return r;
-      const b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost'; b.dataset.petTut = '1'; b.textContent = '📨 Pedírselo al club';
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost'; b.dataset.petTut = '1'; const pe = (state.tut.pet || {})[paso.id]; b.textContent = pe && (pe.e === 'pedido' || pe.e === 'caducado') ? '📨 Volver a pedirlo' : '📨 Pedírselo al club';
       b.onclick = () => pedirPeticion({}, m[0], m[1] || '', state.me.nombre);
       const sig = acc.querySelector('#tut-sig'); acc.insertBefore(b, sig || null);
     } catch (e) {}
@@ -7753,9 +7788,7 @@ function cursoNota(form, conBoton) {
       const r = base.apply(this, arguments);
       try {
         const barra = $('#tut-barra'), acc = barra && barra.querySelector('.tut-acc'); if (!acc || acc.querySelector('[data-curso-tut]')) return r;
-        const pasos = tutVisibles(), h = state.tut.hechos || {}, salt = tutLeer().saltados || [];
-        const i = pasos.findIndex(x => !h[x.id] && !salt.includes(x.id)), pend = pasos.findIndex(x => !h[x.id]);
-        const k = state.tut.ver != null ? state.tut.ver : (i >= 0 ? i : pend), paso = pasos[k];
+        const { paso } = tutPasoActual();
         if (!paso || (paso.id !== 'B2' && paso.id !== 'J1')) return r;
         const a = document.createElement('a'); a.className = 'btn ghost'; a.dataset.cursoTut = '1'; a.href = CURSO_JUNTA.url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = '🎓 Curso de la Junta ↗';
         acc.insertBefore(a, acc.querySelector('#tut-sig') || null);
@@ -7977,6 +8010,177 @@ function htmlSesionesGestor(ses) {
   };
   return `<details open style="margin-top:6px"><summary style="cursor:pointer">Trabajo en vuestro espacio (últimos ${ses.length} día${ses.length > 1 ? 's' : ''} con actividad)</summary><ul class="nota" style="margin:6px 0 0;padding-left:18px;list-style:none">${ses.map(dia).join('')}</ul></details>`;
 }
+// v124 + Ampliacion v1.44: AGENTES COLABORADORES
+// Maestra: código de club (ES-001…), alta de agentes con usuario propio, asignación de clubes y contrato modelo.
+// Agente: solo «Mis clubes» con sus clubes asignados; entra como gestor si el club lo autoriza y registra seguimientos.
+const esAgente = () => !!(state.me && state.me.rol === 'agente');
+(function () {
+  const baseShow = show;
+  show = function (v) {
+    if (!esAgente()) return baseShow.apply(this, arguments);
+    agPreparar();
+    return baseShow.call(this, 'agclubes');
+  };
+})();
+function agPreparar() {
+  if ($('#view-agclubes')) return;
+  const main = document.querySelector('#app main'); if (!main) return;
+  main.insertAdjacentHTML('beforeend', `<section id="view-agclubes" class="view hidden"><header><h2>Mis clubes</h2></header>
+    <p class="nota">Clubes que ${esc(prestadorTxt())} te ha asignado como agente colaborador. Para trabajar dentro de un club, el club tiene que haber autorizado el acceso del gestor en «Mis datos».</p>
+    <div class="card"><table id="ag-tabla"></table></div>
+    <div class="card"><h3>Cómo trabajar</h3><ol class="nota" style="margin:0;padding-left:18px"><li><b>🔑 Entrar en el club</b> abre su espacio en otra pestaña, como gestor y con tu nombre. Sigue el tutorial: indica en qué paso va y qué se ha pedido ya.</li><li>Pide los datos al club con <b>📨 Pedírselo al club</b>: le llega un enlace y lo rellena sin contraseña.</li><li>Al pulsar <b>Salir del club</b>, guarda el resumen del trabajo (tiempo y lo hecho). El trabajo fuera de la app (reuniones, llamadas), con <b>✓ Registrar seguimiento</b>.</li><li>Nunca escribas datos de menores y no descargues ni guardes documentos del club fuera de su espacio.</li></ol></div></section>`);
+  const nav = $('#menu-principal');
+  if (nav) { nav.querySelectorAll('button, .nav-grupo').forEach(b => { b.style.display = 'none'; }); nav.insertAdjacentHTML('afterbegin', '<button data-view="agclubes" class="active" type="button">Mis clubes</button>'); nav.querySelector('[data-view="agclubes"]').onclick = () => show('agclubes'); }
+}
+async function loadAgClubes() {
+  const t = $('#ag-tabla'); if (!t) return;
+  t.innerHTML = '<tr><td class="empty">Cargando…</td></tr>';
+  let rows; try { rows = await API.call('agenteClubes'); } catch (e) { t.innerHTML = `<tr><td class="empty">${esc(e.message)}</td></tr>`; return; }
+  const hoy = new Date().toISOString().slice(0, 10);
+  t.innerHTML = '<thead><tr><th>Código</th><th>Club</th><th>Servicio</th><th>Cumplimiento</th><th>Próximo seguimiento</th><th></th></tr></thead><tbody>' + (rows.map(c => {
+    const venc = c.proximo && c.proximo <= hoy;
+    return `<tr><td><span class="chip" style="white-space:nowrap">${esc(c.codigo)}</span></td><td><b>${esc(c.nombre)}</b>${c.alertas_altas ? `<br><small class="bad-t">${c.alertas_altas} alerta(s) alta(s)</small>` : ''}</td><td>${esc(c.servicio || '—')}</td>
+      <td>${c.error ? `<span class="bad-t">${esc(c.error)}</span>` : `<div class="progreso"><i style="width:${c.pct || 0}%;background:${(c.pct || 0) < 40 ? 'var(--bad)' : (c.pct || 0) < 80 ? 'var(--warn)' : 'var(--ok)'}"></i></div><small>${c.pct || 0}%</small>`}</td>
+      <td>${c.proximo ? `<span style="${venc ? 'color:var(--bad);font-weight:700' : ''}">${esc(fCorta(c.proximo))}${venc ? ' (vencido)' : ''}</span>` : '—'}</td>
+      <td><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${c.acceso_gestor === 'SI' ? `<button class="btn" type="button" data-ag-entrar="${esc(c.id)}">🔑 Entrar en el club</button>` : '<small class="muted">El club no ha autorizado el acceso</small>'}
+        ${SEG_DIAS[c.servicio] ? ` <button class="btn ghost" type="button" data-ag-seg="${esc(c.id)}">✓ Registrar seguimiento</button>` : ''}</div></td></tr>`;
+  }).join('') || '<tr><td colspan="6" class="empty">Aún no tienes clubes asignados.</td></tr>') + '</tbody>';
+  $$('[data-ag-entrar]').forEach(b => b.onclick = async () => {
+    const w = window.open('about:blank', '_blank');
+    let r; try { r = await run(() => API.call('entrarComoClub', { id: b.dataset.agEntrar })); } catch (er) { if (w) w.close(); return; }
+    const url = location.origin + location.pathname + '#gt=' + encodeURIComponent(r.token) + (API.base && API.base !== API_URL ? '&api=' + encodeURIComponent(API.base) : '') + (state.inst ? '&inst=' + encodeURIComponent(state.inst) : '');
+    if (w) w.location.href = url; else { location.href = url; setTimeout(() => location.reload(), 80); }
+  });
+  $$('[data-ag-seg]').forEach(b => b.onclick = async () => {
+    const c = rows.find(x => x.id === b.dataset.agSeg); let nota = '';
+    try { nota = textoPeticiones(await API.call('resumenPeticiones', { club_id: c.id })); } catch (e) {}
+    modal('✓ Registrar seguimiento · ' + c.nombre, [['fecha', 'Fecha', 'date', true], ['horas', 'Horas dedicadas (ej. 1,5)', 'text'], ['nota', 'Qué has hecho (nota interna, sin datos personales)', 'textarea'],
+      ['mensaje', '💬 Mensaje para el club (lo verá en su Panel; opcional)', 'textarea'], ['proxima_sesion', '📅 Próxima sesión acordada (opcional)', 'date']],
+      { fecha: hoy, horas: '', nota }, async v => { await run(() => API.call('registrarSeguimiento', Object.assign({ club_id: c.id }, v))); toast('Seguimiento registrado'); loadAgClubes(); });
+    const fl = $('#modal-form .fields'); if (fl) fl.insertAdjacentHTML('afterend', '<p class="nota">La nota y las horas son internas (las ve ' + esc(prestadorTxt()) + '). El <b>mensaje</b> y la <b>próxima sesión</b> los verá el club en su tarjeta «Tu servicio».</p>');
+  });
+}
+(function () {
+  const baseShow = show;
+  show = function (v) { const r = baseShow.apply(this, arguments); if (esAgente()) loadAgClubes(); return r; };
+})();
+// Maestra · Mis clubes: código y agente de cada club + gestión de agentes colaboradores
+(function () {
+  const baseC = loadClubes;
+  loadClubes = async function () {
+    const r = await baseC.apply(this, arguments);
+    if (typeof esMaestra !== 'function' || !esMaestra()) return r;
+    try {
+      $$('#tabla-clubes [data-club]').forEach(b => {
+        const c = (state.clubes || []).find(x => x.id === b.dataset.club), tr = b.closest('tr'); if (!c || tr.querySelector('.chip-cod')) return;
+        tr.cells[0].insertAdjacentHTML('afterbegin', c.codigo ? `<span class="chip chip-cod" title="Código del club">${esc(c.codigo)}</span> ` : '<span class="chip-cod"></span>');
+        if (c.agente) tr.cells[0].insertAdjacentHTML('beforeend', `<br><small>🤝 Agente: ${esc(c.agente_nombre || c.agente)}</small>`);
+      });
+      await pintarAgentesCom();
+    } catch (e) {}
+    return r;
+  };
+})();
+async function pintarAgentesCom() {
+  const v = $('#view-clubes'); if (!v) return;
+  let card = $('#card-agentes-com');
+  if (!card) { v.insertAdjacentHTML('beforeend', '<div class="card" id="card-agentes-com"><h3>🤝 Agentes colaboradores</h3><p class="nota">Cada agente entra con su propio usuario y solo ve los clubes que le asignes. Si el club ha autorizado el acceso del gestor, puede trabajar en él como gestor; todo queda registrado con su nombre. El alta de clubes la haces siempre tú. Antes de darle acceso, firmad el contrato de colaboración (Documentación).</p><div class="ag-c"></div><div class="ia-acciones" style="margin-top:10px"><button class="btn" type="button" id="ag-nuevo">+ Nuevo agente</button></div></div>'); card = $('#card-agentes-com'); }
+  let ags; try { ags = await API.call('listarAgentesCom'); } catch (e) { card.querySelector('.ag-c').innerHTML = '<p class="muted">Actualiza el servidor (Ampliacion v1.44).</p>'; return; }
+  card.querySelector('.ag-c').innerHTML = ags.length ? `<table><thead><tr><th>Agente</th><th>Usuario</th><th>Clubes asignados</th><th>Último acceso</th><th></th></tr></thead><tbody>${ags.map(a => `<tr class="${a.activo !== 'SI' ? 'inactivo' : ''}">
+      <td><b>${esc(a.nombre)}</b>${a.email ? '<br><small>' + esc(a.email) + '</small>' : ''}${a.activo !== 'SI' ? '<br><small class="bad-t">DESACTIVADO</small>' : ''}</td><td>${esc(a.usuario)}</td>
+      <td>${a.clubes.length ? a.clubes.map(c => `<span class="chip">${esc(c.codigo)}</span> ${esc(c.nombre)}`).join('<br>') : '<small class="muted">Ninguno</small>'}</td><td>${esc(a.ultimo_acceso) || 'Nunca'}</td>
+      <td style="white-space:nowrap"><button class="link" type="button" data-ag-asig="${esc(a.usuario)}">Asignar clubes</button> · <button class="link" type="button" data-ag-clave="${esc(a.usuario)}">Nueva contraseña</button> · <button class="link" type="button" data-ag-act="${esc(a.usuario)}">${a.activo === 'SI' ? 'Desactivar' : 'Activar'}</button></td></tr>`).join('')}</tbody></table>`
+    : '<p class="muted">Aún no hay agentes colaboradores.</p>';
+  $('#ag-nuevo').onclick = () => modal('+ Nuevo agente colaborador', [['nombre', 'Nombre y apellidos', 'text', true], ['email', 'Correo electrónico', 'email'], ['usuario', 'Usuario (opcional; si lo dejas vacío se crea solo)']], {}, async d => {
+    const r = await run(() => API.call('crearAgenteCom', d)); agClaves(d.nombre, r.usuario, r.temporal); pintarAgentesCom();
+  });
+  $$('[data-ag-clave]').forEach(b => b.onclick = async () => { const a = ags.find(x => x.usuario === b.dataset.agClave); const r = await run(() => API.call('claveAgenteCom', { usuario: a.usuario })); agClaves(a.nombre, r.usuario, r.temporal); });
+  $$('[data-ag-act]').forEach(b => b.onclick = async () => { const a = ags.find(x => x.usuario === b.dataset.agAct); await run(() => API.call('activarAgenteCom', { usuario: a.usuario, activo: a.activo === 'SI' ? 'NO' : 'SI' })); toast(a.activo === 'SI' ? 'Agente desactivado: ya no puede entrar' : 'Agente activado'); pintarAgentesCom(); });
+  $$('[data-ag-asig]').forEach(b => b.onclick = () => {
+    const a = ags.find(x => x.usuario === b.dataset.agAsig), cl = (state.clubes || []).filter(c => c.estado === 'activo');
+    const f = $('#modal-form');
+    f.innerHTML = `<h3>Clubes de ${esc(a.nombre)}</h3><p class="nota">Marca los clubes que podrá ver y gestionar. Cada club tiene un solo agente: si marcas uno que ya tiene otro, pasa a este.</p>
+      <div style="display:grid;gap:6px;margin:10px 0">${cl.map(c => `<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" value="${esc(c.id)}"${c.agente === a.usuario ? ' checked' : ''}> <span class="chip">${esc(c.codigo)}</span> ${esc(c.nombre)}${c.agente && c.agente !== a.usuario ? ` <small class="muted">(ahora: ${esc(c.agente_nombre || c.agente)})</small>` : ''}</label>`).join('') || '<p class="muted">No hay clubes activos.</p>'}</div>
+      <div class="actions"><button class="btn ghost" value="cancel" formnovalidate>Cancelar</button><button class="btn" type="button" id="ag-asig-ok">Guardar</button></div>`;
+    $('#modal').showModal();
+    $('#ag-asig-ok').onclick = async () => { const ids = [...f.querySelectorAll('input[type=checkbox]:checked')].map(x => x.value); $('#modal').close('cancel'); await run(() => API.call('asignarClubesAgente', { usuario: a.usuario, clubes: ids })); toast('Clubes asignados'); loadClubes(); };
+  });
+}
+function agClaves(nombre, usuario, clave) {
+  const url = location.origin + location.pathname;
+  const f = $('#modal-form');
+  f.innerHTML = `<h3>Claves de acceso · ${esc(nombre)}</h3><p>Entrega estos datos al agente. Entra por la web con el perfil habitual (no MI CLUB).</p>
+    <table class="claves"><tr><td>Web</td><td><b>${esc(url)}</b></td></tr><tr><td>Usuario</td><td class="temp">${esc(usuario)}</td></tr><tr><td>Contraseña temporal</td><td class="temp">${esc(clave)}</td></tr></table>
+    <p class="nota">La contraseña no se volverá a mostrar. En el primer acceso la cambiará por una propia. Envíala por un canal distinto al del usuario.</p>
+    <div class="actions"><button class="btn" value="cancel">Cerrar</button></div>`;
+  $('#modal').showModal();
+}
+// Contrato modelo de colaboración con agentes (Documentación de la maestra)
+function htmlContratoAgente(p, v) {
+  const PRE = campo(p.nombre, 'DENOMINACIÓN DEL PRESTADOR'), AG = campo(v.nombre, 'NOMBRE Y APELLIDOS DEL AGENTE');
+  const hoy = new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+  const gestion = v.gestion === 'SI';
+  let n = 0; const cl = t => `<h2>${['PRIMERA', 'SEGUNDA', 'TERCERA', 'CUARTA', 'QUINTA', 'SEXTA', 'SÉPTIMA', 'OCTAVA', 'NOVENA', 'DÉCIMA', 'UNDÉCIMA', 'DUODÉCIMA', 'DECIMOTERCERA', 'DECIMOCUARTA'][n++]}. ${esc(t)}</h2>`;
+  const pc = x => (Number(x) || 0) + ' %';
+  const b = `<p>En ${campo(p.localidad, 'LOCALIDAD')}, a ${esc(hoy)}.</p><h3 class="centro">REUNIDOS</h3>
+  <p>De una parte, ${campo(p.representante, 'NOMBRE Y APELLIDOS')}, con DNI <span class="campo">[DNI]</span>, en nombre y representación de ${PRE}, con CIF ${campo(p.cif, 'CIF')} y domicilio en ${campo(p.domicilio, 'DOMICILIO')}, en su condición de ${campo(p.cargo, 'CARGO')}, en adelante el PRESTADOR.</p>
+  <p>De otra parte, ${AG}, con NIF <span class="campo">[NIF]</span> y domicilio en ${campo(v.domicilio, 'DOMICILIO')}, que actúa en su propio nombre como profesional independiente, en adelante el AGENTE.</p>
+  <p>Ambas partes se reconocen capacidad suficiente para suscribir el presente contrato y</p><h3 class="centro">EXPONEN</h3><ol type="I">
+  <li>Que el PRESTADOR presta el servicio EntornoSeguro, aplicación web y servicios de acompañamiento para que entidades deportivas y ayuntamientos implanten su sistema de protección de las personas menores frente a la violencia (Ley Orgánica 8/2021, LOPIVI, y Protocolo Marco de la Orden de 18 de noviembre de 2024).</li>
+  <li>Que el AGENTE desea colaborar con el PRESTADOR en la promoción del servicio${gestion ? ' y en su prestación a los clubes que se le asignen' : ''}, de forma independiente y sin relación laboral.</li>
+  <li>Que ambas partes acuerdan formalizar la colaboración con arreglo a las siguientes</li></ol><h3 class="centro">CLÁUSULAS</h3>` +
+  cl('Objeto') + pj('El AGENTE promoverá el servicio EntornoSeguro ante entidades deportivas y ayuntamientos' + (v.ambito ? ' de ' + v.ambito : ' del ámbito territorial [ÁMBITO]') + ', presentará las ofertas del PRESTADOR y le pondrá en contacto con los clientes interesados.' + (gestion ? ' Además, prestará por cuenta del PRESTADOR el servicio de gestión o acompañamiento a los clubes que este le asigne expresamente.' : '')) +
+  cl('Naturaleza de la relación') + lista(['La relación es mercantil. El AGENTE actúa con plena independencia, organiza su actividad y sus horarios y asume sus propios gastos, salvo pacto escrito en contrario.', 'El AGENTE está dado de alta en el régimen fiscal y de Seguridad Social que le corresponda y cumple por su cuenta las obligaciones derivadas.', 'La colaboración no es exclusiva para ninguna de las partes.', 'Se aplicará, en lo no previsto, la Ley 12/1992, de 27 de mayo, sobre Contrato de Agencia, cuando proceda.']) +
+  cl('Funciones y límites') + lista(['Utilizar solo el dossier, las tarifas y los modelos de contrato vigentes que le facilite el PRESTADOR, sin ofrecer precios, descuentos ni condiciones distintas sin autorización escrita.', 'No firmar contratos ni cobrar cantidades en nombre del PRESTADOR. Los contratos con los clientes los firma el PRESTADOR, que también realiza el alta de cada club en la aplicación.', 'Comunicar al PRESTADOR cada contacto comercial, para evitar duplicidades y asignar correctamente las comisiones.', 'No presentarse como personal del PRESTADOR ni de ninguna administración pública.']) +
+  (gestion ? cl('Prestación del servicio en los clubes asignados') + lista(['El PRESTADOR asignará al AGENTE, de forma expresa en la aplicación, los clubes en los que prestará el servicio. El AGENTE solo podrá ver y trabajar en esos clubes.', 'El acceso al espacio de cada club requiere la autorización previa del propio club, se realiza con el usuario personal e intransferible del AGENTE y queda registrado con su nombre.', 'El AGENTE registrará en la aplicación cada seguimiento realizado y seguirá los procedimientos, plantillas y tutorial de la aplicación.', 'El PRESTADOR podrá retirar la asignación o desactivar el usuario en cualquier momento.']) : '') +
+  cl('Comisiones') + tablaKV([
+    ['Club · primera contratación', pc(v.club_alta) + ' del importe anual cobrado, sin impuestos'],
+    ['Club · renovaciones', pc(v.club_renov) + ' en las renovaciones de los ' + (Number(v.anos) || 2) + ' años siguientes'],
+    ['Ayuntamiento · primera contratación', pc(v.ayto_alta) + ' del importe anual cobrado, sin impuestos'],
+    ['Ayuntamiento · renovaciones', pc(v.ayto_renov) + ' en las renovaciones de los ' + (Number(v.anos) || 2) + ' años siguientes'],
+    ...(gestion ? [['Prestación del servicio', '<span class="campo">[IMPORTE O PORCENTAJE POR CLUB GESTIONADO]</span>']] : []),
+    ['Devengo', 'Cuando el cliente haya pagado la factura correspondiente. No se devenga comisión por clientes que no paguen o por importes devueltos.'],
+    ['Liquidación', 'Trimestral, previa factura del AGENTE con los impuestos que correspondan, en los quince días siguientes a su recepción.']]) +
+  pj('Los servicios bonificados o gratuitos no generan comisión, salvo acuerdo escrito.') +
+  cl('Confidencialidad') + pj('El AGENTE guardará secreto sobre la información de los clientes, de sus personas y de su actividad, y sobre la información comercial del PRESTADOR, durante la vigencia del contrato y después de su finalización.') +
+  cl('Protección de datos') + lista([gestion ? 'Para la prestación del servicio en los clubes asignados, el AGENTE actúa como subencargado del tratamiento del PRESTADOR (art. 28.4 del Reglamento (UE) 2016/679) y se somete a las mismas obligaciones que el contrato de encargo firmado entre el PRESTADOR y cada club, que declara conocer.' : 'El AGENTE solo tratará los datos de contacto comercial necesarios para su actividad.', 'Tratará los datos solo siguiendo instrucciones del PRESTADOR y para la finalidad del contrato.', 'No introducirá en la aplicación datos que identifiquen a personas menores de edad.', 'No descargará, copiará ni conservará fuera de la aplicación documentos ni datos de los clubes, que permanecen bajo la custodia de cada club.', 'Comunicará al PRESTADOR cualquier incidente de seguridad en un plazo máximo de veinticuatro horas.', 'Al finalizar el contrato, devolverá o destruirá cualquier información recibida y su usuario será desactivado.']) +
+  cl('Protección de las personas menores') + lista(['El AGENTE aportará, antes de iniciar la colaboración, la certificación negativa del Registro Central de Delincuentes Sexuales y de Trata de Seres Humanos, y la renovará cuando el PRESTADOR lo solicite.', 'Conocerá y respetará el código de conducta del PRESTADOR y los protocolos de protección de las entidades con las que trabaje.', 'Si conoce cualquier indicio de violencia sobre una persona menor, lo comunicará de inmediato al Delegado/a de Protección de la entidad y, en su caso, a las autoridades, conforme a la LOPIVI.']) +
+  cl('Material y propiedad intelectual') + pj('La aplicación, la marca EntornoSeguro, el dossier y los modelos son propiedad del PRESTADOR. El AGENTE podrá usarlos solo para la finalidad de este contrato y los devolverá a su finalización.') +
+  cl('Duración') + pj('El contrato estará vigente desde el ' + (csFecha(v.inicio) || '[FECHA DE INICIO]') + ' hasta el ' + (csFecha(v.fin) || '[FECHA DE FIN]') + ' y podrá prorrogarse por acuerdo escrito de ambas partes.') +
+  cl('Resolución') + pj('Cualquiera de las partes podrá resolver el contrato con un preaviso de treinta días, o de forma inmediata por incumplimiento grave, en particular de las obligaciones de confidencialidad, protección de datos y protección de las personas menores. Las comisiones devengadas hasta la fecha de resolución se liquidarán conforme a la cláusula de comisiones.') +
+  cl('Legislación y jurisdicción') + `<p>Este contrato se rige por la legislación española. Para cualquier controversia, las partes se someten a los juzgados y tribunales de ${campo(p.localidad, 'LOCALIDAD')}.</p>` +
+  pj('Y en prueba de conformidad, firman el presente documento por duplicado en el lugar y fecha indicados.') +
+  `<div class="firma"><div>Por el PRESTADOR<br>${PRE}</div><div>El AGENTE<br>${AG}</div></div>`;
+  const prev = state.cfg && state.cfg.organismo;
+  if (state.cfg && !state.inst) state.cfg.organismo = p.nombre || 'Escuela&Deporte';
+  try { return plantillaInforme('Contrato de colaboración comercial', 'Agente colaborador · ' + (v.nombre || 'Modelo'), '<div class="just">' + b + '</div>', false, `EntornoSeguro · Contrato de colaboración entre ${p.nombre ? esc(p.nombre) : 'el prestador'} y ${v.nombre ? esc(v.nombre) : 'el agente'}.`); }
+  finally { if (state.cfg) state.cfg.organismo = prev; }
+}
+async function abrirContratoAgente() {
+  const d = await run(() => API.call('datosContrato', {}));
+  const temp = new Date().getMonth() >= 7 ? new Date().getFullYear() + 1 : new Date().getFullYear();
+  modal('📄 Contrato de colaboración · agente', [['nombre', 'Nombre y apellidos del agente'], ['domicilio', 'Domicilio del agente'], ['ambito', 'Ámbito territorial (ej. provincia de Sevilla)'],
+    ['gestion', '¿Prestará también el servicio en clubes asignados?', [['SI', 'Sí: captación y gestión de clubes'], ['NO', 'No: solo captación']]],
+    ['club_alta', 'Comisión club · alta (%)', 'number'], ['club_renov', 'Comisión club · renovaciones (%)', 'number'], ['ayto_alta', 'Comisión ayuntamiento · alta (%)', 'number'], ['ayto_renov', 'Comisión ayuntamiento · renovaciones (%)', 'number'],
+    ['anos', 'Años de renovación con comisión', 'number'], ['inicio', 'Fecha de inicio', 'date', true], ['fin', 'Fecha de fin', 'date', true], ['formato', 'Formato', [['pdf', 'PDF (ver e imprimir)'], ['word', 'Word (para retocar)']]]],
+    { gestion: 'SI', club_alta: 25, club_renov: 10, ayto_alta: 15, ayto_renov: 5, anos: 2, inicio: new Date().toISOString().slice(0, 10), fin: temp + '-07-31', formato: 'word' },
+    async v => { const html = htmlContratoAgente(d.prestador, v); if (v.formato === 'word') descargar('﻿' + html, 'application/msword', nombreInf('contrato-agente-' + (v.nombre || 'modelo'))); else abrirInforme(html); });
+  const fl = $('#modal-form .fields'); if (fl) fl.insertAdjacentHTML('afterend', '<p class="nota">Comisiones propuestas según tu modelo (clubes 25 % / 10 %, ayuntamientos 15 % / 5 %). Lo que falte (NIF, DNI, importes) sale marcado entre corchetes. Revísalo con tu asesor antes de firmarlo.</p>');
+}
+(function () {
+  const baseDoc = loadDocumentacion;
+  loadDocumentacion = async function () {
+    await baseDoc.apply(this, arguments);
+    if (typeof esMaestra !== 'function' || !esMaestra() || $('#card-agente')) return;
+    const ref = $('#card-servicios');
+    const html = '<div class="card" id="card-agente"><h3>Contrato de colaboración con agentes</h3><p class="nota">Modelo para agentes comerciales independientes: captación y, si se acuerda, gestión de los clubes que les asignes. Incluye comisiones, confidencialidad, protección de datos (subencargado) y certificado negativo de delitos sexuales. Firmado el contrato, crea su usuario en Mis clubes → Agentes colaboradores.</p><div class="ia-acciones"><button class="btn" type="button" id="btn-ca-modelo">Preparar contrato</button></div></div>';
+    if (ref) ref.insertAdjacentHTML('afterend', html); else { const v = $('#view-documentacion'); if (v) v.insertAdjacentHTML('beforeend', html); }
+    $('#btn-ca-modelo').onclick = () => abrirContratoAgente();
+  };
+})();
+GUIA.forEach(t => { if (t[1] === 'Modelo comercial y versiones (solo versión maestra)' || t[1] === '💼 Modelo comercial y versiones (solo versión maestra)') t[2].push(['¿Cómo incorporo a un agente colaborador?',
+  '<ol><li><b>Contrato:</b> Documentación → Contrato de colaboración con agentes → Preparar contrato. Complétalo, revísalo con tu asesor y firmadlo. Pide su certificado negativo de delitos sexuales.</li><li><b>Material:</b> comparte con él, desde el Drive de la maestra, una carpeta con el dossier, las tarifas y los modelos. Nunca documentos de clubes.</li><li><b>Usuario:</b> Mis clubes → 🤝 Agentes colaboradores → <b>+ Nuevo agente</b>. Entrégale las claves; en el primer acceso cambia la contraseña.</li><li><b>Clubes:</b> el alta la haces tú (cada club recibe un código ES-001, ES-002…). Después, <b>Asignar clubes</b>.</li></ol>' +
+  '<p><b>Qué ve el agente:</b> solo «Mis clubes» con los suyos. Si el club ha autorizado el acceso del gestor, entra como gestor con su nombre, sigue el tutorial y registra sus seguimientos (horas por agente). No ve otros clubes, configuración, precios ni usuarios, ni da de alta clubes.</p><p><b>Para retirarle el acceso:</b> Desactivar (inmediato, también dentro de un club) o quítale el club en Asignar clubes.</p>', 'admin', 'clubes']); });
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
