@@ -4621,11 +4621,7 @@ async function tutEvaluar() {
   const ok = p => p.then(x => x, () => null);
   // v123: peticiones enviadas al club → «esperando al club», «recibido» o «caducado» en su paso
   if (state.club) {
-    const pets = (await ok(API.call('listarPeticiones', {}))) || [], pet = {}, PASO = { ficha: 'ficha', formacion_del: 'B2', agentes: 'K', autorizaciones: 'E' };
-    pets.forEach(x => { const id = x.tipo === 'documento' ? x.ref : PASO[x.tipo]; if (!id || pet[id]) return;
-      pet[id] = x.estado === 'recibida' ? { e: 'recibido', f: x.recibido } : x.estado === 'caducada' ? { e: 'caducado', f: x.creado } : x.estado === 'enviada' ? { e: 'pedido', f: x.creado } : null;
-      if (!pet[id]) delete pet[id]; });
-    state.tut.pet = pet;
+    state.tut.pet = petPorPaso((await ok(API.call('listarPeticiones', {}))) || []);
   }
   const ents = state.entidades.length ? state.entidades : (await ok(API.call('listarEntidades'))) || [];
   const e = ents[0] || {};
@@ -4665,6 +4661,13 @@ async function tutEvaluarMun() {
   h.clubes = !!(clu && clu.length) || !!tutLeer().clubes;
   h.infm = !!tutLeer().infm;
   if (tutCuenta() > antes) state.tut.ver = null;
+}
+function petPorPaso(pets) {
+  const pet = {}, PASO = { ficha: 'ficha', formacion_del: 'B2', agentes: 'K', autorizaciones: 'E' };
+  (pets || []).forEach(x => { const id = x.tipo === 'documento' ? x.ref : PASO[x.tipo]; if (!id || pet[id]) return;
+    const o = x.estado === 'recibida' ? { e: 'recibido', f: x.recibido } : x.estado === 'caducada' ? { e: 'caducado', f: x.creado } : x.estado === 'enviada' ? { e: 'pedido', f: x.creado } : null;
+    if (o) pet[id] = o; });
+  return pet;
 }
 function tutPasoActual() {
   const pasos = tutVisibles(), h = state.tut.hechos || {}, salt = tutLeer().saltados || [], pet = state.tut.pet || {};
@@ -6278,7 +6281,7 @@ function entAcciones() {
 GUIA.forEach(t => { if (t[1] === 'Entidades y coordinación con clubes') t[2].push(['¿Cómo doy de baja o elimino una entidad?', '<ul><li><b>Desactivar</b> (en su fila): deja de contar en el Panel, las alertas y los informes, pasa al final de la lista en gris y conserva todo su historial. Se puede <b>Reactivar</b> en cualquier momento. Es lo recomendable cuando una entidad deja de colaborar o de trabajar con menores.</li><li><b>Eliminar</b> (solo administración): borra la entidad y todos sus registros. Hay que escribir su nombre para confirmar. No es posible si tiene incidencias registradas: en ese caso, desactívala.</li><li>Las <b>Actividades municipales</b> propias no se pueden desactivar ni eliminar.</li></ul>', '', 'entidades']); });
 
 // v74: 🧭 Seguimiento de cada entidad (modo municipal) · hoja de ruta con el estado de cada paso y el botón que lo resuelve, sin IA
-const SEG_ICO = { ok: '✅', act: '👉', pend: '⬜', opc: '➖' };
+const SEG_ICO = { ok: '✅', act: '👉', pend: '⬜', opc: '➖', ped: '📨', rec: '📥' };
 let segUsuarios = null;
 function segFecha(v) { const d = v ? new Date(v) : null; return d && !isNaN(d) ? d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''; }
 function segCoordDoc(entId, doc) {
@@ -6415,13 +6418,13 @@ function segEstilo() {
     '.seg-x{width:40px;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.5);background:transparent;color:inherit;font-size:1.1rem;cursor:pointer;flex:0 0 auto}.seg-x:hover{background:rgba(255,255,255,.15)}' +
     '.seg-prog{padding:12px 16px 0}.seg-barra{height:8px;border-radius:99px;background:var(--line,#dde);overflow:hidden;margin-bottom:6px}.seg-barra i{display:block;height:100%;background:var(--seg)}' +
     '.seg-tramos{display:flex;gap:4px;margin-bottom:6px}.seg-t{flex:1;height:22px;border-radius:6px;display:grid;place-items:center;font-size:.75rem;font-weight:700;background:var(--line,#dde);color:#56656d}' +
-    '.seg-t-ok{background:var(--seg);color:#fff}.seg-t-sig{background:#fff;color:var(--seg);box-shadow:inset 0 0 0 2px var(--seg)}.seg-t-act{background:#f6c26b;color:#5a3a00}.seg-t-opc{background:transparent;color:#8a979e;box-shadow:inset 0 0 0 1px #c5ced3;border-style:dashed}' +
+    '.seg-t-ped{background:#dbe9f6;color:#0b3057}.seg-t-rec{background:#fdf1e3;color:#8a4b0f}.seg-t-ok{background:var(--seg);color:#fff}.seg-t-sig{background:#fff;color:var(--seg);box-shadow:inset 0 0 0 2px var(--seg)}.seg-t-act{background:#f6c26b;color:#5a3a00}.seg-t-opc{background:transparent;color:#8a979e;box-shadow:inset 0 0 0 1px #c5ced3;border-style:dashed}' +
     '.seg-num{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--seg);color:#fff;font-size:.75rem;margin-right:4px;vertical-align:1px}.seg-pend .seg-num,.seg-opc .seg-num{background:#c5ced3}' +
     '.seg-cuerpo{padding:8px 16px 16px;max-height:calc(100vh - 220px);overflow:auto}' +
     '.seg-pasos{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:6px}.seg-pasos li{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line,#dde);border-radius:10px;background:var(--card,#fff)}' +
     '.seg-pasos li .ico{font-size:1.1em;line-height:1.4}.seg-pasos li.seg-pend,.seg-pasos li.seg-opc{opacity:.72}.seg-pasos li.seg-actual{border-color:var(--seg);box-shadow:0 0 0 2px rgba(15,118,110,.2)}' +
     '#seg-dlg .seg-actual .btn:not(.ghost){background:var(--seg);border-color:var(--seg)}.seg-bot{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.seg-bot .btn{min-height:36px;padding:6px 12px}' +
-    '.segc-datos{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:6px;margin:4px 0 10px}.segc-datos>div{border:1px solid var(--line,#dde);border-radius:10px;padding:6px 10px;background:var(--card,#fff)}.segc-datos small{display:block;color:var(--muted,#667);font-size:.72rem}.segc-datos b{font-size:1rem}' +
+    '.segc-datos{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:6px;margin:4px 0 10px}.segc-datos>div{border:1px solid var(--line,#dde);border-radius:10px;padding:6px 10px;background:var(--card,#fff);display:flex;flex-direction:column;justify-content:space-between;gap:4px;min-width:0}.segc-datos small{display:block;color:var(--muted,#667);font-size:.72rem;line-height:1.25}.segc-datos b{font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
     '#seg-dlg .seg-pasos li.seg-ok{padding:5px 10px}' +
     '#seg-banda{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;padding:8px 12px;background:var(--seg);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.2)}' +
     '#seg-banda .btn{background:#fff;color:var(--seg);border-color:#fff;min-height:36px;padding:6px 12px}#seg-banda .seg-x{width:36px;height:36px}body.con-seg-banda{padding-top:56px}' +
@@ -6759,7 +6762,8 @@ async function clubesPropios() {
   };
 })();
 // v91: 🧭 Seguimiento de cada club alojado en Mis clubes · ventana de consulta con los 13 pasos de su tutorial (calculados con sus datos), alertas y recomendaciones
-function segClubPasos(d) {
+function segClubPasos(d, pet) {
+  pet = pet || {};
   const est = d.estados || {}, ok = c => TUT_OK.includes(est[c]);
   const ff = fichaFaltan(d.entidad || {});
   const hecho = {
@@ -6774,6 +6778,9 @@ function segClubPasos(d) {
     const o = { n: i + 1, k: p.id, t: p.t, bot: [] };
     if (p.id === 'inf') { o.est = 'opc'; o.txt = 'Lo descarga el propio club. Tú puedes verlo con «📊 Informe del club».'; return o; }
     if (hecho[p.id]) { o.est = 'ok'; o.txt = 'Hecho.'; return o; }
+    const pe = pet[p.id];
+    if (pe && pe.e === 'pedido') { o.est = 'ped'; o.txt = 'Pedido al club por enlace el ' + fCorta(pe.f) + ': esperando su respuesta.'; return o; }
+    if (pe && pe.e === 'recibido') { o.est = 'rec'; o.txt = 'El club lo envió el ' + fCorta(pe.f) + ': revísalo y márcalo en la Matriz.'; return o; }
     o.est = sig ? 'pend' : 'act';
     o.txt = p.id === 'ficha' ? `Le faltan ${ff.falta.length} de ${ff.total} datos clave: ${ff.falta.slice(0, 6).map(fichaEtiq).join(', ')}${ff.falta.length > 6 ? '…' : '.'}` : 'Lo que tiene que hacer el club: ' + p.d;
     if (!sig) { sig = o; o.sig = true; }
@@ -6792,14 +6799,16 @@ async function segClubAbrir(c) {
   let d; try { d = await API.call('seguimientoClub', { id: c.id }); }
   catch (er) { dlg.querySelector('.seg-cuerpo').innerHTML = '<p class="bad-t">' + esc(/desconocida/i.test(er.message) ? 'Actualiza Ampliacion.gs a la v1.28 para ver el seguimiento de los clubes.' : 'No se pudo consultar el club: ' + er.message) + '</p>'; return; }
   if (!dlg.open) return;
-  const P = segClubPasos(d), sig = P.find(p => p.sig), TIT = { ok: 'hecho', act: 'siguiente', pend: 'más adelante', opc: 'opcional' };
+  let pet = {}; try { pet = petPorPaso(await API.call('listarPeticiones', { club_id: c.id })); } catch (e) {}
+  const P = segClubPasos(d, pet), sig = P.find(p => p.sig), TIT = { ok: 'hecho', act: 'siguiente', pend: 'más adelante', opc: 'opcional', ped: 'pedido al club', rec: 'recibido, por revisar' };
+  const nOk = P.filter(p => p.est === 'ok').length, nPed = P.filter(p => p.est === 'ped').length;
   dlg.querySelector('.seg-prog').innerHTML = `<div class="seg-tramos" role="list">${P.map(p => `<span role="listitem" class="seg-t seg-t-${p.sig ? 'sig' : p.est}" title="Paso ${p.n} · ${esc(p.t)}: ${TIT[p.est]}">${p.n}</span>`).join('')}</div>
-    <small>${sig ? `<b>El club va por el paso ${sig.n} de ${P.length}</b> · ${esc(sig.t)}` : '<b>El club tiene todos los pasos hechos</b>'} · ${P.filter(p => p.est === 'ok').length} hechos · cumplimiento ${d.pct}%</small>`;
+    <small>${sig ? `<b>El club va por el paso ${sig.n} de ${P.length}</b> · ${esc(sig.t)}` : '<b>El club tiene todos los pasos hechos</b>'} · ${nOk} hecho${nOk === 1 ? '' : 's'}${nPed ? ` · ${nPed} esperando al club` : ''} · cumplimiento ${d.pct}%</small>`;
   const recs = d.recomendaciones || [], a = d.alertas || {};
   const asunto = 'Recomendaciones de EntornoSeguro · ' + d.nombre;
   const dato = (k, v, mal) => `<div><small>${k}</small><b${mal ? ' style="color:var(--bad)"' : ''}>${esc(v)}</b></div>`;
   dlg.querySelector('.seg-cuerpo').innerHTML =
-    `<div class="segc-datos">${dato('Alertas abiertas', a.abiertas || 0)}${dato('Alertas altas', a.altas || 0, a.altas > 0)}${dato('Cerradas sin resolver', a.cerradas_sin_resolver || 0, a.cerradas_sin_resolver > 0)}${dato('Último acceso', d.ultimo_acceso ? segFecha(d.ultimo_acceso) : 'Nunca', !d.ultimo_acceso)}${dato('Próxima revisión del club (Matriz)', d.proxima_revision ? segFecha(d.proxima_revision) : '—')}</div>
+    `<div class="segc-datos">${dato('Alertas abiertas', a.abiertas || 0)}${dato('Alertas altas', a.altas || 0, a.altas > 0)}${dato('Cerradas sin resolver', a.cerradas_sin_resolver || 0, a.cerradas_sin_resolver > 0)}${dato('Último acceso del club', d.ultimo_acceso ? segFecha(d.ultimo_acceso) : 'Nunca', !d.ultimo_acceso)}${dato('Próxima revisión del club (Matriz)', d.proxima_revision ? segFecha(d.proxima_revision) : '—')}</div>
     <ol class="seg-pasos">${P.map(p => `<li class="seg-${p.est}${p.sig ? ' seg-actual' : ''}"><span class="ico" aria-hidden="true">${p.sig ? SEG_ICO.act : SEG_ICO[p.est] || '⬜'}</span>
       <div><b><span class="seg-num">${p.n}</span> ${esc(p.t)}</b>${p.sig ? ' <span class="chip">va por aquí</span>' : ''}${p.est === 'ok' ? '' : `<br><small>${esc(p.txt)}</small>`}</div></li>`).join('')}</ol>
     <h4 style="margin:14px 0 6px">💡 Recomendaciones para el club (${recs.length})</h4>
@@ -7211,7 +7220,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v127';
+const ES_VERSION = 'v128';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
