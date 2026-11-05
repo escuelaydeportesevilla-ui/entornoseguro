@@ -7220,7 +7220,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v135';
+const ES_VERSION = 'v136';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -8350,19 +8350,20 @@ async function segAytoAbrir(x) {
 }
 GUIA.forEach(t => { if (/Modelo comercial y versiones/.test(t[1])) t[2].push(['¿Cómo trabajo en un ayuntamiento con nivel Acompañado o Gestionado?',
   '<ol><li>El ayuntamiento te crea un <b>usuario propio</b> en su aplicación (rol técnico). Entras por la portada con <b>usuario@código</b>; todo queda registrado con tu usuario y ellos te quitan el acceso cuando quieran.</li><li>En la maestra, <b>Ayuntamientos → Editar</b>: indica el <b>nivel de servicio</b> contratado.</li><li>Tras cada reunión, formación o revisión: <b>🧭 Seguimiento → ✓ Registrar seguimiento</b> (fecha, horas, qué has hecho y, si la acordáis, la próxima revisión).</li></ol><p>La app calcula la próxima revisión (Acompañado: cada 6 meses; Gestionado: cada 3) y te avisa en <b>Alertas</b> cuando toca. La tabla muestra las horas del año para controlar la dedicación (referencia: ~24 h Acompañado, ~60 h Gestionado).</p>', 'admin', 'instancias']); });
+// v136: fondo general teñido según la paleta (tarjetas en blanco; contraste AA comprobado)
 // v135 + Ampliacion v1.48: rol «Colaborador externo» y tabla de roles en la guía
 // v134 + Ampliacion v1.47: paleta de colores por instalación o club (contraste AA comprobado; la portada y los documentos no cambian)
 const PALETAS = {
   azul: { n: 'Azul EntornoSeguro', c: ['#0b3057', '#0d818f', '#2fa37f'] },
-  naranja: { n: 'Naranja', c: ['#8a3b00', '#c2410c', '#ea580c'], dk: ['#f5a05a', '#fb923c', '#fdba74'], navy: '#5a2600', grad: 'linear-gradient(90deg,#8a3b00 0%,#c2410c 55%,#f59e0b 100%)' },
-  verde: { n: 'Verde', c: ['#14532d', '#15803d', '#16a34a'], dk: ['#5fd38a', '#4ade80', '#86efac'], navy: '#0b3b20', grad: 'linear-gradient(90deg,#14532d 0%,#15803d 55%,#4ade80 100%)' },
-  granate: { n: 'Granate', c: ['#7f1d1d', '#a51c30', '#e11d48'], dk: ['#f08a98', '#fb7185', '#fda4af'], navy: '#5a1414', grad: 'linear-gradient(90deg,#7f1d1d 0%,#a51c30 55%,#e11d48 100%)' },
-  morado: { n: 'Morado', c: ['#4c1d95', '#6d28d9', '#8b5cf6'], dk: ['#b9a2f5', '#a78bfa', '#c4b5fd'], navy: '#2e1065', grad: 'linear-gradient(90deg,#4c1d95 0%,#6d28d9 55%,#a78bfa 100%)' }
+  naranja: { n: 'Naranja', c: ['#8a3b00', '#c2410c', '#ea580c'], dk: ['#f5a05a', '#fb923c', '#fdba74'], navy: '#5a2600', grad: 'linear-gradient(90deg,#8a3b00 0%,#c2410c 55%,#f59e0b 100%)', bg: '#fbf5ee', dbg: '#1a1410' },
+  verde: { n: 'Verde', c: ['#14532d', '#15803d', '#16a34a'], dk: ['#5fd38a', '#4ade80', '#86efac'], navy: '#0b3b20', grad: 'linear-gradient(90deg,#14532d 0%,#15803d 55%,#4ade80 100%)', bg: '#f2f8f3', dbg: '#111a14' },
+  granate: { n: 'Granate', c: ['#7f1d1d', '#a51c30', '#e11d48'], dk: ['#f08a98', '#fb7185', '#fda4af'], navy: '#5a1414', grad: 'linear-gradient(90deg,#7f1d1d 0%,#a51c30 55%,#e11d48 100%)', bg: '#faf3f3', dbg: '#1b1214' },
+  morado: { n: 'Morado', c: ['#4c1d95', '#6d28d9', '#8b5cf6'], dk: ['#b9a2f5', '#a78bfa', '#c4b5fd'], navy: '#2e1065', grad: 'linear-gradient(90deg,#4c1d95 0%,#6d28d9 55%,#a78bfa 100%)', bg: '#f5f3fa', dbg: '#15131d' }
 };
 (function () {
   const css = Object.keys(PALETAS).filter(k => PALETAS[k].dk).map(k => { const p = PALETAS[k];
-    return `:root[data-paleta="${k}"]{--brand:${p.c[0]};--brand-2:${p.c[1]};--accent:${p.c[2]};--navy:${p.navy};--grad:${p.grad}}` +
-      `@media (prefers-color-scheme:dark){:root[data-paleta="${k}"]{--brand:${p.dk[0]};--brand-2:${p.dk[1]};--accent:${p.dk[2]}}}`; }).join('') +
+    return `:root[data-paleta="${k}"]{--brand:${p.c[0]};--brand-2:${p.c[1]};--accent:${p.c[2]};--navy:${p.navy};--grad:${p.grad};--bg:${p.bg}}` +
+      `@media (prefers-color-scheme:dark){:root[data-paleta="${k}"]{--brand:${p.dk[0]};--brand-2:${p.dk[1]};--accent:${p.dk[2]};--bg:${p.dbg}}}`; }).join('') +
     '.pal-op{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}.pal-op button{display:flex;align-items:center;gap:8px;border:2px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink);padding:8px 12px;min-height:44px;font:inherit;cursor:pointer}' +
     '.pal-op button[aria-pressed="true"]{border-color:var(--brand);box-shadow:0 0 0 2px color-mix(in srgb,var(--brand) 25%,transparent);font-weight:700}.pal-op i{display:inline-flex;border-radius:6px;overflow:hidden}.pal-op i span{width:14px;height:22px}';
   const st = document.createElement('style'); st.id = 'paletas-css'; st.textContent = css; document.head.appendChild(st);
