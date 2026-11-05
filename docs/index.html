@@ -7220,7 +7220,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v136';
+const ES_VERSION = 'v137';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -8394,6 +8394,84 @@ function pintarApariencia(vista) {
 })();
 GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Puedo cambiar los colores de la aplicación?',
   '<p>Sí. El administrador elige la paleta en <b>Usuarios → 🎨 Apariencia</b> (en un club: <b>Mi espacio → 🎨 Apariencia</b>): Azul EntornoSeguro, Naranja, Verde, Granate o Morado. La ven todos los usuarios de la instalación al entrar. Un club alojado puede tener la suya o usar la de su instalación.</p><p>Todas las paletas tienen contraste suficiente para baja visión. La portada de acceso y los documentos mantienen el diseño de EntornoSeguro, y los colores de estado (verde cumple, rojo alerta) no cambian.</p>', 'todos', 'usuarios']); });
+// v137: «Trabaja con menores» destacado al principio de la ficha y alta rápida de entidades por lista de nombres
+(function () {
+  const baseF = formEntidad;
+  formEntidad = async function () {
+    const r = await baseF.apply(this, arguments);
+    try {
+      const f = $('#modal-form'), sel = f && f.querySelector('select[name="trabaja_menores"]'), nom = f && f.querySelector('[name="nombre"]');
+      const lab = sel && sel.closest('label'), labN = nom && nom.closest('label');
+      if (lab && labN && !f.querySelector('#tm-destacado')) {
+        const caja = document.createElement('div'); caja.id = 'tm-destacado'; caja.className = 'tm-dest';
+        lab.firstChild && lab.firstChild.nodeType === 3 && (lab.firstChild.textContent = '¿Trabaja con menores? ');
+        caja.appendChild(lab);
+        caja.insertAdjacentHTML('beforeend', '<small>Con «SI» la entidad aparece en el Panel, en la Matriz y en la coordinación.</small>');
+        const sec = labN.closest('details') || labN.parentNode;
+        sec.parentNode.insertBefore(caja, sec);
+      }
+    } catch (e) {}
+    return r;
+  };
+  const st = document.createElement('style');
+  st.textContent = '.tm-dest{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:0 0 12px;padding:10px 12px;border:2px solid var(--brand);border-radius:12px;background:color-mix(in srgb,var(--brand) 6%,var(--panel))}' +
+    '#tm-destacado label{display:flex!important;flex-direction:row!important;align-items:center;gap:10px;font-weight:700;margin:0}#tm-destacado select{width:auto!important;min-width:90px;margin:0}.tm-dest small{color:var(--muted);flex:1 1 220px}' +
+    '#alta-rapida-lista{width:100%;min-height:200px;font:inherit}';
+  document.head.appendChild(st);
+
+  const norm = t => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
+  function altaRapida() {
+    const f = $('#modal-form');
+    f.innerHTML = `<h3>+ Alta rápida de entidades</h3>
+      <p class="nota" style="margin:0 0 8px">Escribe o pega <b>un nombre por línea</b> (máximo 200). Se crean activas y con «Trabaja con menores: SI». Los nombres que ya existan se omiten.</p>
+      <textarea id="alta-rapida-lista" placeholder="Club Deportivo Ejemplo&#10;Asociación Deportiva Ejemplo&#10;…"></textarea>
+      <p class="nota" id="alta-rapida-cuenta" style="margin:6px 0 0">0 nombres</p>
+      <p class="nota" style="margin:8px 0 0">Después, en <b>🧭 Seguimiento</b> de cada entidad, pide los datos de la ficha con <b>📨 Pedir los datos de la ficha</b>.</p>
+      <div class="actions"><button value="cancel" class="btn ghost" formnovalidate>Cancelar</button><button type="button" class="btn" id="alta-rapida-ok">Dar de alta</button></div>`;
+    const ta = f.querySelector('#alta-rapida-lista');
+    const lineas = () => { const vis = {}; return ta.value.split(/\n+/).map(x => x.replace(/^\s*[-•*\d.)]+\s+/, '').replace(/\s+/g, ' ').trim()).filter(x => x.length >= 2 && !vis[norm(x)] && (vis[norm(x)] = 1)).slice(0, 200); };
+    ta.oninput = () => { const n = lineas().length; f.querySelector('#alta-rapida-cuenta').textContent = n + (n === 1 ? ' nombre' : ' nombres'); };
+    f.querySelector('#alta-rapida-ok').onclick = async () => {
+      const lista = lineas(); if (!lista.length) { toast('Escribe al menos un nombre', true); return; }
+      const ya = {}; (state.entidades || []).forEach(e => { ya[norm(e.nombre)] = 1; });
+      const nuevas = lista.filter(x => !ya[norm(x)]), repetidas = lista.length - nuevas.length;
+      if (!nuevas.length) { toast('Todas esas entidades ya existen', true); return; }
+      if (!confirm('Se van a dar de alta ' + nuevas.length + ' entidad(es)' + (repetidas ? ' (' + repetidas + ' ya existían y se omiten)' : '') + '. ¿Continuar?')) return;
+      const btn = f.querySelector('#alta-rapida-ok'), cuenta = f.querySelector('#alta-rapida-cuenta');
+      btn.disabled = true; ta.readOnly = true;
+      let ok = 0; const clubes = [], fallos = [];
+      for (let i = 0; i < nuevas.length; i++) {
+        cuenta.textContent = 'Creando ' + (i + 1) + ' de ' + nuevas.length + '… (no cierres esta ventana)';
+        try { await API.call('guardarEntidad', { nombre: nuevas[i], trabaja_menores: 'SI', activo: 'SI', plazo_comunicacion_h: 24, revision_meses: 12 }); ok++; }
+        catch (er) { if (/^DUPLICADO_CLUB:/.test(er.message || '')) clubes.push(nuevas[i]); else fallos.push(nuevas[i] + ' (' + er.message + ')'); }
+      }
+      $('#modal').close('cancel');
+      state.entidades = await run(() => API.call('listarEntidades'));
+      loadEntidades();
+      alert('✓ Entidades creadas: ' + ok +
+        (repetidas ? '\nYa existían (omitidas): ' + repetidas : '') +
+        (clubes.length ? '\n\nNo creadas porque ya están en Mis clubes con espacio propio:\n• ' + clubes.join('\n• ') : '') +
+        (fallos.length ? '\n\nNo se pudieron crear:\n• ' + fallos.join('\n• ') : ''));
+    };
+    const dlg = $('#modal'); dlg.oncancel = null; dlg.onclose = null; dlg.returnValue = '';
+    if (!dlg.open) dlg.showModal();
+    setTimeout(() => ta.focus(), 50);
+  }
+  const baseL = loadEntidades;
+  loadEntidades = async function () {
+    const r = await baseL.apply(this, arguments);
+    try {
+      const nb = $('#nueva-entidad');
+      const puede = nb && !state.club && can('escribir') && !(state.me && ['entidad', 'agente'].indexOf(state.me.rol) >= 0);
+      let b = $('#alta-rapida');
+      if (puede && !b) { b = document.createElement('button'); b.id = 'alta-rapida'; b.type = 'button'; b.className = 'btn ghost'; b.textContent = '+ Alta rápida (lista)'; b.onclick = altaRapida; const g = document.createElement('span'); g.style.cssText = 'display:inline-flex;flex-wrap:wrap;gap:8px;align-items:center'; nb.parentNode.insertBefore(g, nb); g.appendChild(nb); g.appendChild(b); }
+      if (b) b.classList.toggle('hidden', !puede);
+    } catch (e) {}
+    return r;
+  };
+  if (typeof GUIA !== 'undefined') GUIA.forEach(t => { if (/Entidades|Coordinaci/i.test(t[1]) && !t[2].some(q => /Alta rápida/.test(q[0]))) t[2].unshift(['¿Cómo doy de alta muchas entidades a la vez? (Alta rápida)',
+    '<ol><li>En <b>Entidades</b>, pulsa <b>+ Alta rápida (lista)</b>.</li><li>Pega los nombres, <b>uno por línea</b> (por ejemplo, copiados de una hoja de cálculo). Se omiten los repetidos y los que ya existen.</li><li>Pulsa <b>Dar de alta</b>: se crean activas y con «Trabaja con menores: SI», así salen en el Panel, la Matriz y la coordinación.</li><li>Después, en <b>🧭 Seguimiento</b> de cada entidad, pulsa <b>📨 Pedir los datos de la ficha</b> y envía el enlace: la entidad completa su ficha sin contraseña.</li></ol><p>Si un nombre ya está en <b>Mis clubes</b> (club con espacio propio), no se crea y se te indica.</p>', 'mun', 'entidades']); });
+})();
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
