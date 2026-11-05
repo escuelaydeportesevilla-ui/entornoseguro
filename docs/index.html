@@ -7220,7 +7220,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v137';
+const ES_VERSION = 'v138';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -8471,6 +8471,52 @@ GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Puedo cambiar l
   };
   if (typeof GUIA !== 'undefined') GUIA.forEach(t => { if (/Entidades|Coordinaci/i.test(t[1]) && !t[2].some(q => /Alta rápida/.test(q[0]))) t[2].unshift(['¿Cómo doy de alta muchas entidades a la vez? (Alta rápida)',
     '<ol><li>En <b>Entidades</b>, pulsa <b>+ Alta rápida (lista)</b>.</li><li>Pega los nombres, <b>uno por línea</b> (por ejemplo, copiados de una hoja de cálculo). Se omiten los repetidos y los que ya existen.</li><li>Pulsa <b>Dar de alta</b>: se crean activas y con «Trabaja con menores: SI», así salen en el Panel, la Matriz y la coordinación.</li><li>Después, en <b>🧭 Seguimiento</b> de cada entidad, pulsa <b>📨 Pedir los datos de la ficha</b> y envía el enlace: la entidad completa su ficha sin contraseña.</li></ol><p>Si un nombre ya está en <b>Mis clubes</b> (club con espacio propio), no se crea y se te indica.</p>', 'mun', 'entidades']); });
+})();
+// v138: botón 🧭 Seguimiento en «Implantación por entidad» del Panel (entidades y clubes con espacio propio); el nombre sigue abriendo la Matriz
+(function () {
+  const st = document.createElement('style');
+  st.textContent = '#panel-entidades.con-segs .bar-row{grid-template-columns:minmax(0,1fr) 120px 44px 44px}' +
+    '.panel-seg{display:inline-flex;align-items:center;justify-content:center;width:44px;height:40px;border:1px solid var(--line);border-radius:10px;background:var(--panel);font-size:18px;cursor:pointer;padding:0}' +
+    '.panel-seg:hover,.panel-seg:focus-visible{border-color:var(--brand);outline:2px solid color-mix(in srgb,var(--brand) 30%,transparent)}' +
+    '@media (max-width:640px){#panel-entidades.con-segs .bar-row{grid-template-columns:minmax(0,1fr) 60px 38px 44px}}';
+  document.head.appendChild(st);
+  const boton = (row, titulo, fn) => {
+    if (row.querySelector('.panel-seg')) return;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'panel-seg'; b.textContent = '🧭';
+    b.title = titulo; b.setAttribute('aria-label', titulo);
+    b.onclick = ev => { ev.stopPropagation(); fn(); };
+    row.classList.add('con-seg'); row.appendChild(b);
+  };
+  const baseP = loadPanel;
+  loadPanel = async function () {
+    const r = await baseP.apply(this, arguments);
+    try {
+      if (state.club || !can('leer') || (state.me && ['entidad', 'agente'].indexOf(state.me.rol) >= 0)) return r;
+      if (typeof segAbrir === 'function') {
+        if (!(state.entidades || []).length) { try { state.entidades = await API.call('listarEntidades'); } catch (e) {} }
+        $$('#panel-entidades .bar-row[data-id]').forEach(row => {
+          const e = (state.entidades || []).find(x => x.id === row.dataset.id);
+          if (!e || e.propia === 'SI' || e.trabaja_menores !== 'SI' || e.activo === 'NO') return;
+          boton(row, 'Seguimiento de ' + e.nombre, () => segAbrir(e));
+        });
+      }
+      const filasC = $$('#panel-clubes-propios .bar-row[data-club]');
+      if (filasC.length && typeof segClubAbrir === 'function') {
+        if (!(state.clubes || []).length) { try { state.clubes = await API.call('listarClubes'); } catch (e) {} }
+        filasC.forEach(row => {
+          const c = (state.clubes || []).find(x => x.id === row.dataset.club);
+          if (!c || c.error || c.estado !== 'activo') return;
+          boton(row, 'Seguimiento del club ' + c.nombre, () => segClubAbrir(c));
+        });
+      }
+      const cont = $('#panel-entidades');
+      if (cont && cont.querySelector('.panel-seg')) {
+        cont.classList.add('con-segs');
+        $$('#panel-entidades .bar-row').forEach(row => { if (!row.querySelector('.panel-seg, .panel-seg-vacio')) row.insertAdjacentHTML('beforeend', '<span class="panel-seg-vacio" aria-hidden="true"></span>'); });
+      }
+    } catch (e) { console.warn(e); }
+    return r;
+  };
 })();
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
