@@ -7220,7 +7220,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v139';
+const ES_VERSION = 'v140';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -8572,6 +8572,40 @@ GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Puedo cambiar l
     '<li>Al entrar con tu usuario verás abajo a la derecha <b>⏱ Sesión de soporte</b> con el tiempo desde que entraste.</li>' +
     '<li>Al pulsar <b>Salir</b>, la app propone fecha, horas (redondeadas a 0,25 h; si llevas más de 30 min sin actividad, cuenta hasta tu última acción) y una nota con lo hecho. Ajusta y pulsa Guardar: se anota en <b>Ayuntamientos → 🧭 Seguimiento</b> de la maestra, con las horas del año.</li>' +
     '<li>Sesiones de menos de 5 minutos no proponen registro. Puedes elegir <b>Salir sin registrar</b>.</li></ol>', 'maestro']); });
+})();
+// v140: Ayuntamientos clientes (maestra) en fichas, sin desplazamiento lateral
+(function () {
+  const st = document.createElement('style');
+  st.textContent = '.inst-fichas{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,420px),1fr));gap:14px}' +
+    '.inst-ficha{border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--panel);display:flex;flex-direction:column;gap:10px}' +
+    '.inst-ficha.inactivo{opacity:.65}.inst-cab{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.inst-cab h3{margin:0;font-size:1.05rem}' +
+    '.inst-datos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.inst-datos>div{border:1px solid var(--line);border-radius:10px;padding:6px 10px}' +
+    '.inst-datos small{display:block;color:var(--muted);font-size:.8rem}.inst-url{font-size:.82rem;color:var(--muted);word-break:break-all;margin:0}' +
+    '.inst-acc{display:flex;flex-wrap:wrap;gap:8px}';
+  document.head.appendChild(st);
+  loadInstancias = async function () {
+    const rows = state.instancias = await run(() => API.call('listarInstancias'));
+    const hoy = new Date().toISOString().slice(0, 10), tabla = $('#tabla-instancias');
+    let cont = $('#inst-fichas');
+    if (!cont) { cont = document.createElement('div'); cont.id = 'inst-fichas'; cont.className = 'inst-fichas'; tabla.parentNode.insertBefore(cont, tabla); }
+    tabla.classList.add('hidden'); tabla.innerHTML = '';
+    const sc = tabla.closest('.table-wrap, .tabla-scroll'); if (sc) sc.style.overflow = 'visible';
+    cont.innerHTML = rows.length ? rows.map(x => {
+      const venc = x.proximo && x.proximo <= hoy, inact = x.estado === 'inactivo';
+      return `<article class="inst-ficha ${inact ? 'inactivo' : ''}">
+        <div class="inst-cab"><h3>${esc(x.nombre)}</h3>${inact ? '<span class="st muted">Inactivo</span>' : '<span class="st ok">Activo</span>'}</div>
+        <div class="inst-datos">
+          <div><small>Acceso</small><b>admin@${esc(x.codigo)}</b></div>
+          <div><small>Servicio</small><b>${esc(x.nivel || 'Autogestión')}</b></div>
+          <div><small>Próxima revisión</small><b style="${venc ? 'color:var(--bad)' : ''}">${x.proximo ? esc(fCorta(x.proximo)) + (venc ? ' (vencida)' : '') : '—'}</b></div>
+          <div><small>Horas ${new Date().getFullYear()}</small><b>${x.horas_anio != null ? String(x.horas_anio).replace('.', ',') + ' h' : '—'}</b></div>
+        </div>
+        <p class="inst-url">${esc(x.api_url || '')}</p>
+        <div class="inst-acc"><button class="btn" type="button" data-inst-seg="${esc(x.codigo)}">🧭 Seguimiento</button><button class="btn ghost" type="button" data-inst="${esc(x.codigo)}">Editar</button></div>
+      </article>`; }).join('') : '<p class="empty">Aún no hay ayuntamientos clientes.</p>';
+    $$('#inst-fichas [data-inst]').forEach(b => b.onclick = () => formInstancia(rows.find(x => x.codigo === b.dataset.inst)));
+    $$('#inst-fichas [data-inst-seg]').forEach(b => b.onclick = () => segAytoAbrir(rows.find(x => x.codigo === b.dataset.instSeg)));
+  };
 })();
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
