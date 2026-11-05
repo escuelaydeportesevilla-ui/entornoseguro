@@ -7220,7 +7220,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v141';
+const ES_VERSION = 'v142';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -8624,6 +8624,71 @@ GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Puedo cambiar l
   };
   GUIA.forEach(t => { if (/Modelo comercial y versiones/.test(t[1])) t[2].forEach(q => { if (/Se cuentan solas las horas/.test(q[0])) q[1] = q[1].replace('</ol>',
     '<li><b>Si trabaja un agente colaborador en ese ayuntamiento:</b> el ayuntamiento le crea su propio usuario (rol Colaborador externo; nunca uses tu usuario para él) y tú lo añades a <b>prestador_usuario</b> separado por coma, por ejemplo <code>escuelaydeporte, ag.juan</code>. Sus sesiones tendrán el mismo contador y llegarán a la maestra con su nombre como autor. Cuando deje de colaborar: el ayuntamiento desactiva su usuario y tú lo quitas de esa fila.</li></ol>'); }); });
+})();
+// v142: ventana de seguimiento más ancha en escritorio y, en los clubes, organizada en pestañas (Resumen · Pasos · Gestor · Recomendaciones)
+(function () {
+  const st = document.createElement('style');
+  st.textContent = '@media (min-width:900px){#seg-dlg{max-width:980px!important}}' +
+    '.seg-tabs{display:flex;gap:6px;padding:8px 16px 0;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:thin;background:var(--panel)}' +
+    '.seg-tabs button{flex:0 0 auto;border:1px solid var(--line);border-bottom:0;border-radius:10px 10px 0 0;background:transparent;color:var(--muted);font:inherit;font-weight:600;padding:8px 14px;min-height:40px;cursor:pointer}' +
+    '.seg-tabs button[aria-selected="true"]{background:var(--seg,#0f766e);border-color:var(--seg,#0f766e);color:#fff}' +
+    '.seg-tabs button:focus-visible{outline:2px solid var(--seg,#0f766e);outline-offset:2px}' +
+    '.seg-panel[hidden]{display:none!important}.seg-cab .seg-entrar{margin-right:8px;white-space:nowrap}' +
+    '@media (min-width:900px){#seg-dlg .segc-datos{grid-template-columns:repeat(4,minmax(0,1fr))}}' +
+    '@media (max-width:640px){.seg-cab .seg-entrar{display:none}}';
+  document.head.appendChild(st);
+  const TABS = [['resumen', '📊 Resumen'], ['pasos', '🧭 Pasos'], ['gestor', '⏱ Gestor'], ['recs', '💡 Recomendaciones']];
+  let actual = 'resumen', clubAct = '';
+  const cls = el => {
+    const c = el.classList, t = (el.textContent || '').trim();
+    if (c.contains('seg-ded')) return 'gestor';
+    if (c.contains('seg-pasos') || /^📨 Peticiones/.test(t)) return 'pasos';
+    if (c.contains('rec-lista') || c.contains('seg-bot') || (el.tagName === 'H4' && /Recomendaciones/.test(t))) return 'recs';
+    return 'resumen';
+  };
+  function ordenar(dlg) {
+    const cu = dlg.querySelector('.seg-cuerpo'); if (!cu || !cu.querySelector('.segc-datos')) return false;
+    let tabs = dlg.querySelector('.seg-tabs');
+    const nombre = (dlg.querySelector('.seg-cab h3') || {}).textContent || '';
+    if (nombre !== clubAct) { clubAct = nombre; actual = 'resumen'; }
+    if (!tabs) {
+      tabs = document.createElement('div'); tabs.className = 'seg-tabs'; tabs.setAttribute('role', 'tablist');
+      tabs.innerHTML = TABS.map(([k, n]) => `<button type="button" role="tab" data-segtab="${k}">${n}</button>`).join('');
+      cu.parentNode.insertBefore(tabs, cu);
+      tabs.onclick = ev => { const b = ev.target.closest('[data-segtab]'); if (!b) return; actual = b.dataset.segtab; mostrar(dlg); cu.scrollTop = 0; };
+      TABS.forEach(([k]) => { const p = document.createElement('div'); p.className = 'seg-panel'; p.dataset.panel = k; p.setAttribute('role', 'tabpanel'); cu.appendChild(p); });
+    }
+    const panel = k => cu.querySelector(`.seg-panel[data-panel="${k}"]`);
+    [...cu.children].forEach(el => { if (!el.classList.contains('seg-panel')) panel(cls(el)).appendChild(el); });
+    cu.querySelectorAll('.seg-panel').forEach(p => [...p.children].forEach(el => { const k = cls(el); if (k !== p.dataset.panel) panel(k).appendChild(el); }));
+    const h4 = cu.querySelector('.seg-panel[data-panel="recs"] h4'), m = h4 && /\((\d+)\)/.exec(h4.textContent);
+    const br = tabs.querySelector('[data-segtab="recs"]'); if (br) br.textContent = '💡 Recomendaciones' + (m ? ' (' + m[1] + ')' : '');
+    const bp = tabs.querySelector('[data-segtab="pasos"]'), nP = cu.querySelectorAll('.seg-pasos > li').length; if (bp) bp.textContent = '🧭 Pasos' + (nP ? ' (' + nP + ')' : '');
+    const bg = tabs.querySelector('[data-segtab="gestor"]'); if (bg) bg.hidden = !panel('gestor').children.length;
+    // 🔑 Entrar en el club, también en la cabecera
+    const ent = [...cu.querySelectorAll('button')].find(b => /Entrar en el club/.test(b.textContent));
+    const cab = dlg.querySelector('.seg-cab'); let he = cab && cab.querySelector('.seg-entrar');
+    if (ent && cab && !he) { he = document.createElement('button'); he.type = 'button'; he.className = 'btn seg-entrar'; he.textContent = '🔑 Entrar en el club'; he.onclick = () => ent.click(); cab.insertBefore(he, cab.querySelector('.seg-x')); }
+    if (!ent && he) he.remove();
+    if (actual === 'gestor' && bg && bg.hidden) actual = 'resumen';
+    mostrar(dlg); return true;
+  }
+  function mostrar(dlg) {
+    dlg.querySelectorAll('.seg-tabs [data-segtab]').forEach(b => b.setAttribute('aria-selected', b.dataset.segtab === actual ? 'true' : 'false'));
+    dlg.querySelectorAll('.seg-cuerpo .seg-panel').forEach(p => { p.hidden = p.dataset.panel !== actual; });
+  }
+  // Se aplica cuando el contenido termina de pintarse (las capas añaden partes en momentos distintos)
+  let t = null;
+  const obs = new MutationObserver(() => {
+    clearTimeout(t); t = setTimeout(() => {
+      const dlg = $('#seg-dlg'); if (!dlg || !dlg.open) return;
+      if (!dlg.querySelector('.seg-cuerpo .segc-datos')) { const tb = dlg.querySelector('.seg-tabs'); if (tb) tb.remove(); const he = dlg.querySelector('.seg-entrar'); if (he) he.remove(); return; }
+      obs.disconnect(); try { ordenar(dlg); } finally { obs.observe(document.body, { childList: true, subtree: true }); }
+    }, 60);
+  });
+  obs.observe(document.body, { childList: true, subtree: true });
+  // Tras registrar un seguimiento, quedarse en la pestaña Gestor
+  document.addEventListener('click', ev => { if (ev.target.closest && ev.target.closest('#ded-reg')) actual = 'gestor'; }, true);
 })();
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
