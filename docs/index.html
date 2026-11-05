@@ -7220,7 +7220,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v140';
+const ES_VERSION = 'v141';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -8606,6 +8606,24 @@ GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Puedo cambiar l
     $$('#inst-fichas [data-inst]').forEach(b => b.onclick = () => formInstancia(rows.find(x => x.codigo === b.dataset.inst)));
     $$('#inst-fichas [data-inst-seg]').forEach(b => b.onclick = () => segAytoAbrir(rows.find(x => x.codigo === b.dataset.instSeg)));
   };
+})();
+// v141 + Ampliacion v1.50: agentes en ayuntamientos · recordatorio de añadir su usuario a prestador_usuario (varios, separados por comas)
+(function () {
+  const AVISO = '🤝 <b>¿Trabaja aquí un agente?</b> Pide al ayuntamiento un usuario propio para él (rol Colaborador externo) y añádelo en la hoja del ayuntamiento, pestaña <b>Config_Municipio</b>, fila <b>prestador_usuario</b>, separado por coma: <code>escuelaydeporte, ag.nombre</code>. Así su tiempo se cuenta solo y llega aquí con su nombre.';
+  const baseS = segAytoAbrir;
+  segAytoAbrir = async function () {
+    const r = await baseS.apply(this, arguments);
+    try { const f = $('#modal-form'), n = f && f.querySelector('.nota'); if (n && !f.querySelector('.aviso-agente-ayto')) n.insertAdjacentHTML('afterend', '<p class="nota aviso-agente-ayto" style="border-left:3px solid var(--accent);padding:6px 10px;background:color-mix(in srgb,var(--accent) 7%,transparent);border-radius:6px">' + AVISO + '</p>'); } catch (e) {}
+    return r;
+  };
+  const baseA = pintarAgentesCom;
+  pintarAgentesCom = async function () {
+    const r = await baseA.apply(this, arguments);
+    try { const c = $('#card-agentes-com'); if (c && !c.querySelector('.aviso-agente-ayto')) { const n = c.querySelector('.nota'); if (n) n.insertAdjacentHTML('afterend', '<p class="nota aviso-agente-ayto">🏛️ <b>Agente en un ayuntamiento:</b> no se asigna aquí. El ayuntamiento le crea un usuario propio en su instalación y tú lo añades a <b>prestador_usuario</b> (Config_Municipio de su hoja), separado por coma, para que sus horas se cuenten solas.</p>'); } } catch (e) {}
+    return r;
+  };
+  GUIA.forEach(t => { if (/Modelo comercial y versiones/.test(t[1])) t[2].forEach(q => { if (/Se cuentan solas las horas/.test(q[0])) q[1] = q[1].replace('</ol>',
+    '<li><b>Si trabaja un agente colaborador en ese ayuntamiento:</b> el ayuntamiento le crea su propio usuario (rol Colaborador externo; nunca uses tu usuario para él) y tú lo añades a <b>prestador_usuario</b> separado por coma, por ejemplo <code>escuelaydeporte, ag.juan</code>. Sus sesiones tendrán el mismo contador y llegarán a la maestra con su nombre como autor. Cuando deje de colaborar: el ayuntamiento desactiva su usuario y tú lo quitas de esa fila.</li></ol>'); }); });
 })();
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
