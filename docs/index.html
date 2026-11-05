@@ -7220,7 +7220,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v130';
+const ES_VERSION = 'v134';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -7396,6 +7396,12 @@ GUIA.forEach(t => { if (t[1] === 'Modelo comercial y versiones (solo versión ma
 const CS_TARIFA = { 'Autogestión': [195, 195], 'Acompañado': [495, 295], 'Gestionado': [990, 990],
   'Ayuntamiento (menos de 20.000 hab.)': [2400, 2400], 'Ayuntamiento (20.000–50.000 hab.)': [3600, 3600], 'Ayuntamiento (más de 50.000 hab.)': [4800, 4800] };
 const CS_CLUB_AYTO = 150, CS_CLUB_MIN = 5, CS_IMPL = 600;
+// v131: niveles de servicio para ayuntamientos (suplemento anual sobre la licencia del tramo)
+const CS_NIVEL_AYTO = { 'Autogestión': 0, 'Acompañado': 1200, 'Gestionado': 3000 };
+const CS_INCLUYE_NIVEL_AYTO = {
+  'Acompañado': ['Formación de los técnicos que designe el Ayuntamiento.', 'Revisión semestral del sistema municipal e informe anual.'],
+  'Gestionado': ['Formación de los técnicos que designe el Ayuntamiento.', 'Revisión semestral del sistema municipal e informe anual.', 'Gestión delegada: el PRESTADOR revisa las alertas, prepara los informes y la memoria anual y registra el seguimiento en la aplicación.', 'Revisión trimestral y una reunión con la dirección del servicio.', 'Soporte prioritario, con respuesta en un máximo de un día hábil.']
+};
 const CS_INCLUYE = {
   'Autogestión': ['Acceso a la aplicación EntornoSeguro (perfil MI CLUB) durante la vigencia del contrato, con sus actualizaciones.', 'Sesión de puesta en marcha de una hora (presencial o en línea) y kit de bienvenida.', 'Soporte de uso por correo electrónico, con respuesta en un máximo de dos días hábiles.'],
   'Acompañado': ['Todo lo incluido en el servicio Autogestión.', 'Acompañamiento en la implantación: ficha de la entidad, protocolo, código de conducta, designación del Delegado/a, análisis de riesgos (en sesión de trabajo), documentos y campaña informativa a familias.', 'Orientación para la inscripción en el registro de la Junta de Andalucía y la aceptación del Protocolo Marco.', 'Seguimiento periódico del avance y envío de recomendaciones.', 'Revisión anual del sistema e informe de implantación.'],
@@ -7409,9 +7415,10 @@ function htmlContratoServicios(p, e, c) {
   const ayto = /^Ayuntamiento/.test(c.servicio);
   const CLI = campo(e.nombre, ayto ? 'AYUNTAMIENTO DE …' : 'DENOMINACIÓN DE LA ENTIDAD'), PRE = campo(p.nombre, 'DENOMINACIÓN DEL PRESTADOR');
   const hoy = new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
-  const imp = Number(c.importe) || 0, dto = Number(c.descuento) || 0, impl = Number(c.implantacion) || 0;
+  const imp = Number(c.importe) || 0, dto = /^Ayuntamiento/.test(c.servicio || '') ? 0 : Number(c.descuento) || 0, impl = Number(c.implantacion) || 0;
   const nCl = ayto && Number(c.clubes) > 0 ? Math.max(CS_CLUB_MIN, Number(c.clubes)) : 0, impCl = nCl * CS_CLUB_AYTO;
-  const paq = !ayto && c.paquete === 'SI' ? CS_CLUB_AYTO : 0, tar = CS_TARIFA[c.servicio], renov = tar ? tar[1] : imp;
+  const nivel = ayto ? (CS_NIVEL_AYTO[c.nivel] != null ? c.nivel : 'Autogestión') : '', supl = ayto ? CS_NIVEL_AYTO[nivel] : 0;
+  const paq = !ayto && c.paquete === 'SI' ? CS_CLUB_AYTO : 0, tar = CS_TARIFA[c.servicio], renov = tar ? tar[1] + supl : imp;
   const neto = Math.round((imp - paq) * (100 - dto)) / 100;
   let n = 0; const cl = t => `<h2>${['PRIMERA', 'SEGUNDA', 'TERCERA', 'CUARTA', 'QUINTA', 'SEXTA', 'SÉPTIMA', 'OCTAVA', 'NOVENA', 'DÉCIMA', 'UNDÉCIMA', 'DUODÉCIMA', 'DECIMOTERCERA'][n++]}. ${esc(t)}</h2>`;
   let b = `<p>En ${campo(p.localidad, 'LOCALIDAD')}, a ${esc(hoy)}.</p><h3 class="centro">REUNIDOS</h3>
@@ -7422,14 +7429,14 @@ function htmlContratoServicios(p, e, c) {
   <li>Que el PRESTADOR presta el servicio EntornoSeguro, aplicación web y servicios de acompañamiento para la implantación y el seguimiento del sistema de protección.</li>
   <li>Que ambas partes acuerdan formalizar la prestación con arreglo a las siguientes</li></ol><h3 class="centro">CLÁUSULAS</h3>` +
   cl('Objeto') + pj('El PRESTADOR prestará al CLIENTE el servicio EntornoSeguro en la modalidad «' + c.servicio + '», con el contenido descrito en la cláusula segunda.') +
-  cl('Servicios incluidos') + lista(ayto ? CS_INCLUYE['Ayuntamiento Base'].concat(nCl ? ['Espacio propio completo (perfil MI CLUB) para ' + nCl + ' clubes, gestionado por el Ayuntamiento, con soporte de uso a los clubes por correo electrónico.'] : []) : (CS_INCLUYE[c.servicio] || [])) +
+  cl('Servicios incluidos') + lista(ayto ? CS_INCLUYE['Ayuntamiento Base'].concat(CS_INCLUYE_NIVEL_AYTO[nivel] || [], nCl ? ['Espacio propio completo (perfil MI CLUB) para ' + nCl + ' clubes, gestionado por el Ayuntamiento, con soporte de uso a los clubes por correo electrónico.'] : []) : (CS_INCLUYE[c.servicio] || [])) +
   cl('Servicios no incluidos') + lista(['Asesoramiento jurídico y representación ante cualquier administración u órgano judicial.', 'Formación oficial o certificada (por ejemplo, la exigida al Delegado/a de Protección), que el CLIENTE realizará con la entidad formadora que corresponda.', 'La valoración y la actuación ante situaciones o casos concretos, que corresponden al Delegado/a de Protección y a los órganos competentes del CLIENTE. La aplicación ayuda a documentar y recordar procedimientos, pero no sustituye las decisiones de las personas responsables.', 'La custodia de documentos con datos personales (certificados, autorizaciones, hojas firmadas), que permanecen en el CLIENTE.']) +
   cl('Duración') + pj('El contrato estará vigente desde el ' + (csFecha(c.inicio) || '[FECHA DE INICIO]') + ' hasta el ' + (csFecha(c.fin) || '[FECHA DE FIN]') + '. Podrá renovarse por temporadas sucesivas por acuerdo expreso y por escrito de ambas partes, con las tarifas vigentes en ese momento.') +
   cl('Precio y forma de pago') + tablaKV([
-    ['Servicio', esc(c.servicio)],
-    [ayto ? 'Licencia anual de tarifa' : 'Tarifa de la temporada', csEuros(imp)],
+    ['Servicio', esc(c.servicio) + (ayto ? ' · nivel ' + esc(nivel) : '')],
+    [ayto ? 'Cuota anual de tarifa (licencia' + (supl ? ' + nivel ' + nivel : '') + ')' : 'Tarifa de la temporada', csEuros(imp)],
     ...(paq ? [['Club incluido en el paquete municipal', '−' + csEuros(paq) + ' (la aplicación ya la abona el ayuntamiento)']] : []),
-    ...(dto ? [['Descuento cliente fundador', dto + ' %' + (ayto ? ' sobre la licencia' : '') + ' (solo durante el periodo de este contrato)']] : []),
+    ...(dto ? [['Descuento cliente fundador', dto + ' %' + (ayto ? ' sobre la cuota anual' : '') + ' (solo durante el periodo de este contrato)']] : []),
     ...(nCl ? [['Clubes con espacio propio', nCl + ' × ' + csEuros(CS_CLUB_AYTO) + ' = ' + csEuros(impCl) + (Number(c.clubes) < CS_CLUB_MIN ? ' (mínimo ' + CS_CLUB_MIN + ' clubes)' : '')]] : []),
     ['Importe del periodo', '<b>' + csEuros(neto + impCl) + '</b>'],
     ['Renovación', (ayto ? 'Años siguientes: ' : 'Temporadas siguientes: ') + csEuros(renov - paq + impCl) + (ayto ? ' al año' : ' por temporada') + ', con las tarifas vigentes y sin el descuento de fundador'],
@@ -7458,18 +7465,22 @@ async function abrirContratoServicios(club) {
   const temp = new Date().getMonth() >= 7 ? new Date().getFullYear() + 1 : new Date().getFullYear();
   const opciones = club ? SERVICIOS : Object.keys(CS_TARIFA);
   modal('📄 Contrato de servicios' + (club ? ' · ' + club.nombre : ''), [
-    ['servicio', 'Servicio', opciones], ['importe', 'Importe anual de tarifa (€)', 'number', true],
-    ['descuento', 'Descuento cliente fundador', [['0', 'Sin descuento'], ['10', '10 %'], ['20', '20 %'], ['30', '30 %'], ['50', '50 %'], ['100', '100 % (bonificado)']]],
+    ['servicio', 'Servicio', opciones], ['nivel', 'Ayuntamientos: nivel de servicio', [['Autogestión', 'Autogestión (licencia)'], ['Acompañado', 'Acompañado (+1.200 €/año)'], ['Gestionado', 'Gestionado (+3.000 €/año)']]], ['importe', 'Importe anual de tarifa (€)', 'number', true],
+    ['descuento', 'Descuento cliente fundador (solo clubes)', [['0', 'Sin descuento'], ['10', '10 %'], ['20', '20 %'], ['30', '30 %'], ['50', '50 %'], ['100', '100 % (bonificado)']]],
     ['clubes', 'Ayuntamientos: nº de clubes con espacio propio (opcional; 150 €/club, mínimo 5)', 'number'], ['paquete', 'Clubes: ¿está incluido en un paquete municipal? (−150 €)', [['NO', 'No'], ['SI', 'Sí: el ayuntamiento ya paga su aplicación']]], ['implantacion', 'Implantación y formación, pago único (€)', 'number'],
     ['inicio', 'Fecha de inicio', 'date', true], ['fin', 'Fecha de fin', 'date', true], ['formato', 'Formato', [['pdf', 'PDF (ver e imprimir)'], ['word', 'Word (para retocar)']]]],
-    { servicio: serv, importe: CS_TARIFA[serv][0], descuento: '0', clubes: '', paquete: 'NO', implantacion: /^Ayuntamiento/.test(serv) ? CS_IMPL : 0,
+    { servicio: serv, nivel: 'Autogestión', importe: CS_TARIFA[serv][0], descuento: '0', clubes: '', paquete: 'NO', implantacion: /^Ayuntamiento/.test(serv) ? CS_IMPL : 0,
       inicio: new Date().toISOString().slice(0, 10), fin: temp + '-07-31', formato: 'pdf' },
     async v => {
       const html = htmlContratoServicios(d.prestador, d.entidad, v);
       if (v.formato === 'word') descargar('﻿' + html, 'application/msword', nombreInf('contrato-servicios-' + (d.entidad.nombre || 'modelo'))); else abrirInforme(html);
     });
   const f = $('#modal-form'), sel = f && f.servicio;
-  if (sel) sel.onchange = () => { const t = CS_TARIFA[sel.value]; if (t) f.importe.value = t[0]; f.implantacion.value = /^Ayuntamiento/.test(sel.value) ? CS_IMPL : 0; };
+  // v133: el descuento de cliente fundador es solo para clubes
+  const recalc = () => { const t = CS_TARIFA[sel.value], ay = /^Ayuntamiento/.test(sel.value); if (t) f.importe.value = t[0] + (ay ? CS_NIVEL_AYTO[f.nivel.value] || 0 : 0); f.implantacion.value = ay ? CS_IMPL : 0;
+    if (f.descuento) { if (ay) f.descuento.value = '0'; f.descuento.disabled = ay; const l = f.descuento.closest('label'); if (l) l.title = ay ? 'El descuento de cliente fundador es solo para clubes' : ''; } };
+  setTimeout(recalc, 0);
+  if (sel) { sel.onchange = recalc; if (f.nivel) f.nivel.onchange = recalc; }
   const fl = f && f.querySelector('.fields');
   if (fl) fl.insertAdjacentHTML('afterend', '<p class="nota">El importe se propone con la tarifa del servicio y se puede cambiar. Los datos que falten (DNI, IVA, IBAN…) salen marcados para completarlos. Fírmalo junto con el contrato de encargo del tratamiento.</p>');
 }
@@ -8285,6 +8296,102 @@ const LOGO_COLABORA = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANwAAACmCAM
   poner($('#login-hero .lh-pie'));
   poner($('.sidebar .user .copy'));
 })();
+// v132 + Ampliacion v1.46: nivel de servicio y seguimiento por ayuntamiento (maestra · Ayuntamientos)
+const NIVELES_AYTO = [['Autogestión', 'Autogestión'], ['Acompañado', 'Acompañado · revisión semestral'], ['Gestionado', 'Gestionado · revisión trimestral']];
+loadInstancias = async function () {
+  const rows = state.instancias = await run(() => API.call('listarInstancias'));
+  const hoy = new Date().toISOString().slice(0, 10);
+  $('#tabla-instancias').innerHTML = `<thead><tr><th>Ayuntamiento</th><th>Acceso</th><th>Servicio</th><th>Próxima revisión</th><th>Horas ${new Date().getFullYear()}</th><th>Estado</th><th></th></tr></thead><tbody>` +
+    (rows.map(x => { const venc = x.proximo && x.proximo <= hoy;
+      return `<tr class="${x.estado === 'inactivo' ? 'inactivo' : ''}"><td><b>${esc(x.nombre)}</b><br><small>${esc(x.api_url)}</small></td>
+      <td><b>admin@${esc(x.codigo)}</b></td><td>${esc(x.nivel || 'Autogestión')}</td>
+      <td>${x.proximo ? `<span style="${venc ? 'color:var(--bad);font-weight:700' : ''}">${esc(fCorta(x.proximo))}${venc ? ' (vencida)' : ''}</span>` : '—'}</td>
+      <td>${x.horas_anio != null ? String(x.horas_anio).replace('.', ',') + ' h' : '—'}</td>
+      <td>${x.estado === 'inactivo' ? '<span class="st muted">Inactivo</span>' : '<span class="st ok">Activo</span>'}</td>
+      <td style="white-space:nowrap"><button class="link" type="button" data-inst-seg="${esc(x.codigo)}">🧭 Seguimiento</button> · <button class="link" type="button" data-inst="${esc(x.codigo)}">Editar</button></td></tr>`; }).join('')
+      || '<tr><td colspan="7" class="empty">Aún no hay ayuntamientos clientes.</td></tr>') + '</tbody>';
+  $$('[data-inst]').forEach(b => b.onclick = () => formInstancia(rows.find(x => x.codigo === b.dataset.inst)));
+  $$('[data-inst-seg]').forEach(b => b.onclick = () => segAytoAbrir(rows.find(x => x.codigo === b.dataset.instSeg)));
+};
+formInstancia = function (x) {
+  modal(x.codigo ? 'Editar ayuntamiento' : 'Nuevo ayuntamiento cliente', [['codigo', 'Código (minúsculas, sin espacios: sanlucar)', 'text', true],
+    ['nombre', 'Nombre', 'text', true], ['api_url', 'URL de su aplicación web (/exec)', 'url', true], ['nivel', 'Nivel de servicio contratado', NIVELES_AYTO], ['estado', 'Estado', [['activo', 'Activo'], ['inactivo', 'Inactivo']]]],
+    Object.assign({ nivel: 'Autogestión' }, x), async d => { await run(() => API.call('guardarInstancia', d)); toast('Ayuntamiento guardado'); loadInstancias(); });
+  const f = $('#modal-form');
+  if (x.codigo) {
+    f.codigo.readOnly = true;
+    const del = document.createElement('button'); del.type = 'button'; del.className = 'btn ghost peligro'; del.textContent = 'Quitar';
+    del.onclick = async () => { if (!confirm('¿Quitar este ayuntamiento del acceso único? Su hoja y sus datos no se borran.')) return; $('#modal').close('cancel');
+      await run(() => API.call('eliminarInstancia', { codigo: x.codigo })); toast('Quitado'); loadInstancias(); };
+    f.querySelector('.actions').prepend(del);
+  }
+};
+async function segAytoAbrir(x) {
+  if (!$('#sega-css')) { const st = document.createElement('style'); st.id = 'sega-css';
+    st.textContent = '.sega-datos{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:6px;margin:6px 0 10px}.sega-datos>div{border:1px solid var(--line,#dde);border-radius:10px;padding:6px 10px;display:flex;flex-direction:column;justify-content:space-between;gap:4px}.sega-datos small{display:block;color:var(--muted);font-size:.72rem}.sega-datos b{font-size:.95rem;white-space:nowrap}';
+    document.head.appendChild(st); }
+  const d = await run(() => API.call('dedicacionAyto', { codigo: x.codigo }));
+  const hoy = new Date().toISOString().slice(0, 10), venc = d.proximo && d.proximo <= hoy, f = $('#modal-form');
+  f.innerHTML = `<h3>🧭 Seguimiento · ${esc(x.nombre)}</h3>
+    <div class="sega-datos"><div><small>Servicio</small><b>${esc(d.nivel)}</b></div><div><small>Último seguimiento</small><b>${d.ultimo ? esc(fCorta(d.ultimo)) : '—'}</b></div>
+      <div><small>Próxima revisión</small><b style="${venc ? 'color:var(--bad)' : ''}">${d.proximo ? esc(fCorta(d.proximo)) : '—'}</b></div><div><small>Horas ${new Date().getFullYear()}</small><b>${String(d.horas_anio).replace('.', ',')} h</b></div></div>
+    <p class="nota">Trabajas en su aplicación con el usuario que te ha creado el ayuntamiento: <b>tu-usuario@${esc(x.codigo)}</b>. Aquí registras lo hecho (también reuniones y formación) para controlar la dedicación. ${d.nivel === 'Autogestión' ? 'Con Autogestión no hay revisiones periódicas.' : `Revisión cada ${d.nivel === 'Gestionado' ? 'trimestre' : 'semestre'}: la app te avisa en Alertas cuando toque.`}</p>
+    <div class="ia-acciones"><button class="btn" type="button" id="sega-reg">✓ Registrar seguimiento</button></div>
+    <h4 style="margin:14px 0 6px">Historial</h4>
+    ${d.filas.length ? `<ul class="nota" style="margin:0;padding-left:18px">${d.filas.map(r => `<li>${esc(fCorta(r.fecha))} · ${esc(String(r.horas || 0).replace('.', ','))} h · ${esc(r.nota || '')}${r.proxima_revision ? ' · 📅 próxima: ' + esc(fCorta(r.proxima_revision)) : ''}</li>`).join('')}</ul>` : '<p class="muted">Aún no hay seguimientos registrados.</p>'}
+    <div class="actions"><button class="btn ghost" value="cancel">Cerrar</button></div>`;
+  $('#modal').showModal();
+  $('#sega-reg').onclick = () => {
+    $('#modal').close('cancel');
+    modal('✓ Registrar seguimiento · ' + x.nombre, [['fecha', 'Fecha', 'date', true], ['horas', 'Horas dedicadas (ej. 1,5)', 'text'], ['nota', 'Qué has hecho (sin datos personales)', 'textarea'],
+      ['proxima_revision', 'Próxima revisión acordada (opcional; si la dejas vacía, se calcula sola)', 'date']], { fecha: hoy },
+      async v => { await run(() => API.call('registrarSeguimientoAyto', Object.assign({ codigo: x.codigo }, v))); toast('Seguimiento registrado'); loadInstancias(); segAytoAbrir(x); });
+  };
+}
+GUIA.forEach(t => { if (/Modelo comercial y versiones/.test(t[1])) t[2].push(['¿Cómo trabajo en un ayuntamiento con nivel Acompañado o Gestionado?',
+  '<ol><li>El ayuntamiento te crea un <b>usuario propio</b> en su aplicación (rol técnico). Entras por la portada con <b>usuario@código</b>; todo queda registrado con tu usuario y ellos te quitan el acceso cuando quieran.</li><li>En la maestra, <b>Ayuntamientos → Editar</b>: indica el <b>nivel de servicio</b> contratado.</li><li>Tras cada reunión, formación o revisión: <b>🧭 Seguimiento → ✓ Registrar seguimiento</b> (fecha, horas, qué has hecho y, si la acordáis, la próxima revisión).</li></ol><p>La app calcula la próxima revisión (Acompañado: cada 6 meses; Gestionado: cada 3) y te avisa en <b>Alertas</b> cuando toca. La tabla muestra las horas del año para controlar la dedicación (referencia: ~24 h Acompañado, ~60 h Gestionado).</p>', 'admin', 'instancias']); });
+// v134 + Ampliacion v1.47: paleta de colores por instalación o club (contraste AA comprobado; la portada y los documentos no cambian)
+const PALETAS = {
+  azul: { n: 'Azul EntornoSeguro', c: ['#0b3057', '#0d818f', '#2fa37f'] },
+  naranja: { n: 'Naranja', c: ['#8a3b00', '#c2410c', '#ea580c'], dk: ['#f5a05a', '#fb923c', '#fdba74'], navy: '#5a2600', grad: 'linear-gradient(90deg,#8a3b00 0%,#c2410c 55%,#f59e0b 100%)' },
+  verde: { n: 'Verde', c: ['#14532d', '#15803d', '#16a34a'], dk: ['#5fd38a', '#4ade80', '#86efac'], navy: '#0b3b20', grad: 'linear-gradient(90deg,#14532d 0%,#15803d 55%,#4ade80 100%)' },
+  granate: { n: 'Granate', c: ['#7f1d1d', '#a51c30', '#e11d48'], dk: ['#f08a98', '#fb7185', '#fda4af'], navy: '#5a1414', grad: 'linear-gradient(90deg,#7f1d1d 0%,#a51c30 55%,#e11d48 100%)' },
+  morado: { n: 'Morado', c: ['#4c1d95', '#6d28d9', '#8b5cf6'], dk: ['#b9a2f5', '#a78bfa', '#c4b5fd'], navy: '#2e1065', grad: 'linear-gradient(90deg,#4c1d95 0%,#6d28d9 55%,#a78bfa 100%)' }
+};
+(function () {
+  const css = Object.keys(PALETAS).filter(k => PALETAS[k].dk).map(k => { const p = PALETAS[k];
+    return `:root[data-paleta="${k}"]{--brand:${p.c[0]};--brand-2:${p.c[1]};--accent:${p.c[2]};--navy:${p.navy};--grad:${p.grad}}` +
+      `@media (prefers-color-scheme:dark){:root[data-paleta="${k}"]{--brand:${p.dk[0]};--brand-2:${p.dk[1]};--accent:${p.dk[2]}}}`; }).join('') +
+    '.pal-op{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}.pal-op button{display:flex;align-items:center;gap:8px;border:2px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink);padding:8px 12px;min-height:44px;font:inherit;cursor:pointer}' +
+    '.pal-op button[aria-pressed="true"]{border-color:var(--brand);box-shadow:0 0 0 2px color-mix(in srgb,var(--brand) 25%,transparent);font-weight:700}.pal-op i{display:inline-flex;border-radius:6px;overflow:hidden}.pal-op i span{width:14px;height:22px}';
+  const st = document.createElement('style'); st.id = 'paletas-css'; st.textContent = css; document.head.appendChild(st);
+})();
+function aplicarPaleta(p) { if (p && p !== 'azul' && PALETAS[p]) document.documentElement.dataset.paleta = p; else delete document.documentElement.dataset.paleta; }
+(function () {
+  const base = arrancar;
+  arrancar = async function () { const r = await base.apply(this, arguments); try { aplicarPaleta(state.cfg && state.cfg.paleta); } catch (e) {} return r; };
+})();
+function paletaPuede() { return state.me && ['entidad', 'agente'].indexOf(state.me.rol) < 0 && can('escribir'); }
+function pintarApariencia(vista) {
+  if (!vista || !paletaPuede()) return;
+  let c = vista.querySelector('#card-apariencia');
+  if (!c) { c = document.createElement('div'); c.id = 'card-apariencia'; c.className = 'card'; vista.appendChild(c); }
+  const actual = (state.cfg && state.cfg.paleta) || 'azul', propia = !!(state.cfg && state.cfg.paleta_propia), alojado = !!state.club;
+  const op = Object.keys(PALETAS).map(k => `<button type="button" data-pal="${k}" aria-pressed="${(alojado && !propia) ? 'false' : String(k === actual)}"><i aria-hidden="true">${PALETAS[k].c.map(x => `<span style="background:${x}"></span>`).join('')}</i>${esc(PALETAS[k].n)}</button>`).join('') +
+    (alojado ? `<button type="button" data-pal="" aria-pressed="${String(!propia)}">↺ La de nuestra instalación</button>` : '');
+  c.innerHTML = `<h3>🎨 Apariencia</h3><p class="nota">Colores de la aplicación para ${alojado ? 'vuestro club' : 'todos los usuarios de esta instalación'}. Todas las paletas tienen el contraste necesario para leer bien. La portada de acceso y los documentos mantienen el diseño de EntornoSeguro; los colores de estado (cumple, alerta) no cambian.</p><div class="pal-op" role="group" aria-label="Paleta de colores">${op}</div>`;
+  c.querySelectorAll('[data-pal]').forEach(b => b.onclick = async () => {
+    let r; try { r = await run(() => API.call('guardarPaleta', { paleta: b.dataset.pal })); } catch (e) { return; }
+    state.cfg = Object.assign({}, state.cfg, { paleta: r.paleta, paleta_propia: b.dataset.pal !== '' });
+    aplicarPaleta(r.paleta); toast('Colores guardados: ' + PALETAS[r.paleta].n); pintarApariencia(vista);
+  });
+}
+(function () {
+  const bu = loadUsuarios; loadUsuarios = async function () { const r = await bu.apply(this, arguments); try { if (!state.club) pintarApariencia($('#view-usuarios')); } catch (e) {} return r; };
+  const bm = loadMisDatos; loadMisDatos = async function () { const r = await bm.apply(this, arguments); try { if (state.club) pintarApariencia($('#view-misdatos')); } catch (e) {} return r; };
+})();
+GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Puedo cambiar los colores de la aplicación?',
+  '<p>Sí. El administrador elige la paleta en <b>Usuarios → 🎨 Apariencia</b> (en un club: <b>Mi espacio → 🎨 Apariencia</b>): Azul EntornoSeguro, Naranja, Verde, Granate o Morado. La ven todos los usuarios de la instalación al entrar. Un club alojado puede tener la suya o usar la de su instalación.</p><p>Todas las paletas tienen contraste suficiente para baja visión. La portada de acceso y los documentos mantienen el diseño de EntornoSeguro, y los colores de estado (verde cumple, rojo alerta) no cambian.</p>', 'todos', 'usuarios']); });
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
