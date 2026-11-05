@@ -1359,13 +1359,13 @@ function modal(titulo, campos, datos, onSave, obligatorio) {
 }
 
 // ---------- USUARIOS (admin) ----------
-const ROLES_TXT = [['admin', 'Administrador'], ['delegado', 'Delegado/a de Protección'], ['tecnico', 'Técnico/a'], ['entidad', 'Entidad deportiva'], ['lectura', 'Solo lectura']];
+const ROLES_TXT = [['admin', 'Administrador'], ['delegado', 'Delegado/a de Protección'], ['tecnico', 'Técnico/a'], ['colaborador', 'Colaborador externo'], ['entidad', 'Entidad deportiva'], ['lectura', 'Solo lectura']];
 async function loadUsuarios() {
   const [us, ents] = await run(() => Promise.all([API.call('listarUsuarios'), state.entidades.length ? state.entidades : API.call('listarEntidades')]));
   state.entidades = ents; state.usuarios = us;
   const nom = id => (ents.find(e => e.id === id) || {}).nombre || '—';
   $('#tabla-usuarios').innerHTML = `<thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Entidad</th><th>Activo</th><th>Último acceso</th><th></th></tr></thead><tbody>` +
-    us.map(u => `<tr><td><b>${esc(u.usuario)}</b></td><td>${esc(u.nombre)}<br><small>${esc(u.email)}</small></td><td>${esc(u.rol)}</td>
+    us.map(u => `<tr><td><b>${esc(u.usuario)}</b></td><td>${esc(u.nombre)}<br><small>${esc(u.email)}</small></td><td>${esc((ROLES_TXT.find(r => r[0] === u.rol) || [0, u.rol === 'agente' ? 'Agente colaborador' : u.rol])[1])}</td>
       <td>${u.rol === 'entidad' ? esc(nom(u.entidad_id)) : '—'}</td><td>${u.activo === 'SI' ? '✓' : '<span class="bad-t">No</span>'}</td><td>${esc(u.ultimo_acceso) || '—'}</td>
       <td><button class="link" data-u="${esc(u.usuario)}">Editar</button> · <button class="link" data-reset="${esc(u.usuario)}">Nueva contraseña</button></td></tr>`).join('') + '</tbody>';
   $$('[data-u]').forEach(b => b.onclick = () => formUsuario(us.find(u => u.usuario === b.dataset.u)));
@@ -3504,7 +3504,7 @@ const GUIA = [
     ['¿Cómo descargo todos los datos del club?', '<p><b>Mis datos → Descargar Excel</b>, cuando quieras. En la misma ventana ves el registro de cada consulta o copia que haya hecho el ayuntamiento.</p>', 'club', 'misdatos']
   ]],
   ['⚙️', 'Administración', [
-    ['¿Cómo creo usuarios y qué rol les doy?', '<p><b>Usuarios → + Nuevo usuario</b>. Roles: <b>Delegado/a</b> (todo menos administración), <b>Técnico/a</b> (lectura y escritura), <b>Entidad</b> (solo su entidad), <b>Solo lectura</b>. La contraseña temporal se muestra una vez.</p>', 'admin', 'usuarios'],
+    ['¿Cómo creo usuarios y qué rol les doy?', '<p><b>Usuarios → + Nuevo usuario</b>. La contraseña temporal se muestra una vez; al entrar, la persona pone la suya.</p><table><thead><tr><th>Rol</th><th>Qué puede hacer</th><th>Para quién</th></tr></thead><tbody><tr><td><b>Administrador</b></td><td>Todo: usuarios, configuración, IA, informes e incidencias</td><td>Responsable de la instalación (1 o 2 personas)</td></tr><tr><td><b>Delegado/a de Protección</b></td><td>Todo menos usuarios y configuración. Gestiona incidencias</td><td>Delegado/a municipal y su suplente</td></tr><tr><td><b>Técnico/a</b></td><td>Ver y editar entidades, Matriz, riesgos, formación e informes. Sin IA ni incidencias</td><td>Personal técnico que actualiza datos</td></tr><tr><td><b>Colaborador externo</b></td><td>Como Técnico/a, con IA. Sin incidencias ni administración</td><td>Consultoría o prestador del servicio (Acompañado / Gestionado)</td></tr><tr><td><b>Entidad deportiva</b></td><td>Solo su entidad: ficha, Matriz, evidencias e informes</td><td>Delegado/a de un club en modo A (sin espacio propio)</td></tr><tr><td><b>Solo lectura</b></td><td>Ver datos e informes, sin cambiar nada</td><td>Concejalía, dirección o supervisión</td></tr><tr><td><b>Agente colaborador</b></td><td>Solo «Mis clubes» asignados; entra si el club lo autoriza</td><td>Solo en la maestra: se crea en Agentes, no aquí</td></tr></tbody></table><p><b>Regla:</b> da el rol con menos permisos que permita hacer el trabajo. Las incidencias solo las ven Administrador y Delegado/a. Cuando alguien deje de colaborar, pon <b>Activo: NO</b>.</p>', 'admin', 'usuarios'],
     ['¿Dónde están el contrato de encargo y la ficha del DPD?', '<p>En <b>Documentación</b>: guarda una vez los datos del prestador y descarga los modelos en PDF o Word.</p>', 'admin', 'documentacion']
   ]],
   ['💼', 'Modelo comercial y versiones (solo versión maestra)', [
@@ -7220,7 +7220,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v134';
+const ES_VERSION = 'v135';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -8350,6 +8350,7 @@ async function segAytoAbrir(x) {
 }
 GUIA.forEach(t => { if (/Modelo comercial y versiones/.test(t[1])) t[2].push(['¿Cómo trabajo en un ayuntamiento con nivel Acompañado o Gestionado?',
   '<ol><li>El ayuntamiento te crea un <b>usuario propio</b> en su aplicación (rol técnico). Entras por la portada con <b>usuario@código</b>; todo queda registrado con tu usuario y ellos te quitan el acceso cuando quieran.</li><li>En la maestra, <b>Ayuntamientos → Editar</b>: indica el <b>nivel de servicio</b> contratado.</li><li>Tras cada reunión, formación o revisión: <b>🧭 Seguimiento → ✓ Registrar seguimiento</b> (fecha, horas, qué has hecho y, si la acordáis, la próxima revisión).</li></ol><p>La app calcula la próxima revisión (Acompañado: cada 6 meses; Gestionado: cada 3) y te avisa en <b>Alertas</b> cuando toca. La tabla muestra las horas del año para controlar la dedicación (referencia: ~24 h Acompañado, ~60 h Gestionado).</p>', 'admin', 'instancias']); });
+// v135 + Ampliacion v1.48: rol «Colaborador externo» y tabla de roles en la guía
 // v134 + Ampliacion v1.47: paleta de colores por instalación o club (contraste AA comprobado; la portada y los documentos no cambian)
 const PALETAS = {
   azul: { n: 'Azul EntornoSeguro', c: ['#0b3057', '#0d818f', '#2fa37f'] },
