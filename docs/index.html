@@ -7220,7 +7220,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v138';
+const ES_VERSION = 'v139';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -8517,6 +8517,61 @@ GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Puedo cambiar l
     } catch (e) { console.warn(e); }
     return r;
   };
+})();
+// v139 + Ampliacion v1.49: sesión de soporte del prestador en un ayuntamiento (contador y registro de horas en la maestra al salir)
+(function () {
+  const st = document.createElement('style');
+  st.textContent = '#sop-chip{position:fixed;right:16px;bottom:16px;z-index:50;display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:var(--panel);color:var(--ink);border:1px solid var(--line);box-shadow:0 4px 14px rgba(16,24,40,.12);font-size:14px;font-weight:600}' +
+    '#sop-chip small{font-weight:400;color:var(--muted)}@media print{#sop-chip{display:none}}';
+  document.head.appendChild(st);
+  let sop = null, reloj = null;
+  const fmt = ms => { const m = Math.max(0, Math.floor(ms / 60000)); return Math.floor(m / 60) + ':' + ('0' + (m % 60)).slice(-2); };
+  function pintarChip() {
+    let c = $('#sop-chip');
+    if (!sop || !sop.activo) { if (c) c.remove(); if (reloj) { clearInterval(reloj); reloj = null; } return; }
+    if (!c) { c = document.createElement('div'); c.id = 'sop-chip'; c.setAttribute('role', 'status'); document.body.appendChild(c); }
+    const tick = () => { c.innerHTML = '⏱ Sesión de soporte · ' + fmt(Date.now() - sop.inicio_ms) + (sop.listo ? '' : ' <small>(sin configurar)</small>'); };
+    tick(); if (!reloj) reloj = setInterval(tick, 30000);
+    c.title = sop.listo ? 'Al salir, la app te propone registrar este tiempo en la maestra (' + sop.codigo + ').' : 'Falta configurar instancia_codigo y maestra_sheet_id en Config_Municipio de esta instalación.';
+  }
+  const baseA = arrancar;
+  arrancar = async function () {
+    const r = await baseA.apply(this, arguments);
+    try { sop = await API.call('estadoSoporte'); } catch (e) { sop = null; }
+    pintarChip();
+    return r;
+  };
+  const salir = async () => { try { await API.call('logout'); } catch (e) {} ssSet('es_api', null); ssSet('es_inst', null); location.reload(); };
+  const lo = $('#logout');
+  if (lo) lo.onclick = async () => {
+    if (!sop || !sop.activo) return salir();
+    let r = null; try { r = await API.call('resumenSesionSoporte'); } catch (e) {}
+    if (!r || r.minutos < 5) return salir();
+    if (!r.listo) { if (confirm('Esta instalación aún no tiene configurado el registro de horas en la maestra (Config_Municipio: instancia_codigo y maestra_sheet_id).\n\nSesión: ' + r.minutos + ' min. ¿Salir sin registrar?')) salir(); return; }
+    const hoy = new Date().toISOString().slice(0, 10);
+    const nota = ('Soporte en la instalación. ' + (typeof textoSesion === 'function' ? textoSesion(r).replace(/^Sesión en la app /, 'Sesión ') : '')).trim().slice(0, 400);
+    modal('✓ Registrar este trabajo antes de salir', [['fecha', 'Fecha', 'date', true], ['horas', 'Horas (calculadas; ajústalas si trabajaste también fuera de la app)', 'text'],
+      ['nota', 'Qué has hecho (nota interna, sin datos personales)', 'textarea'], ['proxima_revision', '📅 Próxima revisión acordada (opcional; vacía = se calcula sola)', 'date']],
+      { fecha: hoy, horas: String(r.horas).replace('.', ','), nota }, async v => {
+        try { await run(() => API.call('registrarSoporteAyto', v)); toast('Registrado en la maestra'); } catch (e) { return; }
+        setTimeout(salir, 400);
+      });
+    const act = $('#modal-form .actions');
+    if (act) {
+      const c = act.querySelector('[value=cancel]'); if (c) c.textContent = 'Seguir trabajando';
+      const sn = document.createElement('button'); sn.type = 'button'; sn.className = 'btn ghost'; sn.textContent = 'Salir sin registrar';
+      sn.onclick = () => { $('#modal').onclose = null; $('#modal').close('cancel'); salir(); };
+      act.prepend(sn);
+    }
+    const fl = $('#modal-form .fields');
+    if (fl) fl.insertAdjacentHTML('afterend', `<p class="nota">⏱ Entrada ${esc(r.inicio)} · salida ${esc(r.fin)} · ${r.minutos} min (redondeado a 0,25 h). Se guarda en la maestra: Ayuntamientos → 🧭 Seguimiento de «${esc(r.codigo)}». El ayuntamiento no ve este registro.</p>`);
+  };
+  GUIA.forEach(t => { if (/Modelo comercial y versiones/.test(t[1])) t[2].push(['¿Se cuentan solas las horas que trabajo dentro de un ayuntamiento?',
+    '<p>Sí, si la instalación del ayuntamiento está configurada. Solo afecta a tu usuario; el ayuntamiento no ve nada nuevo.</p><ol>' +
+    '<li><b>Una vez por ayuntamiento</b>, en su hoja (pestaña <b>Config_Municipio</b>), rellena: <b>prestador_usuario</b> (tu usuario en esa instalación, sin @), <b>instancia_codigo</b> (su código en Ayuntamientos de la maestra, por ejemplo imdsevilla) y <b>maestra_sheet_id</b> (el identificador de la hoja maestra: lo que va entre /d/ y /edit en su dirección; vale también la dirección completa).</li>' +
+    '<li>Al entrar con tu usuario verás abajo a la derecha <b>⏱ Sesión de soporte</b> con el tiempo desde que entraste.</li>' +
+    '<li>Al pulsar <b>Salir</b>, la app propone fecha, horas (redondeadas a 0,25 h; si llevas más de 30 min sin actividad, cuenta hasta tu última acción) y una nota con lo hecho. Ajusta y pulsa Guardar: se anota en <b>Ayuntamientos → 🧭 Seguimiento</b> de la maestra, con las horas del año.</li>' +
+    '<li>Sesiones de menos de 5 minutos no proponen registro. Puedes elegir <b>Salir sin registrar</b>.</li></ol>', 'maestro']); });
 })();
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
