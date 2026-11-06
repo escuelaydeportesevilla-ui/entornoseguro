@@ -2959,7 +2959,7 @@ const COORD_ACOMP = [
   'documento de aceptación del Protocolo Marco y justificante de su registro.',
   'acuerdo de designación del Delegado/a y su certificado de formación.',
   'protocolo de protección aprobado y acreditación de su difusión.',
-  'ningún documento: la entidad custodia la relación del personal y sus certificados.',
+  'ningún documento (la entidad custodia la relación del personal y sus certificados).',
   'código de conducta (las hojas de aceptación firmadas las custodia la entidad).',
   'análisis de riesgos y documento de medidas preventivas.',
   'procedimiento de actuación y flujograma.',
@@ -2977,7 +2977,7 @@ const coordLimite = 'La verificación municipal es formal y documental. Se limit
 function coordProcedimiento(cfg) {
   return '<h2>1. Objeto, alcance y límites</h2>' +
     pj('Este procedimiento regula cómo se coordina ' + coordOrg(cfg) + ' con las entidades deportivas que trabajan con menores y usan instalaciones municipales o reciben subvenciones municipales.') +
-    pj('Cada entidad es responsable de cumplir sus propias obligaciones de protección y de contar con su propio Delegado o Delegada de Protección. El Ayuntamiento no sustituye a la entidad en esas obligaciones.') +
+    pj('Cada entidad es responsable de cumplir sus propias obligaciones de protección y de contar con su propio Delegado o Delegada de Protección. El Ayuntamiento u organismo municipal no sustituye a la entidad en esas obligaciones.') +
     pj('La actuación del Delegado Municipal de Protección respecto a las entidades se limita a:') +
     lista(['recibir la declaración responsable anual;', 'comprobar que la documentación se ha presentado y está completa;',
       'requerir la subsanación de lo que falte;', 'recibir y trasladar las comunicaciones de posibles casos a quien corresponda;',
@@ -3007,7 +3007,7 @@ function coordDeclaracion(e, temp, cfg, h) {
     '<p>La persona abajo firmante, en representación de la entidad, <b>DECLARA BAJO SU RESPONSABILIDAD</b> que la entidad cumple lo siguiente y dispone de la documentación que lo acredita:</p>' +
     COORD_DECLARA.map((t, i) => `<p style="margin:0 0 2px 10px;line-height:1.25;font-size:10pt">☐&nbsp; ${esc(t)}<br><span style="font-size:8.5pt;color:#4f5d65;padding-left:18px">Se acompaña: ${esc(COORD_ACOMP[i])}</span></p>`).join('') +
     pj('Se acompaña la documentación indicada en cada punto marcado. Los documentos con datos personales (certificados negativos, hojas de aceptación firmadas y autorizaciones de las familias) no se adjuntan: la entidad los custodia y los exhibirá si se le solicitan.') +
-    pj('La entidad se compromete a mantener estos requisitos durante toda la temporada, a comunicar cualquier cambio en 15 días y a poner la documentación a disposición del Ayuntamiento cuando se le solicite.') +
+    pj('La entidad se compromete a mantener estos requisitos durante toda la temporada, a comunicar cualquier cambio en 15 días y a poner la documentación a disposición del Ayuntamiento u organismo municipal competente (instituto o patronato municipal de deportes, organismo autónomo…) cuando se le solicite.') +
     pj('La entidad conoce que la comprobación municipal es formal y documental, y que la veracidad de lo declarado y el cumplimiento de estas obligaciones son responsabilidad exclusiva de la entidad.') +
     `<div style="page-break-inside:avoid;break-inside:avoid"><p>En ${campo(e.municipio || cfg.municipio, 'MUNICIPIO')}, a ____ de ______________ de ______</p>` +
     '<style>.pie{margin-top:8px}</style><div class="firma" style="margin-top:14px"><div>Firma del representante legal' + (repr ? '<br>' + repr : '') + '</div><div>Sello de la entidad</div></div></div>';
@@ -3066,7 +3066,7 @@ function coordTraslado(e, temp, cfg, h) {
 function coordClausula(e, temp, cfg, h) {
   return coordH(h, 'Anexo V. Cláusula tipo para autorizaciones de uso y bases de subvenciones') +
     '<h3>En autorizaciones de uso de instalaciones deportivas</h3>' +
-    pj('La entidad autorizada que desarrolle actividades con menores deberá presentar, antes del inicio del uso y en cada temporada, la declaración responsable en materia de protección de menores aprobada por el Ayuntamiento. También deberá mantener vigentes durante toda la autorización los requisitos declarados.') +
+    pj('La entidad autorizada que desarrolle actividades con menores deberá presentar, antes del inicio del uso y en cada temporada, la declaración responsable en materia de protección de menores aprobada por el Ayuntamiento u organismo municipal competente. También deberá mantener vigentes durante toda la autorización los requisitos declarados.') +
     pj('La falta de presentación, o la falta de subsanación en el plazo concedido, impedirá iniciar o continuar el uso de las instalaciones con menores. El cumplimiento de las obligaciones de protección corresponde exclusivamente a la entidad. La comprobación municipal es formal y documental.') +
     '<h3>En bases de subvenciones a entidades deportivas</h3>' +
     pj('Será requisito para obtener la condición de beneficiaria, en las entidades que desarrollen actividades con menores, haber presentado la declaración responsable en materia de protección de menores de la temporada correspondiente, con resultado conforme.') +
@@ -6609,7 +6609,7 @@ function coordSolicitud(e, temp, cfg, items, plazo, venc) {
     '<table><thead><tr><th style="width:40%">Requisito del Protocolo Marco</th><th>Documentación que deben aportar</th></tr></thead><tbody>' +
     items.map(x => `<tr><td><b>${esc(x.codigo)}</b> · ${esc(x.requisito)}</td><td>${esc(x.falta)}</td></tr>`).join('') + '</tbody></table>' +
     `<p>Les rogamos que la aporten en un plazo de <b>${esc(plazo)} días hábiles</b> desde la recepción de este escrito${venc ? ' (hasta el ' + esc(fmtCorta(venc)) + ')' : ''}.</p>` +
-    pj('No deben remitirse documentos con datos personales (certificados negativos, hojas de aceptación firmadas ni autorizaciones de las familias): basta con indicar que la entidad los custodia. El Ayuntamiento podrá pedir que se exhiban.') +
+    pj('No deben remitirse documentos con datos personales (certificados negativos, hojas de aceptación firmadas ni autorizaciones de las familias): basta con indicar que la entidad los custodia. El Ayuntamiento u organismo municipal podrá pedir que se exhiban.') +
     pj('Lo que no se acredite en ese plazo se incluirá en un requerimiento de subsanación. La verificación municipal es formal y documental: no valida el contenido de los documentos.') +
     `<p>En ${coordMuni(cfg)}, a fecha de firma electrónica.</p>` +
     `<div class="firma"><div>Delegado/a Municipal de Protección de Menores en el Deporte<br>${campo(cfg.delegado_municipal, 'NOMBRE Y APELLIDOS')}</div><div>Recibí (entidad)</div></div>`;
@@ -7220,7 +7220,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v143';
+const ES_VERSION = 'v144';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -8702,7 +8702,7 @@ function nucleoOrg() { return (state.cfg && state.cfg.organismo) || 'el Ayuntami
   const REQ_COD = [[''], ['A1'], ['A2'], ['B1'], ['B2'], ['G1'], ['H1', 'H2'], ['K1', 'K2'], ['D1', 'D2'], ['C1', 'C2'], ['I1', 'I2'], ['E1', 'E2'], ['F1', 'F2'], ['J1']];
   function aplicarNucleo() {
     const n = nucleoLista();
-    COORD_ACOMP.length = 0; ACOMP0.forEach((t, i) => COORD_ACOMP.push(!n || COORD_MAPA[i].some(c => n.indexOf(c) >= 0) ? t : 'ningún documento: la entidad conserva la documentación y la exhibirá si se le solicita.'));
+    COORD_ACOMP.length = 0; ACOMP0.forEach((t, i) => COORD_ACOMP.push(!n || COORD_MAPA[i].some(c => n.indexOf(c) >= 0) ? t : 'ningún documento (la entidad conserva la documentación y la exhibirá si se le solicita).'));
     COORD_REQ.length = 0; REQ0.forEach((t, i) => { if (!n || REQ_COD[i].some(c => !c || n.indexOf(c) >= 0)) COORD_REQ.push(t); });
     if (n) COORD_REQ.push('Resto de requisitos: declarados por la entidad (verificación a su cargo)');
     Object.keys(FALTA0).forEach(c => { COORD_FALTA[c] = !n || n.indexOf(c) >= 0 ? FALTA0[c] : 'Declarar su cumplimiento en la declaración responsable. La documentación la conserva la entidad.'; });
@@ -8738,6 +8738,7 @@ function nucleoOrg() { return (state.cfg && state.cfg.organismo) || 'el Ayuntami
     '<p>Las <b>actividades propias</b> (incluido el personal de empresas contratadas, que se registra en Agentes con la empresa en «Grupo») y los <b>clubes con espacio propio</b> siguen con los 21 requisitos completos.</p>' +
     '<p><small>Cambiar el núcleo: hoja de la instalación → Config_Municipio → <b>nucleo_verificacion</b> (códigos separados por comas; <b>TODOS</b> = los 21). Es un criterio técnico de control documental, no una lista fijada por la norma.</small></p>', '', 'entidades']); });
 })();
+// v144: textos de coordinación genéricos («Ayuntamiento u organismo municipal») y sin doble «:» en «Se acompaña»
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
