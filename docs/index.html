@@ -7220,7 +7220,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v144';
+const ES_VERSION = 'v145';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -8176,23 +8176,18 @@ function htmlContratoAgente(p, v) {
   cl('Funciones y límites') + lista(['Utilizar solo el dossier, las tarifas y los modelos de contrato vigentes que le facilite el PRESTADOR, sin ofrecer precios, descuentos ni condiciones distintas sin autorización escrita.', 'No firmar contratos ni cobrar cantidades en nombre del PRESTADOR. Los contratos con los clientes los firma el PRESTADOR, que también realiza el alta de cada club en la aplicación.', 'Comunicar al PRESTADOR cada contacto comercial, para evitar duplicidades y asignar correctamente las comisiones.', 'No presentarse como personal del PRESTADOR ni de ninguna administración pública.']) +
   (gestion ? cl('Prestación del servicio en los clubes asignados') + lista(['El PRESTADOR asignará al AGENTE, de forma expresa en la aplicación, los clubes en los que prestará el servicio. El AGENTE solo podrá ver y trabajar en esos clubes.', 'El acceso al espacio de cada club requiere la autorización previa del propio club, se realiza con el usuario personal e intransferible del AGENTE y queda registrado con su nombre.', 'El AGENTE registrará en la aplicación cada seguimiento realizado y seguirá los procedimientos, plantillas y tutorial de la aplicación.', 'El PRESTADOR podrá retirar la asignación o desactivar el usuario en cualquier momento.']) : '') +
   cl('Comisiones') + tablaKV([
-    ['Club · primera contratación', pc(v.club_alta) + ' del importe anual cobrado, sin impuestos'],
-    ['Club · renovaciones', pc(v.club_renov) + ' en las renovaciones de los ' + (Number(v.anos) || 2) + ' años siguientes'],
-    ['Ayuntamiento · primera contratación', pc(v.ayto_alta) + ' del importe anual cobrado, sin impuestos'],
-    ['Ayuntamiento · renovaciones', pc(v.ayto_renov) + ' en las renovaciones de los ' + (Number(v.anos) || 2) + ' años siguientes'],
-    ...(gestion ? [['Club captado y desarrollado por el AGENTE', pc(v.des_capta) + ' de lo cobrado cada temporada que lo gestione (sustituye a las comisiones de captación de ese club)'],
-      ['Club captado por el PRESTADOR y desarrollado por el AGENTE', pc(v.des_solo) + ' de lo cobrado cada temporada que lo gestione'],
-      ['Clubes bonificados que desarrolle el AGENTE', (Number(v.bonif_h) || 0) + ' € por hora registrada en la aplicación']] : []),
-    ['Implantación municipal impartida por el AGENTE', pc(v.impl) + ' del importe de la implantación'],
+    ['Captar un cliente (club o ayuntamiento)', pc(v.captar) + ' de lo cobrado al cliente, sin impuestos, cada año mientras este contrato esté en vigor. Si el contrato termina, solo durante las ' + (Number(v.renov_fin) || 0) + ' renovaciones siguientes de ese cliente.'],
+    ...(gestion ? [['Atender un cliente asignado (implantación y seguimiento)', pc(v.atender) + ' de lo cobrado al cliente, sin impuestos, cada año que lo atienda. Incluye la implantación. No se aplica a los clientes con servicio Autogestión.'],
+      ['Captar y atender el mismo cliente', 'Se suman las dos comisiones (' + pc((Number(v.captar) || 0) + (Number(v.atender) || 0)) + ').']] : []),
+    ['Clientes bonificados o gratuitos', 'No generan comisión salvo acuerdo escrito para cada caso.'],
     ['Devengo', 'Cuando el cliente haya pagado la factura correspondiente. No se devenga comisión por clientes que no paguen o por importes devueltos.'],
     ['Liquidación', 'Trimestral, previa factura del AGENTE con los impuestos que correspondan, en los quince días siguientes a su recepción.']]) +
-  pj('Los servicios bonificados o gratuitos no generan comisión, salvo acuerdo escrito.') +
   cl('Confidencialidad') + pj('El AGENTE guardará secreto sobre la información de los clientes, de sus personas y de su actividad, y sobre la información comercial del PRESTADOR, durante la vigencia del contrato y después de su finalización.') +
   cl('Protección de datos') + lista([gestion ? 'Para la prestación del servicio en los clubes asignados, el AGENTE actúa como subencargado del tratamiento del PRESTADOR (art. 28.4 del Reglamento (UE) 2016/679) y se somete a las mismas obligaciones que el contrato de encargo firmado entre el PRESTADOR y cada club, que declara conocer.' : 'El AGENTE solo tratará los datos de contacto comercial necesarios para su actividad.', 'Tratará los datos solo siguiendo instrucciones del PRESTADOR y para la finalidad del contrato.', 'No introducirá en la aplicación datos que identifiquen a personas menores de edad.', 'No descargará, copiará ni conservará fuera de la aplicación documentos ni datos de los clubes, que permanecen bajo la custodia de cada club.', 'Comunicará al PRESTADOR cualquier incidente de seguridad en un plazo máximo de veinticuatro horas.', 'Al finalizar el contrato, devolverá o destruirá cualquier información recibida y su usuario será desactivado.']) +
   cl('Protección de las personas menores') + lista(['El AGENTE aportará, antes de iniciar la colaboración, la certificación negativa del Registro Central de Delincuentes Sexuales y de Trata de Seres Humanos, y la renovará cuando el PRESTADOR lo solicite.', 'Conocerá y respetará el código de conducta del PRESTADOR y los protocolos de protección de las entidades con las que trabaje.', 'Si conoce cualquier indicio de violencia sobre una persona menor, lo comunicará de inmediato al Delegado/a de Protección de la entidad y, en su caso, a las autoridades, conforme a la LOPIVI.']) +
   cl('Material y propiedad intelectual') + pj('La aplicación, la marca EntornoSeguro, el dossier y los modelos son propiedad del PRESTADOR. El AGENTE podrá usarlos solo para la finalidad de este contrato y los devolverá a su finalización.') +
   cl('Duración') + pj('El contrato estará vigente desde el ' + (csFecha(v.inicio) || '[FECHA DE INICIO]') + ' hasta el ' + (csFecha(v.fin) || '[FECHA DE FIN]') + ' y podrá prorrogarse por acuerdo escrito de ambas partes.') +
-  cl('Resolución') + pj('Cualquiera de las partes podrá resolver el contrato con un preaviso de treinta días, o de forma inmediata por incumplimiento grave, en particular de las obligaciones de confidencialidad, protección de datos y protección de las personas menores. Las comisiones devengadas hasta la fecha de resolución se liquidarán conforme a la cláusula de comisiones.') +
+  cl('Resolución') + pj('Cualquiera de las partes podrá resolver el contrato con un preaviso de treinta días, o de forma inmediata por incumplimiento grave, en particular de las obligaciones de confidencialidad, protección de datos y protección de las personas menores. Las comisiones devengadas hasta la fecha de resolución, y las de captación de las renovaciones posteriores previstas en la cláusula de comisiones, se liquidarán conforme a esta.') +
   cl('Legislación y jurisdicción') + `<p>Este contrato se rige por la legislación española. Para cualquier controversia, las partes se someten a los juzgados y tribunales de ${campo(p.localidad, 'LOCALIDAD')}.</p>` +
   pj('Y en prueba de conformidad, firman el presente documento por duplicado en el lugar y fecha indicados.') +
   `<div class="firma"><div>Por el PRESTADOR<br>${PRE}</div><div>El AGENTE<br>${AG}</div></div>`;
@@ -8206,11 +8201,10 @@ async function abrirContratoAgente() {
   const temp = new Date().getMonth() >= 7 ? new Date().getFullYear() + 1 : new Date().getFullYear();
   modal('📄 Contrato de colaboración · agente', [['nombre', 'Nombre y apellidos del agente'], ['domicilio', 'Domicilio del agente'], ['ambito', 'Ámbito territorial (ej. provincia de Sevilla)'],
     ['gestion', '¿Prestará también el servicio en clubes asignados?', [['SI', 'Sí: captación y gestión de clubes'], ['NO', 'No: solo captación']]],
-    ['club_alta', 'Comisión club · alta (%)', 'number'], ['club_renov', 'Comisión club · renovaciones (%)', 'number'], ['ayto_alta', 'Comisión ayuntamiento · alta (%)', 'number'], ['ayto_renov', 'Comisión ayuntamiento · renovaciones (%)', 'number'],
-    ['anos', 'Años de renovación con comisión', 'number'], ['des_capta', 'Capta y desarrolla un club (%)', 'number'], ['des_solo', 'Solo desarrolla un club (%)', 'number'], ['bonif_h', 'Clubes bonificados (€/hora)', 'number'], ['impl', 'Implantación municipal impartida (%)', 'number'], ['inicio', 'Fecha de inicio', 'date', true], ['fin', 'Fecha de fin', 'date', true], ['formato', 'Formato', [['pdf', 'PDF (ver e imprimir)'], ['word', 'Word (para retocar)']]]],
-    { gestion: 'SI', club_alta: 25, club_renov: 10, ayto_alta: 15, ayto_renov: 5, anos: 2, des_capta: 50, des_solo: 40, bonif_h: 25, impl: 50, inicio: new Date().toISOString().slice(0, 10), fin: temp + '-07-31', formato: 'word' },
+    ['captar', 'Captar un cliente (% de cada año)', 'number'], ['atender', 'Atender un cliente asignado (% de cada año)', 'number'], ['renov_fin', 'Renovaciones con comisión de captación tras el fin del contrato', 'number'], ['inicio', 'Fecha de inicio', 'date', true], ['fin', 'Fecha de fin', 'date', true], ['formato', 'Formato', [['pdf', 'PDF (ver e imprimir)'], ['word', 'Word (para retocar)']]]],
+    { gestion: 'SI', captar: 10, atender: 40, renov_fin: 2, inicio: new Date().toISOString().slice(0, 10), fin: temp + '-07-31', formato: 'word' },
     async v => { const html = htmlContratoAgente(d.prestador, v); if (v.formato === 'word') descargar('﻿' + html, 'application/msword', nombreInf('contrato-agente-' + (v.nombre || 'modelo'))); else abrirInforme(html); });
-  const fl = $('#modal-form .fields'); if (fl) fl.insertAdjacentHTML('afterend', '<p class="nota">Comisiones de tu política de precios (31/10/2026): solo captación, clubes 25 % / 10 % y ayuntamientos 15 % / 5 %; capta y desarrolla 50 %; solo desarrolla 40 %; bonificados 25 €/h; implantación 50 %. Lo que falte (NIF, DNI, importes) sale marcado entre corchetes. Revísalo con tu asesor antes de firmarlo.</p>');
+  const fl = $('#modal-form .fields'); if (fl) fl.insertAdjacentHTML('afterend', '<p class="nota">Comisiones (06/11/2026), iguales para clubes y ayuntamientos: captar 10 % de cada año mientras dure el contrato (y 2 renovaciones tras su fin); atender 40 % de cada año que lo atienda, implantación incluida, salvo Autogestión; si capta y atiende, 50 %. Bonificados: se pacta aparte. Lo que falte (NIF, DNI, importes) sale marcado entre corchetes. Revísalo con tu asesor antes de firmarlo.</p>');
 }
 (function () {
   const baseDoc = loadDocumentacion;
@@ -8739,6 +8733,7 @@ function nucleoOrg() { return (state.cfg && state.cfg.organismo) || 'el Ayuntami
     '<p><small>Cambiar el núcleo: hoja de la instalación → Config_Municipio → <b>nucleo_verificacion</b> (códigos separados por comas; <b>TODOS</b> = los 21). Es un criterio técnico de control documental, no una lista fijada por la norma.</small></p>', '', 'entidades']); });
 })();
 // v144: textos de coordinación genéricos («Ayuntamiento u organismo municipal») y sin doble «:» en «Se acompaña»
+// v145: contrato de agentes con las comisiones simplificadas (captar 10 %, atender 40 %, salvo Autogestión; 2 renovaciones tras el fin)
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
