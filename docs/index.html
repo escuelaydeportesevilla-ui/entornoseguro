@@ -6601,7 +6601,7 @@ async function abrirDocumentacion(entidadId) {
 GUIA.forEach(t => { if (t[1] === 'Entidades y coordinación con clubes') t[2].push(['¿Cómo registro la documentación que me entrega una entidad?', '<p>En <b>🧭 Seguimiento → Verificación (II)</b> o en la <b>Matriz</b> de la entidad, pulsa <b>📂 Registrar documentación recibida</b>:</p><ol><li>Pon la fecha de recepción y, si quieres, el enlace a la carpeta del expediente (acceso restringido).</li><li>Aparecen marcados los requisitos declarados que solo tienen como prueba la declaración responsable. Desmarca los que no hayas podido comprobar.</li><li>Pulsa <b>Aplicar a la matriz</b>: los marcados pasan a «Cumple» con la evidencia; los desmarcados, a «Parcial» con «Falta documentación…», y entrarán en el requerimiento.</li></ol><p>Los documentos con datos personales (certificados negativos, hojas firmadas, autorizaciones de familias) los custodia la entidad: compruébalos y anótalo, sin pedir copia.</p>', 'mun', 'entidades']); });
 // v82: 📄 Solicitud de documentación (verificación II): pide al club que acredite lo que ha declarado, con plazo en días hábiles
 const segSolicitada = r => /^Documentación solicitada el /.test(String(r.accion_pendiente || ''));
-const segPorAcreditar = mat => mat.filter(r => (r.estado === 'cumple' || r.estado === 'parcial') && esSoloDecl(r) && !/^(Falta documentación|Requerido el)/.test(String(r.accion_pendiente || '')));
+const segPorAcreditar = mat => mat.filter(r => (r.estado === 'cumple' || r.estado === 'parcial') && esSoloDecl(r) && !/^(Falta documentación|Requerido el)/.test(String(r.accion_pendiente || '')) && (typeof nucleoVerif !== 'function' || nucleoVerif(r.codigo))); // v143: solo el núcleo
 function coordSolicitud(e, temp, cfg, items, plazo, venc) {
   return tablaKV([['A', campo(String(e.nombre || '').trim(), 'ENTIDAD DEPORTIVA') + ', a la atención de su representante legal y de su Delegado/a de Protección'],
       ['Asunto', 'Solicitud de documentación · Verificación de la declaración responsable · Temporada ' + esc(temp)]]) +
@@ -7220,7 +7220,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v142';
+const ES_VERSION = 'v143';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -8689,6 +8689,54 @@ GUIA.forEach(t => { if (t[1] === 'Primeros pasos') t[2].push(['¿Puedo cambiar l
   obs.observe(document.body, { childList: true, subtree: true });
   // Tras registrar un seguimiento, quedarse en la pestaña Gestor
   document.addEventListener('click', ev => { if (ev.target.closest && ev.target.closest('#ded-reg')) actual = 'gestor'; }, true);
+})();
+// v143 + Ampliacion v1.51: núcleo de verificación documental en la coordinación con entidades.
+// La entidad declara los 21 requisitos; el ayuntamiento u organismo solo pide y comprueba documentos del núcleo (por defecto A2, B1, B2, G1, I1, K2).
+// No afecta a las actividades propias ni a los clubes con espacio propio (Mis clubes), que siguen con los 21.
+function nucleoLista() { const n = state.cfg && state.cfg.nucleo; return Array.isArray(n) && n.length ? n : null; }
+function nucleoVerif(c) { const n = nucleoLista(); return !n || n.indexOf(c) >= 0; }
+function nucleoOrg() { return (state.cfg && state.cfg.organismo) || 'el Ayuntamiento'; }
+(function () {
+  const ACOMP0 = COORD_ACOMP.slice(), REQ0 = COORD_REQ.slice(), FALTA0 = Object.assign({}, COORD_FALTA);
+  // Correspondencia de cada fila de la ficha de verificación con sus requisitos ('' = siempre)
+  const REQ_COD = [[''], ['A1'], ['A2'], ['B1'], ['B2'], ['G1'], ['H1', 'H2'], ['K1', 'K2'], ['D1', 'D2'], ['C1', 'C2'], ['I1', 'I2'], ['E1', 'E2'], ['F1', 'F2'], ['J1']];
+  function aplicarNucleo() {
+    const n = nucleoLista();
+    COORD_ACOMP.length = 0; ACOMP0.forEach((t, i) => COORD_ACOMP.push(!n || COORD_MAPA[i].some(c => n.indexOf(c) >= 0) ? t : 'ningún documento: la entidad conserva la documentación y la exhibirá si se le solicita.'));
+    COORD_REQ.length = 0; REQ0.forEach((t, i) => { if (!n || REQ_COD[i].some(c => !c || n.indexOf(c) >= 0)) COORD_REQ.push(t); });
+    if (n) COORD_REQ.push('Resto de requisitos: declarados por la entidad (verificación a su cargo)');
+    Object.keys(FALTA0).forEach(c => { COORD_FALTA[c] = !n || n.indexOf(c) >= 0 ? FALTA0[c] : 'Declarar su cumplimiento en la declaración responsable. La documentación la conserva la entidad.'; });
+  }
+  const baseA = arrancar;
+  arrancar = async function () { const r = await baseA.apply(this, arguments); try { aplicarNucleo(); } catch (e) {} return r; };
+  // Matriz de una entidad en coordinación: aviso del núcleo y marca «Declarado · a cargo de la entidad»
+  const baseM = loadMatriz;
+  loadMatriz = async function () {
+    const r = await baseM.apply(this, arguments);
+    try {
+      const n = nucleoLista(), sel = $('#matriz-entidad'), tabla = $('#tabla-matriz');
+      const e = (state.entidades || []).find(x => x.id === (sel && sel.value));
+      let nota = $('#nucleo-nota');
+      if (!n || state.club || !e || e.propia === 'SI') { if (nota) nota.remove(); return r; }
+      if (!nota) { nota = document.createElement('p'); nota.id = 'nucleo-nota'; nota.className = 'nota'; nota.style.cssText = 'border-left:3px solid var(--brand);padding:8px 12px;margin:0 0 10px;background:color-mix(in srgb,var(--brand) 6%,transparent);border-radius:6px'; tabla.parentNode.insertBefore(nota, tabla); }
+      nota.innerHTML = `🔎 <b>Verificación de ${esc(nucleoOrg())}:</b> ${n.map(c => '<b>' + esc(c) + '</b>').join(', ')}. El resto de requisitos los <b>declara la entidad</b> en su declaración responsable y su verificación le corresponde a ella.`;
+      (state.matriz || []).forEach(m => {
+        if (nucleoVerif(m.codigo) || m.estado !== 'cumple' || !esSoloDecl(m)) return;
+        const b = [...tabla.querySelectorAll('tbody tr td:first-child > b')].find(x => x.textContent === m.codigo);
+        const td = b && b.closest('tr').children[1];
+        if (td && !td.querySelector('.nucleo-decl')) td.insertAdjacentHTML('beforeend', '<br><small class="nucleo-decl muted">Declarado · a cargo de la entidad</small>');
+      });
+    } catch (e) {}
+    return r;
+  };
+  GUIA.forEach(t => { if (t[1] === 'Entidades y coordinación con clubes') t[2].unshift(['¿Qué documentos tengo que comprobar a cada entidad? (núcleo de verificación)',
+    '<p>Como titular de las instalaciones, el ayuntamiento u organismo <b>vela</b> por las entidades que las usan, pero no responde de su funcionamiento interno. Por eso:</p><ul>' +
+    '<li>La entidad <b>declara los 21 requisitos</b> en su declaración responsable anual.</li>' +
+    '<li>Solo se pide y comprueba la documentación del <b>núcleo</b>: por defecto <b>A2</b> (aceptación del Protocolo Marco), <b>B1</b> (Delegado/a designado), <b>B2</b> (su formación), <b>G1</b> (protocolo propio), <b>I1</b> (canal de comunicación) y <b>K2</b> (certificados negativos, por exhibición).</li>' +
+    '<li>El resto queda en la Matriz como <b>«Declarado · a cargo de la entidad»</b>: no se pide documento ni se incluye en la solicitud.</li>' +
+    '<li>Si algo no se declara o el núcleo no se acredita, entra en el <b>requerimiento</b>. Si no se subsana, el ayuntamiento decide sobre el uso de sus instalaciones con menores.</li></ul>' +
+    '<p>Las <b>actividades propias</b> (incluido el personal de empresas contratadas, que se registra en Agentes con la empresa en «Grupo») y los <b>clubes con espacio propio</b> siguen con los 21 requisitos completos.</p>' +
+    '<p><small>Cambiar el núcleo: hoja de la instalación → Config_Municipio → <b>nucleo_verificacion</b> (códigos separados por comas; <b>TODOS</b> = los 21). Es un criterio técnico de control documental, no una lista fijada por la norma.</small></p>', '', 'entidades']); });
 })();
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
