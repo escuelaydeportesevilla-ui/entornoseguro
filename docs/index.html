@@ -3522,6 +3522,7 @@ const GUIA = [
 const esMaestra = () => !state.club && can('admin') && !state.inst && String((state.cfg || {}).tipo || '').toUpperCase() === 'MAESTRO';
 function guiaVisible(ambito) {
   if (!ambito) return true;
+  if (state.me && state.me.rol === 'agente') return ambito === 'club' || ambito === 'agente'; // v146: guía del agente = la del club + la suya
   if (ambito === 'mun') return !state.club;
   if (ambito === 'club') return !!state.club;
   if (ambito === 'admin') return !state.club && can('admin');
@@ -3556,7 +3557,7 @@ function htmlGuia() {
     if (!items.length) return '';
     return `<h2>${dest ? '★ ' : ''}${esc(tema)}${dest ? ' · imprescindible' : ''}</h2>` + items.map(([pr, resp]) => `<h3>${esc(pr)}</h3>${resp}`).join('');
   }).join('');
-  return plantillaInforme('Guía de uso · Preguntas frecuentes', 'EntornoSeguro · ' + (state.club ? 'Perfil club' : 'Perfil municipal'), cuerpo, false,
+  return plantillaInforme('Guía de uso · Preguntas frecuentes', 'EntornoSeguro · ' + (state.me && state.me.rol === 'agente' ? 'Agente colaborador' : state.club ? 'Perfil club' : 'Perfil municipal'), cuerpo, false,
     'EntornoSeguro · Guía de uso. Las decisiones sobre casos corresponden siempre al profesional responsable.');
 }
 
@@ -7220,7 +7221,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v145';
+const ES_VERSION = 'v146';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -8057,7 +8058,7 @@ const esAgente = () => !!(state.me && state.me.rol === 'agente');
   show = function (v) {
     if (!esAgente()) return baseShow.apply(this, arguments);
     agPreparar();
-    return baseShow.call(this, 'agclubes');
+    return baseShow.call(this, v === 'guia' ? 'guia' : 'agclubes'); // v146: el agente también ve la Guía de uso
   };
 })();
 function agPreparar() {
@@ -8068,7 +8069,7 @@ function agPreparar() {
     <div class="card"><table id="ag-tabla"></table></div>
     <div class="card"><h3>Cómo trabajar</h3><ol class="nota" style="margin:0;padding-left:18px"><li><b>🔑 Entrar en el club</b> abre su espacio en otra pestaña, como gestor y con tu nombre. Sigue el tutorial: indica en qué paso va y qué se ha pedido ya.</li><li>Pide los datos al club con <b>📨 Pedírselo al club</b>: le llega un enlace y lo rellena sin contraseña.</li><li>Al pulsar <b>Salir del club</b>, guarda el resumen del trabajo (tiempo y lo hecho). El trabajo fuera de la app (reuniones, llamadas), con <b>✓ Registrar seguimiento</b>.</li><li>Nunca escribas datos de menores y no descargues ni guardes documentos del club fuera de su espacio.</li></ol></div></section>`);
   const nav = $('#menu-principal');
-  if (nav) { nav.querySelectorAll('button, .nav-grupo').forEach(b => { b.style.display = 'none'; }); nav.insertAdjacentHTML('afterbegin', '<button data-view="agclubes" class="active" type="button">Mis clubes</button>'); nav.querySelector('[data-view="agclubes"]').onclick = () => show('agclubes'); }
+  if (nav) { nav.querySelectorAll('button, .nav-grupo').forEach(b => { b.style.display = 'none'; }); nav.insertAdjacentHTML('afterbegin', '<button data-view="agclubes" class="active" type="button">Mis clubes</button><button data-view="guia" type="button">Guía de uso</button>'); nav.querySelector('[data-view="agclubes"]').onclick = () => show('agclubes'); nav.querySelector('[data-view="guia"]').onclick = () => { show('guia'); pintarGuia(); }; }
 }
 async function loadAgClubes() {
   const t = $('#ag-tabla'); if (!t) return;
@@ -8734,6 +8735,22 @@ function nucleoOrg() { return (state.cfg && state.cfg.organismo) || 'el Ayuntami
 })();
 // v144: textos de coordinación genéricos («Ayuntamiento u organismo municipal») y sin doble «:» en «Se acompaña»
 // v145: contrato de agentes con las comisiones simplificadas (captar 10 %, atender 40 %, salvo Autogestión; 2 renovaciones tras el fin)
+// v146: Guía de uso para los agentes colaboradores (en la maestra, sin entrar en los clubes)
+(function () {
+  const baseP = pintarGuia;
+  pintarGuia = function () {
+    const r = baseP.apply(this, arguments);
+    // El agente solo tiene «Mis clubes» y la Guía: los botones «Ir a…» de la guía no le llevan a ninguna pantalla
+    try { if (esAgente()) $$('#guia-lista [data-guia-ir]').forEach(b => { const p = b.closest('p'); if (p) p.remove(); }); } catch (e) {}
+    return r;
+  };
+  GUIA.unshift(['🤝', 'Trabajo como agente colaborador', [
+    ['¿Qué puedo hacer con mi usuario de agente?', '<ul><li>Ver en <b>Mis clubes</b> los clubes que te ha asignado el prestador: servicio, cumplimiento y próximo seguimiento.</li><li><b>🔑 Entrar en el club</b> si el club ha autorizado el acceso del gestor en «Mis datos». Se abre en otra pestaña, como gestor y con tu nombre; todo lo que hagas queda registrado en el club.</li><li><b>✓ Registrar seguimiento</b> de cada sesión: horas y nota internas, y un mensaje y una próxima sesión que verá el club.</li><li>Consultar esta <b>Guía de uso</b>: el resto de temas explican cómo funciona la app de un club, que es donde trabajas.</li></ul><p>No puedes dar de alta clubes, ni ver otros clubes, precios, usuarios o configuración, ni el registro de incidencias.</p>', 'agente'],
+    ['¿Cómo trabajo dentro de un club?', '<ol><li>En Mis clubes, pulsa <b>🔑 Entrar en el club</b>.</li><li>En su Panel, sigue el <b>tutorial</b>: indica en qué paso va y qué se ha pedido ya (📨 pedido, 📥 recibido).</li><li>Pide al club lo que falte con <b>📨 Pedírselo al club</b>: le llega un enlace sin contraseña.</li><li>Al terminar, pulsa <b>Salir del club</b>: la app te propone el registro de la sesión ya relleno (fecha, horas y resumen). Revísalo y guárdalo.</li></ol>', 'agente'],
+    ['¿Y si un club no me deja entrar?', '<p>El acceso lo autoriza el propio club en <b>Mis datos → Acceso del gestor</b>. Si aparece «El club no ha autorizado el acceso», pídeselo al club. Si te han quitado el club o han desactivado tu usuario, el acceso deja de funcionar al momento: habla con el prestador.</p>', 'agente'],
+    ['¿Qué datos puedo anotar?', '<p>Nunca datos de menores ni de casos, ni en las notas, ni en los mensajes, ni en la agenda. Los documentos con datos personales los custodia el club. Si conoces cualquier indicio de violencia sobre una persona menor, comunícalo de inmediato al Delegado/a de Protección del club y, en su caso, a las autoridades.</p>', 'agente']
+  ]]);
+})();
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
