@@ -7221,7 +7221,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v146';
+const ES_VERSION = 'v147';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -8750,6 +8750,58 @@ function nucleoOrg() { return (state.cfg && state.cfg.organismo) || 'el Ayuntami
     ['¿Y si un club no me deja entrar?', '<p>El acceso lo autoriza el propio club en <b>Mis datos → Acceso del gestor</b>. Si aparece «El club no ha autorizado el acceso», pídeselo al club. Si te han quitado el club o han desactivado tu usuario, el acceso deja de funcionar al momento: habla con el prestador.</p>', 'agente'],
     ['¿Qué datos puedo anotar?', '<p>Nunca datos de menores ni de casos, ni en las notas, ni en los mensajes, ni en la agenda. Los documentos con datos personales los custodia el club. Si conoces cualquier indicio de violencia sobre una persona menor, comunícalo de inmediato al Delegado/a de Protección del club y, en su caso, a las autoridades.</p>', 'agente']
   ]]);
+})();
+// v147 + Ampliacion v1.52: «🔒 Información reservada» en la Guía de la maestra (contenido en la hoja, se pide al servidor con código)
+(function () {
+  let datos = null, estado = null;
+  const txtHtml = t => {
+    const lineas = String(t || '').split(/\n/); let out = '', lista = '';
+    const cerrar = () => { if (lista) { out += '<' + lista + '>' + buf.join('') + '</' + lista + '>'; lista = ''; buf = []; } };
+    let buf = [];
+    lineas.forEach(l => {
+      const m = /^\s*(?:-|•)\s+(.*)$/.exec(l), n = /^\s*\d+[.)]\s+(.*)$/.exec(l);
+      if (m || n) { const tipo = m ? 'ul' : 'ol'; if (lista && lista !== tipo) cerrar(); lista = tipo; buf.push('<li>' + esc((m || n)[1]) + '</li>'); }
+      else { cerrar(); if (l.trim()) out += '<p>' + esc(l) + '</p>'; }
+    });
+    cerrar(); return out;
+  };
+  function pintar() {
+    const lista = $('#guia-lista'); if (!lista || !esMaestra()) return;
+    let c = $('#guia-reservada');
+    if (!c) { c = document.createElement('div'); c.id = 'guia-reservada'; c.className = 'card guia-tema'; c.style.borderLeft = '4px solid var(--brand)'; }
+    lista.prepend(c);
+    if (datos) {
+      const temas = []; datos.forEach(r => { if (temas.indexOf(r.tema) < 0) temas.push(r.tema); });
+      c.innerHTML = '<h3>🔒 Información reservada <button type="button" class="link" id="gres-cerrar" style="float:right;font-size:.9rem">Cerrar</button></h3>' +
+        '<p class="nota">Solo administradores de la maestra. Se edita en la hoja maestra, pestaña <b>Guia_Reservada</b> (orden · tema · pregunta · respuesta). No sale en el PDF de la Guía.</p>' +
+        temas.map(t => `<h4 style="margin:14px 0 6px">${esc(t)}</h4>` + datos.filter(r => r.tema === t).map(r => `<details class="guia-item"><summary>${esc(r.pregunta)}</summary><div class="md">${txtHtml(r.respuesta)}</div></details>`).join('')).join('');
+      c.querySelector('#gres-cerrar').onclick = () => { datos = null; pintar(); };
+      return;
+    }
+    const conf = estado && estado.configurado;
+    c.innerHTML = '<h3>🔒 Información reservada</h3><p class="nota">Precios, programas institucionales, agentes y despliegue. Solo para administradores de la maestra.</p>' +
+      (estado && !conf ? '<p class="nota" style="color:var(--bad)">Falta el código: escríbelo en la hoja maestra, pestaña Config_Municipio, fila <b>codigo_reservado</b>.</p>' : '') +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><input id="gres-cod" type="password" autocomplete="off" placeholder="Código" style="max-width:220px"><button type="button" class="btn" id="gres-ok">Abrir</button></div>';
+    const ok = c.querySelector('#gres-ok'), inp = c.querySelector('#gres-cod');
+    const abrir = async () => {
+      if (!inp.value.trim()) { toast('Escribe el código', true); return; }
+      ok.disabled = true;
+      try { datos = await API.call('guiaReservada', { codigo: inp.value }); pintar(); }
+      catch (e) { toast(e.message, true); ok.disabled = false; inp.select(); }
+    };
+    ok.onclick = abrir; inp.onkeydown = ev => { if (ev.key === 'Enter') { ev.preventDefault(); abrir(); } };
+  }
+  const baseP = pintarGuia;
+  pintarGuia = function () {
+    const r = baseP.apply(this, arguments);
+    try {
+      if (esMaestra()) {
+        pintar();
+        if (!estado) API.call('guiaReservadaEstado').then(x => { estado = x || {}; if (!estado.disponible) { const c = $('#guia-reservada'); if (c) c.remove(); } else if (!datos) pintar(); }).catch(() => {});
+      }
+    } catch (e) {}
+    return r;
+  };
 })();
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
