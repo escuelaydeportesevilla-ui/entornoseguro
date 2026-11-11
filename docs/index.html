@@ -7225,7 +7225,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v148';
+const ES_VERSION = 'v149';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -8808,6 +8808,80 @@ function nucleoOrg() { return (state.cfg && state.cfg.organismo) || 'el Ayuntami
   };
 })();
 // v148: aviso de copyright al principio del archivo
+// v149: guía «Alta de un club cliente» y «¿Entidades o Mis clubes?»; pie del kit en una línea; Mis clubes y 🧭 Seguimiento con datos frescos; tutorial de un club nuevo sin restos del navegador
+(function () {
+  // 1) Guía
+  const ALTA = '<ol><li><b>Mis clubes → + Nuevo club</b>: nombre, usuario (vacío = se genera del nombre), modalidad, CIF y correo del club. Ese correo recibe las alertas: mejor uno de la entidad, no personal.</li>' +
+    '<li>Guarda las claves: <b>Copiar</b> (solo web, usuario y contraseña), <b>Copiar mensaje de bienvenida</b> (texto para enviar al club) o <b>📄 Kit de bienvenida</b> (PDF con la contraseña). La contraseña no se vuelve a mostrar.</li>' +
+    '<li><b>🧭 Seguimiento → Servicio contratado</b>: Autogestión, Acompañado o Gestionado.</li>' +
+    '<li><b>Documentación</b>: contrato de servicios y contrato de encargo del tratamiento (o el acuerdo de bonificación, si el servicio es gratuito).</li>' +
+    '<li>Primer acceso del club con el perfil <b>MI CLUB</b>: cambia la contraseña. Si el servicio es <b>Gestionado</b>, en <b>Mis datos → Acceso del gestor</b> pulsa <b>Autorizar</b>. Si el club te ha dado sus claves, hazlo tú en una <b>ventana de incógnito</b> (Ctrl+Mayús+N) para no cerrar tu sesión.</li>' +
+    '<li><b>🧭 Seguimiento → 🔑 Entrar en el club</b>: trabajas con su tutorial o le pides los datos con <b>📨 Pedírselo al club</b>.</li>' +
+    '<li>Al salir, registra el trabajo. Si cambias el servicio, vuelve a generar el kit desde <b>Gestionar</b> (sale sin contraseña).</li></ol>';
+  const DONDE = '<p>Pregúntate <b>quién hace el trabajo de protección del club</b>:</p><ul><li><b>El propio club</b>, solo o con ayuda → <b>Mis clubes</b>: tiene su espacio y su usuario, los 21 requisitos y el tutorial de 13 pasos.</li><li><b>El club lo lleva fuera de la app y tú compruebas lo que declara</b> → <b>Entidades</b>: seguimiento de 7 pasos y núcleo de verificación.</li></ul>' +
+    '<table class="md-tabla"><tr><th></th><th>Entidades</th><th>Mis clubes</th></tr><tr><td>Quién lo usa</td><td>Ayuntamiento, instituto o patronato municipal, organismo autónomo…</td><td>Escuela&amp;Deporte, o el ayuntamiento que da espacio propio a sus clubes</td></tr><tr><td>Papel</td><td><b>Velar</b>: el club usa sus instalaciones o actividades</td><td><b>Hacer</b>: el club cumple dentro de la app</td></tr><tr><td>¿Entra el club?</td><td>No (o con un usuario «Entidad»)</td><td>Sí, con su usuario (perfil MI CLUB)</td></tr><tr><td>Servicios</td><td>—</td><td>Autogestión · Acompañado · Gestionado</td></tr></table>' +
+    '<ul><li>En la <b>versión maestra</b>, un club cliente va siempre a <b>Mis clubes</b>.</li><li>En un <b>ayuntamiento</b>, los clubes que usan sus instalaciones van a <b>Entidades</b>.</li><li>Un mismo club puede estar en los dos sitios: el ayuntamiento lo vigila en sus Entidades y su espacio propio está en Mis clubes. Son dos papeles distintos; los datos no se sincronizan.</li><li>Si lo diste de alta en el sitio equivocado, desactívalo allí (no lo elimines) y créalo en el correcto.</li></ul>';
+  try {
+    GUIA.forEach(t => (t[2] || []).forEach(p => {
+      if (p[0] === '¿Cómo doy de alta un club SOLO CLUBES?') { p[0] = '¿Cómo doy de alta un club cliente, de principio a fin?'; p[1] = ALTA; }
+      if (p[0] === '¿Cómo entro en el espacio de un club con servicio Gestionado?' && p[1].indexOf('incógnito') < 0) p[1] = p[1].replace('</ol>', '</ol><p>Si el club te ha dado sus claves, la autorización la haces tú: entra como club en una ventana de incógnito (Ctrl+Mayús+N), cambia la contraseña y pulsa Autorizar en Mis datos.</p>');
+    }));
+    const t = GUIA.find(x => x[1] === 'Entidades y coordinación con clubes') || GUIA.find(x => (x[2] || []).some(p => p[0] === '¿Cómo doy de alta una entidad?'));
+    if (t && !t[2].some(p => p[0] === '¿Entidades o Mis clubes? ¿Dónde doy de alta un club?')) t[2].unshift(['¿Entidades o Mis clubes? ¿Dónde doy de alta un club?', DONDE, 'mun', 'entidades']);
+  } catch (e) {}
+
+  // 2) Kit de bienvenida: pie en una sola línea (cabía en una página antes de añadir «Colabora»)
+  if (typeof htmlKitBienvenida === 'function') {
+    const baseK = htmlKitBienvenida;
+    htmlKitBienvenida = function () {
+      return String(baseK.apply(this, arguments)).replace('EntornoSeguro · Kit de bienvenida del club<br>EntornoSeguro © 2026', 'EntornoSeguro · Kit de bienvenida del club · © 2026')
+        .replace('</head>', '<style>h2{margin:12px 0 5px}.pie{margin-top:12px}.fecha{margin-bottom:8px}</style></head>');
+    };
+  }
+
+  // 3) Mis clubes se repinta tras crear un club; 🧭 Seguimiento lee los datos al día (servicio, autorización del gestor)
+  const baseApi = API.call;
+  API.call = async function (a, d) {
+    const r = await baseApi.apply(this, arguments);
+    if (a === 'crearClub') setTimeout(() => { try { if ($("#view-clubes") && !$("#view-clubes").classList.contains("hidden")) loadClubes(); } catch (e) {} }, 1500);
+    return r;
+  };
+  if (typeof segClubAbrir === 'function') {
+    const baseS = segClubAbrir;
+    let refrescando = false;
+    segClubAbrir = async function (c) {
+      const r = await baseS.apply(this, arguments);
+      if (refrescando || !c || !c.id || !esMaestra()) return r;
+      refrescando = true;
+      try {
+        const filas = await API.call('listarClubes');
+        const n = (filas || []).find(x => x.id === c.id);
+        if (n) {
+          state.clubes = filas;
+          const cambia = ['servicio', 'acceso_gestor', 'agente', 'estado'].some(k => String(n[k] || '') !== String(c[k] || ''));
+          const dlg = $('#seg-dlg');
+          if (cambia) { try { loadClubes(); } catch (e) {} if (dlg && dlg.open) await segClubAbrir(n); }
+        }
+      } catch (e) {} finally { refrescando = false; }
+      return r;
+    };
+  }
+
+  // 4) Tutorial: si el espacio del club no tiene progreso guardado, se empieza de cero (no se recupera lo de otro club con el mismo usuario en este navegador)
+  if (typeof tutCargarSrv === 'function') {
+    tutCargarSrv = async function () {
+      if (!state.me) return;
+      if (state.tutSrvKey === tutKey() && state.tutSrvOk !== undefined) return;
+      state.tutSrvKey = tutKey(); state.tutSrv = null; state.tutSrvOk = undefined;
+      try {
+        const r = await API.call('tutorialLeer', {});
+        state.tutSrvOk = true;
+        if (r && typeof r === 'object' && Object.keys(r).length) state.tutSrv = r;
+        else { state.tutSrv = {}; try { localStorage.removeItem(tutKey()); } catch (e) {} }
+      } catch (e) { state.tutSrvOk = false; }
+    };
+  }
+})();
 // ---------- FIN BLOQUE ENTORNOSEGURO (coordinación + guía) ----------
 
 </script>
