@@ -469,7 +469,7 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
         <header><h2>Plantillas de documentos</h2><select id="plant-entidad" aria-label="Entidad"></select></header>
         <p class="nota">Genera con IA los documentos del sistema de protección con los datos de la entidad. Revisa y adapta siempre el resultado antes de aprobarlo.</p>
         <div id="plant-lista" class="plantillas"></div>
-        <div class="ia-acciones"><button class="btn ghost" type="button" data-nuevo="plantilla">+ Nuevo</button></div>
+        <div class="ia-acciones"><button class="btn ghost" type="button" data-nuevo="plantilla" title="Limpia la pantalla para preparar otro documento. No borra nada guardado.">↺ Empezar otro documento</button></div>
         <div id="plant-out"></div>
         <div class="card"><div class="out-head"><h3>Últimas plantillas generadas</h3><button class="link" type="button" data-vertodos="plantilla">Ver todas</button></div><div id="rec-plantilla"></div></div>
       </section>
@@ -514,7 +514,7 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
                 <option>Que participen (encuesta, formación o actividad)</option><option>Que contacten con el Delegado/a de Protección</option>
               </select></label>
             </div>
-            <div class="ia-acciones"><button class="btn">Preparar prompt</button><button class="btn ghost" type="button" data-nuevo="contenido">+ Nuevo</button></div>
+            <div class="ia-acciones"><button class="btn">Preparar prompt</button><button class="btn ghost" type="button" data-nuevo="contenido" title="Limpia el formulario y el prompt. No borra nada guardado.">↺ Empezar otro contenido</button></div>
           </form>
           <div class="card"><h3>Prompt preparado</h3><div id="out-contenido"><p class="empty">Rellena el formulario y pulsa "Preparar prompt".</p></div></div>
         </div>
@@ -528,7 +528,7 @@ input, select, textarea { min-height: 44px; font-size: 1rem; }
         <form id="form-asistente" class="card form">
           <label>Asunto<input name="asunto" required maxlength="200" placeholder="Ej.: Análisis de riesgos torneo con pernocta"></label>
           <label>Consulta<textarea name="pregunta" rows="4" required placeholder="Ej.: ¿Qué debe contener el análisis de riesgos de un club con pernoctas en torneos?"></textarea></label>
-          <div class="ia-acciones"><button class="btn">Preparar prompt</button><button class="btn ghost" type="button" data-nuevo="asistente">+ Nuevo</button></div>
+          <div class="ia-acciones"><button class="btn">Preparar prompt</button><button class="btn ghost" type="button" data-nuevo="asistente" title="Limpia la consulta y el prompt. No borra nada guardado.">↺ Nueva consulta</button></div>
         </form>
         <div class="card"><h3>Prompt preparado</h3><div id="out-asistente"><p class="empty">Escribe tu consulta y pulsa "Preparar prompt".</p></div></div>
         <div class="card"><div class="out-head"><h3>Últimas consultas</h3><button class="link" type="button" data-vertodos="asistente">Ver todas</button></div><div id="rec-asistente"></div></div>
@@ -2915,7 +2915,7 @@ document.addEventListener('click', ev => {
     const t = n.dataset.nuevo;
     if (t === 'plantilla') { $('#plant-out').innerHTML = ''; $$('.plantilla').forEach(x => x.classList.remove('activa')); }
     else { const f = $('#form-' + t); if (f) f.reset(); $('#out-' + t).innerHTML = `<p class="empty">${VACIO[t]}</p>`; }
-    window.scrollTo(0, 0); toast('Listo para uno nuevo');
+    window.scrollTo(0, 0); toast('Pantalla limpia. Lo guardado sigue en Documentos.');
     return;
   }
   const v = ev.target.closest('[data-vertodos]');
@@ -4447,6 +4447,33 @@ function marcarInactivas() {
   // Documento: Guardar, Copiar, Word, PDF, Texto y Eliminar justo debajo del asunto, antes del contenido.
   const f = $('#form-doc'), acc = f && f.querySelector(':scope > .ia-acciones'), modo = f && f.querySelector(':scope > .modo');
   if (acc && modo) { f.insertBefore(acc, modo); acc.classList.add('arriba'); }
+})();
+
+// v155: botón «↓ Abajo» flotante, encima de «↑ Arriba» (páginas largas al pegar respuestas de la IA)
+(function () {
+  if ($('#btn-abajo')) return;
+  const st = document.createElement('style'); st.id = 'abajo-estilo';
+  st.textContent = '#btn-abajo{position:fixed;right:calc(20px + env(safe-area-inset-right, 0px));bottom:calc(78px + env(safe-area-inset-bottom, 0px));z-index:60;' +
+    'min-height:48px;padding:0 18px;border-radius:24px;border:0;background:var(--brand);color:#fff;font:inherit;font-weight:700;cursor:pointer;' +
+    'box-shadow:0 4px 14px rgba(0,0,0,.25);opacity:0;transform:translateY(12px);pointer-events:none;transition:opacity .2s,transform .2s}' +
+    '#btn-abajo.visible{opacity:1;transform:none;pointer-events:auto}#btn-abajo:focus-visible{outline:3px solid var(--accent);outline-offset:2px}' +
+    '@media (prefers-reduced-motion:reduce){#btn-abajo{transition:none}}#btn-arriba,#btn-abajo{min-width:124px;text-align:center}';
+  document.head.appendChild(st);
+  const b = document.createElement('button');
+  b.type = 'button'; b.id = 'btn-abajo'; b.textContent = '↓ Abajo'; b.setAttribute('aria-label', 'Ir al final de la página'); b.tabIndex = -1;
+  b.onclick = () => {
+    const suave = !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: suave ? 'smooth' : 'auto' });
+  };
+  document.body.appendChild(b);
+  const ver = () => {
+    const app = $('#app'), resto = document.documentElement.scrollHeight - window.innerHeight - window.scrollY;
+    const on = !!app && !app.classList.contains('hidden') && resto > 400;
+    b.classList.toggle('visible', on); b.tabIndex = on ? 0 : -1;
+  };
+  window.addEventListener('scroll', ver, { passive: true }); window.addEventListener('resize', ver);
+  new MutationObserver(() => { clearTimeout(b._t); b._t = setTimeout(ver, 150); }).observe(document.body, { childList: true, subtree: true });
+  ver();
 })();
 
 // v22: acceso destacado a la guía de la Matriz desde la propia pantalla
@@ -7225,7 +7252,7 @@ function agChipHero() {
   pintarHeroClub = function () { const r = base.apply(this, arguments); try { agChipHero(); } catch (e) {} return r; };
 })();
 // v99: versión visible debajo del logo (Index y servidor): con una captura se sabe qué está cargado en cada instalación
-const ES_VERSION = 'v154';
+const ES_VERSION = 'v155';
 async function pintarVersion() {
   const br = $('.sidebar .brand'); if (!br) return;
   let v = $('#es-version'); if (!v) { v = document.createElement('div'); v.id = 'es-version'; br.after(v); }
@@ -8808,6 +8835,7 @@ function nucleoOrg() { return (state.cfg && state.cfg.organismo) || 'el Ayuntami
   };
 })();
 // v148: aviso de copyright al principio del archivo
+// v155: «+ Nuevo» de Plantillas, Contenidos y Asistente → «↺ Empezar otro documento / contenido», «↺ Nueva consulta»; botón flotante «↓ Abajo» encima de «↑ Arriba»
 // v154: código de conducta · contacto físico adaptado a la modalidad (permitido el propio de la técnica, la ayuda y la seguridad; prohibido el innecesario)
 // v153: protocolo · medidas de protección las adopta el Delegado/a e informa a la Presidencia; expediente informativo también en paralelo a la comunicación cuando hay indicios de violencia sin delito; certificado negativo citado como art. 13.5 LO 1/1996 (mod. art. 57 LOPIVI)
 // v151: en las plantillas, «medidas de protección provisionales» en lugar de «precautorias» (término oficial citado solo en las funciones)
